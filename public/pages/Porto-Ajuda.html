@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Porto Ajuda</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <link rel="stylesheet" href="../css/Porto-Ajuda.css">
+  <link rel="stylesheet" href="../css/geral.css">
+
+  <script src="../js/Porto-Ajuda.js" defer></script>
+  <script src="../js/header_footer.js" defer></script>
+  
+  <script src="../js/crud.js" defer></script>
+
+</head>
+
+<body>
+
+  <div class="stars"></div>
+
+  <!-- ========================= -->
+  <!-- NAVBAR -->
+  <!-- ========================= -->
+
+  <header class="navbar"></header>
+
+  <!-- ========================= -->
+  <!-- HERO -->
+  <!-- ========================= -->
+
+  <section class="surgir">
+
+    <section class="hero">
+
+      <div class="hero-text">
+
+        <h1>
+          DOE <br>
+          <span>ESPERANÇA</span>
+        </h1>
+
+        <p>
+          Pequenas ações, grandes transformações.<br>
+          Juntos, podemos mudar histórias.
+        </p>
+
+        <div class="search-box">
+
+          <div class="search-button">
+            <i class="fa-solid fa-magnifying-glass"></i>
+          </div>
+
+          <button class="filter-btn">
+            TEMA
+            <i class="fa-solid fa-caret-down"></i>
+          </button>
+
+          <button class="filter-btn">
+            REGIÃO
+            <i class="fa-solid fa-caret-down"></i>
+          </button>
+
+        </div>
+
+      </div>
+
+      <div class="hero-image">
+
+        <div class="moon">
+          <img class="moon img" src="../imgs/moon.png">
+        </div>
+
+
+        <div class="circle-bg">
+
+          <div class="circle-idosas">
+
+            <img src="../imgs/idosas-removebg-preview.png">
+
+          </div>
+
+        </div>
+
+        <div class="leafs">
+
+          <div class="leaf">
+
+            <img class="leaf1" src="../imgs/folhas-brancas.svg">
+
+          </div>
+
+          <div class="leaf">
+
+            <img class="leaf2" src="../imgs/folhas-brancas.svg">
+
+          </div>
+
+          <div class="leaf">
+
+            <img class="leaf3" src="../imgs/folhas-brancas.svg">
+
+          </div>
+
+        </div>
+
+      </div>
+
+      </div>
+
+      </div>
+
+    </section>
+
+  </section>
+
+  <section class="esperanca">
+    <div class="divider">
+      <img class="lua" src="../imgs/moon.png">
+    </div>
+  </section>
+
+  <!-- ========================= -->
+  <!-- OSC -->
+  <!-- ========================= -->
+
+  <section class="surgir">
+
+    <section class="section">
+
+      <div class="section-image">
+
+        <div class="moon1">
+          <img class="moon1 img" src="../imgs/moon.png">
+        </div>
+
+        <div class="circle-bg"></div>
+
+        <img src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=1200&auto=format&fit=crop">
+
+        <!-- BOTÃO DE EDIÇÃO OSC -->
+        <button class="btn-editar-secao" data-tipo="osc" onclick="abrirModalEdicao('osc')">
+          <i class="fa-solid fa-pen-to-square"></i>
+          Editar OSC's
+        </button>
+
+      </div>
+
+      <div class="section-content">
+
+        <h2>
+          OSC's
+          <span>Destaques</span>
+        </h2>
+
+        <div class="cards" id="cards-osc">
+
+          <div class="card card-vazio"></div>
+          <div class="card card-vazio"></div>
+          <div class="card card-vazio"></div>
+          <div class="card card-vazio"></div>
+
+        </div>
+
+        <a href="#" class="section-link">
+          Ver todas OSC's →
+        </a>
+
+      </div>
+
+    </section>
+
+  </section>
+
+  <section class="destaque">
+    <div class="divider">
+      <img class="lua1" src="../imgs/moon.png">
+    </div>
+  </section>
+
+  <!-- ========================= -->
+  <!-- VOLUNTARIAÇÕES -->
+  <!-- ========================= -->
+
+  <section class="surgir">
+
+    <section class="section reverse">
+
+      <div class="section-content">
+
+        <h2>
+          <span>Voluntariados</span>
+        </h2>
+
+        <div class="cards" id="cards-voluntariacao">
+
+          <div class="card card-vazio"></div>
+          <div class="card card-vazio"></div>
+          <div class="card card-vazio"></div>
+          <div class="card card-vazio"></div>
+
+        </div>
+
+        <a href="#" class="section-link">
+          Ver voluntariados →
+        </a>
+
+      </div>
+
+      <div class="section-image">
+
+        <div class="moon1">
+          <img class="moon1 img" src="../imgs/moon.png">
+        </div>
+
+        <div class="circle-bg"></div>
+
+        <img src="https://images.unsplash.com/photo-1516627145497-ae6968895b74?q=80&w=1200&auto=format&fit=crop">
+
+        <!-- BOTÃO DE EDIÇÃO VOLUNTARIAÇÃO -->
+        <button class="btn-editar-secao" data-tipo="voluntariacao" onclick="abrirModalEdicao('voluntariacao')">
+          <i class="fa-solid fa-pen-to-square"></i>
+          Editar Voluntariados
+        </button>
+
+      </div>
+
+    </section>
+
+  </section>
+
+  <section class="voluntario">
+    <div class="divider">
+      <img class="lua2" src="../imgs/moon.png">
+    </div>
+  </section>
+
+  <!-- ========================= -->
+  <!-- DOAÇÕES -->
+  <!-- ========================= -->
+
+  <section class="surgir">
+
+    <section class="section">
+
+      <div class="section-image">
+
+        <div class="moon1">
+          <img class="moon1 img" src="../imgs/moon.png">
+        </div>
+
+        <div class="circle-bg"></div>
+
+        <img src="https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?q=80&w=1200&auto=format&fit=crop">
+
+        <!-- BOTÃO DE EDIÇÃO DOAÇÕES -->
+        <button class="btn-editar-secao" data-tipo="doacao" onclick="abrirModalEdicao('doacao')">
+          <i class="fa-solid fa-pen-to-square"></i>
+          Editar Doações
+        </button>
+
+      </div>
+
+      <div class="section-content">
+
+        <h2>
+          Doe esperança
+          <span>Doações</span>
+        </h2>
+
+        <div class="cards" id="cards-doacao">
+
+          <div class="card card-vazio"></div>
+          <div class="card card-vazio"></div>
+          <div class="card card-vazio"></div>
+          <div class="card card-vazio"></div>
+
+        </div>
+
+        <a href="#" class="section-link">
+          Doar →
+        </a>
+
+      </div>
+
+    </section>
+
+  </section>
+
+  <!-- ========================= -->
+  <!-- FOOTER -->
+  <!-- ========================= -->
+
+  <footer id="footer"></footer>
+
+  <!-- ========================= -->
+  <!-- MODAL DE EDIÇÃO DE POSTS -->
+  <!-- ========================= -->
+
+  <div class="modal-overlay" id="modal-overlay" onclick="fecharModalEdicao(event)">
+
+    <div class="modal-container" id="modal-container">
+
+      <div class="modal-header">
+        <h3 class="modal-titulo" id="modal-titulo">Gerenciar Posts</h3>
+        <button class="modal-fechar" onclick="fecharModal()">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="modal-corpo">
+
+        <!-- FORMULÁRIO DE POST -->
+        <form class="modal-form" id="formPost">
+
+          <input type="hidden" id="postId">
+          <input type="hidden" id="postTipo">
+
+          <div class="form-linha">
+
+            <div class="form-grupo">
+              <label class="form-label">Título</label>
+              <input class="form-input" type="text" id="postTitulo" placeholder="Título do post" required>
+            </div>
+
+            <div class="form-grupo">
+              <label class="form-label">Nome do Usuário</label>
+              <input class="form-input" type="text" id="postNomeUsuario" placeholder="Nome do responsável" required>
+            </div>
+
+          </div>
+
+          <div class="form-linha">
+
+            <div class="form-grupo">
+              <label class="form-label">Nome da OSC</label>
+              <input class="form-input" type="text" id="postNomeOsc" placeholder="Nome da organização" required>
+            </div>
+
+            <div class="form-grupo form-grupo-ativo">
+              <label class="form-label">Ativo</label>
+              <label class="toggle-label">
+                <input type="checkbox" id="postAtivo">
+                <span class="toggle-slider"></span>
+                <span class="toggle-texto">Publicar</span>
+              </label>
+            </div>
+
+          </div>
+
+          <div class="form-grupo form-grupo-full">
+            <label class="form-label">Conteúdo</label>
+            <textarea class="form-input form-textarea" id="postConteudo" placeholder="Descreva o post..." required></textarea>
+          </div>
+
+          <div class="form-grupo form-grupo-full">
+            <label class="form-label">Imagem</label>
+            <div class="upload-area" id="uploadArea" onclick="document.getElementById('postImagem').click()">
+              <i class="fa-solid fa-cloud-arrow-up upload-icone"></i>
+              <span class="upload-texto">Clique para enviar uma imagem</span>
+              <img class="upload-preview" id="uploadPreview" src="" alt="Preview">
+            </div>
+            <input type="file" id="postImagem" accept="image/*" style="display:none">
+          </div>
+
+          <div class="form-acoes">
+            <button type="button" class="btn-cancelar" onclick="limparFormPost()">Cancelar</button>
+            <button type="submit" class="btn-salvar">
+              <i class="fa-solid fa-floppy-disk"></i>
+              Salvar Post
+            </button>
+          </div>
+
+        </form>
+
+        <!-- LISTA DE POSTS -->
+        <div class="modal-lista-titulo">
+          <i class="fa-solid fa-list"></i>
+          Posts cadastrados
+        </div>
+
+        <div class="modal-lista" id="modalListaPosts"></div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ========================= -->
+  <!-- MODAL DE VISUALIZAÇÃO DE CARD -->
+  <!-- ========================= -->
+
+  <div class="modal-overlay" id="modal-card-overlay" onclick="fecharModalCard(event)">
+
+    <div class="modal-card-container" id="modal-card-container">
+
+      <button class="modal-fechar" onclick="fecharModalCardDireto()">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div class="modal-card-imagem-wrap">
+        <img class="modal-card-imagem" id="modal-card-imagem" src="" alt="">
+        <div class="modal-card-imagem-placeholder" id="modal-card-imagem-placeholder">
+          <i class="fa-solid fa-image"></i>
+        </div>
+      </div>
+
+      <div class="modal-card-info">
+        <span class="modal-card-tag" id="modal-card-tag"></span>
+        <h2 class="modal-card-titulo" id="modal-card-titulo"></h2>
+        <p class="modal-card-osc" id="modal-card-osc"></p>
+        <p class="modal-card-conteudo" id="modal-card-conteudo"></p>
+        <div class="modal-card-rodape">
+          <span class="modal-card-usuario" id="modal-card-usuario">
+            <i class="fa-solid fa-user"></i>
+            <span id="modal-card-usuario-nome"></span>
+          </span>
+          <span class="modal-card-data" id="modal-card-data"></span>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+</body>
+
+</html>

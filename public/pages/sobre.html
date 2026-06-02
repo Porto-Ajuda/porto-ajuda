@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Porto Ajuda – Sobre</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="../css/sobre.css" />
+  <link rel="stylesheet" href="../css/geral.css">
+  <script src="../js/header_footer.js" defer></script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+
+      const elementosSurgir = document.querySelectorAll(".surgir");
+
+      const observador = new IntersectionObserver((entradas) => {
+        entradas.forEach(entrada => {
+          if (entrada.isIntersecting) {
+            entrada.target.classList.add("active");
+          }
+        });
+      }, { threshold: 0.15 });
+
+      elementosSurgir.forEach(el => observador.observe(el));
+
+    });
+  </script>
+</head>
+<body>
+
+  <div class="stars"></div>
+
+  <!-- ========================= -->
+  <!-- NAVBAR -->
+  <!-- ========================= -->
+
+  <header class="navbar"></header>
+
+  <!-- ========================= -->
+  <!-- SOBRE HERO -->
+  <!-- ========================= -->
+
+  <section class="surgir">
+
+    <section class="sobre-hero">
+
+      <div class="sobre-hero-text">
+
+        <div class="sobre-label">
+          <span>Sobre</span>
+        </div>
+
+        <h1 class="sobre-titulo">
+          Porto <br>
+          <span>Ajuda</span>
+        </h1>
+
+        <p class="sobre-subtitulo">
+          Uma ponte entre a solidariedade<br>
+          e quem mais precisa.
+        </p>
+
+      </div>
+
+      <div class="sobre-hero-imagem">
+
+        <div class="moon">
+          <img src="../imgs/moon.png" alt="">
+        </div>
+
+        <div class="circle-bg"></div>
+
+        <img
+          src="../imgs/criancas-felizes.jpg"
+          alt="Pessoas se ajudando"
+        >
+
+      </div>
+
+    </section>
+
+  </section>
+
+  <!-- ========================= -->
+  <!-- DIVISOR -->
+  <!-- ========================= -->
+
+  <section class="esperanca">
+    <div class="divider">
+      <img class="lua" src="../imgs/moon.png" alt="">
+    </div>
+  </section>
+
+  <!-- ========================= -->
+  <!-- MISSÃO -->
+  <!-- ========================= -->
+
+  <section class="surgir">
+
+    <section class="sobre-section">
+
+      <div class="sobre-section-topo">
+        <span class="section-tag">Missão</span>
+        <h2 class="sobre-section-titulo">
+          O que nos <span>move</span>
+        </h2>
+      </div>
+
+      <div class="missao-card">
+
+        <div class="missao-icone">
+          <svg viewBox="0 0 24 24">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+          </svg>
+        </div>
+
+        <div class="missao-texto">
+          <p>Nossa missão é <strong>acolher, apoiar e transformar</strong> a vida de pessoas em situação de vulnerabilidade em Porto Seguro.</p>
+          <p>Acreditamos que a solidariedade é o caminho para construir uma sociedade mais justa, humana e cheia de oportunidades para todos.</p>
+        </div>
+
+      </div>
+
+    </section>
+
+  </section>
+
+  <!-- ========================= -->
+  <!-- DIVISOR -->
+  <!-- ========================= -->
+
+  <section class="destaque">
+    <div class="divider">
+      <img class="lua1" src="../imgs/moon.png" alt="">
+    </div>
+  </section>
+
+  <!-- ========================= -->
+  <!-- PILARES -->
+  <!-- ========================= -->
+
+  <section class="surgir">
+
+    <section class="sobre-section">
+
+      <div class="sobre-section-topo">
+        <span class="section-tag">Como faremos isso?</span>
+        <h2 class="sobre-section-titulo">
+          Nossos <span>pilares</span>
+        </h2>
+      </div>
+
+      <div class="pilares">
+
+        <div class="pilar">
+          <div class="pilar-icone">
+            <svg viewBox="0 0 24 24">
+              <circle cx="9" cy="7" r="3"/>
+              <path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              <path d="M21 21v-2a4 4 0 0 0-3-3.87"/>
+            </svg>
+          </div>
+          <h3>Acolhimento</h3>
+          <p>Recebemos com empatia e respeito toda pessoa que chega até nós.</p>
+        </div>
+
+        <div class="pilar">
+          <div class="pilar-icone">
+            <svg viewBox="0 0 24 24">
+              <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+              <line x1="3" y1="6" x2="21" y2="6"/>
+              <path d="M16 10a4 4 0 0 1-8 0"/>
+            </svg>
+          </div>
+          <h3>Assistência</h3>
+          <p>Oferecemos refeições, roupas, itens de higiene e apoio emergencial.</p>
+        </div>
+
+        <div class="pilar">
+          <div class="pilar-icone">
+            <svg viewBox="0 0 24 24">
+              <path d="M22 10v6"/>
+              <path d="M2 10l10-5 10 5-10 5z"/>
+              <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+            </svg>
+          </div>
+          <h3>Transformação</h3>
+          <p>Promovemos educação, capacitação e acesso a oportunidades.</p>
+        </div>
+
+        <div class="pilar">
+          <div class="pilar-icone">
+            <svg viewBox="0 0 24 24">
+              <circle cx="12" cy="5"  r="2"/>
+              <circle cx="5"  cy="19" r="2"/>
+              <circle cx="19" cy="19" r="2"/>
+              <line x1="12" y1="7"  x2="5"  y2="17"/>
+              <line x1="12" y1="7"  x2="19" y2="17"/>
+              <line x1="7"  y1="19" x2="17" y2="19"/>
+            </svg>
+          </div>
+          <h3>Comunidade</h3>
+          <p>Construímos uma rede de apoio com voluntários e parceiros locais.</p>
+        </div>
+
+      </div>
+
+    </section>
+
+  </section>
+
+  <!-- ========================= -->
+  <!-- DIVISOR -->
+  <!-- ========================= -->
+
+  <section class="voluntario">
+    <div class="divider">
+      <img class="lua2" src="../imgs/moon.png" alt="">
+    </div>
+  </section>
+
+  <!-- ========================= -->
+  <!-- CITAÇÃO -->
+  <!-- ========================= -->
+
+  <section class="surgir">
+
+    <section class="sobre-citacao-wrap">
+
+      <div class="citacao-moon">
+        <img src="../imgs/moon.png" alt="">
+      </div>
+
+      <div class="citacao">
+        <span class="aspas-abre">"</span>
+        <blockquote>Pequenas ações, quando realizadas por muitas pessoas, podem transformar o mundo.</blockquote>
+        <span class="aspas-fecha">"</span>
+      </div>
+
+    </section>
+
+  </section>
+ 
+  <footer id="footer"></footer>
+
+</body>
+</html>

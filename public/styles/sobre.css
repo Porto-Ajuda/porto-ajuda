@@ -1,0 +1,687 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap');
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css');
+
+/* ========================= */
+/* PALETA */
+/* ========================= */
+
+:root {
+
+  /* FUNDOS */
+
+  --bg-main: #161928;
+  --bg-section: #2E1C50;
+  --bg-card: #3E2871;
+  --bg-card-hover: #453B80;
+
+  /* DETALHES */
+
+  --primary: #4A5492;
+  --secondary: #5B68AC;
+
+  /* DOURADOS */
+
+  --gold: #F2AA1A;
+  --gold-dark: #DDAA41;
+  --gold-light: #F9C86B;
+  --gold-soft: #FCE0A1;
+
+  /* TEXTOS */
+
+  --text: #FFFFFF;
+  --text-soft: #d7d7d7;
+
+}
+
+/* ========================= */
+/* RESET */
+/* ========================= */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  overflow-x: hidden;
+  font-family: 'Poppins', sans-serif;
+  color: var(--text);
+
+  background:
+    radial-gradient(circle at top,
+      var(--bg-card) 0%,
+      var(--bg-section) 45%,
+      var(--bg-main) 100%);
+}
+
+/* ========================= */
+/* STARS */
+/* ========================= */
+
+.stars {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+
+  background-image:
+    radial-gradient(var(--gold-soft) 1px, transparent 1px);
+
+  background-size: 90px 90px;
+
+  opacity: .18;
+}
+
+/* ========================= */
+/* ANIMAÇÃO DE SURGIR */
+/* ========================= */
+
+.surgir {
+  opacity: 0;
+  transform: translateX(-60px);
+  transition: all 0.8s ease;
+}
+
+.surgir.active {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* ========================= */
+/* SEPARADORES */
+/* ========================= */
+
+.divider {
+  position: relative;
+
+  width: 100%;
+  height: 80px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.divider::before {
+  content: "";
+
+  position: absolute;
+  width: 100%;
+  height: 1px;
+
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(255, 255, 255, 0.25),
+    transparent
+  );
+}
+
+.divider img {
+  position: relative;
+
+  width: 100px;
+  height: auto;
+  padding: 0 10px;
+
+  z-index: 2;
+  border-radius: 50%;
+}
+
+.esperanca .divider img {
+  background: #35215F;
+}
+
+.destaque .divider img {
+  background: #2f1d51;
+}
+
+.voluntario .divider img {
+  background: #231B3D;
+}
+
+/* ========================= */
+/* SOBRE HERO */
+/* ========================= */
+
+.sobre-hero {
+  min-height: 100vh;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 150px 90px 80px;
+}
+
+.sobre-hero-text {
+  width: 45%;
+}
+
+/* ========================= */
+/* LABEL */
+/* ========================= */
+
+.sobre-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+
+  font-size: 0.75rem;
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  color: var(--text-soft);
+
+  margin-bottom: 20px;
+}
+
+.sobre-label::before,
+.sobre-label::after {
+  content: '';
+  width: 40px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* ========================= */
+/* TÍTULO HERO */
+/* ========================= */
+
+.sobre-titulo {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 7rem;
+  line-height: .95;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.sobre-titulo span {
+  color: var(--gold);
+}
+
+.sobre-subtitulo {
+  margin-top: 30px;
+
+  line-height: 1.8;
+
+  color: var(--text-soft);
+
+  font-size: 1.1rem;
+}
+
+/* ========================= */
+/* IMAGEM DO HERO */
+/* ========================= */
+
+.sobre-hero-imagem {
+  position: relative;
+
+  width: 500px;
+  height: 500px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sobre-hero-imagem .circle-bg {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+
+  border-radius: 50%;
+
+  border: 1px solid rgba(91, 104, 172, .35);
+
+  box-shadow: 0 0 100px rgba(91, 104, 172, .15);
+}
+
+.sobre-hero-imagem > img {
+  width: 420px;
+  height: 420px;
+
+  object-fit: cover;
+
+  border-radius: 50%;
+
+  border: 1px solid rgba(255, 255, 255, .08);
+
+  box-shadow: 0 0 50px rgba(0, 0, 0, .18);
+
+  position: relative;
+  z-index: 2;
+}
+
+.sobre-hero-imagem .moon {
+  position: absolute;
+
+  top: -10px;
+  left: 10px;
+
+  z-index: 3;
+
+  filter: drop-shadow(0 0 18px rgba(249, 200, 107, .45));
+}
+
+.sobre-hero-imagem .moon img {
+  width: 150px;
+  height: auto;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* ========================= */
+/* SECTIONS INTERNAS */
+/* ========================= */
+
+.sobre-section {
+  max-width: 1100px;
+  margin: 0 auto;
+
+  padding: 80px 90px;
+}
+
+.sobre-section-topo {
+  margin-bottom: 48px;
+}
+
+.section-tag {
+  display: inline-block;
+
+  font-size: 0.72rem;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+
+  color: var(--gold);
+
+  border: 1px solid rgba(242, 170, 26, 0.35);
+  border-radius: 60px;
+
+  padding: 4px 14px;
+
+  margin-bottom: 16px;
+}
+
+.sobre-section-titulo {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 4.5rem;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1;
+}
+
+.sobre-section-titulo span {
+  color: var(--gold);
+}
+
+/* ========================= */
+/* MISSÃO */
+/* ========================= */
+
+.missao-card {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+
+  background:
+    linear-gradient(to bottom,
+      rgba(74, 84, 146, .18),
+      rgba(46, 28, 80, .55));
+
+  border: 1px solid rgba(255, 255, 255, .06);
+
+  border-radius: 28px;
+
+  padding: 40px 44px;
+
+  transition: border-color .3s, box-shadow .3s;
+}
+
+.missao-card:hover {
+  border-color: rgba(242, 170, 26, 0.18);
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, .2),
+    0 0 40px rgba(242, 170, 26, .06);
+}
+
+.missao-icone {
+  flex-shrink: 0;
+
+  width: 72px;
+  height: 72px;
+
+  border-radius: 50%;
+
+  border: 1.5px solid rgba(242, 170, 26, .5);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(242, 170, 26, .06);
+
+  box-shadow: 0 0 25px rgba(242, 170, 26, .12);
+}
+
+.missao-icone svg {
+  width: 28px;
+  height: 28px;
+  stroke: var(--gold);
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.missao-texto p {
+  font-size: 1rem;
+  line-height: 1.8;
+  color: var(--text-soft);
+}
+
+.missao-texto strong {
+  color: var(--gold-light);
+  font-weight: 600;
+}
+
+.missao-texto p + p {
+  margin-top: 10px;
+  font-size: 0.92rem;
+  color: rgba(215, 215, 215, .65);
+}
+
+/* ========================= */
+/* PILARES */
+/* ========================= */
+
+.pilares {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.pilar {
+  background:
+    linear-gradient(to bottom,
+      rgba(74, 84, 146, .28),
+      rgba(46, 28, 80, .75));
+
+  border: 1px solid rgba(255, 255, 255, .05);
+
+  border-radius: 28px;
+
+  padding: 32px 22px 28px;
+
+  text-align: center;
+
+  cursor: default;
+
+  transition:
+    transform .4s,
+    background .4s,
+    box-shadow .4s,
+    border-color .4s;
+}
+
+.pilar:hover {
+  transform: translateY(-10px) scale(1.02);
+
+  background:
+    linear-gradient(to bottom,
+      rgba(91, 104, 172, .4),
+      rgba(69, 59, 128, .88));
+
+  border-color: rgba(242, 170, 26, .2);
+
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, .3),
+    0 0 30px rgba(249, 200, 107, .1);
+}
+
+.pilar-icone {
+  width: 58px;
+  height: 58px;
+
+  border-radius: 50%;
+
+  border: 1.5px solid rgba(242, 170, 26, .45);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin: 0 auto 18px;
+
+  background: rgba(242, 170, 26, .05);
+
+  transition: box-shadow .4s, background .4s;
+}
+
+.pilar:hover .pilar-icone {
+  background: rgba(242, 170, 26, .1);
+  box-shadow: 0 0 20px rgba(242, 170, 26, .2);
+}
+
+.pilar-icone svg {
+  width: 22px;
+  height: 22px;
+  stroke: var(--gold);
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.pilar h3 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+
+.pilar p {
+  font-size: 0.82rem;
+  color: var(--text-soft);
+  line-height: 1.65;
+  opacity: .85;
+}
+
+/* ========================= */
+/* CITAÇÃO */
+/* ========================= */
+
+.sobre-citacao-wrap {
+  position: relative;
+
+  max-width: 860px;
+  margin: 0 auto;
+
+  padding: 80px 90px;
+}
+
+.citacao-moon {
+  position: absolute;
+
+  top: 60px;
+  right: 70px;
+
+  filter: drop-shadow(0 0 18px rgba(249, 200, 107, .3));
+
+  z-index: 0;
+}
+
+.citacao-moon img {
+  width: 100px;
+  height: auto;
+}
+
+.citacao {
+  position: relative;
+  z-index: 1;
+
+  background:
+    linear-gradient(to bottom,
+      rgba(74, 84, 146, .2),
+      rgba(46, 28, 80, .6));
+
+  border: 1px solid rgba(242, 170, 26, .18);
+
+  border-radius: 28px;
+
+  padding: 20px 52px 36px;
+
+  text-align: center;
+
+  transition: border-color .3s, box-shadow .3s;
+}
+
+.citacao:hover {
+  border-color: rgba(242, 170, 26, .3);
+  box-shadow: 0 0 50px rgba(242, 170, 26, .07);
+}
+
+.aspas-abre {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 6rem;
+  color: var(--gold);
+  line-height: 0.8;
+  display: block;
+  opacity: .45;
+  text-align: left;
+}
+
+.aspas-fecha {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 6rem;
+  color: var(--gold);
+  line-height: 0.2;
+  display: block;
+  opacity: .45;
+  text-align: right;
+  margin-top: 16px;
+}
+
+.citacao blockquote {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.55rem;
+  font-style: italic;
+  font-weight: 400;
+  color: var(--text);
+  line-height: 1.75;
+  padding-bottom: 5%;
+}
+
+/* ========================= */
+/* RESPONSIVO */
+/* ========================= */
+
+@media (max-width: 1200px) {
+
+  .sobre-hero {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .sobre-hero-text {
+    width: 100%;
+  }
+
+  .sobre-label {
+    justify-content: center;
+  }
+
+  .pilares {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+}
+
+@media (max-width: 768px) {
+
+  .sobre-hero {
+    padding: 150px 20px 80px;
+  }
+
+  .sobre-section {
+    padding: 60px 20px;
+  }
+
+  .sobre-citacao-wrap {
+    padding: 60px 20px;
+  }
+
+  .sobre-titulo {
+    font-size: 4rem;
+  }
+
+  .sobre-section-titulo {
+    font-size: 3.2rem;
+  }
+
+  .sobre-hero-imagem {
+    width: 320px;
+    height: 320px;
+  }
+
+  .sobre-hero-imagem > img {
+    width: 270px;
+    height: 270px;
+  }
+
+  .missao-card {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 28px 24px;
+    gap: 20px;
+  }
+
+  .citacao {
+    padding: 16px 28px 24px;
+  }
+
+  .citacao blockquote {
+    font-size: 1.15rem;
+  }
+
+  .aspas-abre,
+  .aspas-fecha {
+    font-size: 4rem;
+  }
+
+  .citacao-moon {
+    display: none;
+  }
+
+}
+
+@media (max-width: 480px) {
+
+  .sobre-titulo {
+    font-size: 3rem;
+  }
+
+  .sobre-section-titulo {
+    font-size: 2.6rem;
+  }
+
+  .pilares {
+    grid-template-columns: 1fr;
+  }
+
+  .citacao {
+    padding: 14px 20px 20px;
+  }
+
+  .citacao blockquote {
+    font-size: 1rem;
+  }
+
+}

@@ -1,0 +1,237 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Poppins:wght@300;400;500&display=swap');
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css');
+:root {
+
+    /* FUNDOS */
+  
+    --bg-main: #161928;
+    --bg-section: #2E1C50;
+    --bg-card: #3E2871;
+    --bg-card-hover: #453B80;
+  
+    /* DETALHES */
+  
+    --primary: #4A5492;
+    --secondary: #5B68AC;
+  
+    /* DOURADOS */
+  
+    --gold: #F2AA1A;
+    --gold-dark: #DDAA41;
+    --gold-light: #F9C86B;
+    --gold-soft: #FCE0A1;
+  
+    /* TEXTOS */
+  
+    --text: #FFFFFF;
+    --text-soft: #d7d7d7;
+  
+  }
+  
+  /* ========================= */
+  /* RESET */
+  /* ========================= */
+  
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    overflow-x: hidden;
+    font-family: 'Poppins', sans-serif;
+    color: var(--text);
+  
+    background:
+      radial-gradient(circle at top,
+        var(--bg-card) 0%,
+        var(--bg-section) 45%,
+        var(--bg-main) 100%);
+        overflow: hidden;
+    
+  }
+
+.corpo {
+    position: absolute;
+    width: 500px;
+    margin-left: 35%;
+    margin-bottom: 90px;
+    bottom: 2em;
+}
+
+/* Título */
+.title {
+
+    margin-bottom: 25px;
+
+    font-size: 3.2rem;
+
+    font-family: 'Cinzel', serif;
+
+    color: #e6c36f;
+
+    letter-spacing: 2px;
+
+    text-align: center;
+}
+
+/* Caixa do formulário */
+.container {
+
+    width: 100%;
+
+    padding: 35px;
+
+    border-radius: 28px;
+
+    background: rgba(48, 39, 87, 0.82);
+
+    border: 2px solid rgba(183, 154, 216, 0.25);
+
+    backdrop-filter: blur(8px);
+
+    box-shadow: 0 0 25px rgba(0, 0, 0, 0.35);
+}
+
+/* Formulário */
+form {
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 18px;
+}
+
+/* Campos */
+.campo-nome,
+.campo-email,
+.campo-mensagem {
+
+    display: flex;
+    flex-direction: column;
+}
+
+/* Labels */
+label {
+
+    margin-bottom: 6px;
+
+    color: #f4ebff;
+
+    font-size: 0.95rem;
+
+    font-weight: 400;
+}
+
+/* Inputs */
+input,
+textarea {
+
+    width: 100%;
+
+    padding: 14px 16px;
+
+    border-radius: 14px;
+
+    border: 1px solid rgba(255, 255, 255, 0.12);
+
+    background: rgba(255, 255, 255, 0.08);
+
+    color: white;
+
+    font-size: 1rem;
+
+    outline: none;
+
+    transition: 0.3s;
+}
+
+/* Placeholder */
+input::placeholder,
+textarea::placeholder {
+
+    color: rgba(255, 255, 255, 0.5);
+}
+
+/* Foco */
+input:focus,
+textarea:focus {
+
+    border-color: #ddb866;
+
+    background: rgba(255, 255, 255, 0.12);
+
+    box-shadow: 0 0 12px rgba(221, 184, 102, 0.25);
+}
+
+/* Textarea */
+textarea {
+
+    height: 120px;
+
+    resize: none;
+}
+
+/* Botão */
+button {
+
+    margin-top: 10px;
+
+    padding: 15px;
+
+    border: none;
+
+    border-radius: 16px;
+
+    background: linear-gradient(90deg,
+            #d8b15f,
+            #e7c97c);
+
+    color: #493565;
+
+    font-size: 1rem;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: 0.3s;
+}
+
+/* Hover botão */
+button:hover {
+
+    transform: translateY(-2px);
+
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+}
+
+#footer {
+    margin-top: 42em;
+}
+
+textarea::-webkit-scrollbar {
+    width: 5px;
+    height: 20px;
+}
+
+/* Fundo da barra */
+textarea::-webkit-scrollbar-track {
+    background: #2b2b40;
+    border-radius: 10px;
+}
+
+/* Parte que desliza */
+textarea::-webkit-scrollbar-thumb {
+    background: #9d4edd;
+    border-radius: 10px;
+}
+
+/* Hover */
+textarea::-webkit-scrollbar-thumb:hover {
+    background: #c77dff;
+}
