@@ -38,6 +38,21 @@
   padding: 0;
   box-sizing: border-box;
 }
+.polygon {
+
+  clip-path: polygon(100% 0%, 100% 60%, 100% 100%, 27% 100%, 0 50%, 32% 0);
+  background: var(--bg-header);
+  width: 500px;
+  height: 100%;
+  position: absolute;
+  background-color: var(--bg-card-hover);
+  right: 0;
+  top: 0;
+  transition:
+    left .5s cubic-bezier(.4,0,.2,1),
+    right .5s cubic-bezier(.4,0,.2,1),
+    transform .5s cubic-bezier(.4,0,.2,1);
+}
 
 html {
   scroll-behavior: smooth;
@@ -107,27 +122,27 @@ body {
 /* ========================= */
 
 .frame {
-  position: relative;
-  margin-top: 10vh;  
-  width: min(95vw, 850px);
-  height: min(92vh, 540px);
-
+  position:absolute;
+  left: 10%;
+  margin-top: 15vh;  
+  width: min(70vw, 550px);
+  height: min(79vh, 540px);
   overflow: hidden;
-
   border-radius: 30px;
-
   background:
     linear-gradient(to bottom,
       rgba(62, 40, 113, .92),
       rgba(46, 28, 80, .96));
-
   border:
     1px solid rgba(255, 255, 255, .06);
-
   box-shadow:
     0 20px 50px rgba(0, 0, 0, .35);
+  z-index: 1;
+  text-align: center;
 
-  z-index: 2;
+}
+.frame .panel-login {
+  left: 0;
 }
 
 /* ========================= */
@@ -135,32 +150,35 @@ body {
 /* ========================= */
 
 .panel {
-  position: absolute;
-  inset: 0;
-
-  display: flex;
-
-  transition: .45s ease;
+   position: absolute;
+  display: flex; 
+  padding: 10px;
+  transition: 0.5s ease;
 }
 
-.panel-login {
+.frame .panel-login {
   opacity: 1;
   pointer-events: all;
+  padding: 50px;
+  transform: translateX(0);
 }
 
 .panel-cadastro {
   opacity: 0;
   pointer-events: none;
+  transform: translateX(100%);
 }
 
 .frame.flipped .panel-login {
   opacity: 0;
   pointer-events: none;
+  transform: translateX(-100%);
 }
 
 .frame.flipped .panel-cadastro {
   opacity: 1;
   pointer-events: all;
+  transform: translateX(0);
 }
 
 /* ========================= */
@@ -168,22 +186,17 @@ body {
 /* ========================= */
 
 .form-sec {
-  width: 58%;
+   flex: 1;
+  padding: 30px;
 
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-
-  padding: 55px;
 }
 
 .title {
   font-family: 'Cormorant Garamond', serif;
-
   font-size: 4rem;
-  line-height: .95;
-
-  margin-bottom: 12px;
+  line-height: .78;
+  text-align: center;
+  margin-bottom: 8px;
 }
 
 .title span {
@@ -192,9 +205,8 @@ body {
 
 .subtitulo {
   color: var(--text-soft);
-
+  text-align: center;
   line-height: 1.7;
-
   margin-bottom: 35px;
 }
 
@@ -212,11 +224,8 @@ body {
 
 .inp {
   width: 100%;
-
-  padding: 16px 18px;
-
+  padding: 9px 10px;
   border-radius: 16px;
-
   border:
     1px solid rgba(255, 255, 255, .08);
 
@@ -232,7 +241,6 @@ body {
 
   transition: .3s;
 }
-
 .inp::placeholder {
   color: rgba(255, 255, 255, .55);
 }
@@ -254,8 +262,8 @@ body {
 /* ========================= */
 
 .btn {
-  margin-top: 10px;
-
+  margin-top: 20px;
+  margin-bottom: 10px;
   border: none;
 
   padding: 16px;
@@ -290,10 +298,9 @@ body {
 /* TROCA */
 /* ========================= */
 
-
-.sw a {
+.sw a  {
   color: var(--gold);
-
+  gap: 3px;
   text-decoration: none;
 
   font-weight: 600;
@@ -305,57 +312,6 @@ body {
 
 .sw a:hover {
   color: var(--gold-light);
-}
-
-/* ========================= */
-/* ARTE */
-/* ========================= */
-
-.art {
-  width: 42%;
-
-  position: relative;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  overflow: hidden;
-
-  background:
-    linear-gradient(to bottom,
-      rgba(74, 84, 146, .45),
-      rgba(46, 28, 80, .95));
-}
-
-.art::before {
-  content: "";
-
-  position: absolute;
-  inset: 0;
-
-  background:
-    radial-gradient(circle at top left,
-      rgba(249, 200, 107, .12),
-      transparent 45%);
-}
-
-.logo-wrap {
-  width: 75%;
-  max-width: 280px;
-
-  position: relative;
-  z-index: 2;
-}
-
-.logo-wrap img {
-  width: 100%;
-  height: auto;
-
-  object-fit: contain;
-
-  filter:
-    drop-shadow(0 0 20px rgba(242, 170, 26, .18));
 }
 
 /* ========================= */
