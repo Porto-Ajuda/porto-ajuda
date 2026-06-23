@@ -4,7 +4,7 @@ const cabecalho =
     <div class="logo">
     
       <div class="logo-circle">
-        <img class="logo-circle-img" src="../imgs/logo-night.png">
+        <img class="logo-circle-img" src="../assets/logo-night.png">
       </div>
 
       <span >Porto Ajuda</span>
