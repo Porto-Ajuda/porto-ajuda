@@ -38,7 +38,7 @@ const rodape =
   `
     <div class="footer-logo">
       <div class="logo-footer">
-        <img class="img" src="../imgs/logo-night.png">
+        <img class="img" src="../assets/logo-night.png">
         <div class="logo-name">Porto Ajuda</div>
       </div>
     </div>
