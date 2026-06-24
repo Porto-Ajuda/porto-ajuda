@@ -42,12 +42,13 @@
 
   clip-path: polygon(100% 0%, 100% 60%, 100% 100%, 27% 100%, 0 50%, 32% 0);
   background: var(--bg-header);
-  width: 500px;
+  width: 600px;
   height: 100%;
   position: absolute;
   background-color: var(--bg-card-hover);
   right: 0;
   top: 0;
+  z-index: 20;
   transition:
     left .5s cubic-bezier(.4,0,.2,1),
     right .5s cubic-bezier(.4,0,.2,1),
