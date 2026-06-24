@@ -242,16 +242,12 @@ body {
 }
 
 .sobre-hero-imagem > img {
-  width: 420px;
-  height: 420px;
+  width: 580px;
+  height: 580px;
 
   object-fit: cover;
 
   border-radius: 50%;
-
-  border: 1px solid rgba(255, 255, 255, .08);
-
-  box-shadow: 0 0 50px rgba(0, 0, 0, .18);
 
   position: relative;
   z-index: 2;
