@@ -21,6 +21,9 @@
   --gold-light: #F9C86B;
   --gold-soft: #FCE0A1;
 
+    /*ROXOS*/
+    
+
   /* TEXTOS */
 
   --text: #FFFFFF;
@@ -38,27 +41,29 @@
   box-sizing: border-box;
 }
 .polygon {
-
+  right: 0;
+  top: 0;
   clip-path: polygon(100% 0%, 100% 60%, 100% 100%, 27% 100%, 0 50%, 32% 0);
   background: var(--bg-header);
   width: 550px;
   height: 100%;
   position:absolute;
-  background-color: var(--bg-card-hover);
-  right: 0;
-  top: 0;
- transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+  background-color:#1b0031;
+  transition:
+  all 1.5s cubic-bezier(.22,1,.36,1);
+  pointer-events: none;
 }
 .moon img{
   z-index:2;
   width: 250px;
-   height: auto;
+  height: auto;
   position: absolute;
   top: 33%;
   right: 23%;
   cursor:pointer;
+  transition:
+  all 1.5s cubic-bezier(.22,1,.36,1);
 }
-
 html {    
   scroll-behavior: smooth;
 }
@@ -70,9 +75,9 @@ body {
 
   background:
     radial-gradient(circle at top,
-      var(--bg-card) 0%,
+      var(--bg-card) 100%,
       var(--bg-section) 45%,
-      var(--bg-main) 100%);
+      var(--bg-main) 0%);
       overflow: hidden;
   display: flex;
   align-items: center;
@@ -148,24 +153,29 @@ body {
   opacity: 1;
   pointer-events: all;
   padding: 50px;
-  transform: translateX(0);
+  transform: translateX(0);   
+  transition:all 1.5s cubic-bezier(.22,1,.36,1);
 }
 
 .panel-cadastro {
   opacity: 0;
   pointer-events: none;
   transform: translateX(100%);
+  transition:all 1.5s cubic-bezier(.22,1,.36,1);
+
 }
 .frame.flipped .panel-login {
   opacity: 0;
   pointer-events: none;
-  transform: translateX(-100%);
+  transform: translateX(-100%) ;
+  transition:all 1.5s cubic-bezier(.22,1,.36,1);
 }
 
 .frame.flipped .panel-cadastro {
   opacity: 1;
   pointer-events: all;
   transform: translateX(0);
+  transition:all 1.5s cubic-bezier(.22,1,.36,1);
 }
 
 /* ========================= */
