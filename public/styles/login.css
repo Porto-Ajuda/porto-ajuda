@@ -42,7 +42,7 @@
 
   clip-path: polygon(100% 0%, 100% 60%, 100% 100%, 27% 100%, 0 50%, 32% 0);
   background: var(--bg-header);
-  width: 600px;
+  width: 750px;
   height: 100%;
   position: absolute;
   background-color: var(--bg-card-hover);

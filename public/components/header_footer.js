@@ -1,6 +1,6 @@
 const header = document.querySelector(".navbar");
 const cabecalho =
- `        <a href="Porto-Ajuda.html">
+  `        <a href="Porto-Ajuda.html">
     <div class="logo">
     
       <div class="logo-circle">
@@ -16,11 +16,14 @@ const cabecalho =
 
       <ul class="nav-links">
 
-        <li><a href="#">Ajude Nosso Site</a></li>
-        <li><a href="#">OSC's Próximas</a></li>
-        <li><a href="sobre.html">Sobre</a></li>
-        <li><a href="#">Ajuda</a></li>
-        <li><a href="Porto-Ajuda.html">Home</a></li>
+      <li><a href="Porto-Ajuda.html">Home</a></li>
+      <li><a href="sobre.html">Sobre</a></li>
+      <li><a href="#">FAQ</a></li>
+      <li><a href="#">Ajude Nosso Site</a></li>
+      <li><a href="proximity.html">OSC's Próximas</a></li>
+        
+        
+        
 
       </ul>
 
@@ -34,7 +37,7 @@ const cabecalho =
 header.innerHTML = cabecalho;
 
 const footer = document.querySelector("#footer");
-const rodape = 
+const rodape =
   `
     <div class="footer-logo">
       <div class="logo-footer">

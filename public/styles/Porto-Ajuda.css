@@ -82,6 +82,26 @@ body {
 /* ========================= */
 /* HERO */
 /* ========================= */
+.sobre-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+
+  font-size: 0.75rem;
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  color: var(--text-soft);
+
+  margin-bottom: 20px;
+}
+
+.sobre-label::before,
+.sobre-label::after {
+  content: '';
+  width: 40px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.3);
+}
 
 .hero {
   min-height: 100vh;
