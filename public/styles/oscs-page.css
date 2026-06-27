@@ -54,3 +54,194 @@ body {
       var(--bg-section) 45%,
       var(--bg-main) 100%);
 }
+/* ========================= */
+/* ANIMAÇÃO DE SURGIR */
+/* ========================= */
+
+.surgir {
+  opacity: 0;
+  transform: translateX(-60px);
+  transition: all 0.8s ease;
+}
+
+.surgir.active {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* ========================= */
+/* SEPARADORES */
+/* ========================= */
+
+.divider {
+  position: relative;
+
+  width: 100%;
+  height: 80px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.divider::before {
+  content: "";
+
+  position: absolute;
+  width: 100%;
+  height: 1px;
+
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(255, 255, 255, 0.25),
+    transparent
+  );
+}
+
+.divider img {
+  position: relative;
+
+  width: 100px;
+  height: auto;
+  padding: 0 10px;
+
+  z-index: 2;
+  border-radius: 50%;
+}
+
+.ongs .divider img {
+  background: #2C1B4D;
+  position: absolute;
+  
+}
+
+
+
+/* ========================= */
+/* ======SOBRE HERO======== */
+/* ======================= */
+
+.ONGs-hero {
+  min-height: 100vh;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 150px 90px 80px;
+}
+
+.ONGs-hero-text {
+  width: 45%;
+}
+
+/* ========================= */
+/* LABEL */
+/* ========================= */
+
+.ONGs-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+
+  font-size: 0.75rem;
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  color: var(--text-soft);
+
+  margin-bottom: 20px;
+}
+
+.ONGs-label::before,
+.ONGs-label::after {
+  content: '';
+  width: 40px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* ========================= */
+/* TÍTULO HERO */
+/* ========================= */
+
+.ONGs-titulo {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 7rem;
+  line-height: .95;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.ONGs-titulo span {
+  color: var(--gold);
+}
+
+.ONGs-subtitulo {
+  margin-top: 30px;
+
+  line-height: 1.8;
+
+  color: var(--text-soft);
+
+  font-size: 1.1rem;
+}
+
+/* ========================= */
+/* IMAGEM DO HERO */
+/* ========================= */
+
+.ONGs-hero-imagem {
+  position: relative;
+
+  width: 500px;
+  height: 500px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ONGs-hero-imagem .circle-bg {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+
+  border-radius: 50%;
+
+  border: 1px solid rgba(91, 104, 172, .35);
+
+  box-shadow: 0 0 100px rgba(91, 104, 172, .15);
+}
+
+.ONGs-hero-imagem > img {
+  width: 580px;
+  height: 580px;
+
+  object-fit: cover;
+
+  border-radius: 50%;
+
+  position: relative;
+  z-index: 2;
+}
+
+.ONGs-hero-imagem .moon {
+  position: absolute;
+
+  top: -10px;
+  left: 10px;
+
+  z-index: 3;
+
+  filter: drop-shadow(0 0 18px rgba(249, 200, 107, .45));
+}
+
+.ONGs-hero-imagem .moon img {
+  width: 150px;
+  height: auto;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+

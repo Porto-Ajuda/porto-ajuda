@@ -1,4 +1,4 @@
-
+/*SURGIR*/ 
 document.addEventListener("DOMContentLoaded", () => {
 
             const elementosSurgir = document.querySelectorAll(".surgir");
@@ -14,3 +14,5 @@ document.addEventListener("DOMContentLoaded", () => {
             elementosSurgir.forEach(el => observador.observe(el));
 
         });
+
+
