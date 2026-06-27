@@ -30,6 +30,7 @@ requisicaoBanco.onupgradeneeded = (event) => {
 requisicaoBanco.onsuccess = (event) => {
 
     db = event.target.result;
+    document.dispatchEvent(new Event("bancoPronto"));
 
     renderizarCardsSecao("osc");
     renderizarCardsSecao("voluntariacao");
