@@ -1,1 +1,56 @@
-*
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap');
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css');
+
+:root {
+
+  /* FUNDOS */
+
+  --bg-main: #161928;
+  --bg-section: #2E1C50;
+  --bg-card: #3E2871;
+  --bg-card-hover: #453B80;
+
+  /* DETALHES */
+
+  --primary: #4A5492;
+  --secondary: #5B68AC;
+
+  /* DOURADOS */
+
+  --gold: #F2AA1A;
+  --gold-dark: #DDAA41;
+  --gold-light: #F9C86B;
+  --gold-soft: #FCE0A1;
+
+  /* TEXT OS */
+
+  --text: #FFFFFF;
+  --text-soft: #d7d7d7;
+
+}
+
+/* ========================= */
+/* RESET */
+/* ========================= */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  overflow-x: hidden;
+  font-family: 'Poppins', sans-serif;
+  color: var(--text);
+
+  background:
+    radial-gradient(circle at top,
+      var(--bg-card) 0%,
+      var(--bg-section) 45%,
+      var(--bg-main) 100%);
+}

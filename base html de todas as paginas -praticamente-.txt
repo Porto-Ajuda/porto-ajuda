@@ -4,16 +4,31 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Porto Ajuda – ONGs</title>
+    <title>Porto Ajuda – </title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    
-    <link rel="stylesheet" href="../styles/oscs-page.css" />
+    <link rel="stylesheet" href="../styles/" />
     <link rel="stylesheet" href="../styles/geral.css">
-
-    <script src="../components/oscs-page.js" defer></script>
+    <script src="../components/" defer></script>
     <script src="../components/header_footer.js" defer></script>
 
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+
+            const elementosSurgir = document.querySelectorAll(".surgir");
+
+            const observador = new IntersectionObserver((entradas) => {
+                entradas.forEach(entrada => {
+                    if (entrada.isIntersecting) {
+                        entrada.target.classList.add("active");
+                    }
+                });
+            }, { threshold: 0.15 });
+
+            elementosSurgir.forEach(el => observador.observe(el));
+
+        });
+    </script>
 
 </head>
 
@@ -31,8 +46,7 @@
 
     <section class="surgir">
 
-
-
+    
     </section>
 </body>
 
