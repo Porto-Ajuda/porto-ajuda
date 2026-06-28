@@ -69,5 +69,30 @@ body {
     width: 100%;
     height: 90px; 
     background: #3C266C;
+    z-index: 6;
+}
+
+.blur {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 35em;
+    height: 100%; 
+    background: #00000069;
+    backdrop-filter: blur(10px);
     z-index: 1;
+}
+.section-ongs{
+position: fixed;
+    top: 0;
+    left: 0;
+    width: 35em;
+    height: 100%; 
+    z-index: 2;
+    text-align: center;
+
+}
+.baduh{
+  top: 30em;
+
 }
