@@ -1,7 +1,5 @@
 package com.portoajuda.aplicacao_osc;
 
-import com.portoajuda.aplicacao_osc.entity.Usuario;
-import com.portoajuda.aplicacao_osc.repository.UsuarioRepository;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
