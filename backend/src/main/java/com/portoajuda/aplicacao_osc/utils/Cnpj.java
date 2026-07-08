@@ -1,4 +1,4 @@
-package com.portoajuda.aplicacao_osc.entity;
+package com.portoajuda.aplicacao_osc.utils;
 
 import lombok.Getter;
 

@@ -2,6 +2,7 @@ package com.portoajuda.aplicacao_osc.entity;
 
 import com.portoajuda.aplicacao_osc.enums.StatusDoacao;
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import tools.jackson.databind.JsonNode;
@@ -39,10 +40,12 @@ public class Doacao {
     @Enumerated(EnumType.STRING)
     private StatusDoacao status;
 
-    @Column(name = "data_criacao", nullable = false)
+    @CreationTimestamp
+    @Column(name = "data_criacao", nullable = false, updatable = false)
     private LocalDateTime dataCriacao;
 
-    @Column(name = "data_pag", nullable = false)
+    @CreationTimestamp
+    @Column(name = "data_pag", nullable = false, updatable = false)
     private LocalDateTime dataPag;
 
     @Column(name = "txid", nullable = false, length = 64, unique = true)

@@ -1,6 +1,5 @@
 package com.portoajuda.aplicacao_osc.utils;
 
-import com.portoajuda.aplicacao_osc.entity.Cnpj;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 

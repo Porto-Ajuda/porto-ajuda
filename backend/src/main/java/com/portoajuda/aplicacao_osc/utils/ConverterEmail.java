@@ -1,6 +1,5 @@
 package com.portoajuda.aplicacao_osc.utils;
 
-import com.portoajuda.aplicacao_osc.entity.Email;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 
@@ -8,7 +7,7 @@ import jakarta.persistence.Converter;
 public class ConverterEmail implements AttributeConverter<Email, String> {
     @Override
     public String convertToDatabaseColumn(Email email) {
-        return email == null ? null : email.getEmail();
+        return email == null ? null : email.valor();
     }
 
     @Override

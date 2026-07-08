@@ -1,6 +1,5 @@
 package com.portoajuda.aplicacao_osc.utils;
 
-import com.portoajuda.aplicacao_osc.entity.Cpf;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 
@@ -9,7 +8,7 @@ public class ConverterCpf implements AttributeConverter<Cpf, String>{
 
     @Override
     public String convertToDatabaseColumn(Cpf cpf) {
-        return cpf == null ? null : cpf.getCpf();
+        return cpf == null ? null : cpf.valor();
     }
 
     @Override

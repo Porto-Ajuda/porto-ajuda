@@ -1,7 +1,12 @@
 package com.portoajuda.aplicacao_osc.entity;
 
 import com.portoajuda.aplicacao_osc.enums.TipoChavePix;
+import com.portoajuda.aplicacao_osc.utils.Cnpj;
+import com.portoajuda.aplicacao_osc.utils.Email;
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
 import java.time.LocalDateTime;
 import java.util.Set;
 
@@ -57,9 +62,11 @@ public class Osc {
     @Column(name = "cep", nullable = false, length = 9)
     private String cep;
 
-    @Column(name = "data_criacao", nullable = false)
+    @CreationTimestamp
+    @Column(name = "data_criacao", nullable = false, updatable = false)
     private LocalDateTime dataCriacao;
 
+    @UpdateTimestamp
     @Column(name = "data_atualizacao", nullable = false)
     private LocalDateTime dataAtualizacao;
 }

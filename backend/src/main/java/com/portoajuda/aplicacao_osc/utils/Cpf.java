@@ -1,24 +1,22 @@
-package com.portoajuda.aplicacao_osc.entity;
+package com.portoajuda.aplicacao_osc.utils;
 
 import lombok.Getter;
 
-public class Cpf {
-    @Getter
-    private String cpf;
+public record Cpf(String valor) {
 
-    public Cpf(String cpf){
-       this.cpf = this.validateCpf(cpf);
+    public Cpf {
+        valor = validateCpf(valor);
     }
 
-    private String validateCpf(String cpf){
-        if (cpf == null) {
+    private static String validateCpf(String cpf) {
+        if (cpf == null || cpf.isBlank()) {
             throw new IllegalArgumentException("CPF não pode ser vazio");
         }
 
         cpf = cpf.replaceAll("\\D", "");
 
         if (cpf.length() != 11 || cpf.matches("(\\d)\\1{10}")) {
-            throw new IllegalArgumentException("Sequência Inválida");
+            throw new IllegalArgumentException("Sequência inválida");
         }
 
         int[] nums = new int[11];
@@ -31,13 +29,15 @@ public class Cpf {
             for (int c = 0; c < t; c++) {
                 sum += nums[c] * ((t + 1) - c);
             }
+
             int resto = (sum * 10) % 11;
             int dv = (resto == 10) ? 0 : resto;
+
             if (nums[t] != dv) {
-                throw new IllegalArgumentException("CPF Inválido");
+                throw new IllegalArgumentException("CPF inválido");
             }
         }
+
         return cpf;
     }
-
 }

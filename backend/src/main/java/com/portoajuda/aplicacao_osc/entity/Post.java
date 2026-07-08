@@ -2,6 +2,8 @@ package com.portoajuda.aplicacao_osc.entity;
 
 import com.portoajuda.aplicacao_osc.enums.TipoPost;
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -40,9 +42,11 @@ public class Post {
     @Column(name = "conteudo", columnDefinition = "TEXT")
     private String conteudo;
 
-    @Column(name = "data_criacao", nullable = false)
+    @CreationTimestamp
+    @Column(name = "data_criacao", nullable = false, updatable = false)
     private LocalDateTime dataCriacao;
 
+    @UpdateTimestamp
     @Column(name = "data_atualizacao", nullable = false)
     private LocalDateTime dataAtualizacao;
 }
