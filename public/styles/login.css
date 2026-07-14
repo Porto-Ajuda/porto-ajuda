@@ -41,29 +41,35 @@
   box-sizing: border-box;
 }
 .polygon {
-  right: 0;
-  top: 0;
-  clip-path: polygon(100% 0%, 100% 60%, 100% 100%, 27% 100%, 0 50%, 32% 0);
-  background: var(--bg-header);
-  width: 550px;
-  height: 100%;
-  position:absolute;
-  background-color:#1b0031;
-  transition:
-  all 1.5s cubic-bezier(.22,1,.36,1);
-  pointer-events: none;
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 10;
 }
-.moon img{
-  z-index:2;
-  width: 250px;
-  height: auto;
-  position: absolute;
-  top: 33%;
-  right: 23%;
-  cursor:pointer;
-  transition:
-  all 1.5s cubic-bezier(.22,1,.36,1);
+.shape{
+    position:absolute;
+    right:0;
+    top:0;
+
+    width:550px;
+    height:100vh;
+
+    background:var(--bg-section);
+
+    clip-path: polygon(
+        100% 0,
+        100% 60%,
+        100% 100%,
+        27% 100%,
+        0 50%,
+        32% 0
+    );
+
+    transform-origin:right center;
+
+
 }
+
 html {    
   scroll-behavior: smooth;
 }
@@ -185,7 +191,6 @@ body {
 .form-sec {
    flex: 1;
   padding: 30px;
-
 }
 
 .title {
@@ -210,15 +215,28 @@ body {
 .formulario {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px; 
+   bottom: 10%;
 }
-
-.row2 {
+#cad {
+  display: none;
+}
+.row2, .row3 {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  padding: 2px 50px 2px 50px;
 }
-
+.row4 {
+  gap: 12px;
+}
+.msg-error {
+  color: var(--gold);
+  font-size: .85rem;
+  text-align: center;
+  margin-top: 0;
+  margin-bottom: 5px;
+}
 .inp {
   width: 100%;
   padding: 9px 10px;
@@ -235,7 +253,6 @@ body {
   font-size: .95rem;
 
   outline: none;
-
   transition: .3s;
 }
 .inp::placeholder {
@@ -254,6 +271,35 @@ body {
     0 0 20px rgba(242, 170, 26, .12);
 }
 
+.opcoes{
+    border-radius:12px;
+    font-size: 16px;
+    padding: 2px;
+    display:flex;
+    flex-direction:column;
+}
+
+.opcoes h2{
+    color: gold;
+    margin-bottom:10px;
+    font-size: 1.2rem;
+    text-align:center;
+}
+
+label, a{
+    display:inline;
+    align-items:left;
+    gap:5px;
+    color: rgb(255, 255, 255);
+    text-decoration: none;
+}
+a {
+    outline: none;
+    transition: color .5s ease-in;
+}
+a:hover {
+    color: gold;
+}
 /* ========================= */
 /* BOTÃO */
 /* ========================= */
@@ -279,7 +325,6 @@ body {
 
   transition: .35s;
 }
-
 .btn:hover {
 
   transform:
