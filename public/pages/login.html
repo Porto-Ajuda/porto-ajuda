@@ -20,9 +20,11 @@
  
    <header class="navbar"></header>
  <div class="moon">
-     <img src="../assets/moon.png" alt="lua" id="moonT">
   </div>
   <div class="polygon">
+    <div class="shape">   
+        <img src="../assets/moon.png" alt="lua" id="moonT">
+</div>
     </div>
    
 
@@ -70,61 +72,118 @@
 
     </div>
 
-       <div class="panel panel-cadastro">
+<div class="panel panel-cadastro">
 
-      <div class="form-sec">
+    <div class="form-sec">
 
         <h1 class="title">
-          Criar <span>Conta</span>
-          
+            Criar <span>Conta</span>
         </h1>
 
         <p class="subtitulo">
-          Junte-se à comunidade Porto Ajuda<br>
-          e faça parte dessa transformação.
+            Junte-se à comunidade Porto Ajuda<br>
+            e faça parte dessa transformação.
         </p>
 
         <form class="formulario">
 
-          <div class="row2">
+            <!-- ETAPA 1 -->
+            <div class="row2">
 
-            <input
-              class="inp"
-              type="text"
-              placeholder="Nome">
+                <input
+                    class="inp"
+                    type="text"
+                    placeholder="Nome">
 
-            <input
-              class="inp"
-              type="text"
-              placeholder="CPF">
+                <input
+                    class="inp"
+                    id="cpf"
+                    type="text"
+                    placeholder="CPF"
+                    maxlength="14">
 
-          </div>
+                <input
+                    class="inp"
+                    type="email"
+                    placeholder="E-mail">
 
-          <input
-            class="inp"
-            type="email"
-            placeholder="E-mail">
+            </div>
 
-          <input
-            class="inp"
-            type="password"
-            placeholder="Senha">
+            <!-- ETAPA 2 -->
+            <div class="row3">
 
-          <button class="btn" type="submit">
-            Cadastrar
-          </button>
-          <p class="sw">
-          Já possui uma conta?
-          <a id="goLogin">Entrar</a>
-        </p>
+                <input
+                    class="inp"
+                    type="tel"
+                    id="telefone"
+                    placeholder="Telefone">
+
+                <input
+                    class="inp"
+                    type="text"
+                    id="username"
+                    placeholder="Nome de usuário">
+
+                <input
+                    class="inp"
+                    type="date"
+                    id="nascimento"
+                    placeholder="Data de nascimento">
+
+                <input
+                    class="inp"
+                    type="text"
+                    id="cep"
+                    placeholder="CEP">
+
+            </div>
+
+            <!-- ETAPA 3 -->
+            <div class="row4">
+
+                <input
+                    class="inp"
+                    type="password"
+                    placeholder="Senha">
+
+                <input
+                    class="inp"
+                    type="password"
+                    placeholder="Confirmar Senha">
+
+                <div class="opcoes">
+
+                    <h2>Ao se cadastrar neste site, você afirma que</h2>
+
+                    <label>
+                        <input type="checkbox" name="termos" checked>
+                        Concorda com nossos
+                        <a href="#">Termos de Uso</a>
+                        e nossas políticas de
+                        <a href="#">Privacidade &amp; Uso de Dados</a>
+                    </label>
+
+                </div>
+                    
+            </div>
+
+            <button class="btn" type="button" id="nextBtn">
+                Próximo
+            </button>
+
+            <button class="btn" type="submit" id="cad">
+                Cadastrar
+            </button>
+
         </form>
 
-        
-      </div>
-       </div>
-    </div>
+        <p class="sw">
+            Já possui uma conta?
+            <a id="goLogin">Entrar</a>
+        </p>
 
-  </div>
+    </div>
+</div>
 </body>
 
 </html>
