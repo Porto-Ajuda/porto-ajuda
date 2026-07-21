@@ -1,25 +1,42 @@
 package com.portoajuda.aplicacao_osc.entity;
 
+import com.portoajuda.aplicacao_osc.enums.CausaSocial;
 import com.portoajuda.aplicacao_osc.enums.TipoChavePix;
 import com.portoajuda.aplicacao_osc.utils.Cnpj;
 import com.portoajuda.aplicacao_osc.utils.Email;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Set;
 
+@Setter
+@Getter
 @Entity
 @Table(name = "oscs")
 public class Osc {
 
+    @Setter(AccessLevel.NONE)
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     @Column(name = "cnpj", nullable = false, length = 14, unique = true)
     private Cnpj cnpj;
+
+    @ElementCollection(targetClass = CausaSocial.class)
+    @CollectionTable(
+            name = "osc_causas",
+            joinColumns = @JoinColumn(name = "id_osc")
+    )
+    @Column(name = "causa")
+    @Enumerated(EnumType.STRING)
+    private Set<CausaSocial> causas = new HashSet<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_usuario_criador", nullable = false)

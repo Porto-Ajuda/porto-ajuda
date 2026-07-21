@@ -1,30 +1,38 @@
 package com.portoajuda.aplicacao_osc.service;
 
+import com.portoajuda.aplicacao_osc.dto.request.RequestLoginDTO;
 import com.portoajuda.aplicacao_osc.dto.request.RequestUsuarioDTO;
+import com.portoajuda.aplicacao_osc.dto.response.ResponseLoginDTO;
 import com.portoajuda.aplicacao_osc.dto.response.ResponseUsuarioDTO;
+import com.portoajuda.aplicacao_osc.entity.Role;
 import com.portoajuda.aplicacao_osc.entity.Usuario;
 import com.portoajuda.aplicacao_osc.enums.Genero;
+import com.portoajuda.aplicacao_osc.repository.RoleRepository;
 import com.portoajuda.aplicacao_osc.repository.UsuarioRepository;
+import com.portoajuda.aplicacao_osc.segurity.JwtService;
 import com.portoajuda.aplicacao_osc.utils.Cpf;
 import com.portoajuda.aplicacao_osc.utils.Email;
 import jakarta.transaction.Transactional;
-import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-@Service
-public class UsuarioService {
-    private final Argon2PasswordEncoder passwordEncoder;
-    private final UsuarioRepository usuarioRepository;
+import java.util.HashSet;
+import java.util.Set;
 
-    public UsuarioService(Argon2PasswordEncoder passwordEncoder, UsuarioRepository usuarioRepository) {
-        this.passwordEncoder = passwordEncoder;
-        this.usuarioRepository = usuarioRepository;
-    }
+@Service
+@RequiredArgsConstructor
+public class UsuarioService {
+    private final PasswordEncoder passwordEncoder;
+    private final UsuarioRepository usuarioRepository;
+    private final JwtService jwtService;
+    private final RoleRepository roleRepository;
 
     @Transactional
-    public ResponseUsuarioDTO cadastro(RequestUsuarioDTO usuarioDTO){
+    public void signup(RequestUsuarioDTO usuarioDTO){
         if(usuarioRepository.existsByEmail(new Email(usuarioDTO.email()))){
-            throw new IllegalArgumentException("Email já está cadastrado");
+            throw new BadCredentialsException("Email já está cadastrado");
         }
         Usuario usuario = new Usuario();
         usuario.setCpf(new Cpf(usuarioDTO.cpf()));
@@ -36,17 +44,29 @@ public class UsuarioService {
         usuario.setTelefone(usuarioDTO.telefone());
         usuario.setSenha(passwordEncoder.encode(usuarioDTO.senha()));
 
-        Usuario usuarioSalvo = usuarioRepository.save(usuario);
-        return new ResponseUsuarioDTO
-                (usuarioSalvo.getId(),
-                usuarioSalvo.getNome(),
-                usuarioSalvo.getNomeSocial(),
-                usuarioSalvo.getEmail().valor(),
-                usuarioSalvo.getTelefone());
+        Role role = roleRepository.findByNome("USUARIO")
+                .orElseThrow(() -> new IllegalArgumentException("Role não encontrada"));
+
+        usuario.setRoles(Set.of(role));
+        usuarioRepository.save(usuario);
     }
 
     @Transactional
-    public void excluir(Integer id){
+    public ResponseLoginDTO login(RequestLoginDTO loginDTO){
+        Usuario usuario = usuarioRepository.findByEmail(new Email(loginDTO.email())).
+                orElseThrow(() -> new IllegalArgumentException("Email ou senha incorretos"));
+        if(!passwordEncoder.matches(loginDTO.senha(), usuario.getSenha())){
+            throw new BadCredentialsException("Email ou senha incorretos");
+        }
+
+        return new ResponseLoginDTO(jwtService.generateToken(usuario),
+                new ResponseUsuarioDTO(usuario.getId(), usuario.getNome(),
+                usuario.getNomeSocial(), usuario.getEmail().valor(), usuario.getTelefone())
+        );
+    }
+
+    @Transactional
+    public void delete(Integer id){
         if(!usuarioRepository.existsById(id)){
             throw new IllegalArgumentException("Usuário não existe");
         }
@@ -55,7 +75,7 @@ public class UsuarioService {
     }
 
     @Transactional
-    public void alterar(RequestUsuarioDTO usuarioDTO, Integer id){
+    public void update(RequestUsuarioDTO usuarioDTO, Integer id){
         Usuario usuarioAlterado = usuarioRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Usuário não existe"));
         usuarioAlterado.setEmail(new Email(usuarioDTO.email()));
@@ -64,18 +84,18 @@ public class UsuarioService {
     }
 
     @Transactional
-    public void alterarSenha(String senha, Integer id){
+    public void changePassword(String senha, Integer id){
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Usuário não existe"));
 
         if(senha == null || senha.isBlank()){
-            throw new IllegalArgumentException("Senha não pode ser vazia");
+            throw new BadCredentialsException("Senha não pode ser vazia");
         }
 
         usuario.setSenha(passwordEncoder.encode(senha));
     }
 
-    public ResponseUsuarioDTO visualizar(Integer id){
+    public ResponseUsuarioDTO view(Integer id){
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Usuário não existe"));
 

@@ -1,0 +1,46 @@
+package com.portoajuda.aplicacao_osc.controller;
+
+import com.portoajuda.aplicacao_osc.dto.request.RequestOscDTO;
+import com.portoajuda.aplicacao_osc.entity.Osc;
+import com.portoajuda.aplicacao_osc.entity.Usuario;
+import com.portoajuda.aplicacao_osc.segurity.JwtService;
+import com.portoajuda.aplicacao_osc.service.OscService;
+import io.jsonwebtoken.Jwts;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
+
+@RequiredArgsConstructor
+@RestController
+@RequestMapping("/osc")
+public class OscController {
+    private final OscService oscService;
+
+    @PreAuthorize("hasRole('USUARIO')")
+    @PostMapping(
+            value = "/criar",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public ResponseEntity<Void> create(@Valid @RequestBody RequestOscDTO oscDTO, @AuthenticationPrincipal Usuario usuario){
+        oscService.create(oscDTO, usuario);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @GetMapping(
+            value = "/lista",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public ResponseEntity<Page<Osc>> viewAll(Pageable pageable){
+        Page<Osc> oscs = oscService.viewAll(pageable);
+        return ResponseEntity.ok(oscs);
+    }
+}

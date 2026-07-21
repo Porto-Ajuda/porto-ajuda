@@ -9,7 +9,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 public class Argon2id {
 
     @Bean
-    public Argon2PasswordEncoder passwordEncoder(){
+    public PasswordEncoder passwordEncoder(){
         return new Argon2PasswordEncoder(
                 16,
                 32,

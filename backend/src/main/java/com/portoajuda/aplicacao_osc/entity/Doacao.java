@@ -1,11 +1,12 @@
 package com.portoajuda.aplicacao_osc.entity;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.portoajuda.aplicacao_osc.enums.StatusDoacao;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
-import tools.jackson.databind.JsonNode;
+
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
