@@ -1,7 +1,75 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Poppins:wght@300;400;500;600&display=swap');
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css');
+:root {
 
+  /* FUNDOS */
 
+  --bg-main: #111d5b;
+  --bg-section: #2E1C50;
+  --bg-card: #3E2871;
+  --bg-card-hover: #453B80;
 
-#circle {
+  /* DETALHES */
+
+  --primary: #4A5492;
+  --secondary: #5B68AC;
+
+  /* DOURADOS */
+
+  --gold: #F2AA1A;
+  --gold-dark: #DDAA41;
+  --gold-light: #F9C86B;
+  --gold-soft: #FCE0A1;
+
+    /*ROXOS*/
+    
+
+  /* TEXTOS */
+
+  --text: #FFFFFF;
+  --text-soft: #d7d7d7;
+
+}
+
+/* ========================= */
+/* RESET */
+/* ========================= */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+body {
+    background:
+    radial-gradient(circle at top,
+      var(--bg-card) 100%,
+      var(--bg-section) 45%,
+      var(--bg-main) 0%);
+      overflow: hidden;
+}
+.perfil-header {
+    position:relative;
+    margin-top: 10%;
+    left: 60%;
+}
+.circle {
+    width: 400px;
+    height: 400px;
+    background: var(--bg-card-hover);
     clip-path: circle(50% at 50% 50%);
-    background: blueviolet;
-};
+}
+.rectangle {
+    width: 520px;
+    height: auto;
+    clip-path: polygon(100% 0%, 100% 40%, 100% 100%, 0 100%, 0% 50%, 0 0);
+    background: var(--bg-section);
+      z-index: 10;
+      padding: 20px;
+}
+#edit img {
+    margin-bottom: 0;
+}
+input {
+  display: none;
+}
