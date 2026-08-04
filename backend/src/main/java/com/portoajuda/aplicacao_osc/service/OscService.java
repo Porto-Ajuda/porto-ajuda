@@ -1,6 +1,7 @@
 package com.portoajuda.aplicacao_osc.service;
 
 import com.portoajuda.aplicacao_osc.dto.request.RequestOscDTO;
+import com.portoajuda.aplicacao_osc.dto.request.UpdateOscDTO;
 import com.portoajuda.aplicacao_osc.entity.Osc;
 import com.portoajuda.aplicacao_osc.entity.OscMembros;
 import com.portoajuda.aplicacao_osc.entity.Role;
@@ -60,6 +61,19 @@ public class OscService {
         usuario.getRoles().add(role);
         osc.setUsuario(usuario);
 
+        oscRepository.save(osc);
+    }
+
+    @Transactional
+    public void update(UpdateOscDTO updateOscDTO){
+        Osc osc = oscRepository.findByEmail(new Email(updateOscDTO.email()))
+                .orElseThrow(() -> new IllegalArgumentException("Cnpj não encontrado"));
+        osc.setChavePix(updateOscDTO.pix());
+        osc.setTipoChavePix(TipoChavePix.valueOf(updateOscDTO.tipoPix()));
+        osc.setDescricao(updateOscDTO.descricao());
+        osc.setEmail(new Email(updateOscDTO.email()));
+        osc.setTelefone(updateOscDTO.telefone());
+        osc.setSite(updateOscDTO.site());
         oscRepository.save(osc);
     }
 

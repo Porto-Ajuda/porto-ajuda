@@ -25,7 +25,7 @@ public class OscController {
 
     @PreAuthorize("hasRole('USUARIO')")
     @PostMapping(
-            value = "/criar",
+            value = "/create",
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
@@ -34,8 +34,9 @@ public class OscController {
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
+
     @GetMapping(
-            value = "/lista",
+            value = "/list",
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
@@ -43,4 +44,6 @@ public class OscController {
         Page<Osc> oscs = oscService.viewAll(pageable);
         return ResponseEntity.ok(oscs);
     }
+
+
 }

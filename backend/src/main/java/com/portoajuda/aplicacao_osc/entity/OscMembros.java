@@ -28,15 +28,6 @@ public class OscMembros {
     @JoinColumn(name = "id_usuario", nullable = false)
     private Usuario usuario;
 
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(name = "osc_membro_permissao",
-            joinColumns = {
-                @JoinColumn(name = "id_osc", nullable = false),
-                @JoinColumn(name = "id_usuario", nullable = false)
-            },
-            inverseJoinColumns = @JoinColumn(name = "id_permissao", nullable = false))
-    private Set<Permissao> permissoes;
-
     @Column(name = "cargo_osc", length = 100)
     private String cargoOsc;
 
