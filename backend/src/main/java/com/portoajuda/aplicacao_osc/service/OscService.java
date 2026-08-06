@@ -22,6 +22,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 
+import java.nio.file.AccessDeniedException;
 import java.util.List;
 import java.util.Set;
 
@@ -52,7 +53,7 @@ public class OscService {
         osc.setCep(oscDTO.cep());
 
 
-        Usuario usuario = usuarioRepository.findByEmail(usuarioAuth.getEmail())
+        Usuario usuario = usuarioRepository.findById(usuarioAuth.getId())
                 .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado"));
 
         Role role = roleRepository.findByNome("OSC")
@@ -65,9 +66,14 @@ public class OscService {
     }
 
     @Transactional
-    public void update(UpdateOscDTO updateOscDTO){
-        Osc osc = oscRepository.findByEmail(new Email(updateOscDTO.email()))
+    public void update(UpdateOscDTO updateOscDTO, Usuario usuario) throws AccessDeniedException {
+        Osc osc = oscRepository.findByCnpj(new Cnpj(updateOscDTO.cnpj()))
                 .orElseThrow(() -> new IllegalArgumentException("Cnpj não encontrado"));
+        boolean isDono = oscRepository.existsByIdAndUsuarioId(osc.getId(), usuario.getId());
+        boolean isMembro = oscRepository.userBelongsOsc(osc.getId(), usuario.getId());
+        if(!isDono && !isMembro){
+            throw new AccessDeniedException("Você não pode alterar os dados dessa OSC");
+        }
         osc.setChavePix(updateOscDTO.pix());
         osc.setTipoChavePix(TipoChavePix.valueOf(updateOscDTO.tipoPix()));
         osc.setDescricao(updateOscDTO.descricao());

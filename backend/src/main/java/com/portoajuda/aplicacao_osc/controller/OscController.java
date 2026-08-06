@@ -1,6 +1,7 @@
 package com.portoajuda.aplicacao_osc.controller;
 
 import com.portoajuda.aplicacao_osc.dto.request.RequestOscDTO;
+import com.portoajuda.aplicacao_osc.dto.request.UpdateOscDTO;
 import com.portoajuda.aplicacao_osc.entity.Osc;
 import com.portoajuda.aplicacao_osc.entity.Usuario;
 import com.portoajuda.aplicacao_osc.segurity.JwtService;
@@ -16,6 +17,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.nio.file.AccessDeniedException;
 
 @RequiredArgsConstructor
 @RestController
@@ -34,6 +37,16 @@ public class OscController {
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
+    @PreAuthorize("hasRole('OSC')")
+    @PutMapping(
+            value = "/put",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public ResponseEntity<Void> put(@Valid @RequestBody UpdateOscDTO updateOscDTO, @AuthenticationPrincipal Usuario usuario) throws AccessDeniedException {
+        oscService.update(updateOscDTO, usuario);
+        return ResponseEntity.status(HttpStatus.ACCEPTED).build();
+    }
 
     @GetMapping(
             value = "/list",
@@ -44,6 +57,4 @@ public class OscController {
         Page<Osc> oscs = oscService.viewAll(pageable);
         return ResponseEntity.ok(oscs);
     }
-
-
 }

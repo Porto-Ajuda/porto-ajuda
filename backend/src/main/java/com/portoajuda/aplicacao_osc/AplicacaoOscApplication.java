@@ -9,4 +9,4 @@ public class AplicacaoOscApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(AplicacaoOscApplication.class, args);
 	}
-	}
+}
