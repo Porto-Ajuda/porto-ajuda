@@ -11,6 +11,7 @@ import java.util.Optional;
 
 public interface OscRepository extends JpaRepository<Osc, Integer> {
     Optional<Osc> findByCnpj(Cnpj cnpj);
+    Optional<Osc> findByIdUsuario(Integer id);
 
     boolean existsByIdAndUsuarioId(Integer id, Integer usuarioId);
 

@@ -57,4 +57,15 @@ public class OscController {
         Page<Osc> oscs = oscService.viewAll(pageable);
         return ResponseEntity.ok(oscs);
     }
+
+    @PreAuthorize("hasRole('OSC')")
+    @DeleteMapping(
+            value = "/delete",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public ResponseEntity<Void> delete(@Valid @AuthenticationPrincipal Usuario usuario) throws AccessDeniedException {
+        oscService.delete(usuario);
+        return ResponseEntity.status(HttpStatus.ACCEPTED).build();
+    }
 }

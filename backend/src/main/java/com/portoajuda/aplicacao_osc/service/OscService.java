@@ -84,18 +84,19 @@ public class OscService {
     }
 
     @Transactional
-    public void delete(Cnpj cnpj, Integer id) {
-        if(!oscRepository.existsByCnpj(cnpj)){
-            throw new BadCredentialsException("Erro ao encontrar CNPJ");
-        }
-        Osc osc = oscRepository.findByCnpj(cnpj)
+    public void delete(Usuario usuario) throws AccessDeniedException {
+        Osc osc = oscRepository.findByIdUsuario(usuario.getId())
                 .orElseThrow(() -> new IllegalArgumentException("Osc não encontrada"));
-        if (osc.getId().equals(id)){
-            oscRepository.delete(osc);
+        boolean isDono = oscRepository.existsByIdAndUsuarioId(osc.getId(), usuario.getId());
+        if(!isDono){
+            throw new AccessDeniedException("Você não pode deletar essa OSC");
         }
-        else {
-            throw new BadCredentialsException("Você não é permitido de fazer esta operação");
-        }
+        oscRepository.delete(osc);
+    }
+
+    @Transactional
+    public void addMembro(){
+
     }
 
     public Page<Osc> viewAll(Pageable pageable){

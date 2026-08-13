@@ -18,6 +18,8 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.Period;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -33,6 +35,13 @@ public class UsuarioService {
     public void signup(RequestUsuarioDTO usuarioDTO){
         if(usuarioRepository.existsByEmail(new Email(usuarioDTO.email()))){
             throw new BadCredentialsException("Email já está cadastrado");
+        }
+        int idade = Period.between(
+                usuarioDTO.dataNascimento(),
+                LocalDate.now()
+        ).getYears();
+        if (idade < 16){
+            throw new BadCredentialsException("A idade mínima é de 16 anos");
         }
         Usuario usuario = new Usuario();
         usuario.setCpf(new Cpf(usuarioDTO.cpf()));
