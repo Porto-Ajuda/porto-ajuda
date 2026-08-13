@@ -8,7 +8,7 @@
   --bg-section: #2E1C50;
   --bg-card: #3E2871;
   --bg-card-hover: #453B80;
-
+  --dark-contrast: #160738;
   /* DETALHES */
 
   --primary: #4A5492;
@@ -20,6 +20,7 @@
   --gold-dark: #DDAA41;
   --gold-light: #F9C86B;
   --gold-soft: #FCE0A1;
+  --dark-contrast-gold: #918805;
 
     /*ROXOS*/
     
@@ -50,26 +51,65 @@ body {
 }
 .perfil-header {
     position:relative;
-    margin-top: 10%;
-    left: 60%;
+    margin-top: 8%;
+    left: 3%;
+  
 }
 .circle {
-    width: 400px;
-    height: 400px;
-    background: var(--bg-card-hover);
-    clip-path: circle(50% at 50% 50%);
+    width: 190px;
+    height: 190px;
+    border: 0.5px solid #ebc132;
+    border-radius: 50%;
+    position: relative;
+    overflow: visible;
+    margin-left: 20px;
 }
+
 .rectangle {
-    width: 520px;
+    width: 600px;
     height: auto;
+    border-radius: 40px;
     clip-path: polygon(100% 0%, 100% 40%, 100% 100%, 0 100%, 0% 50%, 0 0);
-    background: var(--bg-section);
+    background: var(--dark-contrast);
       z-index: 10;
       padding: 20px;
+        display: flex;
+    align-items: flex-start;
+
+     
 }
-#edit img {
-    margin-bottom: 0;
+.info-perfil {
+   padding-top: 3%;
+   margin-left: 100px;
+   margin-bottom: 20px;
 }
-input {
-  display: none;
+.info-perfil h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 30px;
+    color: #ebc132;
+    margin-bottom: 10px;
+}
+.info-perfil p {
+    font-family: 'Poppins', sans-serif;
+    font-size: 16px;
+    color: #ebc132;      
+}
+.perfil-img> input {
+   display: none;
+}
+#img-perfil {
+    width: 58px;
+    height: 58px;
+    border-radius: 2%;
+    cursor: pointer;
+    z-index: 10;
+    margin-left: 132px;
+    margin-top: 0px;
+     position: absolute;
+}
+#circle-default-img {
+    width: 80px;
+    height: 80px;
+    margin-top: 50px;
+    margin-left: 55px;
 }
