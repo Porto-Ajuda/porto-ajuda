@@ -17,13 +17,13 @@ const cabecalho =
       <ul class="nav-links">
 
       <li><a href="Porto-Ajuda.html">Home</a></li>
-<li>|</li>
+<li id="barra">|</li>
       <li><a href="sobre.html">Sobre</a></li>
-<li>|</li>
+<li id="barra">|</li>
       <li><a href="#">Ajuda</a></li>
-<li>|</li>
+<li id="barra">|</li>
       <li><a href="#">Apoiar o Site</a></li>
-<li>|</li>
+<li id="barra">|</li>
       <li><a href="proximity.html">ONG's Regionais</a></li>
         
         
