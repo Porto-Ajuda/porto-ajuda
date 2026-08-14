@@ -1,5 +1,6 @@
 package com.portoajuda.aplicacao_osc.controller;
 
+import com.portoajuda.aplicacao_osc.dto.request.RequestNewMembroDTO;
 import com.portoajuda.aplicacao_osc.dto.request.RequestOscDTO;
 import com.portoajuda.aplicacao_osc.dto.request.UpdateOscDTO;
 import com.portoajuda.aplicacao_osc.entity.Osc;
@@ -66,6 +67,17 @@ public class OscController {
     )
     public ResponseEntity<Void> delete(@Valid @AuthenticationPrincipal Usuario usuario) throws AccessDeniedException {
         oscService.delete(usuario);
+        return ResponseEntity.status(HttpStatus.ACCEPTED).build();
+    }
+
+    @PreAuthorize("hasRole('OSC')")
+    @PostMapping(
+            value = "/newMembro",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public ResponseEntity<Void> addMembro(@Valid @RequestBody RequestNewMembroDTO newMembroDTO, @AuthenticationPrincipal Usuario usuario) throws AccessDeniedException {
+        oscService.addMembro(usuario, newMembroDTO);
         return ResponseEntity.status(HttpStatus.ACCEPTED).build();
     }
 }

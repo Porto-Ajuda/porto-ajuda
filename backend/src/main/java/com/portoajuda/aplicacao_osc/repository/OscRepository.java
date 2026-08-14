@@ -11,7 +11,7 @@ import java.util.Optional;
 
 public interface OscRepository extends JpaRepository<Osc, Integer> {
     Optional<Osc> findByCnpj(Cnpj cnpj);
-    Optional<Osc> findByIdUsuario(Integer id);
+    Optional<Osc> findByUsuarioId(Integer UsuarioId);
 
     boolean existsByIdAndUsuarioId(Integer id, Integer usuarioId);
 
@@ -19,7 +19,7 @@ public interface OscRepository extends JpaRepository<Osc, Integer> {
           SELECT COUNT(m) > 0
           FROM OscMembros m
           WHERE m.usuario.id = :usuarioId
-          AND m.osc.id = :oscId   
+          AND m.osc.id = :oscId
     """)
     boolean userBelongsOsc(Integer oscId, Integer usuarioId);
 

@@ -1,11 +1,9 @@
 package com.portoajuda.aplicacao_osc.service;
 
+import com.portoajuda.aplicacao_osc.dto.request.RequestNewMembroDTO;
 import com.portoajuda.aplicacao_osc.dto.request.RequestOscDTO;
 import com.portoajuda.aplicacao_osc.dto.request.UpdateOscDTO;
-import com.portoajuda.aplicacao_osc.entity.Osc;
-import com.portoajuda.aplicacao_osc.entity.OscMembros;
-import com.portoajuda.aplicacao_osc.entity.Role;
-import com.portoajuda.aplicacao_osc.entity.Usuario;
+import com.portoajuda.aplicacao_osc.entity.*;
 import com.portoajuda.aplicacao_osc.enums.TipoChavePix;
 import com.portoajuda.aplicacao_osc.repository.OscMembrosRepository;
 import com.portoajuda.aplicacao_osc.repository.OscRepository;
@@ -13,6 +11,7 @@ import com.portoajuda.aplicacao_osc.repository.RoleRepository;
 import com.portoajuda.aplicacao_osc.repository.UsuarioRepository;
 import com.portoajuda.aplicacao_osc.segurity.JwtService;
 import com.portoajuda.aplicacao_osc.utils.Cnpj;
+import com.portoajuda.aplicacao_osc.utils.Cpf;
 import com.portoajuda.aplicacao_osc.utils.Email;
 import io.jsonwebtoken.Jwts;
 import jakarta.transaction.Transactional;
@@ -23,6 +22,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 
 import java.nio.file.AccessDeniedException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
@@ -32,6 +32,7 @@ public class OscService {
     private final OscRepository oscRepository;
     private final UsuarioRepository usuarioRepository;
     private final RoleRepository roleRepository;
+    private final OscMembrosRepository membrosRepository;
     private final JwtService jwtService;
 
     @Transactional
@@ -85,7 +86,7 @@ public class OscService {
 
     @Transactional
     public void delete(Usuario usuario) throws AccessDeniedException {
-        Osc osc = oscRepository.findByIdUsuario(usuario.getId())
+        Osc osc = oscRepository.findByUsuarioId(usuario.getId())
                 .orElseThrow(() -> new IllegalArgumentException("Osc não encontrada"));
         boolean isDono = oscRepository.existsByIdAndUsuarioId(osc.getId(), usuario.getId());
         if(!isDono){
@@ -95,8 +96,29 @@ public class OscService {
     }
 
     @Transactional
-    public void addMembro(){
+    public void addMembro(Usuario usuario, RequestNewMembroDTO newMembroDTO) throws AccessDeniedException {
+        Osc osc = oscRepository.findByUsuarioId(usuario.getId())
+                .orElseThrow(() -> new IllegalArgumentException("Osc não encontrada"));
+        boolean isDono = oscRepository.existsByIdAndUsuarioId(osc.getId(), usuario.getId());
+        boolean isMembro = oscRepository.userBelongsOsc(osc.getId(), usuario.getId());
+        if(!isDono && !isMembro){
+            throw new AccessDeniedException("Você não pode adicionar membros nessa OSC");
+        }
 
+        Usuario novoMembro = usuarioRepository.findByEmail(new Email(newMembroDTO.email()))
+                .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado"));
+        if(!usuarioRepository.usuarioIsMember(novoMembro.getId())){
+            throw new AccessDeniedException("Esse usuário já pertence a uma OSC");
+        }
+        Role role = roleRepository.findByNome("OSC")
+                .orElseThrow(() -> new IllegalArgumentException("Role não encontrada"));
+        novoMembro.getRoles().add(role);
+        OscMembros membroOsc = new OscMembros();
+        membroOsc.setOsc(osc);
+        membroOsc.setUsuario(novoMembro);
+        membroOsc.setCargoOsc(newMembroDTO.cargo());
+        membroOsc.setDataCriacao(LocalDateTime.now());
+        membrosRepository.save(membroOsc);
     }
 
     public Page<Osc> viewAll(Pageable pageable){

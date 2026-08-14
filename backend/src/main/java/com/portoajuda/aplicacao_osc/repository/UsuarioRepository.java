@@ -10,4 +10,11 @@ import java.util.Optional;
 public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
     Optional<Usuario> findByEmail(Email email);
     boolean existsByEmail(Email email);
+
+    @Query(""" 
+            SELECT COUNT(m) > 0
+            FROM OscMembros m
+            WHERE m.usuario.id = :usuarioId
+            """)
+    boolean usuarioIsMember(Integer usuarioId);
 }
