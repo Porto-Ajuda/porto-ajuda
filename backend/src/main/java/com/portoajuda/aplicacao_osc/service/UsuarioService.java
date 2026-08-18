@@ -69,23 +69,23 @@ public class UsuarioService {
         }
 
         return new ResponseLoginDTO(jwtService.generateToken(usuario),
-                new ResponseUsuarioDTO(usuario.getId(), usuario.getNome(),
-                usuario.getNomeSocial(), usuario.getEmail().valor(), usuario.getTelefone())
+                new ResponseUsuarioDTO(usuario.getCpf().valor(), usuario.getNome(),
+                        usuario.getNomeSocial(), usuario.getDataNascimento().toString(), usuario.getEmail().valor(), usuario.getTelefone())
         );
     }
 
     @Transactional
-    public void delete(Integer id){
-        if(!usuarioRepository.existsById(id)){
+    public void delete(Usuario usuario){
+        if(!usuarioRepository.existsById(usuario.getId())){
             throw new IllegalArgumentException("Usuário não existe");
         }
 
-        usuarioRepository.deleteById(id);
+        usuarioRepository.deleteById(usuario.getId());
     }
 
     @Transactional
-    public void update(RequestUsuarioDTO usuarioDTO, Integer id){
-        Usuario usuarioAlterado = usuarioRepository.findById(id)
+    public void update(RequestUsuarioDTO usuarioDTO, Usuario usuario){
+        Usuario usuarioAlterado = usuarioRepository.findById(usuario.getId())
                 .orElseThrow(() -> new IllegalArgumentException("Usuário não existe"));
         usuarioAlterado.setEmail(new Email(usuarioDTO.email()));
         usuarioAlterado.setTelefone(usuarioDTO.telefone());
@@ -104,11 +104,11 @@ public class UsuarioService {
         usuario.setSenha(passwordEncoder.encode(senha));
     }
 
-    public ResponseUsuarioDTO view(Integer id){
-        Usuario usuario = usuarioRepository.findById(id)
+    public ResponseUsuarioDTO view(Usuario usuario){
+        Usuario viewUsuario = usuarioRepository.findById(usuario.getId())
                 .orElseThrow(() -> new IllegalArgumentException("Usuário não existe"));
 
-        return new ResponseUsuarioDTO(usuario.getId(), usuario.getNome(),
-                usuario.getNomeSocial(), usuario.getEmail().valor(), usuario.getTelefone());
+        return new ResponseUsuarioDTO(viewUsuario.getCpf().valor(), viewUsuario.getNome(),
+                viewUsuario.getNomeSocial(), viewUsuario.getDataNascimento().toString(), viewUsuario.getEmail().valor(), viewUsuario.getTelefone());
     }
 }

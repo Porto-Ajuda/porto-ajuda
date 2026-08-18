@@ -7,6 +7,7 @@ import com.portoajuda.aplicacao_osc.entity.Osc;
 import com.portoajuda.aplicacao_osc.entity.Usuario;
 import com.portoajuda.aplicacao_osc.segurity.JwtService;
 import com.portoajuda.aplicacao_osc.service.OscService;
+import com.portoajuda.aplicacao_osc.utils.Email;
 import io.jsonwebtoken.Jwts;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -78,6 +79,17 @@ public class OscController {
     )
     public ResponseEntity<Void> addMembro(@Valid @RequestBody RequestNewMembroDTO newMembroDTO, @AuthenticationPrincipal Usuario usuario) throws AccessDeniedException {
         oscService.addMembro(usuario, newMembroDTO);
+        return ResponseEntity.status(HttpStatus.ACCEPTED).build();
+    }
+
+    @PreAuthorize("hasRole('OSC')")
+    @DeleteMapping(
+            value = "/newMembro",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public ResponseEntity<Void> removeMembro(@AuthenticationPrincipal Usuario usuario, Email email) throws AccessDeniedException {
+        oscService.removeMembro(usuario, email);
         return ResponseEntity.status(HttpStatus.ACCEPTED).build();
     }
 }

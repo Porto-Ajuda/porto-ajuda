@@ -121,6 +121,18 @@ public class OscService {
         membrosRepository.save(membroOsc);
     }
 
+    @Transactional
+    public void removeMembro(Usuario usuario, Email email) throws AccessDeniedException {
+        Osc osc = oscRepository.findByUsuarioId(usuario.getId())
+                .orElseThrow(() -> new IllegalArgumentException("Osc não encontrada"));
+        boolean isDono = oscRepository.existsByIdAndUsuarioId(osc.getId(), usuario.getId());
+        boolean isMembro = oscRepository.userBelongsOsc(osc.getId(), usuario.getId());
+        if(!isDono && !isMembro){
+            throw new AccessDeniedException("Você não pode remover membros nessa OSC");
+        }
+        Usuario usuarioMembro = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("Membro não encontrado"));
+    }
     public Page<Osc> viewAll(Pageable pageable){
         return oscRepository.findAll(pageable);
     }
