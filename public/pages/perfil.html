@@ -27,18 +27,39 @@
     <img src="../assets/user-gold.png" id="circle-default-img" alt="Foto de perfil">      
     <figure class="perfil-img">
     <label for="file">
-    <img src="../assets/file-gold.png" id="img-perfil" alt="Foto de perfil">
+    <img src="../assets/file-gold.png" id="img-perfil" alt="Alterar Foto de Perfil">
     </label>
     <input type="file" id="file" accept="image/*">
     </figure> 
-    </div> <div class="info-perfil">
-    <h1>Nome do Usuário</h1>
-    <p>X</p>
-    <h1>Atividade Recente</h1>
-    <p>Y</p>
-    </div>
     </div> 
+    <div class="info-perfil">
+    <label for="nome">Nome</label>
+    <input type="text" id="nome" value="" disabled>
+    <label for="email">E-mail</label>
+    <input type="email" id="email" value="" disabled>
+    <label for="telefone">Telefone</label>
+    <input type="tel" id="telefone" value="" disabled>
+    <label for="senha">Senha</label>
+    <input type="password" id="senha" value="" disabled>
     </div>
+    <section class="Alterar-dados">
+    <button type="button" id="btn">Alterar Dados</button>
+    </section>
+    </div></div>
+    <section class="dados-do-usuario">
+      <span class="titulo">Dados do Usuário</span>
+      <img src="../assets/arrow-down.png" alt="Seta para baixo" class="seta-baixo">
+      <br>
+
+     <label for="CEP">CEP</label>
+    <input type="text" id="CEP" value="" disabled>
+    <label for="CPF">CPF</label>
+    <input type="text" id="CPF" value="" disabled>
+    <label for="nascimento">Data de Nascimento</label>
+    <input type="date" id="nascimento" value="" disabled>
+    <label for="sexo">Sexo</label>
+    <input type="text" id="sexo" value="" disabled>
+    </section>
     </main>
 
 </body>               

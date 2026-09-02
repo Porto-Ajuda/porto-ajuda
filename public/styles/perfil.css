@@ -2,36 +2,75 @@
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css');
 :root {
 
-  /* FUNDOS */
+ /* =========================================
+   FUNDOS
+   ========================================= */
 
-  --bg-main: #111d5b;
-  --bg-section: #2E1C50;
-  --bg-card: #3E2871;
-  --bg-card-hover: #453B80;
-  --dark-contrast: #160738;
-  /* DETALHES */
+--bg-main: #0B123D;          /* Fundo principal */
+--bg-section: #151B4F;       /* Seções alternadas */
+--bg-card: #20265F;          /* Cards e containers */
+--bg-card-hover: #292F72;    /* Hover de cards */
+--dark-contrast: #070B29;    /* Contraste máximo */
 
-  --primary: #4A5492;
-  --secondary: #5B68AC;
 
-  /* DOURADOS */
+/* =========================================
+   CORES DE INTERFACE
+   ========================================= */
 
-  --gold: #F2AA1A;
-  --gold-dark: #DDAA41;
-  --gold-light: #F9C86B;
-  --gold-soft: #FCE0A1;
-  --dark-contrast-gold: #918805;
+--primary: #6674D8;          /* Ações principais */
+--primary-hover: #7B87E8;    /* Hover de ações */
+--secondary: #8B6EDB;        /* Elementos secundários */
+--secondary-hover: #9D83E8;  /* Hover secundário */
 
-    /*ROXOS*/
-    
 
-  /* TEXTOS */
+/* =========================================
+   DOURADOS / ACCENT
+   ========================================= */
 
-  --text: #FFFFFF;
-  --text-soft: #d7d7d7;
+--gold: #F5B52E;             /* Destaques e CTAs */
+--gold-dark: #C98A16;        /* Estados pressionados */
+--gold-light: #FFD477;       /* Destaques suaves */
+--gold-soft: #FFE8B3;        /* Backgrounds/detalhes sutis */
+
+
+/* =========================================
+   ROXOS
+   ========================================= */
+
+--purple: #7C5CCF;           /* Destaques visuais */
+--purple-dark: #51369B;      /* Elementos profundos */
+--purple-light: #A995F0;     /* Destaques secundários */
+
+
+/* =========================================
+   TEXTOS
+   ========================================= */
+
+--text: #FFFFFF;              /* Texto principal */
+--text-soft: #D9DCF0;         /* Texto secundário */
+--text-muted: #A8AECA;        /* Texto terciário */
+--text-disabled: #72799C;     /* Texto desabilitado */
+
+
+/* =========================================
+   BORDAS
+   ========================================= */
+
+--border: #353C78;            /* Bordas padrão */
+--border-light: #454C8C;      /* Bordas mais visíveis */
+--border-gold: #F5B52E;       /* Bordas de destaque */
+
+
+/* =========================================
+   ESTADOS
+   ========================================= */
+
+--success: #45C99A;
+--warning: #F5B52E;
+--error: #F06B7A;
+--info: #6CA8FF;
 
 }
-
 /* ========================= */
 /* RESET */
 /* ========================= */
@@ -42,11 +81,7 @@
   box-sizing: border-box;
 }
 body {
-    background:
-    radial-gradient(circle at top,
-      var(--bg-card) 100%,
-      var(--bg-section) 45%,
-      var(--bg-main) 0%);
+    background: var(--bg-main);
       overflow: hidden;
 }
 .perfil-header {
@@ -56,21 +91,21 @@ body {
   
 }
 .circle {
-    width: 190px;
-    height: 190px;
-    border: 0.5px solid #ebc132;
+    width: 150px;
+    height: 150px;
+    border: 0.5px solid var(--gold);
     border-radius: 50%;
-    position: relative;
+    position: absolute;
     overflow: visible;
-    margin-left: 20px;
+    margin-left: 25px;
 }
 
 .rectangle {
-    width: 600px;
-    height: auto;
+    width: 250px;
+    height: 526px;
     border-radius: 40px;
     clip-path: polygon(100% 0%, 100% 40%, 100% 100%, 0 100%, 0% 50%, 0 0);
-    background: var(--dark-contrast);
+    background: var(--bg-card);
       z-index: 10;
       padding: 20px;
         display: flex;
@@ -79,37 +114,105 @@ body {
      
 }
 .info-perfil {
-   padding-top: 3%;
-   margin-left: 100px;
-   margin-bottom: 20px;
+     width: 100%;
+    display: flex;
+    flex-direction: column;
+    margin-top: 160px;
 }
-.info-perfil h1 {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 30px;
-    color: #ebc132;
-    margin-bottom: 10px;
-}
-.info-perfil p {
+.info-perfil label {
+    color: var(--text-soft);
     font-family: 'Poppins', sans-serif;
-    font-size: 16px;
-    color: #ebc132;      
+    font-size: 14px;
+}
+
+.info-perfil input {
+    width: 100%;
+    padding: 12px 12px;
+    background: none;
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    outline: none;
+    font-family: 'Poppins', sans-serif;
 }
 .perfil-img> input {
    display: none;
 }
 #img-perfil {
-    width: 58px;
-    height: 58px;
+    width: 40px;
+    height: 40px;
     border-radius: 2%;
     cursor: pointer;
     z-index: 10;
-    margin-left: 132px;
+    margin-left: 122px;
     margin-top: 0px;
-     position: absolute;
+     position: relative;
 }
 #circle-default-img {
-    width: 80px;
-    height: 80px;
-    margin-top: 50px;
-    margin-left: 55px;
+    width: 60px;
+    height: 60px;
+    margin-top: 40px;
+    margin-left: 44px;
+}
+.Alterar-dados {
+    position: absolute;
+    bottom: 25px;
+    left: 20px;
+    right: 20px;
+    width: 15%;
+}
+
+#btn {
+    width: 100%;
+    padding: 12px;
+    background: var(--gold);
+    color: var(--dark-contrast);
+    border: none;
+    border-radius: 8px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+#btn:hover{
+    background:var(--dark-contrast);
+    color: var(--gold);
+}
+.dados-do-usuario {
+    width: 350px;
+    height: 326px;
+    margin-left: 350px;
+    margin-top: -526px;
+    border-radius: 40px;
+    background: var(--gold);
+    z-index: 10;
+    padding: 20px;
+}
+.dados-do-usuario label {
+    color: var(--dark-contrast);
+    font-family: 'Poppins', sans-serif;
+    font-size: 14px;
+}
+.dados-do-usuario input {
+   width: 100%;
+    padding: 8px 8px;
+    background: none;
+    color: var(---dark-contrast);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    outline: none;
+    font-family: 'Poppins', sans-serif;  
+}
+
+.dados-do-usuario span {
+    color: var(--dark-contrast);
+    font-family: 'Poppins', sans-serif;
+    font-size: 30px;
+    margin-left: 10px;
+}
+.dados-do-usuario .seta-baixo {
+  width: 20px;
+  height: 20px;
+  margin-left: 10px;
+  cursor: pointer;
 }
