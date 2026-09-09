@@ -186,28 +186,65 @@ body {
     flex-direction: column;
     gap: 20px;
 }
+/*card do usuário*/
 .dados-do-usuario {
     border-radius: 40px;
     background: var(--gold);
     z-index: 50;
-    padding: 5px;
+    padding: 15px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-sizing: border-box;
 }
-.dados-do-usuario label {
+
+/* Título */
+.dados-do-usuario span {
     color: var(--dark-contrast);
     font-family: 'Poppins', sans-serif;
-    font-size: 14px;
-    left: 25px;
+    font-size: 25px;
+    margin-left: 0;
+    margin-bottom: 5px;
 }
+.dados-de-acessibilidade span {
+    color: var(--gold);
+    font-family: 'Poppins', sans-serif;
+    font-size: 25px;
+    margin-left: 0;
+    margin-bottom: 25px;
+     padding: 18px 10px;
+}
+/* Labels */
+.dados-do-usuario label {
+width: 225px;
+color: var(--dark-contrast);
+font-family: 'Poppins', sans-serif;
+ font-size: 14px;
+margin-top: 0;
+margin-bottom: 2px;
+}
+.dados-de-acessibilidade label {
+    width: 220px;
+    color: var(--gold);
+    font-family: 'Poppins', sans-serif;
+    font-size: 22px;
+    margin-left: 10%;
+}
+/* Inputs */
 .dados-do-usuario input {
-    width: 90%;
-    padding: 8px 4px;
-    background: none;
-    color: var(---dark-contrast);
+    width: 225px;
+    height: 38px;
+    padding: 8px 10px;
+    background: transparent;
+    color: var(--dark-contrast);
     border: 1px solid var(--border);
     border-radius: 8px;
     outline: none;
-    font-family: 'Poppins', sans-serif;  
+    font-family: 'Poppins', sans-serif;
+    font-size: 14px;
+    box-sizing: border-box;
 }
+/*as cards quando fechadas*/
 .detalhes-usuario, .detalhes-acessibilidade {
     overflow: hidden;
     width: 0;
@@ -216,19 +253,22 @@ body {
     visibility: hidden;
    transition: all 0.3s ease;
 }
+/*a card do usuario quando aberta*/
 .detalhes-usuario.active{
-    opacity: 1;
-    visibility: visible;
-    transition: all 0.3s ease;
-    width: 250px;
-    height: 255px;
+ opacity: 1;
+ visibility: visible;
+ width: 250px;
+height: 290px;
+transition: all 0.3s ease;
+ overflow: hidden;
 }
+/*a card de acessibilidade quando aberta*/
  .detalhes-acessibilidade.active{
     opacity: 1;
     visibility: visible;
     transition: all 0.3s ease;
     width: 250px;
-    height: 55px;
+    height: 180px;
  }
 .dados-do-usuario span {
     color: var(--dark-contrast);
@@ -241,6 +281,7 @@ body {
     font-family: 'Poppins', sans-serif;
     font-size: 25px;
     margin-left: 25px;
+    padding: 20px;
 }
 .btn-seta {
     border: none;
@@ -259,8 +300,33 @@ body {
     display: none;
 }
 .dados-de-acessibilidade {
-    border-radius: 40px;
+    border-radius: 45px;
     background: var(--bg-card);
     z-index: 50;
     padding: 15px;
+}
+.toggle {
+    display: flex;
+    width: 68px;
+    height: 44px;
+    padding: 2px;
+    border: none;
+    border-radius: 50px;
+    background: var(--dark-contrast);
+    cursor: pointer;
+    margin-left: 10%;
+}
+
+.toggle-circle {
+    display: block;
+    width: 100%;
+    height: fit-content;
+    border-radius: 50%;
+    background: var(--text-soft);
+    transition: transform 0.3s ease;
+}
+
+.toggle-circle.active  {
+    background: var(--gold);
+    transform: translateX(-26px);
 }
