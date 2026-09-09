@@ -3,65 +3,107 @@
 
 <head>
 
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Perfil</title>
+    <title>Perfil</title>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="../styles/perfil.css">
-  <link rel="stylesheet" href="../styles/geral.css">
-  <script src="../components/perfil.js" defer></script>
-  <script src="../components/header_footer.js" defer></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link rel="stylesheet" href="../styles/perfil.css">
+    <link rel="stylesheet" href="../styles/geral.css">
+
+    <script src="../components/perfil.js" defer></script>
+    <script src="../components/header_footer.js" defer></script>
+
 </head>
+
 <body>
-    <header class="navbar">
 
-    </header>
+    <header class="navbar"></header>
+
     <main>
-    <div class="perfil-header"> 
-            
-    <div class="rectangle">
-    <div class="circle">   
-    <img src="../assets/user-gold.png" id="circle-default-img" alt="Foto de perfil">      
-    <figure class="perfil-img">
-    <label for="file">
-    <img src="../assets/file-gold.png" id="img-perfil" alt="Alterar Foto de Perfil">
-    </label>
-    <input type="file" id="file" accept="image/*">
-    </figure> 
-    </div> 
-    <div class="info-perfil">
-    <label for="nome">Nome</label>
-    <input type="text" id="nome" value="" disabled>
-    <label for="email">E-mail</label>
-    <input type="email" id="email" value="" disabled>
-    <label for="telefone">Telefone</label>
-    <input type="tel" id="telefone" value="" disabled>
-    <label for="senha">Senha</label>
-    <input type="password" id="senha" value="" disabled>
-    </div>
-    <section class="Alterar-dados">
-    <button type="button" id="btn">Alterar Dados</button>
-    </section>
-    </div></div>
-    <section class="dados-do-usuario">
-      <span class="titulo">Dados do Usuário</span>
-      <img src="../assets/arrow-down.png" alt="Seta para baixo" class="seta-baixo">
-      <br>
 
-     <label for="CEP">CEP</label>
-    <input type="text" id="CEP" value="" disabled>
-    <label for="CPF">CPF</label>
-    <input type="text" id="CPF" value="" disabled>
-    <label for="nascimento">Data de Nascimento</label>
-    <input type="date" id="nascimento" value="" disabled>
-    <label for="sexo">Sexo</label>
-    <input type="text" id="sexo" value="" disabled>
-    </section>
+        <!-- ========================= -->
+        <!-- PERFIL -->
+        <!-- ========================= -->
+
+<div class="perfil-header">
+<div class="rectangle">
+<div class="circle">
+<img src="../assets/user-gold.png" id="circle-default-img" alt="Foto de perfil">
+<figure class="perfil-img">
+<label for="file">
+<img src="../assets/file-gold.png" id="img-perfil" alt="Alterar Foto de Perfil" >
+</label>
+<input type="file" id="file" accept="image/*">
+</figure>
+</div>
+<div class="info-perfil">
+
+<label for="nome">Nome</label>
+<input type="text" id="nome" disabled>
+
+<label for="email">E-mail</label>
+<input type="email" id="email" disabled>
+
+<label for="telefone">Telefone</label>
+<input type="tel" id="telefone" disabled>
+
+<label for="senha">Senha</label>
+<input type="password" id="senha" disabled>
+
+</div>
+
+<section class="Alterar-dados">
+<button type="button" id="btn"> Alterar Dados </button>
+</section> </div> </div>
+        <!-- ========================= -->
+        <!-- CONTAINER DOS CARDS -->
+        <!-- ========================= -->
+
+<div class="cards-container">
+            <!-- CARD 1 -->
+<section class="dados-do-usuario card">
+<div class="card-header">
+<span class="titulo"> Dados do Usuário </span>
+<button type="button" class="btn-seta">
+ <img src="../assets/arrow-down.png" alt="Expandir" class="seta-baixo" >
+</button></div>
+
+<div class="detalhes-usuario">
+ <label for="CEP">CEP</label>
+ <input  type="text" id="CEP"  disabled>
+<label for="CPF">CPF</label>
+<input type="text"id="CPF" disabled >
+<label for="nascimento">Data de Nascimento</label>
+<input type="date" id="nascimento" disabled >
+<label for="sexo">Sexo</label>
+<input type="text"id="sexo"disabled>
+</div>
+</section>
+<!-- CARD 2 -->
+ <section class="dados-de-acessibilidade card">
+<div class="card-header">
+ <span class="titulo"> Dados de Acessibilidade  </span>
+<button type="button"  class="btn-seta" >
+<img src="../assets/arrow-down.png" alt="Expandir" class="seta-baixo">
+ </button>
+</div>
+ <div class="detalhes-acessibilidade">
+ <label for="libra">Libras</label>
+<button id="libra"  class="toggle"  type="button"  >
+    <span class="toggle-circle"></span>
+</button>
+<label for="contraste">  Alto-Contraste  </label>
+ <button id="contraste"   class="toggle"      type="button"     >
+    <span class="toggle-circle"></span>
+ </button> 
+</div>  </section>  </div>
+
     </main>
 
-</body>               
-            
+</body>
+
 </html>

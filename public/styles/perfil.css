@@ -178,24 +178,29 @@ body {
     background:var(--dark-contrast);
     color: var(--gold);
 }
+.cards-container {
+    position: absolute;
+    top: 18%;
+    left: 25%;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
 .dados-do-usuario {
-    width: 350px;
-    height: 326px;
-    margin-left: 350px;
-    margin-top: -526px;
     border-radius: 40px;
     background: var(--gold);
-    z-index: 10;
-    padding: 20px;
+    z-index: 50;
+    padding: 5px;
 }
 .dados-do-usuario label {
     color: var(--dark-contrast);
     font-family: 'Poppins', sans-serif;
     font-size: 14px;
+    left: 25px;
 }
 .dados-do-usuario input {
-   width: 100%;
-    padding: 8px 8px;
+    width: 90%;
+    padding: 8px 4px;
     background: none;
     color: var(---dark-contrast);
     border: 1px solid var(--border);
@@ -203,16 +208,59 @@ body {
     outline: none;
     font-family: 'Poppins', sans-serif;  
 }
-
+.detalhes-usuario, .detalhes-acessibilidade {
+    overflow: hidden;
+    width: 0;
+    height: 0;
+    opacity: 0;
+    visibility: hidden;
+   transition: all 0.3s ease;
+}
+.detalhes-usuario.active{
+    opacity: 1;
+    visibility: visible;
+    transition: all 0.3s ease;
+    width: 250px;
+    height: 255px;
+}
+ .detalhes-acessibilidade.active{
+    opacity: 1;
+    visibility: visible;
+    transition: all 0.3s ease;
+    width: 250px;
+    height: 55px;
+ }
 .dados-do-usuario span {
     color: var(--dark-contrast);
     font-family: 'Poppins', sans-serif;
-    font-size: 30px;
-    margin-left: 10px;
+    font-size: 25px;
+    margin-left: 25px;
 }
-.dados-do-usuario .seta-baixo {
-  width: 20px;
-  height: 20px;
-  margin-left: 10px;
-  cursor: pointer;
+.dados-de-acessibilidade span {
+    color: var(--gold);
+    font-family: 'Poppins', sans-serif;
+    font-size: 25px;
+    margin-left: 25px;
+}
+.btn-seta {
+    border: none;
+    background: none;
+    cursor: pointer;
+    margin-left: 15px;
+    margin-top: 15px;
+}
+.seta-baixo , .seta-cima {
+    width: 20px;
+    height: 20px;
+    pointer-events: none;
+    background: none;
+}
+.seta-cima {
+    display: none;
+}
+.dados-de-acessibilidade {
+    border-radius: 40px;
+    background: var(--bg-card);
+    z-index: 50;
+    padding: 15px;
 }
