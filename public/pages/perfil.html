@@ -2,7 +2,6 @@
 <html lang="pt-BR">
 
 <head>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -16,7 +15,6 @@
 
     <script src="../components/perfil.js" defer></script>
     <script src="../components/header_footer.js" defer></script>
-
 </head>
 
 <body>
@@ -29,78 +27,297 @@
         <!-- PERFIL -->
         <!-- ========================= -->
 
-<div class="perfil-header">
-<div class="rectangle">
-<div class="circle">
-<img src="../assets/user-gold.png" id="circle-default-img" alt="Foto de perfil">
-<figure class="perfil-img">
-<label for="file">
-<img src="../assets/file-gold.png" id="img-perfil" alt="Alterar Foto de Perfil" >
-</label>
-<input type="file" id="file" accept="image/*">
-</figure>
-</div>
-<div class="info-perfil">
+        <div class="perfil-header">
 
-<label for="nome">Nome</label>
-<input type="text" id="nome" disabled>
+            <div class="rectangle">
 
-<label for="email">E-mail</label>
-<input type="email" id="email" disabled>
+                <!-- FOTO DE PERFIL -->
+                <div class="circle">
+                    <img 
+                        src="../assets/user-gold.png" 
+                        id="circle-default-img" 
+                        alt="Foto de perfil"
+                    >
+                </div>
 
-<label for="telefone">Telefone</label>
-<input type="tel" id="telefone" disabled>
 
-<label for="senha">Senha</label>
-<input type="password" id="senha" disabled>
+                <!-- INFORMAÇÕES DO PERFIL -->
+                <div class="info-perfil">
 
-</div>
+                    <label for="nome">Nome</label>
+                    <input 
+                        type="text" 
+                        id="nome" 
+                        disabled
+                    >
 
-<section class="Alterar-dados">
-<button type="button" id="btn"> Alterar Dados </button>
-</section> </div> </div>
+                    <label for="nomeSc">Nome Social</label>
+                    <input 
+                        type="text" 
+                        id="nomeSc" 
+                        disabled
+                    >
+
+                    <label for="email">E-mail</label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        disabled
+                    >
+
+                    <label for="telefone">Telefone</label>
+                    <input 
+                        type="tel" 
+                        id="telefone" 
+                        disabled
+                    >
+
+                    <!-- SENHA -->
+                    <label for="senha" class="campo-senha">
+                        Senha
+                    </label>
+
+                    <input 
+                        type="password" 
+                        id="senha" 
+                        class="campo-senha" 
+                        disabled
+                    >
+
+                </div>
+
+
+                <!-- BOTÃO ALTERAR DADOS -->
+                <section class="Alterar-dados">
+
+                    <button 
+                        type="button" 
+                        id="btn"
+                    >
+                        Alterar Dados
+                    </button>
+
+                </section>
+
+            </div>
+
+        </div>
+
+
         <!-- ========================= -->
         <!-- CONTAINER DOS CARDS -->
         <!-- ========================= -->
 
-<div class="cards-container">
-            <!-- CARD 1 -->
-<section class="dados-do-usuario card">
-<div class="card-header">
-<span class="titulo"> Dados do Usuário </span>
-<button type="button" class="btn-seta">
- <img src="../assets/arrow-down.png" alt="Expandir" class="seta-baixo" >
-</button></div>
+        <div class="cards-container">
 
-<div class="detalhes-usuario">
- <label for="CEP">CEP</label>
- <input  type="text" id="CEP"  disabled>
-<label for="CPF">CPF</label>
-<input type="text"id="CPF" disabled >
-<label for="nascimento">Data de Nascimento</label>
-<input type="date" id="nascimento" disabled >
-<label for="sexo">Sexo</label>
-<input type="text"id="sexo"disabled>
-</div>
-</section>
-<!-- CARD 2 -->
- <section class="dados-de-acessibilidade card">
-<div class="card-header">
- <span class="titulo"> Acessibilidade  </span>
-<button type="button"  class="btn-seta" >
-<img src="../assets/arrow-down.png" alt="Expandir" class="seta-baixo">
- </button>
-</div>
- <div class="detalhes-acessibilidade">
- <label for="libra">LIBRAS</label>
-<button id="libra"  class="toggle"  type="button"  >
-    <span class="toggle-circle"></span>
-</button>
-<label for="contraste">  ALTO-CONTRASTE  </label>
- <button id="contraste"   class="toggle"      type="button"     >
-    <span class="toggle-circle"></span>
- </button> 
-</div>  </section>  </div>
+
+            <!-- ========================= -->
+            <!-- CARD 1 - DADOS DO USUÁRIO -->
+            <!-- ========================= -->
+
+            <section class="dados-do-usuario card">
+
+                <div class="card-header">
+
+                    <span class="titulo">
+                        Dados do Usuário
+                    </span>
+
+                    <button 
+                        type="button" 
+                        class="btn-seta"
+                    >
+                        <img 
+                            src="../assets/arrow-down.png" 
+                            alt="Expandir" 
+                            class="seta-baixo"
+                        >
+                    </button>
+
+                </div>
+
+
+                <div class="detalhes-usuario">
+
+                    <label for="CEP">CEP</label>
+                    <input 
+                        type="text" 
+                        id="CEP" 
+                        disabled
+                    >
+
+                    <label for="CPF">CPF</label>
+                    <input 
+                        type="text" 
+                        id="CPF" 
+                        disabled
+                    >
+
+                    <label for="nascimento">
+                        Data de Nascimento
+                    </label>
+
+                    <input 
+                        type="date" 
+                        id="nascimento" 
+                        disabled
+                    >
+
+                    <label for="genero">Gênero</label>
+                    <input 
+                        type="text" 
+                        id="genero" 
+                        disabled
+                    >
+
+                </div>
+
+            </section>
+
+
+            <!-- ========================= -->
+            <!-- CARD 2 - ACESSIBILIDADE -->
+            <!-- ========================= -->
+
+            <section class="dados-de-acessibilidade card">
+
+                <div class="card-header">
+
+                    <span class="titulo">
+                        Acessibilidade
+                    </span>
+
+                    <button 
+                        type="button" 
+                        class="btn-seta"
+                    >
+                        <img 
+                            src="../assets/arrow-down.png" 
+                            alt="Expandir" 
+                            class="seta-baixo"
+                        >
+                    </button>
+
+                </div>
+
+
+                <div class="detalhes-acessibilidade">
+
+                    <label for="libra">
+                        LIBRAS
+                    </label>
+
+                    <button 
+                        id="libra" 
+                        class="toggle" 
+                        type="button"
+                    >
+                        <span class="toggle-circle"></span>
+                    </button>
+
+
+                    <label for="contraste">
+                        ALTO-CONTRASTE
+                    </label>
+
+                    <button 
+                        id="contraste" 
+                        class="toggle" 
+                        type="button"
+                    >
+                        <span class="toggle-circle"></span>
+                    </button>
+
+
+                    <label for="letra">
+                        LETRA GRANDE
+                    </label>
+
+                    <button 
+                        id="letra" 
+                        class="toggle" 
+                        type="button"
+                    >
+                        <span class="toggle-circle"></span>
+                    </button>
+
+                </div>
+
+            </section>
+
+
+            <!-- ========================= -->
+            <!-- CARD 3 - CONFIGURAÇÕES -->
+            <!-- ========================= -->
+
+            <section class="configuracoes card">
+
+                <div class="card-header">
+
+                    <span class="titulo">
+                        Configurações
+                    </span>
+
+                    <button 
+                        type="button" 
+                        class="btn-seta"
+                    >
+                        <img 
+                            src="../assets/arrow-down.png" 
+                            alt="Expandir" 
+                            class="seta-baixo"
+                        >
+                    </button>
+
+                </div>
+
+
+                <div class="detalhes-configuracoes">
+
+                    <!-- IDIOMA -->
+
+                    <label for="idioma">
+                        IDIOMA
+                    </label>
+
+                    <input 
+                        type="text" 
+                        id="idioma" 
+                        class="Ulang" 
+                        value="" 
+                        disabled
+                    >
+
+
+                    <!-- CONTA -->
+
+                    <label for="conta">
+                        CONTA
+                    </label>
+
+                    <div class="botoes-conta">
+
+                        <button 
+                            type="button" 
+                            class="btn-osc"
+                        >
+                            OSC
+                        </button>
+
+                        <button 
+                            type="button" 
+                            class="btn-out"
+                        >
+                            Sair
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+        </div>
 
     </main>
 

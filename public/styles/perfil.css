@@ -82,251 +82,342 @@
 }
 body {
     background: var(--bg-main);
-      overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
+
 }
 .perfil-header {
-    position:relative;
-    margin-top: 8%;
-    left: 3%;
+     margin-top: clamp(1rem, 16vh, 25rem);
+     margin-left: clamp(0.5rem, 2vw, 2rem);
   
 }
 .circle {
-    width: 150px;
-    height: 150px;
+    width: clamp(100px, 15vw, 150px);
+    height: clamp(100px, 12vw, 150px);
     border: 0.5px solid var(--gold);
     border-radius: 50%;
     position: absolute;
     overflow: visible;
-    margin-left: 25px;
+    margin-left: clamp(10px, 5vw, 65px);
 }
 
 .rectangle {
-    width: 250px;
-    height: 526px;
+    position: relative;
+    width: clamp(200px, 30vw, 380px);
+    height: clamp(540px, 60vh, 750px);
     border-radius: 40px;
-    clip-path: polygon(100% 0%, 100% 40%, 100% 100%, 0 100%, 0% 50%, 0 0);
+    clip-path: polygon(
+        100% 0%,
+        100% 40%,
+        100% 100%,
+        0 100%,
+        0% 50%,
+        0 0
+    );
     background: var(--bg-card);
-      z-index: 10;
-      padding: 20px;
-        display: flex;
+    z-index: 10;
+    padding: clamp(10px, 4vw, 25px);
+    display: flex;
     align-items: flex-start;
+    transition: width 0.5s ease-in-out;
+}
+   
 
-     
+.rectangle.editando {
+     height: clamp(630px, 60vh, 750px);
 }
 .info-perfil {
-     width: 100%;
+    width: 100%;
     display: flex;
     flex-direction: column;
-    margin-top: 160px;
+    margin-top: clamp(10rem, 15vh, 15rem);
 }
+
 .info-perfil label {
     color: var(--text-soft);
     font-family: 'Poppins', sans-serif;
-    font-size: 14px;
+    font-size: clamp(0.56rem, 1,2rem, 3rem);
 }
 
 .info-perfil input {
     width: 100%;
-    padding: 12px 12px;
+    padding: 0.74rem;
     background: none;
     color: var(--text);
     border: 1px solid var(--border);
-    border-radius: 8px;
+    border-radius: 0.5rem;
     outline: none;
     font-family: 'Poppins', sans-serif;
 }
-.perfil-img> input {
-   display: none;
-}
-#img-perfil {
-    width: 40px;
-    height: 40px;
-    border-radius: 2%;
-    cursor: pointer;
-    z-index: 10;
-    margin-left: 122px;
-    margin-top: 0px;
-     position: relative;
-}
+
 #circle-default-img {
-    width: 60px;
-    height: 60px;
-    margin-top: 40px;
-    margin-left: 44px;
+    width: clamp(3rem, 8vw, 3.75rem);
+    aspect-ratio: 1;
+    margin-top: 2.5rem;
+    margin-left: clamp(2.7rem, 0.5vw, 10rem);
+    margin-right: auto;
 }
-.Alterar-dados {
-    position: absolute;
-    bottom: 25px;
-    left: 20px;
-    right: 20px;
-    width: 15%;
+.campo-senha label {
+     color: var(--text-soft);
+    font-family: 'Poppins', sans-serif;
+    font-size: clamp(0.56rem, 1,2rem, 3rem);
+    transition: 
+        opacity 0.3s ease,
+        height 0.3s ease,
+        margin 0.3s ease;
+}
+.campo-senha input {
+     margin-bottom: 0.125rem;
+     width: 100%;
+    padding: 0.74rem;
+    background: none;
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    outline: none;
+    font-family: 'Poppins', sans-serif;
+}
+.campo-senha {
+    display: none;
 }
 
-#btn {
+.info-perfil.editando .campo-senha {
+    display: block;
+}
+
+.Alterar-dados {    
+    position: absolute;
+    bottom: 1.5rem;
+    left: 1.5rem;
+    right: 2rem;
     width: 100%;
-    padding: 12px;
+}
+#btn {
+    font-size:clamp(0.5rem, 1rem, 3rem);
+    width: 87%;
+    padding: 0.55rem;
     background: var(--gold);
     color: var(--dark-contrast);
     border: none;
-    border-radius: 8px;
+    border-radius: 0.5rem;
     font-family: 'Poppins', sans-serif;
     font-weight: 600;
     cursor: pointer;
     transition: background 0.3s ease;
 }
-#btn:hover{
-    background:var(--dark-contrast);
+
+#btn:hover {
+    background: var(--dark-contrast);
     color: var(--gold);
 }
+/* Container das cards */
 .cards-container {
     position: absolute;
     top: 18%;
-    left: 25%;
+    left: clamp(28rem, 24rem,34rem) ;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 1.25rem;
 }
-/*card do usuário*/
-.dados-do-usuario {
-    border-radius: 40px;
+.card-header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+
+/* Cards principais */
+.dados-do-usuario
+{
+    border-radius: 2.5rem;
     background: var(--gold);
     z-index: 50;
-    padding: 15px 20px;
+    padding: 0.8rem 1.25rem;
     display: flex;
     flex-direction: column;
     align-items: center;
     box-sizing: border-box;
 }
-
+.configuracoes {
+     border-radius: 2.5rem;
+    background: var(--gold);
+    z-index: 50;
+    padding: 0.8rem 1.25rem;
+}
 /* Título */
-.dados-do-usuario span {
+.dados-do-usuario span, .configuracoes .titulo {
     color: var(--dark-contrast);
     font-family: 'Poppins', sans-serif;
-    font-size: 25px;
+    font-size: clamp(1rem, 2vw, 1.5625rem);
     margin-left: 0;
-    margin-bottom: 5px;
+   
 }
+
+/* Título de acessibilidade */
 .dados-de-acessibilidade span {
     color: var(--gold);
     font-family: 'Poppins', sans-serif;
-    font-size: 25px;
-    margin-left: 0;
-    margin-bottom: 25px;
-     padding: 18px 10px;
+    font-size: clamp(1rem, 2vw, 1.5625rem);
+    margin-right: 1.2rem;
+     margin-bottom: 0.5125rem;
 }
+
+
 /* Labels */
-.dados-do-usuario label {
-width: 225px;
-color: var(--dark-contrast);
-font-family: 'Poppins', sans-serif;
- font-size: 14px;
-margin-top: 0;
-margin-bottom: 2px;
+.dados-do-usuario label,
+.detalhes-configuracoes label {
+    width: min(225px, 100%);
+    color: var(--dark-contrast);
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.995rem;
+    margin-top: 0;
+    margin-bottom: 0.125rem;
 }
+/* Labels de acessibilidade */
 .dados-de-acessibilidade label {
-    width: 220px;
+    width: min(220px, 100%);
     color: var(--gold);
     font-family: 'Poppins', sans-serif;
-    font-size: 22px;
-    margin-left: 10%;
+    font-size: clamp(1rem, 2vw, 1.375rem);
+    margin-left: 0;
 }
 /* Inputs */
-.dados-do-usuario input {
-    width: 225px;
-    height: 38px;
-    padding: 8px 10px;
+.dados-do-usuario input,
+.detalhes-configuracoes input {
+    width: min(225px, 100%);
+    height: 2.375rem;
+    padding: 0.5rem 0.625rem;
     background: transparent;
     color: var(--dark-contrast);
     border: 1px solid var(--border);
-    border-radius: 8px;
+    border-radius: 0.5rem;
     outline: none;
     font-family: 'Poppins', sans-serif;
-    font-size: 14px;
+    font-size: 0.875rem;
     box-sizing: border-box;
 }
-/*as cards quando fechadas*/
-.detalhes-usuario, .detalhes-acessibilidade {
+/* Cards fechadas */
+.detalhes-usuario,
+.detalhes-acessibilidade,
+.detalhes-configuracoes{
     overflow: hidden;
     width: 0;
     height: 0;
     opacity: 0;
     visibility: hidden;
-   transition: all 0.3s ease;
+    transition:
+        width 0.3s ease,
+        height 0.3s ease,
+        opacity 0.3s ease;
 }
-/*a card do usuario quando aberta*/
-.detalhes-usuario.active{
- opacity: 1;
- visibility: visible;
- width: 250px;
-height: 290px;
-transition: all 0.3s ease;
- overflow: hidden;
-}
-/*a card de acessibilidade quando aberta*/
- .detalhes-acessibilidade.active{
+
+
+/* Card do usuário aberta */
+.detalhes-usuario.active {
     opacity: 1;
     visibility: visible;
-    transition: all 0.3s ease;
-    width: 250px;
-    height: 180px;
- }
-.dados-do-usuario span {
-    color: var(--dark-contrast);
-    font-family: 'Poppins', sans-serif;
-    font-size: 25px;
-    margin-left: 25px;
+
+    width: min(250px, 90vw);
+    height: 290px;
+
+    overflow: hidden;
 }
-.dados-de-acessibilidade span {
-    color: var(--gold);
-    font-family: 'Poppins', sans-serif;
-    font-size: 25px;
-    margin-left: 25px;
-    padding: 20px;
+/* Card de acessibilidade aberta */
+.detalhes-acessibilidade.active {
+    opacity: 1;
+    visibility: visible;
+    width: min(250px, 90vw);
+    height: 250px;
 }
+.detalhes-configuracoes.active {
+    opacity: 1;
+    visibility: visible;
+    width: min(250px, 90vw);
+    height: 200px;
+}
+/* Card de acessibilidade */
+.dados-de-acessibilidade {
+    border-radius: 2.8125rem;
+    background: var(--bg-card);
+    z-index: 50;
+     padding: 0.8rem 1.25rem;
+}
+/* Botão da seta */
 .btn-seta {
-    border: none;
+        border: none;
     background: none;
     cursor: pointer;
-    margin-left: 15px;
-    margin-top: 15px;
+    margin: 0;
+    padding: 0.5rem;
+    flex-shrink: 0;
 }
-.seta-baixo , .seta-cima {
-    width: 20px;
-    height: 20px;
+/* Setas */
+.seta-baixo {
+      width: 1.25rem;
+    height: 1.25rem;
     pointer-events: none;
     background: none;
 }
-.seta-cima {
-    display: none;
-}
-.dados-de-acessibilidade {
-    border-radius: 45px;
-    background: var(--bg-card);
-    z-index: 50;
-    padding: 15px;
-}
+/* Toggle */
 .toggle {
     display: flex;
-    width: 68px;
-    height: 44px;
-    padding: 2px;
+    width: 4.25rem;
+    height: 2.75rem;
+    padding: 0.125rem;
     border: none;
     border-radius: 50px;
     background: var(--dark-contrast);
     cursor: pointer;
-    margin-left: 10%;
+    margin-left: 0;
 }
-
+/* Bolinha do toggle */
 .toggle-circle {
     display: block;
-    width: 100%;
-    height: fit-content;
+    width: 2.5rem;
+    height: 2.5rem;
     border-radius: 50%;
     background: var(--text-soft);
     transition: transform 0.3s ease;
 }
-
-.toggle-circle.active  {
+.toggle-circle.active {
     background: var(--gold);
-    transform: translateX(-26px);
+    transform: translateX(1.5rem);
+}
+
+/* Botões */
+
+.btn-osc,
+.btn-out {
+    width: 50%;
+    padding: 0.55rem;
+    background: var(--dark-contrast);
+    color: var(--gold);
+    border: none;
+    border-radius: 0.5rem;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+        background 0.3s ease,
+        color 0.3s ease;
+}
+.botoes-conta {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    width: 100%;
+}
+
+.btn-acc,
+.btn-osc {
+    width: 50%;
+}
+/* Hover */
+.btn-acc:hover,
+.btn-osc:hover,
+.btn-out:hover {
+    background: var(--purple-dark);
+    color: var(--gold-soft);
+
 }
