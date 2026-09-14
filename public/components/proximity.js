@@ -1,9 +1,165 @@
-var map = L.map('map').setView([51.505, -0.09], 13);
+const posicaoInicial = [-24.090, -46.500];
+const zoomInicial = 13;
+
+var map = L.map('map').setView(posicaoInicial, zoomInicial);
 
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 }).addTo(map);
 
-L.marker([51.5, -0.09]).addTo(map)
+// Voltar a posição original
+document.querySelector("#botao-inicio").addEventListener("click", () => {
+
+    map.setView(posicaoInicial, zoomInicial);
+
+});
+
+const iconesCategorias = {
+
+    "Assistência Social": "🤝",
+    "Proteção Animal": "🐾",
+    "Alimentação": "🍲",
+    "Idosos": "👴",
+    "Meio Ambiente": "🌱",
+    "Educação": "📚"
+
+};
+
+function escolherIcone(categoria) {
+
+    return iconesCategorias[categoria] || "📍";
+
+}
+
+// Cadastrar sede Porto Ajuda
+L.marker([-24.00839596435377, -46.43535299604137]).addTo(map)
     .bindPopup('Porto Ajuda.<br> Sede.')
     .openPopup();
+
+// Calculo distancia usuario e ongs
+function calcularDistancia(lat1, lon1, lat2, lon2) {
+
+    const R = 6371;
+
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+
+    const a =
+        Math.sin(dLat / 2) ** 2 +
+        Math.cos(lat1 * Math.PI / 180) *
+        Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLon / 2) ** 2;
+
+    const c = 2 * Math.atan2(
+        Math.sqrt(a),
+        Math.sqrt(1 - a)
+    );
+
+    return R * c;
+}
+
+// Localizar usuario
+function localizarUsuario() {
+    return new Promise((resolve, reject) => {
+
+        navigator.geolocation.getCurrentPosition(function (position) {
+
+            const latitude = position.coords.latitude;
+            const longitude = position.coords.longitude;
+
+            console.log("Latitude:", latitude);
+            console.log("Longitude:", longitude);
+
+            L.circleMarker([latitude, longitude], {
+                radius: 10,
+                fillColor: "red",
+                color: "black",
+                weight: 2,
+                fillOpacity: 1
+            })
+                .addTo(map)
+                .bindPopup("Você está aqui!");
+
+            resolve({
+                latitude: latitude,
+                longitude: longitude
+            });
+        },
+
+
+
+            function (error) {
+                console.log("Não foi possível obter a localização.");
+                reject(error);
+            }
+        );
+    })
+
+}
+
+
+
+// Criar ongs
+
+async function carregarOngs() {
+
+    const localizacao = await localizarUsuario();
+
+    ongs.forEach(ong => {
+
+        const distancia = calcularDistancia(
+            localizacao.latitude,
+            localizacao.longitude,
+            ong.latitude,
+            ong.longitude
+        )
+
+        const card = document.createElement("div");
+
+        card.classList.add("ong");
+
+        card.innerHTML = `
+        <div class="ong-info">
+            <h3>${ong.nome}</h3>
+            <p>${ong.categoria}</p>
+            <span>${distancia.toFixed(1)} km</span>
+        </div>
+
+        <a href="ong.html?id=${ong.id}" class="botao-ong">
+            Ver ONG
+        </a>
+    `;
+
+        card.addEventListener("click", () => {
+
+            map.setView(
+                [ong.latitude - 0.0025, ong.longitude - 0.0020], 19
+            );
+
+        });
+
+        document.querySelector(".lista-ongs").appendChild(card);
+
+        const icone = L.divIcon({
+            html: escolherIcone(ong.categoria),
+            className: "icone-ong",
+            iconSize: [45, 45],
+            iconAnchor: [22, 45]
+
+        });
+
+        L.marker(
+            [ong.latitude, ong.longitude],
+            { icon: icone }
+        )
+            .addTo(map)
+            .bindPopup(`
+    <strong>${ong.nome}</strong><br>
+    ${ong.categoria}<br>
+    ${ong.endereco}
+`);
+
+    });
+};
+
+carregarOngs();

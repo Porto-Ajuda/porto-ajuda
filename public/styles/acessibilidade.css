@@ -1,0 +1,149 @@
+#acessibilidade {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    z-index: 9999;
+}
+
+
+/* BOTÃO ♿ */
+
+#botao-acessibilidade {
+    width: 60px;
+    height: 60px;
+
+    border: none;
+    border-radius: 50%;
+
+    background: #453B80;
+    color: white;
+
+    font-size: 28px;
+
+    cursor: pointer;
+
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+
+/* PAINEL */
+
+#painel-acessibilidade {
+    position: absolute;
+
+    right: 0;
+    bottom: 75px;
+
+    width: 360px;
+
+    background: #111;
+    color: white;
+
+    border: 1px solid #333;
+    border-radius: 18px;
+
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+
+    display: none;
+}
+
+
+/* PAINEL ABERTO */
+
+#painel-acessibilidade.aberto {
+    display: block;
+}
+
+
+/* CABEÇALHO */
+
+.acessibilidade-cabecalho {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    padding: 18px 20px;
+
+    border-bottom: 1px solid #333;
+}
+
+.acessibilidade-cabecalho h2 {
+    margin: 0;
+    font-size: 20px;
+}
+
+#fechar-acessibilidade {
+    background: none;
+    border: none;
+
+    color: white;
+
+    font-size: 28px;
+
+    cursor: pointer;
+}
+
+
+/* CONTEÚDO */
+
+.acessibilidade-conteudo {
+    padding: 20px;
+}
+
+.acessibilidade-conteudo h3 {
+    margin: 0 0 10px;
+
+    color: #aaa;
+
+    font-size: 15px;
+}
+
+
+/* FONTE */
+
+.controle-fonte {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    margin-bottom: 20px;
+}
+
+.controle-fonte button {
+    width: 42px;
+    height: 42px;
+
+    border: 1px solid #333;
+    border-radius: 10px;
+
+    background: #111;
+    color: white;
+
+    font-size: 22px;
+
+    cursor: pointer;
+}
+
+
+/* OPÇÕES */
+
+.opcao-acessibilidade {
+    width: 100%;
+
+    padding: 13px;
+
+    margin-bottom: 20px;
+
+    border: 1px solid #333;
+    border-radius: 10px;
+
+    background: #111;
+    color: white;
+
+    font-size: 16px;
+    font-weight: bold;
+
+    text-align: left;
+
+    cursor: pointer;
+}

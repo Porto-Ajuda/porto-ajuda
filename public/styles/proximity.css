@@ -96,3 +96,215 @@ position: fixed;
   top: 30em;
 
 }
+
+.painel-esquerdo {
+    position: fixed;
+    left: 0;
+    top: 0;
+
+    width: 380px;
+    height: 100vh;
+
+    background: white;
+
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+
+    z-index: 1000;
+
+    overflow-y: auto;
+}
+
+
+/* PESQUISA */
+
+.barra-pesquisa {
+    display: flex;
+
+    margin: 15px;
+    height: 50px;
+
+    border-radius: 25px;
+
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+
+    overflow: hidden;
+}
+
+.barra-pesquisa input {
+    flex: 1;
+
+    border: none;
+    outline: none;
+
+    padding: 0 20px;
+
+    font-size: 15px;
+}
+
+.barra-pesquisa button {
+    width: 55px;
+
+    border: none;
+    background: white;
+
+    cursor: pointer;
+
+    font-size: 18px;
+}
+
+
+/* FILTROS */
+
+.filtros {
+    display: flex;
+
+    gap: 8px;
+
+    padding: 5px 15px 15px;
+
+    overflow-x: auto;
+}
+
+.filtros button {
+    white-space: nowrap;
+
+    padding: 8px 15px;
+
+    border: 1px solid #ddd;
+    border-radius: 20px;
+
+    background: white;
+
+    cursor: pointer;
+}
+
+
+/* ONG */
+
+.ong {
+    display: flex;
+
+    gap: 15px;
+
+    padding: 15px;
+
+    border-top: 1px solid #eee;
+
+    cursor: pointer;
+}
+
+.ong:hover {
+    background: #F9C86B;
+}
+
+/* IMAGEM */
+
+.ong-imagem {
+    width: 70px;
+    height: 70px;
+
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #eee;
+
+    border-radius: 8px;
+
+    font-size: 30px;
+}
+
+
+/* INFORMAÇÕES */
+
+.ong-info h3 {
+    margin: 0 0 5px;
+
+    font-size: 17px;
+}
+
+.ong-info p {
+    margin: 0 0 8px;
+
+    color: #dfdcdc;
+
+    font-size: 14px;
+}
+
+.ong-info span {
+    color: #b3b3b3;
+
+    font-size: 13px;
+}
+
+.botao-ong {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 8px 14px;
+
+    background-color: #3d2775;
+    color: white;
+
+    text-decoration: none;
+
+    border-radius: 8px;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    white-space: nowrap;
+
+    transition: 0.2s;
+}
+
+.botao-ong:hover {
+    background-color: #28194f;
+}
+
+.botao-ong:active {
+    transform: scale(0.97);
+}
+
+#map {
+    position: relative;
+}
+
+#botao-inicio {
+    position: absolute;
+
+    right: 28px;
+    bottom: 100px;
+
+    width: 45px;
+    height: 45px;
+
+    border: none;
+    border-radius: 8px;
+
+    background-color: white;
+
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+
+    font-size: 20px;
+
+    cursor: pointer;
+
+    z-index: 1000;
+}
+
+#botao-inicio:hover {
+    background-color: #f1f1f1;
+}
+
+.icone-ong {
+    font-size: 40px;
+    width: 45px !important;
+    height: 45px !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}

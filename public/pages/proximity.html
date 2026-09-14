@@ -15,6 +15,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 
+  <script src="../components/testes/ongs-teste.js" defer></script>
   <script src="../components/proximity.js" defer></script>
   <script src="../components/header_footer.js" defer></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
@@ -39,10 +40,27 @@
 
   <div id="map"></div>
 
-    <div class="blur"></div>
-    <div class="section-ongs">
-    
+    <button id="botao-inicio" type="button">
+    🏠
+  </button>
+
+  <div class="blur"></div>
+  <div class="section-ongs">
+
+    <div class="barra-pesquisa">
+      <input type="text" placeholder="Pesquisar ONGs">
+      <button>🔍</button>
     </div>
-  
+
+    <div class="filtros">
+      <button>Todos</button>
+      <button>Alimentação</button>
+      <button>Animais</button>
+      <button>Crianças</button>
+    </div>
+
+    <div class="lista-ongs"></div>
+
+  </div>
 
 </body>
