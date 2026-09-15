@@ -208,3 +208,20 @@ display: flex;
   position: sticky;
   padding-left: 0px;
 }
+/* ========================= */
+/* STARS */
+/* ========================= */
+
+.stars {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+
+  background-image:
+    radial-gradient(var(--gold-soft) 1px, transparent 1px);
+
+  background-size: 90px 90px;
+
+  opacity: .18;
+}
