@@ -15,9 +15,13 @@ script1.onload = () => {
 
 document.head.appendChild(script1);
 
-const cabecalho = `        
-<div id="modal-termos-politica"></div>
+// Modal fica fora da navbar, direto no body
+document.body.insertAdjacentHTML(
+    "afterbegin",
+    `<div id="modal-termos-politica"></div>`
+);
 
+const cabecalho = `        
 <a href="Porto-Ajuda.html">
     <div class="logo">
     
