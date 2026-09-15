@@ -76,35 +76,70 @@
 /* ========================= */
 
 * {
-  margin: 0;
-  padding: 0;
+ 
   box-sizing: border-box;
 }
-body {
-    background: var(--bg-main);
-    overflow-x: hidden;
-    overflow-y: auto;
 
+html {
+  scroll-behavior: smooth;
+   margin: 0;
+  padding: 0;
+}
+
+body {
+    margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  font-family: 'Poppins', sans-serif;
+  color: var(--text);
+
+  background:
+    radial-gradient(circle at top,
+      var(--bg-card) 0%,
+      var(--bg-section) 45%,
+      var(--bg-main) 100%);
+}
+
+.stars {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+
+  background-image:
+    radial-gradient(var(--gold-soft) 1px, transparent 1px);
+
+  background-size: 90px 90px;
+
+  opacity: .18;
 }
 .perfil-header {
-     margin-top: clamp(1rem, 16vh, 25rem);
-     margin-left: clamp(0.5rem, 2vw, 2rem);
+     margin-top: clamp(1vh, 4vh, 16vh);
+      margin-left: clamp(1vh, 5vh, 6vh);
+     position: relative;
+  width: 100vh;
+  height: 100vh;
+  overflow: hidden;
+  align-items: center;
+  justify-content: left;
+  display: flex;
   
 }
 .circle {
-    width: clamp(100px, 15vw, 150px);
-    height: clamp(100px, 12vw, 150px);
+    width: clamp(100px, 250px, 300px);
+    height: clamp(100px, 250px, 300px);
     border: 0.5px solid var(--gold);
     border-radius: 50%;
+    margin-top: clamp(2vh, 2vh, 20vh);
     position: absolute;
     overflow: visible;
-    margin-left: clamp(10px, 5vw, 65px);
+    margin-left: clamp(10vh, 50vh, 65px);
 }
 
 .rectangle {
-    position: relative;
-    width: clamp(200px, 30vw, 380px);
-    height: clamp(540px, 60vh, 750px);
+    position: absolute;
+    width: clamp(30vh, 50vh, 100vh);
+    height: clamp(60vh, 80vh, 100vh);
     border-radius: 40px;
     clip-path: polygon(
         100% 0%,
@@ -124,19 +159,20 @@ body {
    
 
 .rectangle.editando {
-     height: clamp(630px, 60vh, 750px);
+    height: clamp(60vh, 80vh, 100vh);
 }
 .info-perfil {
-    width: 100%;
+    width: 100rem;
     display: flex;
     flex-direction: column;
-    margin-top: clamp(10rem, 15vh, 15rem);
+    margin-top: clamp(10rem, 18rem, 35rem);
 }
 
 .info-perfil label {
     color: var(--text-soft);
     font-family: 'Poppins', sans-serif;
-    font-size: clamp(0.56rem, 1,2rem, 3rem);
+    font-size: clamp(0.86rem, 1.2rem, 5rem);
+    margin-top: clamp(0.2rem, 0.5rem, 0.8rem);
 }
 
 .info-perfil input {
@@ -145,22 +181,23 @@ body {
     background: none;
     color: var(--text);
     border: 1px solid var(--border);
-    border-radius: 0.5rem;
+    border-radius: 0.8rem;
     outline: none;
     font-family: 'Poppins', sans-serif;
 }
 
 #circle-default-img {
-    width: clamp(3rem, 8vw, 3.75rem);
-    aspect-ratio: 1;
-    margin-top: 2.5rem;
-    margin-left: clamp(2.7rem, 0.5vw, 10rem);
-    margin-right: auto;
+     width: clamp(100px, 150px, 300px);
+    height: clamp(100px, 150px, 300px);
+    margin-top: clamp(2vh, 4vh, 20vh);
+    position: absolute;
+    overflow: visible;
+    margin-left: clamp(2vh, 5vh, 65vh);
 }
 .campo-senha label {
      color: var(--text-soft);
     font-family: 'Poppins', sans-serif;
-    font-size: clamp(0.56rem, 1,2rem, 3rem);
+    font-size: clamp(0.56rem, 1.2rem, 3rem);
     transition: 
         opacity 0.3s ease,
         height 0.3s ease,
@@ -213,14 +250,15 @@ body {
 /* Container das cards */
 .cards-container {
     position: absolute;
-    top: 18%;
     left: clamp(28rem, 24rem,34rem) ;
     display: flex;
     flex-direction: column;
     gap: 1.25rem;
+    width: clamp(30vh, 50vh, 100vh);
+    height: clamp(540px, 60vh, 100vh);
 }
 .card-header {
-    width: 100%;
+    width: 40vh;
     display: flex;
     align-items: center;
     justify-content: space-between;

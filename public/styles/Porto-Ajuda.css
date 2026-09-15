@@ -82,6 +82,14 @@ body {
 /* ========================= */
 /* HERO */
 /* ========================= */
+.hero-container {
+  position: relative;
+
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
 .sobre-label {
   display: inline-flex;
   align-items: center;
@@ -115,15 +123,18 @@ body {
 }
 
 .hero-text {
-  width: 45%;
+  width: 100%;
+  text-align: center;
+  padding-top: 130px;
 }
 
 .hero h1 {
-  font-size: 7rem;
+  font-size: 8rem;
   line-height: .95;
-
+  text-align: center;
   font-family: 'Cormorant Garamond', serif;
   font-weight: 600;
+  left:-30%;
 }
 
 .hero h1 span {
@@ -146,7 +157,11 @@ body {
 /* ========================= */
 
 .search-box {
-  margin-top: 55px;
+  margin-top: 60px;
+  left: 15px;
+  position: absolute;
+  top: 50%;
+  transform: translateY(20px);
 
   display: flex;
   align-items: center;
@@ -154,39 +169,57 @@ body {
 }
 
 .search-button {
-  width: 75px;
-  height: 75px;
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, .08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+background:
+    rgba(255, 255, 255, .05);
+    cursor: pointer;
+    overflow: hidden;
 
-  border-radius: 50%;
+    transition: all 0.3s ease;
+}
 
-  border:
-    2px solid rgba(255, 255, 255, .12);
+.search-button i {
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+}
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.search-button input {
+    width: 0;
+    opacity: 0;
+    border: none;
+    outline: none;
+    background: transparent;
 
-  cursor: pointer;
+    color: white;
+    font-size: 16px;
 
-  transition: .35s;
+    transition: all 0.3s ease;
+}
 
-  font-size: 1.4rem;
-
-  background:
-    rgba(255, 255, 255, .03);
+.search-button:hover i {
+    transform: translateX(0);
 }
 
 .search-button:hover {
-
+  width: 190px;
+  height: 70px;
+  border-radius:37px;
   background: var(--gold);
-
+justify-content: flex-start;
   color: var(--bg-main);
-
+gap: 15px;
   transform:
     translateY(-6px) scale(1.08);
 
   box-shadow:
     0 0 30px rgba(242, 170, 26, .45);
+    padding-left:25px;
 
 }
 
@@ -212,6 +245,11 @@ body {
     1px solid rgba(255, 255, 255, .06);
 }
 
+.search-button:hover input {
+    width: 120px;
+    opacity: 1;
+}
+
 .filter-btn:hover {
 
   background: var(--gold);
@@ -230,132 +268,64 @@ body {
   margin-left: 10px;
 }
 
-/* ========================= */
-/* HERO IMAGE */
-/* ========================= */
-
-.hero-image {
-  position: relative;
-
-  width: 500px;
-  height: 500px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.dropdown-regiao {
+    position: relative;
 }
 
-.circle-bg {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-
-  border-radius: 50%;
-
-  border:
-    1px solid rgba(91, 104, 172, .35);
-
-  box-shadow:
-    0 0 100px rgba(91, 104, 172, .15);
+/* ===============
+Lista escondida
+================== */
+.regioes {
+    position: absolute;
+    border-radius: 12px;
+    top: 110%;
+    left: 10%;
+    min-width: 100%;
+    max-height: 200px;
+    padding-top: 8px;
+    opacity: 0;
+    visibility: hidden;
+    transition: 0.2s ease;
+    overflow-y: auto;
+    border:
+      1px solid rgba(255, 255, 255, .06);
+      background:
+        rgba(255, 255, 255, .05);    
+}
+.regioes::-webkit-scrollbar {
+    width: 5px;
+}
+.regioes::-webkit-scrollbar-track {
+    background: var(--gold);
+    border-radius: 10px;
+}
+.regioes::-webkit-scrollbar-thumb {
+    background: var(--gold-soft);
+    border-radius: 10px;
+}
+.regioes::-webkit-scrollbar-thumb:hover {
+    background: transparent;
+}
+.dropdown-regiao:hover .regioes {
+    opacity: 1;
+    visibility: visible;
 }
 
-.hero-image img {
-  width: 420px;
-  height: 420px;
+.regioes a {
+    display: block;
 
-  object-fit: cover;
+    padding: 10px 15px;
 
-  border-radius: 50%;
-
-  position: relative;
-  z-index: 2;
+    text-decoration: none;
+    white-space: nowrap;
+    color: white;
 }
 
-.moon {
-
-  position: absolute;
-
-  top: -10px;
-  left: 10px;
-
-  font-size: 5rem;
-
-  z-index: 61;
-
-  filter:
-    drop-shadow(0 0 18px rgba(249, 200, 107, .45));
+.regioes a:hover {
+    background: var(--gold);
+    color: var(--bg-main);
 }
 
-.moon img {
-
-  width: 150px;
-  height: auto;
-
-}
-
-.circle-idosas {
-  z-index: 60;
-  width: 100%;
-  height: auto;
-
-}
-
-.circle-idosas img {
-  position: absolute;
-  width: 117%;
-  height: auto;
-  left: -40px;
-  top: -40px;
-}
-
-/* ========================= */
-/* LEAVES */
-/* ========================= */
-
-.leafs {
-  width: 10px;
-  position: sticky;
-  display: flex;
-  align-items: center;
-  height: auto;
-  object-fit: contain;
-  user-select: none;
-  pointer-events: none;
-  filter:
-    drop-shadow(0 0 15px rgba(242, 170, 26, .12));
-  z-index: 99;
-  width: 5px;
-}
-
-.leaf img {
-  width: 100px;
-  height: auto;
-  z-index: 110;
-}
-
-.leaf1 {
-  position: absolute;
-  z-index: 110;
-  left: 190px;
-  top: -140px;
-
-}
-
-.leaf2 {
-  position: absolute;
-  z-index: 110;
-  left: 100px;
-  top: 140px;
-
-}
-
-.leaf3 {
-  position: absolute;
-  z-index: 110;
-  left: -420px;
-  top: 140px;
-
-}
 
 
 /* ========================= */
@@ -688,6 +658,13 @@ body {
     width: 100%;
   }
 
+  .search-box {
+    position: static;
+    transform: none;
+    margin-top: 55px;
+    justify-content: center;
+  }
+
   .cards {
     justify-content: center;
   }
@@ -796,6 +773,7 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
+  z-index: 5;
 }
 
 .divider::before{

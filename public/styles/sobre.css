@@ -154,15 +154,68 @@ body {
 
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
 
   padding: 150px 90px 80px;
 }
 
 .sobre-hero-text {
-  width: 45%;
+  width: 100%;
+  max-width: 900px;
+  text-align: center;
 }
 
+/* ========================= */
+/* LABEL */
+/* ========================= */
+
+.sobre-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+
+  font-size: 0.75rem;
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  color: var(--text-soft);
+
+  margin-bottom: 20px;
+}
+
+.sobre-label::before,
+.sobre-label::after {
+  content: '';
+  width: 40px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* ========================= */
+/* TÍTULO HERO */
+/* ========================= */
+
+.sobre-hero-text h1 {
+ font-family: 'Cormorant Garamond', serif;
+  font-size: 10rem;
+  line-height: .95;
+  font-weight: 600;
+  text-align: center;
+}
+
+.sobre-titulo h1 span {
+  color: var(--gold);
+}
+
+.sobre-subtitulo {
+  margin-top: 30px;
+
+  line-height: 1.8;
+
+  color: var(--text-soft);
+
+  font-size: 1.1rem;
+}
 /* ========================= */
 /* LABEL */
 /* ========================= */
@@ -214,63 +267,6 @@ body {
   font-size: 1.1rem;
 }
 
-/* ========================= */
-/* IMAGEM DO HERO */
-/* ========================= */
-
-.sobre-hero-imagem {
-  position: relative;
-
-  width: 500px;
-  height: 500px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.sobre-hero-imagem .circle-bg {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-
-  border-radius: 50%;
-
-  border: 1px solid rgba(91, 104, 172, .35);
-
-  box-shadow: 0 0 100px rgba(91, 104, 172, .15);
-}
-
-.sobre-hero-imagem > img {
-  width: 580px;
-  height: 580px;
-
-  object-fit: cover;
-
-  border-radius: 50%;
-
-  position: relative;
-  z-index: 2;
-}
-
-.sobre-hero-imagem .moon {
-  position: absolute;
-
-  top: -10px;
-  left: 10px;
-
-  z-index: 3;
-
-  filter: drop-shadow(0 0 18px rgba(249, 200, 107, .45));
-}
-
-.sobre-hero-imagem .moon img {
-  width: 150px;
-  height: auto;
-  border: none;
-  border-radius: 0;
-  box-shadow: none;
-}
 
 /* ========================= */
 /* SECTIONS INTERNAS */
