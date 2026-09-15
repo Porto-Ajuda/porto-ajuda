@@ -103,63 +103,113 @@ function localizarUsuario() {
 
 async function carregarOngs() {
 
-    const localizacao = await localizarUsuario();
+    let localizacao = null;
+
+    // Tenta localizar o usuário
+    try {
+
+        localizacao = await localizarUsuario();
+
+    } catch (erro) {
+
+        console.log("Localização do usuário não disponível.");
+
+    }
 
     ongs.forEach(ong => {
 
-        const distancia = calcularDistancia(
-            localizacao.latitude,
-            localizacao.longitude,
-            ong.latitude,
-            ong.longitude
-        )
+        let distancia = null;
+
+        // Só calcula distância se:
+        // 1. O usuário foi localizado
+        // 2. A ONG possui coordenadas
+        if (
+            localizacao &&
+            ong.latitude != null &&
+            ong.longitude != null
+        ) {
+
+            distancia = calcularDistancia(
+                localizacao.latitude,
+                localizacao.longitude,
+                ong.latitude,
+                ong.longitude
+            );
+
+        }
 
         const card = document.createElement("div");
 
         card.classList.add("ong");
 
         card.innerHTML = `
-        <div class="ong-info">
-            <h3>${ong.nome}</h3>
-            <p>${ong.categoria}</p>
-            <span>${distancia.toFixed(1)} km</span>
-        </div>
+            <div class="ong-info">
 
-        <a href="ong.html?id=${ong.id}" class="botao-ong">
-            Ver ONG
-        </a>
-    `;
+                <h3>${ong.nome}</h3>
 
-        card.addEventListener("click", () => {
+                <p>${ong.categoria}</p>
 
-            map.setView(
-                [ong.latitude - 0.0025, ong.longitude - 0.0020], 19
-            );
+                ${
+                    distancia !== null
+                        ? `<span>${distancia.toFixed(1)} km</span>`
+                        : `<span>Distância indisponível</span>`
+                }
 
-        });
+            </div>
 
-        document.querySelector(".lista-ongs").appendChild(card);
+            <a href="ong.html?id=${ong.id}" class="botao-ong">
+                Ver ONG
+            </a>
+        `;
 
-        const icone = L.divIcon({
-            html: escolherIcone(ong.categoria),
-            className: "icone-ong",
-            iconSize: [45, 45],
-            iconAnchor: [22, 45]
+        // Só permite clicar no mapa se houver coordenadas
+        if (
+            ong.latitude != null &&
+            ong.longitude != null
+        ) {
 
-        });
+            card.addEventListener("click", () => {
 
-        L.marker(
-            [ong.latitude, ong.longitude],
-            { icon: icone }
-        )
-            .addTo(map)
-            .bindPopup(`
-    <strong>${ong.nome}</strong><br>
-    ${ong.categoria}<br>
-    ${ong.endereco}
-`);
+                map.setView(
+                    [
+                        ong.latitude - 0.0020,
+                        ong.longitude - 0.0020
+                    ],
+                    19
+                );
+
+            });
+
+            const icone = L.divIcon({
+
+                html: escolherIcone(ong.categoria),
+
+                className: "icone-ong",
+
+                iconSize: [45, 45],
+
+                iconAnchor: [22, 45]
+
+            });
+
+            L.marker(
+                [ong.latitude, ong.longitude],
+                { icon: icone }
+            )
+                .addTo(map)
+                .bindPopup(`
+                    <strong>${ong.nome}</strong><br>
+                    ${ong.categoria}<br>
+                    ${ong.endereco}
+                `);
+
+        }
+
+        document
+            .querySelector(".lista-ongs")
+            .appendChild(card);
 
     });
-};
+}
 
 carregarOngs();

@@ -112,8 +112,16 @@ position: fixed;
     z-index: 1000;
 
     overflow-y: auto;
+    
 }
 
+.section-ongs {
+    margin-top: 90px;
+    padding-bottom: 5vh;
+    height: calc(100vh - 40px);
+    overflow-y: auto;
+    overflow-x: hidden;
+}
 
 /* PESQUISA */
 
