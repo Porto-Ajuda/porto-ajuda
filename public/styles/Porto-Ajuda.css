@@ -125,6 +125,7 @@ body {
 .hero-text {
   width: 100%;
   text-align: center;
+  padding-top: 130px;
 }
 
 .hero h1 {
@@ -156,10 +157,10 @@ body {
 /* ========================= */
 
 .search-box {
-  margin-top: 55px;
+  margin-top: 60px;
   left: 15px;
   position: absolute;
-  top: 37%;
+  top: 50%;
   transform: translateY(20px);
 
   display: flex;
@@ -276,23 +277,35 @@ Lista escondida
 ================== */
 .regioes {
     position: absolute;
-    top: 100%;
-    left: 0;
-
+    border-radius: 12px;
+    top: 110%;
+    left: 10%;
     min-width: 100%;
+    max-height: 200px;
     padding-top: 8px;
-
     opacity: 0;
     visibility: hidden;
-
     transition: 0.2s ease;
+    overflow-y: auto;
     border:
       1px solid rgba(255, 255, 255, .06);
       background:
-        rgba(255, 255, 255, .05);
-
+        rgba(255, 255, 255, .05);    
 }
-
+.regioes::-webkit-scrollbar {
+    width: 5px;
+}
+.regioes::-webkit-scrollbar-track {
+    background: var(--gold);
+    border-radius: 10px;
+}
+.regioes::-webkit-scrollbar-thumb {
+    background: var(--gold-soft);
+    border-radius: 10px;
+}
+.regioes::-webkit-scrollbar-thumb:hover {
+    background: transparent;
+}
 .dropdown-regiao:hover .regioes {
     opacity: 1;
     visibility: visible;
@@ -760,6 +773,7 @@ Lista escondida
   display: flex;
   justify-content: center;
   align-items: center;
+  z-index: 5;
 }
 
 .divider::before{
