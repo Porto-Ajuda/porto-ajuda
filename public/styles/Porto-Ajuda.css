@@ -157,10 +157,9 @@ body {
 
 .search-box {
   margin-top: 55px;
-
+  left: 15px;
   position: absolute;
-  left: 90px;
-  top: 50%;
+  top: 37%;
   transform: translateY(20px);
 
   display: flex;
