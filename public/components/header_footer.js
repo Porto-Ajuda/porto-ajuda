@@ -394,3 +394,55 @@ function esconderPopupVLibras() {
     }
 
 }
+
+function ajustarAcessibilidadeFooter() {
+
+    const acessibilidade =
+        document.querySelector("#acessibilidade");
+
+    const footer =
+        document.querySelector("#footer");
+
+    if (!acessibilidade || !footer) {
+        return;
+    }
+
+    const footerRect =
+        footer.getBoundingClientRect();
+
+    const alturaBotao =
+        acessibilidade.offsetHeight;
+
+    const margem = 20;
+
+    const limiteInferior =
+        window.innerHeight - margem;
+
+    // Footer está chegando no botão
+    if (footerRect.top < limiteInferior - alturaBotao) {
+
+        const distanciaFooter =
+            window.innerHeight - footerRect.top;
+
+        acessibilidade.style.bottom =
+            `${distanciaFooter + margem}px`;
+
+    } else {
+
+        // Posição normal
+        acessibilidade.style.bottom =
+            `${margem}px`;
+    }
+}
+
+window.addEventListener(
+    "scroll",
+    ajustarAcessibilidadeFooter
+);
+
+window.addEventListener(
+    "resize",
+    ajustarAcessibilidadeFooter
+);
+
+ajustarAcessibilidadeFooter();
