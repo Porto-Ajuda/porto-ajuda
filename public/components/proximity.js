@@ -1,6 +1,8 @@
 const posicaoInicial = [-24.090, -46.500];
 const zoomInicial = 13;
 
+let posicaoUsuario = null;
+
 var map = L.map('map').setView(posicaoInicial, zoomInicial);
 
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -10,7 +12,15 @@ L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
 // Voltar a posição original
 document.querySelector("#botao-inicio").addEventListener("click", () => {
 
-    map.setView(posicaoInicial, zoomInicial);
+    if (posicaoUsuario) {
+
+        map.setView(posicaoUsuario, zoomInicial);
+
+    } else {
+
+        map.setView(posicaoInicial, zoomInicial);
+
+    }
 
 });
 
@@ -66,6 +76,10 @@ function localizarUsuario() {
 
             const latitude = position.coords.latitude;
             const longitude = position.coords.longitude;
+
+            posicaoUsuario = [latitude, longitude];
+
+            map.setView([latitude - 0.08, longitude - 0.05], zoomInicial);
 
             console.log("Latitude:", latitude);
             console.log("Longitude:", longitude);
@@ -143,24 +157,30 @@ async function carregarOngs() {
         card.classList.add("ong");
 
         card.innerHTML = `
-            <div class="ong-info">
+    <div class="ong-imagem">
+        <img 
+            src="${ong.imagem || '../assets/ong-padrao.png'}"
+            alt="Imagem de ${ong.nome}"
+        >
+    </div>
 
-                <h3>${ong.nome}</h3>
+    <div class="ong-info">
 
-                <p>${ong.categoria}</p>
+        <h3>${ong.nome}</h3>
 
-                ${
-                    distancia !== null
-                        ? `<span>${distancia.toFixed(1)} km</span>`
-                        : `<span>Distância indisponível</span>`
-                }
+        <p>${ong.categoria}</p>
 
-            </div>
+        ${distancia !== null
+                ? `<span>${distancia.toFixed(1)} km</span>`
+                : `<span>Distância indisponível</span>`
+            }
 
-            <a href="ong.html?id=${ong.id}" class="botao-ong">
-                Ver ONG
-            </a>
-        `;
+    </div>
+
+    <a href="ong.html?id=${ong.id}" class="botao-ong">
+        Ver ONG
+    </a>
+`;
 
         // Só permite clicar no mapa se houver coordenadas
         if (

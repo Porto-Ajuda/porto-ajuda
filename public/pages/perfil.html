@@ -1,330 +1,405 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Perfil</title>
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
-    <link rel="stylesheet" href="../styles/perfil.css">
-    <link rel="stylesheet" href="../styles/geral.css">
-     <link rel="stylesheet" href="../styles/acessibilidade.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Porto Ajuda – Perfil</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="../styles/geral.css">
+   <link rel="stylesheet" href="../styles/acessibilidade.css">
+  <link rel="stylesheet" href="../styles/perfil.css" />
+  <script src="../components/header_footer.js" defer></script>
     <script src="../components/perfil.js" defer></script>
-    <script src="../components/header_footer.js" defer></script>
-    <script src="../components/acessibilidade.js" defer></script>
 </head>
-
 <body>
 
   <div class="stars"></div>
-    <header class="navbar"></header>
 
-    <main>
+  <!-- ========================= -->
+  <!-- NAVBAR -->
+  <!-- ========================= -->
 
-        <!-- ========================= -->
-        <!-- PERFIL -->
-        <!-- ========================= -->
+  <header class="navbar"></header>
 
-        <div class="perfil-header">
+  <section class="surgir">
+        <section class="hero">
+        <div class="hero-text">
+            <div class="hero-container">
+                 <div class="sobre-label">
+            <span>Perfil</span>
+          </div>
+          <h1>
+            SUA <br>
+            <span>CONTA</span>
+          </h1>
 
-            <div class="rectangle">
+          <p>
+            Seus dados, suas preferências de uso do site <br>
+            e o registro do que você já ajudou a fazer acontecer.
+          </p>
+ <div class="divider">
+      <img class="lua" src="../assets/moon.png">
+    </div>
+        </div>
+        
+  <div class="layout">
+<section class="painel-perfil" aria-labelledby="titulo-perfil">
+    <div class="foto-perfil" aria-hidden="true">
+      FL
+    </div>
+    <h2 id="titulo-perfil">
+       Fulano de Tal
+    </h2>
+    <p class="data-cadastro">
+       33 de Fevereiro de 1800
+    </p>
+    <!-- campos do cadastro -->
+    <div class="campo-perfil">
+        <label for="nome-usuario">
+            Nome
+        </label>
+          <input id="nome" type="text">
+   
+         <label for="nome-social">
+            Nome Social
+        </label>
+        <input id="nome-social" type="text">
+        <label for="email">
+           E-mail
+        </label>
+        <input id="email" type="text">
+            <label for="telefone">
+            Telefone
+        </label>
+        <input id="telefone" type="tel">
+   
+    <!-- ação principal -->
+    <button class="btn" type="button">
+      Alterar Dados
+    </button> </div>
+</section>
+   <!-- ==========================================================
+     COLUNA DIREITA — ABAS
+     ========================================================== -->
 
-                <!-- FOTO DE PERFIL -->
-                <div class="circle">
-                    <img 
-                        src="../assets/user-gold.png" 
-                        id="circle-default-img" 
-                        alt="Foto de perfil"
-                    >
+<section class="secoes-perfil">
+
+    <!-- Botões das abas -->
+    <div class="abas-perfil"
+         role="tablist"
+         aria-label="Seções do perfil">
+
+        <button
+            class="aba"
+            role="tab"
+            id="aba-registro"
+            aria-controls="painel-registro"
+            aria-selected="true"
+            type="button">
+            Registro
+        </button>
+
+        <button
+            class="aba"
+            role="tab"
+            id="aba-acessibilidade"
+            aria-controls="painel-acessibilidade"
+            aria-selected="false"
+            type="button">
+            Acessibilidade
+        </button>
+
+        <button
+            class="aba"
+            role="tab"
+            id="aba-configuracoes"
+            aria-controls="painel-configuracoes"
+            aria-selected="false"
+            type="button">
+            Configurações
+        </button>
+
+    </div>
+
+
+    <!-- ======================================================
+         PAINEL 1 — REGISTRO
+         ====================================================== -->
+
+    <div
+        class="painel painel-aba"
+        role="tabpanel"
+        id="painel-registro"
+        aria-labelledby="aba-registro"
+        tabindex="0">
+
+        <!-- Resumo do registro -->
+        <div class="resumo-registro">
+
+            <div class="estatistica">
+                <div class="valor-estatistica">
+                   XXXXXXX reais  
                 </div>
 
-
-                <!-- INFORMAÇÕES DO PERFIL -->
-                <div class="info-perfil">
-
-                    <label for="nome">Nome</label>
-                    <input 
-                        type="text" 
-                        id="nome" 
-                        disabled
-                    >
-
-                    <label for="nomeSc">Nome Social</label>
-                    <input 
-                        type="text" 
-                        id="nomeSc" 
-                        disabled
-                    >
-
-                    <label for="email">E-mail</label>
-                    <input 
-                        type="email" 
-                        id="email" 
-                        disabled
-                    >
-
-                    <label for="telefone">Telefone</label>
-                    <input 
-                        type="tel" 
-                        id="telefone" 
-                        disabled
-                    >
-
-                    <!-- SENHA -->
-                    <label for="senha" class="campo-senha">
-                        Senha
-                    </label>
-
-                    <input 
-                        type="password" 
-                        id="senha" 
-                        class="campo-senha" 
-                        disabled
-                    >
-
+                <div class="rotulo-estatistica">
+                 doados em 7 contribuições
                 </div>
-
-
-                <!-- BOTÃO ALTERAR DADOS -->
-                <section class="Alterar-dados">
-
-                    <button 
-                        type="button" 
-                        id="btn"
-                    >
-                        Alterar Dados
-                    </button>
-
-                </section>
-
             </div>
+
+            <div class="estatistica">
+                <div class="valor-estatistica"> 
+                    X horas 
+                </div>
+                <div class="rotulo-estatistica">de trabalho voluntário</div>
+            </div>
+
+            <div class="estatistica">
+                <div class="valor-estatistica"> X </div>
+                <div class="rotulo-estatistica">iniciativas apoiadas</div>
+            </div>
+
+            <!-- Baixar declaração -->
+            <button
+                class="botao botao-secundario"
+                type="button">
+                Baixar Registro
+            </button>
 
         </div>
 
 
-        <!-- ========================= -->
-        <!-- CONTAINER DOS CARDS -->
-        <!-- ========================= -->
+        <!-- Filtros do registro -->
+        <div
+            class="filtros-registro"
+            role="group"
+            aria-label="Filtrar registro">
 
-        <div class="cards-container">
+            <button
+                class="filtro"
+                type="button"
+                aria-pressed="true"
+                data-filtro="tudo">
+                Tudo
+            </button>
+
+            <button
+                class="filtro"
+                type="button"
+                aria-pressed="false"
+                data-filtro="doacao">
+                Doações
+            </button>
+
+            <button
+                class="filtro"
+                type="button"
+                aria-pressed="false"
+                data-filtro="voluntariado">
+                Voluntariado
+            </button>
+
+        </div>
 
 
-            <!-- ========================= -->
-            <!-- CARD 1 - DADOS DO USUÁRIO -->
-            <!-- ========================= -->
+        <!-- Ano do registro -->
+        <p class="ano-registro">
+            <!-- ano -->
+        </p>
 
-            <section class="dados-do-usuario card">
 
-                <div class="card-header">
+        <!-- Linha do tempo -->
+        <ul class="linha-tempo">
 
-                    <span class="titulo">
-                        Dados do Usuário
+            <!-- Registro de doação -->
+            <li
+                class="registro"
+                data-tipo="doacao">
+
+                <div class="data-registro">
+                    <!-- data -->
+                </div>
+
+                <h3>
+                    <!-- nome da organização -->
+                    <span class="etiqueta">
+                        <!-- etiqueta opcional -->
                     </span>
+                </h3>
 
-                    <button 
-                        type="button" 
-                        class="btn-seta"
-                    >
-                        <img 
-                            src="../assets/arrow-down.png" 
-                            alt="Expandir" 
-                            class="seta-baixo"
-                        >
-                    </button>
-
-                </div>
-
-
-                <div class="detalhes-usuario">
-
-                    <label for="CEP">CEP</label>
-                    <input 
-                        type="text" 
-                        id="CEP" 
-                        disabled
-                    >
-
-                    <label for="CPF">CPF</label>
-                    <input 
-                        type="text" 
-                        id="CPF" 
-                        disabled
-                    >
-
-                    <label for="nascimento">
-                        Data de Nascimento
-                    </label>
-
-                    <input 
-                        type="date" 
-                        id="nascimento" 
-                        disabled
-                    >
-
-                    <label for="genero">Gênero</label>
-                    <input 
-                        type="text" 
-                        id="genero" 
-                        disabled
-                    >
-
-                </div>
-
-            </section>
-
-
-            <!-- ========================= -->
-            <!-- CARD 2 - ACESSIBILIDADE -->
-            <!-- ========================= -->
-
-            <section class="dados-de-acessibilidade card">
-
-                <div class="card-header">
-
-                    <span class="titulo">
-                        Acessibilidade
+                <p>
+                    <span class="valor-doacao">
+                        <!-- valor -->
                     </span>
+                    —
+                    <!-- destino da doação -->
+                </p>
 
-                    <button 
-                        type="button" 
-                        class="btn-seta"
-                    >
-                        <img 
-                            src="../assets/arrow-down.png" 
-                            alt="Expandir" 
-                            class="seta-baixo"
-                        >
-                    </button>
+            </li>
 
+
+            <!-- Registro de voluntariado -->
+            <li
+                class="registro"
+                data-tipo="voluntariado">
+
+                <div class="data-registro">
+                    <!-- data -->
                 </div>
 
-
-                <div class="detalhes-acessibilidade">
-
-                    <label for="libra">
-                        LIBRAS
-                    </label>
-
-                    <button 
-                        id="libra" 
-                        class="toggle" 
-                        type="button"
-                    >
-                        <span class="toggle-circle"></span>
-                    </button>
-
-
-                    <label for="contraste">
-                        ALTO-CONTRASTE
-                    </label>
-
-                    <button 
-                        id="contraste" 
-                        class="toggle" 
-                        type="button"
-                    >
-                        <span class="toggle-circle"></span>
-                    </button>
-
-
-                    <label for="letra">
-                        LETRA GRANDE
-                    </label>
-
-                    <button 
-                        id="letra" 
-                        class="toggle" 
-                        type="button"
-                    >
-                        <span class="toggle-circle"></span>
-                    </button>
-
-                </div>
-
-            </section>
-
-
-            <!-- ========================= -->
-            <!-- CARD 3 - CONFIGURAÇÕES -->
-            <!-- ========================= -->
-
-            <section class="configuracoes card">
-
-                <div class="card-header">
-
-                    <span class="titulo">
-                        Configurações
+                <h3>
+                    <!-- atividade -->
+                    <span class="etiqueta">
+                        <!-- horas -->
                     </span>
+                </h3>
 
-                    <button 
-                        type="button" 
-                        class="btn-seta"
-                    >
-                        <img 
-                            src="../assets/arrow-down.png" 
-                            alt="Expandir" 
-                            class="seta-baixo"
-                        >
-                    </button>
+                <p>
+                    <!-- organização, local e detalhe -->
+                </p>
 
-                </div>
+            </li>
+
+        </ul>
 
 
-                <div class="detalhes-configuracoes">
+        <!-- Estado vazio -->
+        <div
+            class="estado-vazio"
+            id="registro-vazio"
+            hidden>
 
-                    <!-- IDIOMA -->
+            <h3></h3>
 
-                    <label for="idioma">
-                        IDIOMA
-                    </label>
+            <p></p>
 
-                    <input 
-                        type="text" 
-                        id="idioma" 
-                        class="Ulang" 
-                        value="" 
-                        disabled
-                    >
+            <button
+                class="botao botao-secundario"
+                type="button">
+            </button>
+
+        </div>
+
+    </div>
 
 
-                    <!-- CONTA -->
+    <!-- ======================================================
+         PAINEL 2 — ACESSIBILIDADE
+         ====================================================== -->
 
-                    <label for="conta">
-                        CONTA
-                    </label>
+    <div
+        class="painel painel-aba"
+        role="tabpanel"
+        id="painel-acessibilidade"
+        aria-labelledby="aba-acessibilidade"
+        tabindex="0"
+        hidden>
 
-                    <div class="botoes-conta">
+        <p class="observacao-secao">
+            <!-- onde essas preferências valem -->
+        </p>
 
-                        <button 
-                            type="button" 
-                            class="btn-osc"
-                        >
-                            OSC
-                        </button>
 
-                        <button 
-                            type="button" 
-                            class="btn-out"
-                        >
-                            Sair
-                        </button>
+        <!-- Ajuste com lista de opções -->
+        <div
+            class="campo-configuracao"
+            style="max-width:320px">
 
-                    </div>
+            <label for="opcao-acessibilidade">
+            </label>
 
-                </div>
+            <select id="opcao-acessibilidade">
+                <option></option>
+            </select>
 
-            </section>
+        </div>
 
-        </div></div>
 
-        <footer id="footer"></footer>
-        <button id="acessibilidade"></button>
-    </main>
+        <!-- Ajuste liga/desliga -->
+        <div class="configuracao">
+
+            <div>
+
+                <h3>
+                    <!-- nome do ajuste -->
+                </h3>
+
+                <p>
+                    <!-- o que muda na prática -->
+                </p>
+
+            </div>
+
+            <label class="interruptor">
+                <input type="checkbox">
+                <span></span>
+            </label>
+
+        </div>
+
+    </div>
+
+
+    <!-- ======================================================
+         PAINEL 3 — CONFIGURAÇÕES
+         ====================================================== -->
+
+    <div
+        class="painel painel-aba"
+        role="tabpanel"
+        id="painel-configuracoes"
+        aria-labelledby="aba-configuracoes"
+        tabindex="0"
+        hidden>
+
+
+        <!-- Configuração -->
+        <div class="configuracao">
+
+            <div>
+
+                <h3></h3>
+
+                <p></p>
+
+            </div>
+
+            <label class="interruptor">
+                <input type="checkbox">
+                <span></span>
+            </label>
+
+        </div>
+
+
+        <!-- Ação de exclusão -->
+        <div class="configuracao">
+
+            <div>
+
+                <h3 class="perigo"></h3>
+
+                <p>
+                    <!-- o que acontece com os dados -->
+                </p>
+
+            </div>
+
+            <button
+                class="botao botao-secundario perigo"
+                type="button">
+            </button>
+
+        </div>
+
+    </div>  </div>
+
+</section>
+</main>
+  
  
-</body>
+  <footer id="footer"></footer>
 
+</body>
 </html>
