@@ -5,16 +5,30 @@
 /* ========================= */
 
 :root {
+  /* FUNDOS */
+
   --bg-main: #161928;
   --bg-section: #2E1C50;
   --bg-card: #3E2871;
+  --bg-card-hover: #453B80;
 
-  --gold: #f6c569;
-  --gold-light: #f6c569;
+  /* DETALHES */
+
+  --primary: #4A5492;
+  --secondary: #5B68AC;
+
+  /* DOURADOS */
+
+  --gold: #F2AA1A;
+  --gold-dark: #DDAA41;
+  --gold-light: #F9C86B;
   --gold-soft: #FCE0A1;
 
+  /* TEXTOS */
+
   --text: #FFFFFF;
-  --text-soft: #FFFFFF;
+  --text-soft: #d7d7d7;
+
 }
 
 /* ========================= */
@@ -123,4 +137,108 @@ body {
 
 .destaque .divider img {
   background: #2f1d51;
+}
+
+/* ========================= */
+/* HERO */
+/* ========================= */
+
+.hero-container {
+  position: relative;
+
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.sobre-label {
+  display: inline-flex;
+  align-items: left;
+  gap: 14px;
+
+  font-size: 0.75rem;
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  color: var(--text-soft);
+
+  margin-bottom: 20px;
+}
+
+
+.hero {
+  min-height: 100vh;
+
+  display: flex;
+  align-items: left;
+  justify-content: space-between;
+
+  padding:
+    150px 90px 80px;
+}
+
+.hero-text {
+  width: 100%;
+  text-align: left;
+  padding-top: 130px;
+}
+
+.hero-container h1 {
+  font-size: 8rem;
+  line-height: .95;
+  text-align: left;
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 600;
+  left:-30%;
+}
+
+#nome-ong {
+  color: var(--gold-light);
+  padding-left: 40px;
+  margin-top: 7%;
+}
+
+#descricao-ong {
+  margin-top: 30px;
+
+  line-height: 1.8;
+
+  color: var(--text-soft);
+
+  font-size: 1.1rem;
+  padding-left: 40px;
+  margin-top: 2%;
+}
+#categoria {
+  color: var(--text-soft);
+  font-weight: 600;
+  padding-left: 60px;
+  margin-top: 6%;
+  position: absolute;
+}
+#Doacao {
+  background: #261b42;
+  color: var(--text-soft);
+  font-weight: 600;
+  padding: 10px 20px;
+  border: 1px solid var(--gold);
+  border-radius: 50px;
+  cursor: pointer;
+  margin-top: 30px;
+  transition: all 0.6s ease;
+  margin-left: 40px;
+  width: 400px;
+  height: 50px;
+  font-size: 1.5rem;
+  font-family: 'times new roman', serif;
+  position: absolute;
+  padding-left: 110px;
+
+}
+#Doacao:hover {
+  background: linear-gradient(to right, var(--gold), var(--text-soft));
+  color: var(--bg-main);
+  border: 1px solid #261b42;
+}
+.infos-ong {
+  margin-top: 5%;
 }
