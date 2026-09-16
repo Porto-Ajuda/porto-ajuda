@@ -2,10 +2,10 @@
 // EDITAR DADOS DO PERFIL
 // =========================
 
-const btn = document.querySelector("#btn");
-const inputs = document.querySelectorAll(".info-perfil input");
+const btn = document.querySelector(".btn");
+const inputs = document.querySelectorAll(".campo-perfil input");
 
-const infoPerfil = document.querySelector(".info-perfil");
+const infoPerfil = document.querySelector(".campo-perfil");
 const rectangle = document.querySelector(".rectangle");
 
 let editando = false;
