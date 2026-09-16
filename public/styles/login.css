@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Poppins:wght@300;400;500;600&display=swap');
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css');
+
 :root {
 
   /* FUNDOS */
@@ -21,8 +22,8 @@
   --gold-light: #F9C86B;
   --gold-soft: #FCE0A1;
 
-    /*ROXOS*/
-    
+  /*ROXOS*/
+
 
   /* TEXTOS */
 
@@ -40,36 +41,37 @@
   padding: 0;
   box-sizing: border-box;
 }
+
 .polygon {
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 10;
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
 }
-.shape{
-    position:absolute;
-    right:0;
-    top:0;
 
-    width:550px;
-    height:100vh;
+.shape {
+  position: absolute;
+  right: 0;
+  top: 0;
 
-    background:var(--bg-section);
+  width: 550px;
+  height: 100vh;
 
-    clip-path: polygon(
-        100% 0,
-        100% 60%,
-        100% 100%,
-        27% 100%,
-        0 50%,
-        32% 0
-    );
+  background: var(--bg-section);
 
-    transform-origin:right center;
+  clip-path: polygon(100% 0,
+      100% 60%,
+      100% 100%,
+      27% 100%,
+      0 50%,
+      32% 0);
+
+  transform-origin: right center;
 
 
 }
-html {        
+
+html {
   scroll-behavior: smooth;
 }
 
@@ -83,11 +85,11 @@ body {
       var(--bg-card) 100%,
       var(--bg-section) 45%,
       var(--bg-main) 0%);
-      overflow: hidden;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  
+
 }
 
 
@@ -120,9 +122,9 @@ body {
 /* ========================= */
 
 .frame {
-  position:absolute;
+  position: absolute;
   left: 10%;
-  margin-top: 15vh;  
+  margin-top: 15vh;
   width: min(70vw, 550px);
   height: min(79vh, 540px);
   overflow: hidden;
@@ -139,6 +141,7 @@ body {
   text-align: center;
 
 }
+
 .frame .panel-login {
   left: 0;
 }
@@ -148,8 +151,8 @@ body {
 /* ========================= */
 
 .panel {
-   position: absolute;
-  display: flex; 
+  position: absolute;
+  display: flex;
   padding: 10px;
   transition: 0.5s ease;
 }
@@ -158,31 +161,32 @@ body {
   opacity: 1;
   pointer-events: all;
   padding: 50px;
-  transform: translateX(0);   
-  transition:all 1.5s cubic-bezier(.22,1,.36,1);
+  transform: translateX(0);
+  transition: all 1.5s cubic-bezier(.22, 1, .36, 1);
 }
 
 .panel-cadastro {
   opacity: 0;
   pointer-events: none;
   transform: translateX(100%);
-  transition:all 1.5s cubic-bezier(.22,1,.36,1);
+  transition: all 1.5s cubic-bezier(.22, 1, .36, 1);
 
-  transition:all 1.5s cubic-bezier(.22,1,.36,1);
+  transition: all 1.5s cubic-bezier(.22, 1, .36, 1);
 
 }
+
 .frame.flipped .panel-login {
   opacity: 0;
   pointer-events: none;
-  transform: translateX(-100%) ;
-  transition:all 1.5s cubic-bezier(.22,1,.36,1);
+  transform: translateX(-100%);
+  transition: all 1.5s cubic-bezier(.22, 1, .36, 1);
 }
 
 .frame.flipped .panel-cadastro {
   opacity: 1;
   pointer-events: all;
   transform: translateX(0);
-  transition:all 1.5s cubic-bezier(.22,1,.36,1);
+  transition: all 1.5s cubic-bezier(.22, 1, .36, 1);
 }
 
 /* ========================= */
@@ -190,7 +194,7 @@ body {
 /* ========================= */
 
 .form-sec {
-   flex: 1;
+  flex: 1;
   padding: 30px;
 }
 
@@ -216,21 +220,26 @@ body {
 .formulario {
   display: flex;
   flex-direction: column;
-  gap: 14px; 
-   bottom: 10%;
+  gap: 14px;
+  bottom: 10%;
 }
+
 #cad {
   display: none;
 }
-.row2, .row3 {
+
+.row2,
+.row3 {
   display: grid;
   grid-template-columns: 1fr;
   gap: 12px;
   padding: 2px 50px 2px 50px;
 }
+
 .row4 {
   gap: 12px;
 }
+
 .msg-error {
   color: var(--gold);
   font-size: .85rem;
@@ -238,6 +247,7 @@ body {
   margin-top: 0;
   margin-bottom: 5px;
 }
+
 .inp {
   width: 100%;
   padding: 9px 10px;
@@ -256,6 +266,7 @@ body {
   outline: none;
   transition: .3s;
 }
+
 .inp::placeholder {
   color: rgba(255, 255, 255, .55);
 }
@@ -272,64 +283,72 @@ body {
     0 0 20px rgba(242, 170, 26, .12);
 }
 
-.opcoes{
-    border-radius:12px;
-    font-size: 16px;
-    padding: 2px;
-    display:flex;
-    flex-direction:column;
+.opcoes {
+  border-radius: 12px;
+  font-size: 16px;
+  padding: 2px;
+  display: flex;
+  flex-direction: column;
 }
 
-.opcoes h2{
-    color: gold;
-    margin-bottom:10px;
-    font-size: 1.2rem;
-    text-align:center;
+.opcoes h2 {
+  color: gold;
+  margin-bottom: 10px;
+  font-size: 1.2rem;
+  text-align: center;
 }
 
-label, a{
-    display:inline;
-    align-items:left;
-    gap:5px;
-    color: rgb(255, 255, 255);
-    text-decoration: none;
-}
+label,
 a {
-    outline: none;
-    transition: color .5s ease-in;
-}
-a:hover {
-    color: gold;
-}
-.opcoes{
-    border-radius:12px;
-    font-size: 16px;
-    padding: 2px;
-    display:flex;
-    flex-direction:column;
+  display: inline;
+  align-items: left;
+  gap: 5px;
+  color: rgb(255, 255, 255);
+  text-decoration: none;
 }
 
-.opcoes h2{
-    color: gold;
-    margin-bottom:10px;
-    font-size: 1.2rem;
-    text-align:center;
-}
-
-label, a{
-    display:inline;
-    align-items:left;
-    gap:5px;
-    color: rgb(255, 255, 255);
-    text-decoration: none;
-}
 a {
-    outline: none;
-    transition: color .5s ease-in;
+  outline: none;
+  transition: color .5s ease-in;
 }
+
 a:hover {
-    color: gold;
+  color: gold;
 }
+
+.opcoes {
+  border-radius: 12px;
+  font-size: 16px;
+  padding: 2px;
+  display: flex;
+  flex-direction: column;
+}
+
+.opcoes h2 {
+  color: gold;
+  margin-bottom: 10px;
+  font-size: 1.2rem;
+  text-align: center;
+}
+
+label,
+a {
+  display: inline;
+  align-items: left;
+  gap: 5px;
+  color: rgb(255, 255, 255);
+  text-decoration: none;
+}
+
+a {
+  outline: none;
+  transition: color .5s ease-in;
+}
+
+a:hover {
+  color: gold;
+}
+
 /* ========================= */
 /* BOTÃO */
 /* ========================= */
@@ -355,6 +374,7 @@ a:hover {
 
   transition: .35s;
 }
+
 .btn:hover {
 
   transform:
@@ -370,7 +390,7 @@ a:hover {
 /* TROCA */
 /* ========================= */
 
-.sw a  {
+.sw a {
   color: var(--gold);
   gap: 3px;
   text-decoration: none;
@@ -432,4 +452,119 @@ a:hover {
   .subtitulo {
     font-size: .92rem;
   }
+}
+
+.campo-senha {
+  position: relative;
+  width: 100%;
+  display: block;
+}
+
+.campo-senha .inp {
+  width: 100%;
+  padding-right: 45px;
+}
+
+#mostrar-senha {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+
+  border: none;
+  background: transparent;
+  color: var(--text-soft);
+
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0;
+}
+
+#mostrar-senha:hover {
+  color: var(--gold);
+}
+
+.alerta-personalizado {
+  position: fixed;
+  inset: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(0, 0, 0, .65);
+
+  z-index: 9999;
+}
+
+.caixa-alerta {
+  width: min(90%, 420px);
+
+  padding: 35px 30px;
+
+  border-radius: 24px;
+
+  text-align: center;
+
+  background:
+    linear-gradient(to bottom,
+      var(--bg-card),
+      var(--bg-section));
+
+  border: 1px solid rgba(255, 255, 255, .08);
+
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, .5);
+}
+
+.icone-alerta {
+  font-size: 40px;
+  color: var(--gold);
+
+  margin-bottom: 15px;
+}
+
+.caixa-alerta h2 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2rem;
+
+  color: var(--text);
+
+  margin-bottom: 12px;
+}
+
+.caixa-alerta p {
+  color: var(--text-soft);
+
+  font-size: .95rem;
+  line-height: 1.6;
+
+  margin-bottom: 25px;
+}
+
+.btn-alerta {
+  border: none;
+
+  padding: 12px 30px;
+
+  border-radius: 14px;
+
+  background: var(--gold);
+  color: var(--bg-main);
+
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition: .3s;
+}
+
+.btn-alerta:hover {
+  background: var(--gold-light);
+
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 0 25px rgba(242, 170, 26, .25);
 }

@@ -24,37 +24,81 @@ closeButtons.forEach(button => {
 let termosConfirmados = false;
 let lgpdConfirmada = false;
 
-const confirmButtons = document.querySelectorAll(".confirm-modal");
 
-confirmButtons.forEach(button => {
+// CONFIRMAR OS MODAIS
+document.addEventListener("click", (event) => {
 
-    button.addEventListener("click", () => {
+    const button = event.target.closest(".confirm-modal");
 
-        const modalId = button.dataset.modal;
+    if (!button) return;
 
-        if (modalId === "modal-termos") {
-            termosConfirmados = true;
-        }
+    const modalId = button.dataset.modal;
 
-        if (modalId === "modal-lgpd") {
-            lgpdConfirmada = true;
-        }
+    if (modalId === "modal-termos") {
+        termosConfirmados = true;
+    }
 
-        const modal = document.getElementById(modalId);
+    if (modalId === "modal-lgpd") {
+        lgpdConfirmada = true;
+    }
+
+    const modal = document.getElementById(modalId);
+
+    if (modal) {
         modal.close();
-
-        liberarCheckbox();
-
-    });
+    }
 
 });
 
-function liberarCheckbox() {
 
-    const checkbox = document.querySelector("#check-termos");
+// CHECKBOX
+document.addEventListener("click", (event) => {
 
-    if (termosConfirmados && lgpdConfirmada) {
-        checkbox.disabled = false;
+    const checkbox = event.target.closest("#check-termos");
+
+    if (!checkbox) return;
+
+
+    // Se ainda não confirmou os dois
+    if (!termosConfirmados || !lgpdConfirmada) {
+
+        event.preventDefault();
+
+        checkbox.checked = false;
+
+        mostrarAlerta(
+            "Você precisa ler e confirmar os Termos de Uso e a Política de Privacidade antes de continuar."
+        );
+
     }
 
+});
+
+function mostrarAlerta(mensagem) {
+
+    const alerta = document.createElement("div");
+
+    alerta.className = "alerta-personalizado";
+
+    alerta.innerHTML = `
+        <div class="caixa-alerta">
+            <div class="icone-alerta">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+
+            <h2>Atenção</h2>
+
+            <p>${mensagem}</p>
+
+            <button type="button" class="btn-alerta">
+                Entendi
+            </button>
+        </div>
+    `;
+
+    document.body.appendChild(alerta);
+
+    alerta.querySelector(".btn-alerta").addEventListener("click", () => {
+        alerta.remove();
+    });
 }

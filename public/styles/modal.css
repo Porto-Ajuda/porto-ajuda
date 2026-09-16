@@ -1,6 +1,13 @@
 /* =========================
    MODAL - TERMOS / POLÍTICAS
    ========================= */
+#modal-termos-politica {
+    position: absolute;
+    width: 0;
+    height: 0;
+    margin: 0;
+    padding: 0;
+}
 
 dialog {
     width: min(900px, 85vw);

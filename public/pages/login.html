@@ -47,11 +47,14 @@
                     Faça login e continue ajudando.
                 </p>
 
-                <form class="formulario">
+                <form class="formulario" autocomplete="off">
 
-                    <input class="inp" type="text" placeholder="CPF">
+                    <input class="inp" type="text" placeholder="CPF" autocomplete="off" maxlength="14">
 
-                    <input class="inp" type="password" placeholder="Senha">
+                    <div class="campo-senha">
+                        <input id="senha" class="inp" type="password" placeholder="Senha">
+                        <button type="button" id="mostrar-senha">👁️</button>
+                    </div>
 
                     <button class="btn" type="submit">
                         Fazer Login
@@ -82,14 +85,14 @@
                     e faça parte dessa transformação.
                 </p>
 
-                <form class="formulario">
+                <form class="formulario" autocomplete="off">
 
                     <!-- ETAPA 1 -->
                     <div class="row2">
 
                         <input class="inp" type="text" placeholder="Nome">
 
-                        <input class="inp" id="cpf" type="text" placeholder="CPF" maxlength="14">
+                        <input class="inp" id="cpf" type="text" placeholder="CPF" maxlength="14" autocomplete="off">
 
                         <input class="inp" type="email" placeholder="E-mail">
 
@@ -102,9 +105,10 @@
 
                         <input class="inp" type="text" id="username" placeholder="Nome de usuário">
 
-                        <input class="inp" type="date" id="nascimento" placeholder="Data de nascimento">
+                        <input class="inp" type="text" id="nascimento" placeholder="Data de nascimento"
+                            onfocus="this.type='date'" onblur="if(!this.value) this.type='text'">
 
-                        <input class="inp" type="text" id="cep" placeholder="CEP">
+                        <input class="inp" type="text" id="cep" placeholder="CEP" autocomplete="off">
 
                     </div>
 
@@ -120,7 +124,7 @@
                             <h2>Ao se cadastrar neste site, você afirma que</h2>
 
                             <label>
-                                <input id="check-termos" type="checkbox" name="termos" disabled>
+                                <input id="check-termos" type="checkbox" name="termos"                                    value="aceito" required>
                                 Concorda com nossos
                                 <button class="open-modal style-open-modal" data-modal="modal-termos"
                                     type="button">Termos de Uso</button>
