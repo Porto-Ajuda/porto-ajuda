@@ -87,32 +87,12 @@ html {
 }
 
 body {
-    margin: 0;
-  padding: 0;
-  overflow-x: hidden;
-  font-family: 'Poppins', sans-serif;
-  color: var(--text);
-
-  background:
-    radial-gradient(circle at top,
-      var(--bg-card) 0%,
-      var(--bg-section) 45%,
-      var(--bg-main) 100%);
+    min-height: 100vh;
+    background: var(--bg-main);
+    overflow-x: hidden;
+    overflow-y: auto;
 }
 
-.stars {
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-
-  background-image:
-    radial-gradient(var(--gold-soft) 1px, transparent 1px);
-
-  background-size: 90px 90px;
-
-  opacity: .18;
-}
 .perfil-header {
      margin-top: clamp(1vh, 4vh, 16vh);
       margin-left: clamp(1vh, 5vh, 6vh);
@@ -136,10 +116,10 @@ body {
     margin-left: clamp(10vh, 50vh, 65px);
 }
 
-.rectangle {
-    position: absolute;
-    width: clamp(30vh, 50vh, 100vh);
-    height: clamp(60vh, 80vh, 100vh);
+.rectangle{
+    position: relative;
+    width: clamp(200px, 30vw, 380px);
+    height: clamp(540px, 60vh, 750px);
     border-radius: 40px;
     clip-path: polygon(
         100% 0%,
@@ -162,7 +142,7 @@ body {
     height: clamp(60vh, 80vh, 100vh);
 }
 .info-perfil {
-    width: 100rem;
+    width: 100%;
     display: flex;
     flex-direction: column;
     margin-top: clamp(10rem, 18rem, 35rem);
