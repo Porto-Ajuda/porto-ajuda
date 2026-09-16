@@ -223,13 +223,16 @@ body {
   border: 1px solid var(--gold);
   border-radius: 50px;
   cursor: pointer;
-  margin-top: 20px;
+  margin-top: 30px;
   transition: all 0.6s ease;
   margin-left: 40px;
   width: 400px;
   height: 50px;
   font-size: 1.5rem;
   font-family: 'times new roman', serif;
+  position: absolute;
+  padding-left: 110px;
+
 }
 #Doacao:hover {
   background: linear-gradient(to right, var(--gold), var(--text-soft));
