@@ -67,3 +67,16 @@ form.addEventListener('submit', (e) => {
        
     }
 });
+
+const senha = document.querySelector("#senha");
+const botao = document.querySelector("#mostrar-senha");
+
+botao.addEventListener("click", () => {
+    if (senha.type === "password") {
+        senha.type = "text";
+        botao.textContent = "🙈";
+    } else {
+        senha.type = "password";
+        botao.textContent = "👁️";
+    }
+});

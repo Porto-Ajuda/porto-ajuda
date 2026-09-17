@@ -1,0 +1,356 @@
+/* =========================
+   MODAL - TERMOS / POLÍTICAS
+   ========================= */
+#modal-termos-politica {
+    position: absolute;
+    width: 0;
+    height: 0;
+    margin: 0;
+    padding: 0;
+}
+
+dialog {
+    width: min(900px, 85vw);
+    height: min(80vh, 800px);
+
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 24px;
+
+    background: linear-gradient(
+        145deg,
+        #3d2775,
+        #28194f
+    );
+
+    color: #ffffff;
+
+    box-shadow:
+        0 25px 80px rgba(0, 0, 0, 0.55),
+        0 0 40px rgba(91, 52, 160, 0.25);
+
+    overflow: hidden;
+
+    font-family: Arial, sans-serif;
+
+    position: fixed;
+
+    top: 50%;
+    left: 50%;
+
+    transform: translate(-50%, -50%);
+
+    margin: 0;
+}
+
+
+/* =========================
+   FUNDO ATRÁS DO MODAL
+   ========================= */
+
+dialog::backdrop {
+    background: rgba(10, 7, 25, 0.75);
+    backdrop-filter: blur(6px);
+}
+
+
+/* =========================
+   CABEÇALHO
+   ========================= */
+
+.modal-header {
+    height: 93px;
+
+    box-sizing: border-box;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 25px 30px;
+
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+
+    background: rgba(255, 255, 255, 0.03);
+
+    flex-shrink: 0;
+}
+
+
+/* =========================
+   TÍTULO
+   ========================= */
+
+.modal-title {
+    margin: 0;
+
+    font-size: 30px;
+    font-weight: 700;
+
+    color: #ffffff;
+}
+
+.modal-title span {
+    color: #f9ad16;
+}
+
+
+/* =========================
+   BOTÃO FECHAR
+   ========================= */
+
+.close-modal {
+    width: 42px;
+    height: 42px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: none;
+    border-radius: 50%;
+
+    background: rgba(255, 255, 255, 0.08);
+
+    color: #ffffff;
+
+    font-size: 24px;
+
+    cursor: pointer;
+
+    transition: 0.25s ease;
+}
+
+.close-modal:hover {
+    background: #f9ad16;
+    color: #241647;
+
+    transform: rotate(90deg);
+}
+
+
+/* =========================
+   CORPO DO MODAL
+   ========================= */
+
+.modal-body {
+    height: calc(100% - 170px);
+
+    box-sizing: border-box;
+
+    padding: 30px 35px;
+
+    overflow-y: auto;
+
+    font-size: 16px;
+    line-height: 1.7;
+
+    color: rgba(255, 255, 255, 0.88);
+}
+
+
+/* =========================
+   TÍTULOS DENTRO DO TEXTO
+   ========================= */
+
+.modal-body h2 {
+    margin-top: 25px;
+    margin-bottom: 10px;
+
+    font-size: 21px;
+
+    color: #f9ad16;
+}
+
+.modal-body h3 {
+    margin-top: 20px;
+    margin-bottom: 8px;
+
+    font-size: 18px;
+
+    color: #ffffff;
+}
+
+.modal-body p {
+    margin: 0 0 15px;
+}
+
+.modal-body ul,
+.modal-body ol {
+    margin-bottom: 20px;
+    padding-left: 25px;
+}
+
+.modal-body li {
+    margin-bottom: 8px;
+}
+
+
+/* =========================
+   BARRA DE ROLAGEM
+   ========================= */
+
+.modal-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+
+    border-radius: 10px;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+    background: rgba(249, 173, 22, 0.7);
+
+    border-radius: 10px;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+    background: #f9ad16;
+}
+
+
+/* =========================
+   RODAPÉ DO MODAL
+   ========================= */
+
+.modal-footer {
+    height: 77px;
+
+    box-sizing: border-box;
+
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    padding: 12px 25px;
+
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+
+    background: rgba(255, 255, 255, 0.03);
+
+    flex-shrink: 0;
+}
+
+
+/* =========================
+   BOTÃO DE CONFIRMAÇÃO
+   ========================= */
+
+.confirm-modal {
+    min-width: 230px;
+    height: 45px;
+
+    padding: 0 25px;
+
+    border: none;
+    border-radius: 12px;
+
+    background: #f9ad16;
+
+    color: #241647;
+
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 700;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.confirm-modal:hover {
+    background: #ffc34d;
+
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 6px 18px rgba(249, 173, 22, 0.25);
+}
+
+.confirm-modal:active {
+    transform: translateY(0);
+
+    box-shadow: none;
+}
+
+
+/* =========================
+   BOTÕES "TERMOS DE USO"
+   ========================= */
+
+.style-open-modal {
+    border: none;
+
+    background: transparent;
+
+    color: #F2AA1A;
+
+    font-size: inherit;
+    font-family: inherit;
+
+    cursor: pointer;
+
+    padding: 0;
+
+    text-decoration: underline;
+
+    transition: 0.2s ease;
+}
+
+.style-open-modal:hover {
+    color: #ffc34d;
+}
+
+
+/* =========================
+   RESPONSIVIDADE
+   ========================= */
+
+@media (max-width: 700px) {
+
+    dialog {
+        width: 90vw;
+        height: 85vh;
+
+        border-radius: 18px;
+    }
+
+    .modal-header {
+        height: 75px;
+
+        padding: 20px;
+    }
+
+    .modal-title {
+        font-size: 24px;
+    }
+
+    .modal-body {
+        height: calc(100% - 145px);
+
+        padding: 22px;
+
+        font-size: 15px;
+    }
+
+    .close-modal {
+        width: 36px;
+        height: 36px;
+    }
+
+    .modal-footer {
+        height: 70px;
+
+        padding: 10px 15px;
+    }
+
+    .confirm-modal {
+        width: 100%;
+        min-width: 0;
+    }
+}

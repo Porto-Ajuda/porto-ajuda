@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Porto Ajuda – Sobre</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="../styles/ong-profile.css" />
+  <link rel="stylesheet" href="../styles/geral.css">
+  <script src="../components/header_footer.js" defer></script>
+  <script src="../components/compartilhar.js" defer></script>
+  <script src="../components/ong-profile.js" defer></script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+
+      const elementosSurgir = document.querySelectorAll(".surgir");
+
+      const observador = new IntersectionObserver((entradas) => {
+        entradas.forEach(entrada => {
+          if (entrada.isIntersecting) {
+            entrada.target.classList.add("active");
+          }
+        });
+      }, { threshold: 0.15 });
+
+      elementosSurgir.forEach(el => observador.observe(el));
+
+    });
+  </script>
+</head>
+
+<body>
+
+
+
+  <!-- ========================= -->
+  <!-- NAVBAR -->
+  <!-- ========================= -->
+
+  <header class="navbar"></header>
+  <div class="stars"></div>
+
+  <section class="surgir">
+
+    <div class="hero-text">
+
+      <div class="hero-container">
+
+        <div class="infos-ong">
+
+          <div class="sobre-label">
+            <div id="categoria">
+              <svg width="20" height="20" viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path
+                  d="M8.28665 5.52197C8.24611 5.46715 8.2255 5.39984 8.22781 5.32991C8.23013 5.25999 8.25527 5.19115 8.29953 5.13347C8.34379 5.07579 8.40484 5.03231 8.47373 5.00944C8.54263 4.98656 8.61572 4.98547 8.6823 5.00635C8.8625 5.06349 9.06056 5.06108 9.24735 4.99949C9.43414 4.9379 9.59979 4.82037 9.71991 4.66421C9.84003 4.50805 9.90829 4.3215 9.91463 4.13202C9.92098 3.94254 9.86508 3.76014 9.75516 3.61165C9.64523 3.46317 9.48707 3.35642 9.304 3.30717C9.12092 3.25792 8.92257 3.26874 8.73814 3.33804C8.55372 3.40734 8.39295 3.53145 8.27951 3.69212C8.16607 3.8528 8.10594 4.04153 8.10798 4.23056C8.10838 4.27342 8.10015 4.31652 8.08373 4.35737C8.06732 4.39822 8.04306 4.43606 8.01233 4.46868C7.98159 4.5013 7.94497 4.52807 7.90459 4.5475C7.86421 4.56692 7.82085 4.5786 7.77697 4.58186C7.7331 4.58513 7.68958 4.57993 7.64889 4.56655C7.6082 4.55316 7.57115 4.53188 7.53984 4.50387C7.50853 4.47587 7.48358 4.44172 7.46641 4.40337C7.44925 4.36502 7.4402 4.32321 7.43979 4.28034C7.43655 3.95178 7.54129 3.62382 7.73864 3.34469C7.93598 3.06555 8.2155 2.84996 8.53608 2.72965C8.85667 2.60934 9.20142 2.59067 9.5196 2.67634C9.83777 2.76201 10.1126 2.94753 10.3036 3.20561C10.4947 3.46368 10.5919 3.78069 10.581 4.11002C10.57 4.43934 10.4515 4.76359 10.2428 5.03508C10.0341 5.30658 9.74634 5.51097 9.42175 5.61823C9.09716 5.72548 8.7529 5.72992 8.43961 5.63089C8.37763 5.6111 8.32436 5.57317 8.28665 5.52197Z"
+                  fill="#929292"></path>
+                <path
+                  d="M11.3495 0.000308695L7.59267 0.12157C6.98675 0.170029 6.40505 0.436885 5.99294 0.849129L0.563583 6.28189C-0.187861 7.0338 -0.187861 8.24641 0.563583 8.99829L4.00528 12.4421C4.36885 12.8059 4.87791 13 5.36265 13C5.8474 13 6.33214 12.8059 6.72002 12.4421L12.1251 7.03369C12.5614 6.59712 12.828 6.03926 12.8522 5.40872L12.9977 1.64929C13.0219 1.21272 12.8523 0.776125 12.5372 0.460924C12.2221 0.16982 11.7858 0 11.3495 0L11.3495 0.000308695ZM12.1493 5.36046C12.1251 5.79703 11.9312 6.20928 11.616 6.50038L6.21096 11.9088C5.75044 12.3696 4.999 12.3696 4.53848 11.9088L1.09678 8.46499C0.636256 8.00418 0.636256 7.25227 1.09678 6.79146L6.50186 1.38299C6.81698 1.06768 7.20474 0.897946 7.64106 0.849381L11.3739 0.72812C11.6162 0.72812 11.8586 0.800922 12.0283 0.99487C12.1979 1.16459 12.2949 1.40723 12.2949 1.64974L12.1493 5.36046Z"
+                  fill="#929292"></path>
+              </svg>
+
+
+              <span>Categoria</span>
+            </div>
+          </div>
+
+          <div id="nome-ong">
+            <h1>
+              <span>Nome da ONG</span>
+            </h1>
+          </div>
+
+          <div id="descricao-ong">
+            <p>
+              Pequena descrição ou mensagem da ONG, que pode ser um resumo do que ela faz,<br>
+              sua missão ou valores.Este texto deve ser conciso e informativo, capturando <br>
+              a essência da organização de forma clara e envolvente.
+            </p>
+          </div>
+          <a href="https://venge.io" id="Doacao" class="btn">Realizar doação</a>
+
+        </div>
+
+
+        <div class="carrossel">
+          <div class="carrossel-track">
+            <img src="../assets/ong1.jpg" alt="">
+            <img src="../assets/ong2.jpg" alt="">
+            <img src="../assets/ong3.png" alt="">
+            <img src="../assets/ong4.jpg" alt="">
+          </div>
+        </div>
+
+  </section>
+
+
+  </div>
+
+  <div class="divider">
+    <img class="lua1" src="../assets/moon.png" alt="">
+  </div>
+  </section>
+
+  <!-- ========================= -->
+  <!-- DIVISOR -->
+  <!-- ========================= -->
+
+  <section class="surgir">
+
+    <div class="sobre-ong">
+
+      <div class="sobre-label">
+        <h2>Sobre a ONG</h2>
+      </div>
+
+      <div class="sobre-text">
+        <p>
+          Aqui você pode colocar uma descrição mais detalhada sobre a ONG, incluindo sua história, missão, visão e
+          valores.
+          É o espaço ideal para compartilhar informações que ajudem os visitantes a entender melhor o propósito da
+          organização
+          e como ela impacta a comunidade. lorem ipsum dolor sit amet, consectetur adipiscing elit.
+          Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. lorem ipsum dolor sit amet,
+          consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+        </p>
+      </div>
+
+      <div class="ods-container">
+        <h2>ODS da iniciativa</h2>
+        <div class="ods">
+          <div class="ods-item">
+            <img src="../assets/ods1.png" alt="ODS 1">
+          </div>
+
+          <div class="ods-item">
+            <img src="../assets/ods2.png" alt="ODS 2">
+          </div>
+
+          <div class="ods-item">
+            <img src="../assets/ods3.webp" alt="ODS 3">
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+
+    <a href="https://venge.io" id="Doacao-footer" class="btn">Doar para a iniciativa</a>
+
+    <a href="#" class="compartilhar" id="compartilhar">
+      <span>Compartilhar iniciativa</span>
+    </a>
+
+    <div id="regiao">
+      <svg width="25" height="25" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 21C12 21 19 14.5 19 8.5C19 4.91 15.87 2 12 2C8.13 2 5 4.91 5 8.5C5 14.5 12 21 12 21Z"
+          fill="#929292" />
+        <circle cx="12" cy="8.5" r="3" fill="#161928" />
+      </svg>
+
+      <span>Região</span>
+    </div>
+
+    <div class="divider-doacao"></div>
+
+  </section>
+
+
+  <footer id="footer"></footer>
+
+</body>
+
+</html>

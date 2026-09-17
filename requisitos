@@ -1,0 +1,151 @@
+1. Home
+ carrossel na area inicial-> Destaque para ações disponíveis — mostrar algumas oportunidades recentes de voluntariado/doação.
+
+ carrossel na area inicial além de já estarem na area de destaque abaixo-> ONGs em destaque — algumas ONGs cadastradas, com imagem e informações resumidas.
+
+ introdução ao site — explicar de forma simples o fluxo: encontrar uma ONG → escolher como ajudar → entrar em contato/realizar a ação. usando pequenos cards com botão de "proximo" e "entendi"
+
+ Card de mensagem no final da página — semelhante ao do Sobre, com uma mensagem motivacional/institucional.
+
+
+2. Página de Posts das ONGs
+
+ Listagem de posts das ONGs -voluntariados, doações e caridade-.
+ Separação por tipo de ação, por exemplo:
+ Voluntariado
+ Doação financeira
+ Doação de alimentos
+ Doação de roupas/objetos
+ Trabalho voluntário/serviços
+
+ Filtros para os tipos de ações.
+ Busca por nome da ong ou palavra-chave da ação.
+
+ Card do post contendo:
+ tipo -noticia, doação, voluntariado-;
+ imagem;
+ título;
+ ONG responsável;
+ tipo de ajuda;
+ breve descrição;
+ data da publicação.
+ Página/detalhamento do post ao clicar.
+
+ Informações completas da necessidade — descrição, quantidade necessária, local, prazo etc.
+ Botão de ação — "Quero ajudar", "Fazer doação", "Participar do voluntariado" etc.
+
+ Link para a página da ONG responsável.
+
+
+3. Página de ONGs
+
+ Listagem de todas as ONGs cadastradas.
+ Busca por nome da ONG.
+ Filtros por categoria/área de atuação e região, por exemplo:
+    EDUCACAO;
+    SAUDE;
+    MEIO_AMBIENTE;
+    ANIMAIS;
+    INCLUSAO_SOCIAL;
+    ESPORTE;
+    CULTURA;
+    COMBATE_POBREZA.
+
+ Cards das ONGs, contendo:
+ imagem/logo;
+ nome;
+ área de atuação;
+ localização;
+ descrição resumida.
+
+ Página individual da ONG ao clicar no card da mesma, contendo:
+ Descrição completa da ONG;
+ Fotos da ONG/projetos;
+ Informações de contato;
+ Localização/região de atuação;
+ Ações disponíveis atualmente dentro da mesma, separando:
+ vagas de voluntariado;
+ doações financeiras;
+ doações de materiais;
+ necessidades de trabalho/serviços.
+
+ Posts recentes daquela ONG.
+
+ Botão para compartilhar a ONG — opcional, mas interessante.
+ Dentro da página individual da ONG
+ Algo parecido com:
+
+ [Imagem] Nome da ONG
+ Descrição
+   Localização "link"
+   Contato 00 00 0000-0000
+ Como você pode ajudar?
+ → Voluntariado "link"
+ → Doações "link"
+ → Necessidades atuais "link"
+
+
+
+4. Página de Doação
+
+ Identificação da ONG que receberá a doação.
+ Resumo da causa/necessidade que está sendo apoiada.
+ Valores pré-estabelecidos, por exemplo:
+  R$ 10
+  R$ 25
+  R$ 50
+  R$ 100
+ Opção "Ajudar com outro valor".
+ Campo para inserir valor personalizado.
+ Exibição do valor selecionado antes da confirmação -com pop up do tipo "esse foi o valor escolhido?"-.
+ Botão para prosseguir com a doação.
+ Informações sobre para onde a doação será destinada.
+ Confirmação da doação após o processo.
+ Mensagem de agradecimento.
+ A ONG poderia fornecer um link de doação/Pix externo.
+
+
+7. Área da ONG
+
+ Dashboard da ONG.
+ Visualização das informações cadastradas.
+ botão de editar perfil da ONG.
+ botão de Cadastrar nova necessidade/oportunidade.
+ botão de Editar publicação existente.
+ botão de Excluir publicação.
+ botão de Cadastrar vagas de voluntariado.
+ botão de Cadastrar necessidades de doação.
+ botão de Cadastrar informações sobre campanhas.
+ Visualizar suas próprias publicações.
+
+
+8. Página de Voluntariado
+
+ Listagem de oportunidades de voluntariado.
+ Filtros por área de atuação.
+ Filtros por localização.
+ Busca por oportunidade/ONG.
+ Informações da vaga:
+ ONG;
+ função;
+ descrição;
+ local;
+ período;
+ requisitos;
+ quantidade de voluntários necessária.
+
+Botão "Quero ser voluntário".
+
+Forma de contato/inscrição definida pela ONG.
+
+
+navegação principal:
+
+Home | ONGs | Voluntariado | Posts | Sobre
+
+Usuário:
+→ Perfil / Minhas ações
+
+ONG:
+→ Painel da ONG / Criar publicação / Gerenciar oportunidades
+
