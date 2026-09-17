@@ -42,9 +42,9 @@ const cabecalho = `
 <li id="barra">|</li>
       <li><a href="sobre.html">Sobre</a></li>
 <li id="barra">|</li>
-      <li><a href="#">Ajuda</a></li>
+      <li><a href="iniciativas.html">Campanhas Sociais</a></li>
 <li id="barra">|</li>
-      <li><a href="#">Apoiar o Site</a></li>
+      <li><a href="apoie.html">Apoiar o Site</a></li>
 <li id="barra">|</li>
       <li><a href="proximity.html">ONG's Regionais</a></li>
       </ul>
