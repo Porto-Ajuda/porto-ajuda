@@ -18,6 +18,47 @@
 
   <script src="../components/crud.js" defer></script>
 
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+
+      const elementosSurgir = document.querySelectorAll(".surgir");
+
+      const observador = new IntersectionObserver((entradas) => {
+        entradas.forEach(entrada => {
+          if (entrada.isIntersecting) {
+            entrada.target.classList.add("active");
+          }
+        });
+      }, { threshold: 0.15 });
+
+      elementosSurgir.forEach(el => observador.observe(el));
+
+    });
+
+    const cards = document.querySelectorAll(".card");
+
+    const observer = new IntersectionObserver((entries) => {
+
+      entries.forEach((entry) => {
+
+        if (entry.isIntersecting) {
+
+          entry.target.classList.add("show");
+
+        }
+
+      });
+
+    }, {
+      threshold: 0.2
+    });
+
+    cards.forEach((card) => {
+
+      observer.observe(card);
+
+    });
+  </script>
 </head>
 
 <body>
