@@ -6,6 +6,7 @@ import com.portoajuda.aplicacao_osc.utils.Email;
 import org.springframework.data.domain.Example;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 
@@ -21,7 +22,7 @@ public interface OscRepository extends JpaRepository<Osc, Integer> {
           WHERE m.usuario.id = :usuarioId
           AND m.osc.id = :oscId
     """)
-    boolean userBelongsOsc(Integer oscId, Integer usuarioId);
+    boolean userBelongsOsc(@Param("oscId") Integer oscId, @Param("usuarioId") Integer usuarioId);
 
     boolean existsByCnpj(Cnpj cnpj);
 }

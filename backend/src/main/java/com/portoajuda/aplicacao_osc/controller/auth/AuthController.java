@@ -66,7 +66,6 @@ public class AuthController {
     @PreAuthorize("hasRole('USUARIO')")
     @GetMapping(
             value = "/get",
-            consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
     public ResponseEntity<Usuario> get(@AuthenticationPrincipal Usuario usuario){

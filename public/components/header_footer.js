@@ -91,14 +91,14 @@ const acessibilidadeHTML = `
     <div id="acessibilidade">
 
         <button id="botao-acessibilidade" type="button">
-            ♿
+            🚹
         </button>
 
         <div id="painel-acessibilidade">
 
             <div class="acessibilidade-cabecalho">
 
-                <h2>♿ Acessibilidade</h2>
+                <h2>🚹 Acessibilidade</h2>
 
                 <button id="fechar-acessibilidade" type="button">
                     ×

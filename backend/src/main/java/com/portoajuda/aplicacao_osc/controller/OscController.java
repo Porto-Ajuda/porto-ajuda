@@ -52,7 +52,6 @@ public class OscController {
 
     @GetMapping(
             value = "/list",
-            consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
     public ResponseEntity<Page<Osc>> viewAll(Pageable pageable){
@@ -84,7 +83,7 @@ public class OscController {
 
     @PreAuthorize("hasRole('OSC')")
     @DeleteMapping(
-            value = "/newMembro",
+            value = "/removeMembro",
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )

@@ -25,28 +25,45 @@ public class JwtAuthFilter  extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String authHeader = request.getHeader("Authorization");
-        String token = null;
-        Integer id = null;
 
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            token = authHeader.substring(7);
-            id = Integer.valueOf(jwtService.extractSubject(token));
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response);
+            return;
         }
 
-        if (id != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            Usuario usuario = usuarioRepository.findById(id)
-                    .orElseThrow(() -> new IllegalArgumentException("Usuário inválido"));
+        String token = authHeader.substring(7);
 
-            System.out.println(usuario.getAuthorities());
-            if (jwtService.validateToken(token, usuario)) {
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        usuario,
-                        null,
-                        usuario.getAuthorities());
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+        try {
+            Integer id = Integer.valueOf(jwtService.extractSubject(token));
+
+            if (SecurityContextHolder.getContext().getAuthentication() == null) {
+
+                Usuario usuario = usuarioRepository.findById(id)
+                        .orElse(null);
+
+                if (usuario != null && jwtService.validateToken(token, usuario)) {
+
+                    UsernamePasswordAuthenticationToken authToken =
+                            new UsernamePasswordAuthenticationToken(
+                                    usuario,
+                                    null,
+                                    usuario.getAuthorities()
+                            );
+
+                    authToken.setDetails(
+                            new WebAuthenticationDetailsSource()
+                                    .buildDetails(request)
+                    );
+
+                    SecurityContextHolder.getContext()
+                            .setAuthentication(authToken);
+                }
             }
+
+        } catch (Exception e) {
+            SecurityContextHolder.clearContext();
         }
+
         filterChain.doFilter(request, response);
     }
 }
