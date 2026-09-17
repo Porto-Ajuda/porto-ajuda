@@ -84,7 +84,7 @@ public class OscController {
 
     @PreAuthorize("hasRole('OSC')")
     @DeleteMapping(
-            value = "/newMembro",
+            value = "/removeMembro",
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )

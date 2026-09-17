@@ -33,7 +33,6 @@ public class OscService {
     private final UsuarioRepository usuarioRepository;
     private final RoleRepository roleRepository;
     private final OscMembrosRepository membrosRepository;
-    private final JwtService jwtService;
 
     @Transactional
     public void create(RequestOscDTO oscDTO, Usuario usuarioAuth) {
@@ -128,10 +127,15 @@ public class OscService {
         boolean isDono = oscRepository.existsByIdAndUsuarioId(osc.getId(), usuario.getId());
         boolean isMembro = oscRepository.userBelongsOsc(osc.getId(), usuario.getId());
         if(!isDono && !isMembro){
-            throw new AccessDeniedException("Você não pode remover membros nessa OSC");
+            throw new AccessDeniedException("Você não pertence à essa OSC");
         }
-        Usuario usuarioMembro = usuarioRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("Membro não encontrado"));
+        OscMembros membroOsc = membrosRepository.findByUsuarioEmail(email)
+                        .orElseThrow(() -> new IllegalArgumentException("Usuário Membro não encontrado"));
+        if(!membroOsc.getOsc().getId().equals(osc.getId())){
+            throw new AccessDeniedException("Erro ao buscar membro nessa OSC");
+        }
+
+        membrosRepository.delete(membroOsc);
     }
     public Page<Osc> viewAll(Pageable pageable){
         return oscRepository.findAll(pageable);
