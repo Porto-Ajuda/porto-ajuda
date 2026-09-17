@@ -52,7 +52,6 @@ public class OscController {
 
     @GetMapping(
             value = "/list",
-            consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
     public ResponseEntity<Page<Osc>> viewAll(Pageable pageable){
