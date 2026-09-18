@@ -139,7 +139,6 @@ body {
     0 20px 50px rgba(0, 0, 0, .35);
   z-index: 1;
   text-align: center;
-
 }
 
 .frame .panel-login {
@@ -465,7 +464,7 @@ a:hover {
   padding-right: 45px;
 }
 
-#mostrar-senha {
+.mostrar-senha {
   position: absolute;
   right: 12px;
   top: 50%;
@@ -480,7 +479,7 @@ a:hover {
   padding: 0;
 }
 
-#mostrar-senha:hover {
+.mostrar-senha:hover {
   color: var(--gold);
 }
 
@@ -615,12 +614,7 @@ a:hover {
 
 /* CAIXA FLUTUANTE */
 .requisitos-senha {
-  position: absolute;
-
-  left: calc(100% + 15px);
-  top: 50%;
-
-  transform: translateY(-50%);
+  position: fixed;
 
   width: 230px;
   padding: 12px 15px;
@@ -635,7 +629,13 @@ a:hover {
   flex-direction: column;
   gap: 4px;
 
-  z-index: 100;
+  z-index: 9999;
+}
+
+.requisitos-senha span {
+  display: block;
+  font-size: .75rem;
+  color: var(--text-soft);
 }
 
 .requisitos-senha span {

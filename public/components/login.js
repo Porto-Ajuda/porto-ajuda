@@ -312,7 +312,11 @@ const confirmarSenha = document.getElementById('confirmar-senha');
 const requisitosSenha = document.querySelector('.requisitos-senha');
 
 senhaCadastro.addEventListener('focus', () => {
+    const posicao = senhaCadastro.getBoundingClientRect();
+
     requisitosSenha.style.display = 'flex';
+    requisitosSenha.style.left = `${posicao.right + 30}px`;
+    requisitosSenha.style.top = `${posicao.top}px`;
 });
 
 senhaCadastro.addEventListener('blur', () => {
