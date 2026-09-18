@@ -77,9 +77,9 @@ function localizarUsuario() {
             const latitude = position.coords.latitude;
             const longitude = position.coords.longitude;
 
-            posicaoUsuario = [latitude, longitude];
+            posicaoUsuario = [latitude - 0.08, longitude - 0.05];
 
-            map.setView([latitude - 0.08, longitude - 0.05], zoomInicial);
+            map.setView(posicaoUsuario, zoomInicial);
 
             console.log("Latitude:", latitude);
             console.log("Longitude:", longitude);
