@@ -1,405 +1,1110 @@
-
 <!DOCTYPE html>
+
 <html lang="pt-BR">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Porto Ajuda – Perfil</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="../styles/geral.css">
-   <link rel="stylesheet" href="../styles/acessibilidade.css">
-  <link rel="stylesheet" href="../styles/perfil.css" />
-  <script src="../components/header_footer.js" defer></script>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Porto Ajuda – Perfil</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link rel="stylesheet" href="../styles/geral.css">
+    <link rel="stylesheet" href="../styles/acessibilidade.css">
+    <link rel="stylesheet" href="../styles/perfil.css">
+
+    <script src="../components/header_footer.js" defer></script>
     <script src="../components/perfil.js" defer></script>
+
 </head>
+
 <body>
 
-  <div class="stars"></div>
+    <div class="stars"></div>
 
-  <!-- ========================= -->
-  <!-- NAVBAR -->
-  <!-- ========================= -->
+    <!-- ========================= -->
+    <!-- NAVBAR -->
+    <!-- ========================= -->
 
-  <header class="navbar"></header>
+    <header class="navbar"></header>
 
-  <section class="surgir">
+
+    <section class="surgir">
+
         <section class="hero">
-        <div class="hero-text">
-            <div class="hero-container">
-                 <div class="sobre-label">
-            <span>Perfil</span>
-          </div>
-          <h1>
-            SUA <br>
-            <span>CONTA</span>
-          </h1>
 
-          <p>
-            Seus dados, suas preferências de uso do site <br>
-            e o registro do que você já ajudou a fazer acontecer.
-          </p>
- <div class="divider">
-      <img class="lua" src="../assets/moon.png">
-    </div>
-        </div>
-        
-  <div class="layout">
-<section class="painel-perfil" aria-labelledby="titulo-perfil">
-    <div class="foto-perfil" aria-hidden="true">
-      FL
-    </div>
-    <h2 id="titulo-perfil">
-       Fulano de Tal
-    </h2>
-    <p class="data-cadastro">
-       33 de Fevereiro de 1800
-    </p>
-    <!-- campos do cadastro -->
-    <div class="campo-perfil">
-        <label for="nome-usuario">
-            Nome
-        </label>
-          <input id="nome" type="text">
-   
-         <label for="nome-social">
-            Nome Social
-        </label>
-        <input id="nome-social" type="text">
-        <label for="email">
-           E-mail
-        </label>
-        <input id="email" type="text">
-            <label for="telefone">
-            Telefone
-        </label>
-        <input id="telefone" type="tel">
-   
-    <!-- ação principal -->
-    <button class="btn" type="button">
-      Alterar Dados
-    </button> </div>
-</section>
-   <!-- ==========================================================
-     COLUNA DIREITA — ABAS
-     ========================================================== -->
+            <div class="hero-text">
 
-<section class="secoes-perfil">
+                <div class="hero-container">
 
-    <!-- Botões das abas -->
-    <div class="abas-perfil"
-         role="tablist"
-         aria-label="Seções do perfil">
+                    <div class="sobre-label">
+                        <span>Perfil</span>
+                    </div>
 
-        <button
-            class="aba"
-            role="tab"
-            id="aba-registro"
-            aria-controls="painel-registro"
-            aria-selected="true"
-            type="button">
-            Registro
-        </button>
+                    <h1>
+                        SUA <br>
+                        <span>CONTA</span>
+                    </h1>
 
-        <button
-            class="aba"
-            role="tab"
-            id="aba-acessibilidade"
-            aria-controls="painel-acessibilidade"
-            aria-selected="false"
-            type="button">
-            Acessibilidade
-        </button>
+                    <p>
+                        Seus dados, suas preferências de uso do site <br>
+                        e o registro do que você já ajudou a fazer acontecer.
+                    </p>
 
-        <button
-            class="aba"
-            role="tab"
-            id="aba-configuracoes"
-            aria-controls="painel-configuracoes"
-            aria-selected="false"
-            type="button">
-            Configurações
-        </button>
+                    <div class="divider">
+                        <img class="lua" src="../assets/moon.png">
+                    </div>
 
-    </div>
-
-
-    <!-- ======================================================
-         PAINEL 1 — REGISTRO
-         ====================================================== -->
-
-    <div
-        class="painel painel-aba"
-        role="tabpanel"
-        id="painel-registro"
-        aria-labelledby="aba-registro"
-        tabindex="0">
-
-        <!-- Resumo do registro -->
-        <div class="resumo-registro">
-
-            <div class="estatistica">
-                <div class="valor-estatistica">
-                   XXXXXXX reais  
                 </div>
 
-                <div class="rotulo-estatistica">
-                 doados em 7 contribuições
+
+                <div class="layout">
+
+                    <!-- ========================================================== -->
+                    <!-- PERFIL -->
+                    <!-- ========================================================== -->
+
+                    <section class="painel-perfil" aria-labelledby="titulo-perfil">
+
+                        <div class="foto-perfil" aria-hidden="true">
+                            FL
+                        </div>
+
+                        <h2 id="titulo-perfil">
+                            Fulano de Tal
+                        </h2>
+
+                        <p class="data-cadastro">
+                            33 de Fevereiro de 1800
+                        </p>
+
+
+                        <!-- CAMPOS DO CADASTRO -->
+
+                        <div class="campo-perfil">
+
+                            <label for="nome">
+                                Nome
+                            </label>
+
+                            <input
+                                id="nome"
+                                type="text"
+                                disabled
+                            >
+
+
+                            <label for="nome-social">
+                                Nome Social
+                            </label>
+
+                            <input
+                                id="nome-social"
+                                type="text"
+                                disabled
+                            >
+
+
+                            <label for="email">
+                                E-mail
+                            </label>
+
+                            <input
+                                id="email"
+                                type="text"
+                            >
+
+
+                            <label for="telefone">
+                                Telefone
+                            </label>
+
+                            <input
+                                id="telefone"
+                                type="tel"
+                                disabled
+                            >
+
+
+                            <label for="senha">
+                                Senha
+                            </label>
+
+                            <input
+                                id="senha"
+                                type="text"
+                                disabled
+                            >
+
+
+                            <!-- AÇÃO PRINCIPAL -->
+
+                            <button
+                                class="btn"
+                                type="button"
+                            >
+                                Alterar Dados
+                            </button>
+
+                        </div>
+
+                    </section>
+
+
+                    <!-- ========================================================== -->
+                    <!-- COLUNA DIREITA — ABAS -->
+                    <!-- ========================================================== -->
+
+                    <section class="secoes-perfil">
+
+
+                        <!-- ========================= -->
+                        <!-- ABAS -->
+                        <!-- ========================= -->
+
+                        <button
+                            class="aba"
+                            role="tab"
+                            id="aba-registro"
+                            aria-controls="painel-registro"
+                            aria-selected="true"
+                            type="button"
+                        >
+                            Registro
+                        </button>
+
+
+                        <button
+                            class="aba"
+                            role="tab"
+                            id="aba-acss"
+                            aria-controls="painel-acss"
+                            aria-selected="false"
+                            type="button"
+                        >
+                            Acessibilidade
+                        </button>
+
+
+                        <button
+                            class="aba"
+                            role="tab"
+                            id="aba-configuracoes"
+                            aria-controls="painel-configuracoes"
+                            aria-selected="false"
+                            type="button"
+                        >
+                            Configurações
+                        </button>
+
+
+                        <!-- ====================================================== -->
+                        <!-- PAINEL 1 — REGISTRO -->
+                        <!-- ====================================================== -->
+
+                        <div
+                            class="painel painel-aba"
+                            role="tabpanel"
+                            id="painel-registro"
+                            aria-labelledby="aba-registro"
+                            tabindex="0"
+                        >
+
+
+                            <!-- RESUMO DO REGISTRO -->
+
+                            <div class="resumo-registro">
+
+                                <div class="estatistica">
+
+                                    <div class="valor-estatistica">
+                                        R$ 1.800
+                                    </div>
+
+                                    <div class="rotulo-estatistica">
+                                        reais doados em 7 contribuições
+                                    </div>
+
+                                </div>
+
+
+                                <div class="estatistica">
+
+                                    <div class="valor-estatistica">
+                                        12 horas
+                                    </div>
+
+                                    <div class="rotulo-estatistica">
+                                        de trabalho voluntário
+                                    </div>
+
+                                </div>
+
+
+                                <div class="estatistica">
+
+                                    <div class="valor-estatistica">
+                                        8
+                                    </div>
+
+                                    <div class="rotulo-estatistica">
+                                        iniciativas apoiadas
+                                    </div>
+
+                                </div>
+
+
+                                <br>
+                                <br>
+
+
+                                <!-- BAIXAR DECLARAÇÃO -->
+
+                                <button
+                                    class="botao botao-secundario"
+                                    type="button"
+                                >
+                                    Baixar Registro
+                                </button>
+
+                            </div>
+
+
+                            <div class="divider">
+
+                                <img
+                                    class="lua"
+                                    src="../assets/moon.png"
+                                >
+
+                            </div>
+
+
+                            <!-- FILTROS DO REGISTRO -->
+
+                            <div
+                                class="filtros-registro"
+                                role="group"
+                                aria-label="Filtrar registro"
+                            >
+
+                                <button
+                                    class="filtro"
+                                    type="button"
+                                    aria-pressed="true"
+                                    data-filtro="tudo"
+                                >
+                                    Tudo
+                                </button>
+
+
+                                <button
+                                    class="filtro"
+                                    type="button"
+                                    aria-pressed="false"
+                                    data-filtro="doacao"
+                                >
+                                    Doações
+                                </button>
+
+
+                                <button
+                                    class="filtro"
+                                    type="button"
+                                    aria-pressed="false"
+                                    data-filtro="voluntariado"
+                                >
+                                    Voluntariado
+                                </button>
+
+                            </div>
+
+
+                            <!-- ANO DO REGISTRO -->
+
+                            <p class="ano-registro">
+                                2026
+                            </p>
+
+
+                            <!-- LINHA DO TEMPO -->
+
+                            <ul class="linha-tempo">
+
+
+                                <!-- Registro de doação -->
+
+                                <li
+                                    class="registro"
+                                    data-tipo="doacao"
+                                >
+
+                                    <div class="data-registro">
+                                        15 SET
+                                    </div>
+
+                                    <h3>
+                                        Instituto Esperança
+
+                                        <span class="etiqueta">
+                                            Doação
+                                        </span>
+
+                                    </h3>
+
+                                    <p>
+
+                                        <span class="valor-doacao">
+                                            R$ 50,00
+                                        </span>
+
+                                        — destinada à compra de alimentos para famílias de Santos.
+
+                                    </p>
+
+                                </li>
+
+
+                                <!-- Registro de voluntariado -->
+
+                                <li
+                                    class="registro"
+                                    data-tipo="voluntariado"
+                                >
+
+                                    <div class="data-registro">
+                                        07 SET
+                                    </div>
+
+                                    <h3>
+                                        Campanha do Agasalho
+
+                                        <span class="etiqueta">
+                                            6 horas
+                                        </span>
+
+                                    </h3>
+
+                                    <p>
+                                        São Vicente — organização e distribuição de roupas e cobertores.
+                                    </p>
+
+                                </li>
+
+
+                                <!-- Registro de doação -->
+
+                                <li
+                                    class="registro"
+                                    data-tipo="doacao"
+                                >
+
+                                    <div class="data-registro">
+                                        28 AGO
+                                    </div>
+
+                                    <h3>
+                                        Casa Acolher
+
+                                        <span class="etiqueta">
+                                            Doação
+                                        </span>
+
+                                    </h3>
+
+                                    <p>
+
+                                        <span class="valor-doacao">
+                                            R$ 100,00
+                                        </span>
+
+                                        — destinada à compra de materiais para famílias de Praia Grande.
+
+                                    </p>
+
+                                </li>
+
+
+                                <!-- Registro de voluntariado -->
+
+                                <li
+                                    class="registro"
+                                    data-tipo="voluntariado"
+                                >
+
+                                    <div class="data-registro">
+                                        16 AGO
+                                    </div>
+
+                                    <h3>
+                                        Mutirão Comunitário
+
+                                        <span class="etiqueta">
+                                            4 horas
+                                        </span>
+
+                                    </h3>
+
+                                    <p>
+                                        Guarujá — auxílio na organização e distribuição de cestas básicas.
+                                    </p>
+
+                                </li>
+
+
+                                <!-- Registro de doação -->
+
+                                <li
+                                    class="registro"
+                                    data-tipo="doacao"
+                                >
+
+                                    <div class="data-registro">
+                                        02 AGO
+                                    </div>
+
+                                    <h3>
+                                        Projeto Recomeço
+
+                                        <span class="etiqueta">
+                                            Doação
+                                        </span>
+
+                                    </h3>
+
+                                    <p>
+
+                                        <span class="valor-doacao">
+                                            R$ 75,00
+                                        </span>
+
+                                        — destinada à compra de produtos de higiene em Cubatão.
+
+                                    </p>
+
+                                </li>
+
+
+                                <!-- Registro de voluntariado -->
+
+                                <li
+                                    class="registro"
+                                    data-tipo="voluntariado"
+                                >
+
+                                    <div class="data-registro">
+                                        19 JUL
+                                    </div>
+
+                                    <h3>
+                                        Ação Solidária
+
+                                        <span class="etiqueta">
+                                            5 horas
+                                        </span>
+
+                                    </h3>
+
+                                    <p>
+                                        Mongaguá — preparação e distribuição de refeições.
+                                    </p>
+
+                                </li>
+
+
+                                <!-- Registro de doação -->
+
+                                <li
+                                    class="registro"
+                                    data-tipo="doacao"
+                                >
+
+                                    <div class="data-registro">
+                                        05 JUL
+                                    </div>
+
+                                    <h3>
+                                        Projeto Sementes
+
+                                        <span class="etiqueta">
+                                            Doação
+                                        </span>
+
+                                    </h3>
+
+                                    <p>
+
+                                        <span class="valor-doacao">
+                                            R$ 60,00
+                                        </span>
+
+                                        — destinada à compra de materiais escolares em Itanhaém.
+
+                                    </p>
+
+                                </li>
+
+
+                                <!-- Registro de voluntariado -->
+
+                                <li
+                                    class="registro"
+                                    data-tipo="voluntariado"
+                                >
+
+                                    <div class="data-registro">
+                                        21 JUN
+                                    </div>
+
+                                    <h3>
+                                        Ação Comunitária
+
+                                        <span class="etiqueta">
+                                            3 horas
+                                        </span>
+
+                                    </h3>
+
+                                    <p>
+                                        Peruíbe — apoio na arrecadação e separação de alimentos.
+                                    </p>
+
+                                </li>
+
+                            </ul>
+
+
+                            <!-- ESTADO VAZIO -->
+
+                            <div
+                                class="estado-vazio"
+                                id="registro-vazio"
+                                hidden
+                            >
+
+                                <h3></h3>
+
+                                <p></p>
+
+                                <button
+                                    class="botao botao-secundario"
+                                    type="button"
+                                >
+                                </button>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- ====================================================== -->
+                        <!-- PAINEL 2 — ACSS -->
+                        <!-- ====================================================== -->
+
+                        <div
+                            class="painel painel-aba"
+                            role="tabpanel"
+                            id="painel-acss"
+                            aria-labelledby="aba-acss"
+                            tabindex="0"
+                            hidden
+                        >
+
+
+                            <!-- LEITURA DE TELA -->
+
+                            <div class="acss-configuracao">
+
+                                <div>
+
+                                    <h3 class="LT">
+                                        Leitura de tela
+                                    </h3>
+
+                                    <p>
+                                        Ativa recursos compatíveis com leitores de tela
+                                        para facilitar a navegação pelo site.
+                                    </p>
+
+                                </div>
+
+
+                                <label class="acss-interruptor">
+
+                                    <input
+                                        type="checkbox"
+                                        id="acss-leitura-tela"
+                                    >
+
+                                    <span></span>
+
+                                </label>
+
+                            </div>
+
+
+                            <!-- LIBRAS -->
+
+                            <div class="acss-configuracao">
+
+                                <div>
+
+                                    <h3 class="VLB">
+                                        VLibras
+                                    </h3>
+
+                                    <p>
+                                        Ativa o recurso de tradução de conteúdos para Libras.
+                                    </p>
+
+                                </div>
+
+
+                                <label class="acss-interruptor">
+
+                                    <input
+                                        type="checkbox"
+                                        id="acss-libras"
+                                    >
+
+                                    <span></span>
+
+                                </label>
+
+                            </div>
+
+
+                            <div class="divider">
+
+                                <img
+                                    class="lua"
+                                    src="../assets/moon.png"
+                                >
+
+                            </div>
+
+
+                            <!-- TAMANHO DA LETRA -->
+
+                            <div class="acss-configuracao">
+
+                                <div>
+
+                                    <h3>
+                                        Tamanho da letra
+                                    </h3>
+
+                                    <p>
+                                        Escolha o tamanho dos textos exibidos no site.
+                                    </p>
+
+                                </div>
+
+
+                                <div class="acss-campo-configuracao">
+
+                                    <label for="acss-tamanho-letra"></label>
+
+                                    <select id="acss-tamanho-letra">
+
+                                        <option value="pequeno">
+                                            Pequeno
+                                        </option>
+
+                                        <option
+                                            value="medio"
+                                            selected
+                                        >
+                                            Médio
+                                        </option>
+
+                                        <option value="grande">
+                                            Grande
+                                        </option>
+
+                                        <option value="extra-grande">
+                                            Extra grande
+                                        </option>
+
+                                    </select>
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- APARÊNCIA -->
+
+                            <div class="acss-configuracao">
+
+                                <div>
+
+                                    <h3>
+                                        Modo de exibição
+                                    </h3>
+
+                                    <p>
+                                        Escolha o modo de aparência da página.
+                                    </p>
+
+                                </div>
+
+
+                                <div class="acss-campo-configuracao">
+
+                                    <label for="acss-modo-exibicao"></label>
+
+                                    <select id="acss-modo-exibicao">
+
+                                        <option
+                                            value="escuro"
+                                            selected
+                                        >
+                                            Escuro
+                                        </option>
+
+                                        <option value="claro">
+                                            Claro
+                                        </option>
+
+                                        <option value="alto-contraste">
+                                            Alto contraste
+                                        </option>
+
+                                    </select>
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- IDIOMA -->
+
+                            <div class="acss-configuracao">
+
+                                <div>
+
+                                    <h3>
+                                        Idioma de preferência
+                                    </h3>
+
+                                    <p>
+                                        Escolha o idioma preferencial para a interface.
+                                    </p>
+
+                                </div>
+
+
+                                <div class="acss-campo-configuracao">
+
+                                    <label for="acss-idioma"></label>
+
+                                    <select id="acss-idioma">
+
+                                        <option
+                                            value="pt-BR"
+                                            selected
+                                        >
+                                            Português (BR)
+                                        </option>
+
+                                        <option value="en">
+                                            English
+                                        </option>
+
+                                        <option value="es">
+                                            Español
+                                        </option>
+
+                                    </select>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- ====================================================== -->
+                        <!-- PAINEL 3 — CONFIGURAÇÕES -->
+                        <!-- ====================================================== -->
+
+                        <div
+                            class="painel painel-aba"
+                            role="tabpanel"
+                            id="painel-configuracoes"
+                            aria-labelledby="aba-configuracoes"
+                            tabindex="0"
+                            hidden
+                        >
+
+
+                            <!-- ================================================== -->
+                            <!-- CONTA DE OSC -->
+                            <!-- ================================================== -->
+
+                            <div class="configuracao">
+
+                                <div>
+
+                                    <h3>
+                                        Criar conta de OSC
+                                    </h3>
+
+                                    <p>
+                                        Crie uma conta para representar uma
+                                        Organização da Sociedade Civil.
+                                    </p>
+
+                                </div>
+
+
+                                <!-- BOTÕES AGRUPADOS -->
+
+                                <div class="grupo-botoes">
+
+                                    <button
+                                        class="botao botao-secundario"
+                                        type="button"
+                                        id="criar-osc"
+                                    >
+                                        Criar conta
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- ================================================== -->
+                            <!-- TROCAR TIPO DE CONTA -->
+                            <!-- ================================================== -->
+
+                            <div class="configuracao">
+
+                                <div>
+
+                                    <h3>
+                                        Trocar para conta de OSC
+                                    </h3>
+
+                                    <p>
+                                        Transforme sua conta atual em uma conta
+                                        destinada a uma Organização da Sociedade Civil.
+                                    </p>
+
+                                </div>
+
+
+                                <!-- BOTÕES AGRUPADOS -->
+
+                                <div class="grupo-botoes">
+
+                                    <button
+                                        class="botao botao-secundario"
+                                        type="button"
+                                        id="trocar-osc"
+                                    >
+                                        Trocar conta
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+                            <!-- ================================================== -->
+                            <!-- ENCERRAR SESSÕES -->
+                            <!-- ================================================== -->
+
+                            <div class="configuracao">
+
+                                <div>
+
+                                    <h3>
+                                        Encerrar outras sessões
+                                    </h3>
+
+                                    <p>
+                                        Desconecte sua conta de outros dispositivos
+                                        onde ela esteja aberta.
+                                    </p>
+
+                                </div>
+
+
+                                <div class="grupo-botoes">
+
+                                    <button
+                                        class="botao botao-secundario"
+                                        id="encerrar-sessoes"
+                                        type="button"
+                                    >
+                                        Encerrar sessões
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+                            <!-- ================================================== -->
+                            <!-- ENDEREÇO -->
+                            <!-- ================================================== -->
+                            <div class="divider">
+                        <img class="lua" src="../assets/moon.png">
+                    </div>
+                            <div class="configuracao">
+
+                                <div>
+
+                                    <h3>
+                                        Informações de endereço
+                                    </h3>
+
+                                    <p>
+                                        Altere ou atualize o endereço associado
+                                        à sua conta.
+                                    </p>
+
+                                </div>
+
+
+                                <div class="grupo-botoes">
+
+                                    <button
+                                        class="botao botao-secundario"
+                                        type="button"
+                                        id="alterar-endereco"
+                                    >
+                                        Alterar endereço
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+
+
+
+                            <!-- ================================================== -->
+                            <!-- NOTIFICAÇÕES POR E-MAIL -->
+                            <!-- ================================================== -->
+                    
+                            <div class="configuracao">
+
+                                <div>
+
+                                    <h3>
+                                        Notificações por e-mail
+                                    </h3>
+
+                                    <p>
+                                        Receba atualizações importantes da sua conta por e-mail.
+                                    </p>
+
+                                </div>
+
+
+                                <label class="interruptor">
+
+                                    <input
+                                        type="checkbox"
+                                        id="notificacao-email"
+                                    >
+
+                                    <span></span>
+
+                                </label>
+
+                            </div>
+
+
+                            <!-- ================================================== -->
+                            <!-- NOTIFICAÇÕES DE ATIVIDADES -->
+                            <!-- ================================================== -->
+
+                            <div class="configuracao">
+
+                                <div>
+
+                                    <h3>
+                                        Notificações de atividades
+                                    </h3>
+
+                                    <p>
+                                        Receba avisos sobre atividades relacionadas à sua conta.
+                                    </p>
+
+                                </div>
+
+
+                                <label class="interruptor">
+
+                                    <input
+                                        type="checkbox"
+                                        id="notificacao-atividade"
+                                    >
+
+                                    <span></span>
+
+                                </label>
+
+                            </div>
+
+
+                            <!-- ================================================== -->
+                            <!-- EXCLUSÃO DA CONTA -->
+                            <!-- ================================================== -->
+                            <div class="divider">
+                        <img class="lua" src="../assets/moon.png">
+                    </div>
+                            <div class="configuracao">
+
+                                <div>
+
+                                    <h3 class="perigo">
+                                        Excluir conta
+                                    </h3>
+
+                                    <p>
+                                        A exclusão da conta removerá seus dados
+                                        e não poderá ser desfeita.
+                                    </p>
+
+                                </div>
+
+
+                                <div class="grupo-botoes">
+
+                                    <button
+                                        class="botao botao-secundario perigo"
+                                        type="button"
+                                        id="excluir-conta"
+                                    >
+                                        Excluir conta
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </section>
+
                 </div>
-            </div>
-
-            <div class="estatistica">
-                <div class="valor-estatistica"> 
-                    X horas 
-                </div>
-                <div class="rotulo-estatistica">de trabalho voluntário</div>
-            </div>
-
-            <div class="estatistica">
-                <div class="valor-estatistica"> X </div>
-                <div class="rotulo-estatistica">iniciativas apoiadas</div>
-            </div>
-
-            <!-- Baixar declaração -->
-            <button
-                class="botao botao-secundario"
-                type="button">
-                Baixar Registro
-            </button>
-
-        </div>
-
-
-        <!-- Filtros do registro -->
-        <div
-            class="filtros-registro"
-            role="group"
-            aria-label="Filtrar registro">
-
-            <button
-                class="filtro"
-                type="button"
-                aria-pressed="true"
-                data-filtro="tudo">
-                Tudo
-            </button>
-
-            <button
-                class="filtro"
-                type="button"
-                aria-pressed="false"
-                data-filtro="doacao">
-                Doações
-            </button>
-
-            <button
-                class="filtro"
-                type="button"
-                aria-pressed="false"
-                data-filtro="voluntariado">
-                Voluntariado
-            </button>
-
-        </div>
-
-
-        <!-- Ano do registro -->
-        <p class="ano-registro">
-            <!-- ano -->
-        </p>
-
-
-        <!-- Linha do tempo -->
-        <ul class="linha-tempo">
-
-            <!-- Registro de doação -->
-            <li
-                class="registro"
-                data-tipo="doacao">
-
-                <div class="data-registro">
-                    <!-- data -->
-                </div>
-
-                <h3>
-                    <!-- nome da organização -->
-                    <span class="etiqueta">
-                        <!-- etiqueta opcional -->
-                    </span>
-                </h3>
-
-                <p>
-                    <span class="valor-doacao">
-                        <!-- valor -->
-                    </span>
-                    —
-                    <!-- destino da doação -->
-                </p>
-
-            </li>
-
-
-            <!-- Registro de voluntariado -->
-            <li
-                class="registro"
-                data-tipo="voluntariado">
-
-                <div class="data-registro">
-                    <!-- data -->
-                </div>
-
-                <h3>
-                    <!-- atividade -->
-                    <span class="etiqueta">
-                        <!-- horas -->
-                    </span>
-                </h3>
-
-                <p>
-                    <!-- organização, local e detalhe -->
-                </p>
-
-            </li>
-
-        </ul>
-
-
-        <!-- Estado vazio -->
-        <div
-            class="estado-vazio"
-            id="registro-vazio"
-            hidden>
-
-            <h3></h3>
-
-            <p></p>
-
-            <button
-                class="botao botao-secundario"
-                type="button">
-            </button>
-
-        </div>
-
-    </div>
-
-
-    <!-- ======================================================
-         PAINEL 2 — ACESSIBILIDADE
-         ====================================================== -->
-
-    <div
-        class="painel painel-aba"
-        role="tabpanel"
-        id="painel-acessibilidade"
-        aria-labelledby="aba-acessibilidade"
-        tabindex="0"
-        hidden>
-
-        <p class="observacao-secao">
-            <!-- onde essas preferências valem -->
-        </p>
-
-
-        <!-- Ajuste com lista de opções -->
-        <div
-            class="campo-configuracao"
-            style="max-width:320px">
-
-            <label for="opcao-acessibilidade">
-            </label>
-
-            <select id="opcao-acessibilidade">
-                <option></option>
-            </select>
-
-        </div>
-
-
-        <!-- Ajuste liga/desliga -->
-        <div class="configuracao">
-
-            <div>
-
-                <h3>
-                    <!-- nome do ajuste -->
-                </h3>
-
-                <p>
-                    <!-- o que muda na prática -->
-                </p>
 
             </div>
 
-            <label class="interruptor">
-                <input type="checkbox">
-                <span></span>
-            </label>
+        </section>
 
-        </div>
-
-    </div>
+    </section>
 
 
-    <!-- ======================================================
-         PAINEL 3 — CONFIGURAÇÕES
-         ====================================================== -->
-
-    <div
-        class="painel painel-aba"
-        role="tabpanel"
-        id="painel-configuracoes"
-        aria-labelledby="aba-configuracoes"
-        tabindex="0"
-        hidden>
-
-
-        <!-- Configuração -->
-        <div class="configuracao">
-
-            <div>
-
-                <h3></h3>
-
-                <p></p>
-
-            </div>
-
-            <label class="interruptor">
-                <input type="checkbox">
-                <span></span>
-            </label>
-
-        </div>
-
-
-        <!-- Ação de exclusão -->
-        <div class="configuracao">
-
-            <div>
-
-                <h3 class="perigo"></h3>
-
-                <p>
-                    <!-- o que acontece com os dados -->
-                </p>
-
-            </div>
-
-            <button
-                class="botao botao-secundario perigo"
-                type="button">
-            </button>
-
-        </div>
-
-    </div>  </div>
-
-</section>
-</main>
-  
- 
-  <footer id="footer"></footer>
+    <footer id="footer"></footer>
 
 </body>
+
 </html>

@@ -95,6 +95,7 @@ body {
     overflow-x: hidden;
 
     font-family: 'Poppins', sans-serif;
+
     color: var(--text);
 
     background:
@@ -110,22 +111,26 @@ body {
 /* ==========================================================
    HERO
    ========================================================== */
+
 .hero {
     min-height: 100vh;
 
     display: flex;
     flex-direction: column;
-
     align-items: center;
 
     padding: 120px 70px 70px;
 }
 
+
 .hero-text {
     width: 100%;
+
     text-align: center;
+
     padding-top: 40px;
 }
+
 
 .hero-container {
     position: relative;
@@ -135,6 +140,11 @@ body {
 
     overflow: visible;
 }
+
+
+/* ==========================================================
+   LAYOUT DAS DUAS COLUNAS
+   ========================================================== */
 
 .layout {
     width: 100%;
@@ -146,10 +156,15 @@ body {
 
     gap: 28px;
 
-    align-items: start;
+    /*
+       Faz as duas colunas terem a mesma altura.
+    */
+    align-items: stretch;
 
-    margin: 20px auto 0;
+    margin: 60px auto 0;
 }
+
+
 /* ==========================================================
    LABEL "PERFIL"
    ========================================================== */
@@ -178,6 +193,7 @@ body {
     content: '';
 
     width: 40px;
+
     height: 1px;
 
     background: rgba(255, 255, 255, 0.3);
@@ -246,6 +262,7 @@ body {
     left: 0;
 
     width: 100%;
+
     height: 1px;
 
     background:
@@ -270,7 +287,7 @@ body {
 
     border-radius: 50%;
 
-    background: rgba(62, 40, 113, 0.45);
+    background: #292f72ee;
 
     backdrop-filter: blur(15px);
     -webkit-backdrop-filter: blur(15px);
@@ -281,30 +298,8 @@ body {
         0 8px 25px rgba(0, 0, 0, 0.25),
         inset 0 1px 1px rgba(255, 255, 255, 0.12);
 
-    z-index: 2;
+    z-index: 4;
 }
-
-
-/* ==========================================================
-   LAYOUT DAS DUAS COLUNAS
-   ========================================================== */
-
-.layout {
-    width: 100%;
-    max-width: 1200px;
-
-    display: grid;
-
-    grid-template-columns: 330px minmax(0, 1fr);
-
-    gap: 28px;
-
-    align-items: start;
-
-    margin: 60px auto 0;
-}
-
-
 /* ==========================================================
    PAINEL DO PERFIL
    ========================================================== */
@@ -313,9 +308,10 @@ body {
     position: relative;
 
     width: 100%;
-    height: auto;
+    height: 800px;
+    padding: 32px;
 
-    padding: 28px;
+    margin-top: 0;
 
     background: rgba(46, 28, 80, 0.42);
 
@@ -343,6 +339,7 @@ body {
     left: 8%;
 
     width: 84%;
+
     height: 1px;
 
     background: rgba(255, 255, 255, 0.25);
@@ -356,8 +353,8 @@ body {
    ========================================================== */
 
 .foto-perfil {
-    width: 84px;
-    height: 84px;
+    width: 150px;
+    height: 150px;
 
     border-radius: 50%;
 
@@ -371,15 +368,20 @@ body {
     color: var(--bg-main);
 
     display: grid;
-    margin-left: 85px;
+
+    margin-left: 65px;
+
     align-items: center;
+
     font-family: "Cormorant Garamond", serif;
 
     font-size: 2rem;
 
     font-weight: 600;
 
-    margin-bottom: 14px;
+    margin-top: 10px;
+
+    margin-bottom: 10px;
 }
 
 
@@ -389,12 +391,16 @@ body {
 
 .painel-perfil h2 {
     font-family: "Cormorant Garamond", serif;
+
     position: relative;
+
     font-weight: 500;
 
-    font-size: 1.35rem;
+    font-size: 1.95rem;
 
-    margin: 0 0 2px;
+    margin: 4px 3px 2px;
+
+    letter-spacing: 0.8px;
 
     color: var(--text);
 }
@@ -407,9 +413,9 @@ body {
 .painel-perfil .data-cadastro {
     color: var(--info);
 
-    font-size: 0.88rem;
+    font-size: 0.83rem;
 
-    margin: 0 0 20px;
+    margin: 0 0 10px;
 }
 
 
@@ -419,6 +425,7 @@ body {
 
 .campo-perfil {
     display: flex;
+
     flex-direction: column;
 
     width: 100%;
@@ -426,28 +433,33 @@ body {
 
 
 .campo-perfil label {
-    margin-bottom: 6px;
+    margin-bottom: 10px;
 
     color: var(--text-muted);
 
-    font-size: 0.82rem;
+    font-weight: 700;
+
+    font-size: 0.90rem;
 }
 
 
 .campo-perfil input {
     width: 100%;
 
-    padding: 11px 12px;
+    cursor: default;
 
-    margin-bottom: 14px;
+    padding: 6px 6px;
 
-    border-radius: 10px;
+    margin-bottom: 18px;
 
-    background: var(--deep);
+    border-radius: 20px;
+
+    background: var(--bg-card);
 
     color: var(--text);
 
-    border: 1px solid rgba(233, 235, 248, 0.22);
+    border:
+        0.5px solid rgba(233, 235, 248, 0.22);
 
     font: inherit;
 
@@ -462,7 +474,8 @@ body {
 
 
 .campo-perfil input:hover {
-    border-color: rgba(245, 181, 46, 0.45);
+    border-color:
+        rgba(255, 208, 106, 0.45);
 }
 
 
@@ -470,16 +483,17 @@ body {
     border-color: var(--gold);
 
     box-shadow:
-        0 0 0 3px rgba(245, 181, 46, 0.18);
+        0 0 0 0.8px rgba(245, 181, 46, 0.18);
 }
 
 
 .campo-perfil input:focus-visible {
-    outline: 2px solid var(--gold);
+    outline: 0.3px solid var(--gold);
 
-    outline-offset: 2px;
+    cursor: text;
+
+    outline-offset: 1px;
 }
-
 
 
 /* ==========================================================
@@ -487,15 +501,21 @@ body {
    ========================================================== */
 
 .campo-perfil .btn {
-    width: 100%;
+    width: 80%;
 
-    margin-top: 8px;
+    position: absolute;
 
-    padding: 11px 16px;
+    margin-top: 0;
+
+    bottom: 25px;
+
+    left: 30px;
+
+    padding: 8px 12px;
 
     border: none;
 
-    border-radius: 10px;
+    border-radius: 20px;
 
     background: var(--gold);
 
@@ -509,15 +529,30 @@ body {
 
     transition:
         background 0.25s ease,
-        transform 0.2s ease,
         box-shadow 0.25s ease;
 }
 
 
-.campo-perfil .btn:hover {
-    background: var(--gold-light);
+/* Senha escondida inicialmente */
 
-    transform: translateY(-1px);
+.campo-perfil #senha,
+.campo-perfil label[for="senha"] {
+    display: none;
+}
+
+
+/* Senha aparece quando o campo está sendo editado */
+
+.campo-perfil.editando #senha,
+.campo-perfil.editando label[for="senha"] {
+    display: block;
+}
+
+
+.campo-perfil .btn:hover {
+    background: var(--dark-contrast);
+
+    color: var(--gold);
 
     box-shadow:
         0 8px 20px rgba(245, 181, 46, 0.2);
@@ -530,7 +565,14 @@ body {
 
 .secoes-perfil {
     width: 100%;
+
     min-width: 0;
+
+    /*
+       Não precisamos mais de uma altura fixa.
+       O conteúdo define a altura.
+    */
+    height: auto;
 }
 
 
@@ -565,7 +607,7 @@ body {
 
     background: transparent;
 
-    color: var(--muted);
+    color: var(--text-muted);
 
     font: inherit;
 
@@ -605,9 +647,11 @@ body {
     position: absolute;
 
     left: 15%;
+
     bottom: -1px;
 
     width: 70%;
+
     height: 2px;
 
     border-radius: 5px;
@@ -630,7 +674,8 @@ body {
 
     padding: 25px;
 
-    border: 1px solid rgba(255, 255, 255, 0.10);
+    border:
+        1px solid rgba(255, 255, 255, 0.10);
 
     border-radius: 20px;
 
@@ -665,7 +710,7 @@ body {
 
     align-items: stretch;
 
-    margin-bottom: 25px;
+    margin-bottom: 10px;
 }
 
 
@@ -674,7 +719,11 @@ body {
 
     padding: 15px;
 
+    cursor: default;
+
     border-radius: 14px;
+
+    margin-bottom: 15px;
 
     background:
         rgba(255, 255, 255, 0.05);
@@ -701,7 +750,11 @@ body {
 .valor-estatistica {
     color: var(--gold);
 
-    font-size: 1.5rem;
+    align-items: center;
+
+    padding-top: 2px;
+
+    font-size: 2rem;
 
     font-weight: 600;
 }
@@ -710,7 +763,7 @@ body {
 .rotulo-estatistica {
     margin-top: 4px;
 
-    color: var(--muted);
+    color: var(--text-muted);
 
     font-size: 0.78rem;
 }
@@ -748,10 +801,18 @@ body {
 
 
 .botao-secundario {
-    color: var(--text);
+    grid-column: 1 / -1;
+
+    justify-self: center;
+
+    width: 80%;
+
+    margin-top: 8px;
+
+    color: var(--gold);
 
     background:
-        rgba(255, 255, 255, 0.07);
+        rgba(255, 255, 255, 0.05);
 
     border:
         1px solid rgba(255, 255, 255, 0.12);
@@ -759,8 +820,9 @@ body {
 
 
 .botao-secundario:hover {
-    background:
-        rgba(255, 255, 255, 0.12);
+    background: var(--gold);
+
+    color: var(--border);
 }
 
 
@@ -790,7 +852,7 @@ body {
     background:
         rgba(255, 255, 255, 0.05);
 
-    color: var(--muted);
+    color: var(--text-muted);
 
     font: inherit;
 
@@ -846,15 +908,15 @@ body {
 .linha-tempo {
     position: relative;
 
-    display: flex;
+    max-height: 400px;
 
-    flex-direction: column;
+    overflow-y: auto;
 
-    gap: 12px;
+    padding-right: 10px;
 
-    margin: 0;
+    padding-left: 25px;
 
-    padding: 0 0 0 20px;
+    margin-bottom: 20px;
 
     list-style: none;
 }
@@ -867,12 +929,15 @@ body {
 
     position: absolute;
 
-    left: 5px;
+    left: 9px;
 
-    top: 5px;
-    bottom: 5px;
+    top: 0;
 
-    width: 1px;
+    bottom: 0;
+
+    width: 1.4px;
+
+    height: auto;
 
     background:
         linear-gradient(
@@ -880,6 +945,8 @@ body {
             rgba(245, 181, 46, 0.5),
             rgba(255, 255, 255, 0.05)
         );
+
+    z-index: 0;
 }
 
 
@@ -892,6 +959,8 @@ body {
 
     padding: 15px 17px;
 
+    margin-bottom: 25px;
+
     border-radius: 14px;
 
     background:
@@ -903,6 +972,8 @@ body {
     transition:
         background 0.25s ease,
         transform 0.25s ease;
+
+    z-index: 1;
 }
 
 
@@ -915,9 +986,10 @@ body {
 
     left: -20px;
 
-    top: 20px;
+    top: 30px;
 
     width: 9px;
+
     height: 9px;
 
     border-radius: 50%;
@@ -929,6 +1001,8 @@ body {
 
     box-shadow:
         0 0 8px rgba(245, 181, 46, 0.4);
+
+    z-index: 2;
 }
 
 
@@ -948,7 +1022,7 @@ body {
 .data-registro {
     margin-bottom: 5px;
 
-    color: var(--muted);
+    color: var(--text-muted);
 
     font-size: 0.75rem;
 }
@@ -1000,7 +1074,7 @@ body {
 .registro p {
     margin: 6px 0 0;
 
-    color: var(--muted);
+    color: var(--text-muted);
 
     font-size: 0.82rem;
 
@@ -1046,123 +1120,106 @@ body {
 .estado-vazio p {
     margin: 0 0 18px;
 
-    color: var(--muted);
+    color: var(--text-muted);
 
     font-size: 0.85rem;
 }
 
 
 /* ==========================================================
-   ACESSIBILIDADE
+   CAMPO DE CONFIGURAÇÃO — ACSS
    ========================================================== */
 
-.observacao-secao {
-    margin: 0 0 20px;
-
-    color: var(--muted);
-
-    font-size: 0.85rem;
-
-    line-height: 1.5;
-}
-
-
-/* ==========================================================
-   CAMPO DE CONFIGURAÇÃO
-   ========================================================== */
-
-.campo-configuracao {
+.acss-campo-configuracao {
     width: 100%;
-
-    margin-bottom: 20px;
+    flex: 1;
+    text-align: left;
+    margin-top: 25px;
 }
 
-
-.campo-configuracao label {
+.LT,
+.VLB {
     display: block;
-
-    margin-bottom: 7px;
-
+    width: 100%;
+    margin: 0 0 5px;
+    text-align: center;
     color: var(--text);
-
-    font-size: 0.85rem;
 
     font-weight: 500;
 }
 
 
-.campo-configuracao select {
-    width: 100%;
-
-    padding: 11px 12px;
-
-    border:
-        1px solid rgba(255, 255, 255, 0.12);
-
-    border-radius: 10px;
-
-    background: var(--deep);
-
-    color: var(--text);
-
-    font: inherit;
-
-    outline: none;
-
-    cursor: pointer;
-
-    transition:
-        border-color 0.25s ease;
-}
-
-
-.campo-configuracao select:hover,
-.campo-configuracao select:focus {
-    border-color:
-        rgba(245, 181, 46, 0.5);
-}
-
-
-/* ==========================================================
-   CONFIGURAÇÕES
-   ========================================================== */
-
-.configuracao {
-    display: flex;
-
+.acss-configuracao {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 380px;
     align-items: center;
+    gap: 25px;
 
-    justify-content: space-between;
-
-    gap: 20px;
-
+    width: 100%;
     padding: 17px 0;
 
-    border-bottom:
-        1px solid rgba(255, 255, 255, 0.07);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
 }
 
 
-.configuracao:last-child {
+/* Bloco de texto */
+
+.acss-configuracao > div:first-child {
+    min-width: 0;
+}
+
+
+/* Container do select */
+
+.acss-campo-configuracao {
+    width: 380px;
+}
+
+
+/* Selects */
+
+.acss-campo-configuracao select {
+    display: block;
+
+    width: 380px;
+    height: 45px;
+
+    box-sizing: border-box;
+
+    padding: 10px;
+
+    text-align: center;
+    font-size: 0.80rem;
+
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+
+    background: var(--bg-card);
+    color: var(--text);
+
+    outline: none;
+    cursor: pointer;
+
+    transition: border-color 0.25s ease;
+}
+
+
+/* Hover e foco */
+
+.acss-campo-configuracao select:hover,
+.acss-campo-configuracao select:focus {
+    border-color: rgba(245, 181, 46, 0.5);
+}
+.acss-configuracao:last-child {
     border-bottom: none;
 }
 
 
-.configuracao h3 {
-    margin: 0 0 5px;
 
-    color: var(--text);
-
-    font-size: 0.9rem;
-
-    font-weight: 500;
-}
-
-
-.configuracao p {
+.acss-configuracao p {
     margin: 0;
 
-    color: var(--muted);
+    color: var(--text-muted);
 
     font-size: 0.78rem;
 
@@ -1171,30 +1228,32 @@ body {
 
 
 /* ==========================================================
-   INTERRUPTOR
+   INTERRUPTOR — ACSS
    ========================================================== */
 
-.interruptor {
+.acss-interruptor {
     position: relative;
-
+    margin-left: 300px;
     flex-shrink: 0;
 
     width: 44px;
-    height: 24px;
+
+    height: 28px;
 }
 
 
-.interruptor input {
+.acss-interruptor input {
     position: absolute;
 
     width: 0;
+
     height: 0;
 
     opacity: 0;
 }
 
 
-.interruptor span {
+.acss-interruptor span {
     position: absolute;
 
     inset: 0;
@@ -1215,16 +1274,18 @@ body {
 }
 
 
-.interruptor span::before {
+.acss-interruptor span::before {
     content: "";
 
     position: absolute;
 
     width: 18px;
+
     height: 18px;
 
     left: 2px;
-    top: 2px;
+
+    top: 4px;
 
     border-radius: 50%;
 
@@ -1238,21 +1299,229 @@ body {
 }
 
 
-.interruptor input:checked + span {
+.acss-interruptor input:checked + span {
     background: var(--gold);
 
     border-color: var(--gold);
 }
 
 
-.interruptor input:checked + span::before {
+.acss-interruptor input:checked + span::before {
     transform: translateX(20px);
 }
 
 
-.interruptor input:focus-visible + span {
+.acss-interruptor input:focus-visible + span {
     box-shadow:
         0 0 0 3px rgba(245, 181, 46, 0.25);
+}
+
+/* ==========================================================
+   CONFIGURAÇÕES GERAIS
+   ========================================================== */
+
+.configuracao {
+    display: grid;
+
+    grid-template-columns: minmax(0, 1fr) 180px;
+
+    text-align: left;
+    gap: 25px;
+
+    width: 100%;
+    padding: 17px 0;
+
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.configuracao:last-child {
+    border-bottom: none;
+}
+
+
+/* ==========================================================
+   TEXTO DAS CONFIGURAÇÕES
+   ========================================================== */
+
+.configuracao > div:first-child {
+    min-width: 0;
+}
+
+.configuracao h3 {
+    margin: 0 0 5px;
+
+    color: var(--text);
+
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.configuracao p {
+    margin: 0;
+
+    color: var(--text-muted);
+
+    font-size: 0.78rem;
+    line-height: 1.45;
+}
+
+
+/* ==========================================================
+   BOTÕES DAS CONFIGURAÇÕES
+   ========================================================== */
+
+.configuracao .botao {
+    width: 180px;
+    min-height: 42px;
+
+    justify-self: end;
+
+    margin: 0;
+
+    padding: 10px 15px;
+
+    border-radius: 12px;
+
+    font-size: 0.82rem;
+}
+
+
+/* ==========================================================
+   INTERRUPTOR / CHECKBOX
+   ========================================================== */
+
+.interruptor {
+    position: relative;
+
+    justify-self: end;
+
+    width: 52px;
+    height: 28px;
+
+    flex-shrink: 0;
+}
+
+
+/* Esconde o checkbox original */
+
+.interruptor input {
+    position: absolute;
+
+    width: 0;
+    height: 0;
+
+    opacity: 0;
+}
+
+
+/* Corpo do interruptor */
+
+.interruptor span {
+    position: absolute;
+
+    inset: 0;
+
+    border-radius: 20px;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(255, 255, 255, 0.08),
+            rgba(255, 255, 255, 0.14)
+        );
+
+    border:
+        1px solid rgba(255, 255, 255, 0.16);
+
+    cursor: pointer;
+
+    box-shadow:
+        inset 0 1px 2px rgba(0, 0, 0, 0.25),
+        0 3px 8px rgba(0, 0, 0, 0.15);
+
+    transition:
+        background 0.3s ease,
+        border-color 0.3s ease,
+        box-shadow 0.3s ease;
+}
+
+
+/* Bolinha */
+
+.interruptor span::before {
+    content: "";
+
+    position: absolute;
+
+    width: 20px;
+    height: 20px;
+
+    left: 3px;
+    top: 3px;
+
+    border-radius: 50%;
+
+    background: var(--text);
+
+    box-shadow:
+        0 2px 6px rgba(0, 0, 0, 0.3);
+
+    transition:
+        transform 0.3s cubic-bezier(.22, 1, .36, 1),
+        background 0.3s ease;
+}
+
+
+/* ==========================================================
+   CHECKBOX ATIVADO
+   ========================================================== */
+
+.interruptor input:checked + span {
+    background:
+        linear-gradient(
+            135deg,
+            var(--gold-dark),
+            var(--gold)
+        );
+
+    border-color: var(--gold);
+
+    box-shadow:
+        0 0 12px rgba(245, 181, 46, 0.25),
+        inset 0 1px 2px rgba(255, 255, 255, 0.2);
+}
+
+
+.interruptor input:checked + span::before {
+    transform: translateX(24px);
+
+    background: #fff;
+}
+
+
+/* ==========================================================
+   FOCO DO CHECKBOX
+   ========================================================== */
+
+.interruptor input:focus-visible + span {
+    outline: 2px solid var(--gold-light);
+    outline-offset: 3px;
+
+    box-shadow:
+        0 0 0 4px rgba(245, 181, 46, 0.18);
+}
+
+
+/* ==========================================================
+   HOVER
+   ========================================================== */
+
+.interruptor span:hover {
+    border-color:
+        rgba(245, 181, 46, 0.45);
+
+    box-shadow:
+        0 0 10px rgba(245, 181, 46, 0.12);
 }
 
 
@@ -1264,23 +1533,28 @@ body {
     color: #ff7777 !important;
 }
 
-
 .botao.perigo {
+    color: #ff8585;
+
     border-color:
         rgba(255, 100, 100, 0.25);
 
-    color: #ff8585;
+    background:
+        rgba(255, 80, 80, 0.04);
 }
-
 
 .botao.perigo:hover {
+    color: #fff;
+
     background:
-        rgba(255, 80, 80, 0.10);
+        rgba(255, 80, 80, 0.15);
 
     border-color:
-        rgba(255, 100, 100, 0.4);
-}
+        rgba(255, 100, 100, 0.5);
 
+    box-shadow:
+        0 0 15px rgba(255, 80, 80, 0.12);
+}
 
 /* ==========================================================
    RESPONSIVIDADE — 900px
@@ -1295,7 +1569,6 @@ body {
     .painel-perfil {
         width: 100%;
     }
-
 }
 
 
@@ -1313,7 +1586,6 @@ body {
     .resumo-registro .botao {
         grid-column: 1 / -1;
     }
-
 }
 
 
@@ -1378,8 +1650,8 @@ body {
     }
 
 
-    .configuracao {
+    .configuracao,
+    .acss-configuracao {
         align-items: flex-start;
     }
-
 }
