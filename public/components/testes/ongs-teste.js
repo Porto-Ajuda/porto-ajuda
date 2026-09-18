@@ -38,7 +38,7 @@ const ongs = [
         categoria: "Assistência Social",
         descricao: "Centro de Referência da Assistência Social.",
         endereco: "Av. Marechal Deodoro, 169 - Vila Valença, São Vicente - SP",
-        latitude: -23.964563, 
+        latitude: -23.964563,
         longitude: -46.380521
     },
 
@@ -49,7 +49,7 @@ const ongs = [
         categoria: "Assistência Social",
         descricao: "Centro de Referência da Assistência Social.",
         endereco: "Av. Nações Unidas, 696 - Vila Margarida, São Vicente - SP",
-        latitude: -23.967060, 
+        latitude: -23.967060,
         longitude: -46.404049
     },
 
@@ -60,7 +60,7 @@ const ongs = [
         categoria: "Assistência Social",
         descricao: "Centro de Referência da Assistência Social.",
         endereco: "Av. Senador Salgado Filho, 224 - Vila Jóquei Clube, São Vicente - SP",
-        latitude: -23.949897, 
+        latitude: -23.949897,
         longitude: -46.397579
     },
 
@@ -71,7 +71,7 @@ const ongs = [
         categoria: "Assistência Social",
         descricao: "Centro de Referência da Assistência Social.",
         endereco: "Rua Quirino Mário Biasóli, 138 - Tancredo Neves, São Vicente - SP",
-        latitude: -23.939570, 
+        latitude: -23.939570,
         longitude: -46.418360
     },
 
@@ -82,7 +82,7 @@ const ongs = [
         categoria: "Assistência Social",
         descricao: "Centro de Referência da Assistência Social.",
         endereco: "Rua Simão Jah Jah, 351 - Parque das Bandeiras, São Vicente - SP",
-        latitude: -23.985907, 
+        latitude: -23.985907,
         longitude: -46.486263
     },
 
@@ -93,7 +93,7 @@ const ongs = [
         categoria: "Assistência Social",
         descricao: "Centro de Referência da Assistência Social.",
         endereco: "Rua Nivaldo Leite da Silva - Humaitá, São Vicente - SP",
-        latitude: -23.950637, 
+        latitude: -23.950637,
         longitude: -46.465868
     },
 
@@ -104,7 +104,7 @@ const ongs = [
         categoria: "Assistência Social",
         descricao: "Centro de Referência Especializado para População em Situação de Rua.",
         endereco: "Av. Capitão-Mor Aguiar, 436 - Centro, São Vicente - SP",
-        latitude: -23.967479, 
+        latitude: -23.967479,
         longitude: -46.391505
     },
 
@@ -115,7 +115,7 @@ const ongs = [
         categoria: "Assistência Social",
         descricao: "Atendimento e ações de apoio social e distribuição de doações.",
         endereco: "Rua Benedito Calixto, 205 - Gonzaguinha, São Vicente - SP",
-        latitude: -23.967280, 
+        latitude: -23.967280,
         longitude: -46.376197
     },
 
@@ -131,7 +131,7 @@ const ongs = [
         categoria: "Assistência Social",
         descricao: "Centro de Referência da Assistência Social.",
         endereco: "Rua Sete de Setembro, 45 - Vila Nova, Santos - SP",
-        latitude: -23.961586, 
+        latitude: -23.961586,
         longitude: -46.315634
     },
 
@@ -153,7 +153,7 @@ const ongs = [
         categoria: "Assistência Social",
         descricao: "Centro de Referência da Assistência Social.",
         endereco: "Av. Nossa Senhora de Fátima, 517 - Caneleira, Santos - SP",
-        latitude: -23.940977, 
+        latitude: -23.940977,
         longitude: -46.364981
     },
 
@@ -164,7 +164,7 @@ const ongs = [
         categoria: "Assistência Social",
         descricao: "Centro de Referência da Assistência Social.",
         endereco: "Av. Brigadeiro Faria Lima, 677 - Rádio Clube, Santos - SP",
-        latitude: -23.939668, 
+        latitude: -23.939668,
         longitude: -46.388126
     },
 
@@ -175,7 +175,7 @@ const ongs = [
         categoria: "Assistência Social",
         descricao: "Centro de Referência da Assistência Social.",
         endereco: "Av. Marginal da Via Anchieta, 218 - Chico de Paula, Santos - SP",
-        latitude: -23.929887, 
+        latitude: -23.929887,
         longitude: -46.365697
     },
 
@@ -197,7 +197,7 @@ const ongs = [
         categoria: "Proteção Animal",
         descricao: "Organização voltada à proteção animal.",
         endereco: "Rua Almirante Tamandaré, 136 - Macuco, Santos - SP",
-        latitude: -23.961212, 
+        latitude: -23.961212,
         longitude: -46.309183
     },
 
@@ -208,7 +208,7 @@ const ongs = [
         categoria: "Proteção Animal",
         descricao: "Organização voltada à proteção animal.",
         endereco: "Rua Carvalho de Mendonça, 670 - Marapé, Santos - SP",
-        latitude: -23.955434, 
+        latitude: -23.955434,
         longitude: -46.345885
     },
 
@@ -219,7 +219,7 @@ const ongs = [
         categoria: "Proteção Animal",
         descricao: "Organização social.",
         endereco: "Rua São Paulo, 120 - Vila Belmiro, Santos - SP",
-        latitude: -23.951428, 
+        latitude: -23.951428,
         longitude: -46.334620
     },
 
@@ -243,6 +243,19 @@ const ongs = [
         endereco: "Av. Conselheiro Nébias, 388 - Paquetá, Santos - SP",
         latitude: -23.950810,
         longitude: -46.322802
+    },
+
+    {
+        id: 22,
+        nome: "MÃOS QUE AJUDAM!",
+        tipo: "Serviço público",
+        categoria: "Idosos",
+        descricao: "Centro de Referência de Assistência Social.",
+        endereco: "Praia Grande - SP",
+        latitude: -23.973499, 
+        longitude: -46.318576,
+        imagem: "../assets/maos-que-ajudam.png"
     }
 
 ];
+
