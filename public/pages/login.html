@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="../styles/login.css">
     <link rel="stylesheet" href="../styles/geral.css">
     <link rel="stylesheet" href="../styles/acessibilidade.css">
+    <script src="../components/cadastro.js" defer></script>
     <script src="../components/login.js" defer></script>
     <script src="../components/header_footer.js" defer></script>
     <script src="../components/acessibilidade.js" defer></script>
@@ -85,7 +86,7 @@
                     e faça parte dessa transformação.
                 </p>
 
-                <form class="formulario" autocomplete="off">
+                <form class="formulario" id="form-cadastro" autocomplete="off">
 
                     <!-- ETAPA 1 -->
                     <div class="row2">
@@ -102,9 +103,20 @@
                     <!-- ETAPA 2 -->
                     <div class="row3">
 
-                        <input class="inp" type="tel" id="telefone" placeholder="Telefone" autocomplete="off" required>
+                        <div class="campo-genero">
 
-                        <input class="inp" type="text" id="username" placeholder="Nome de usuário" required>
+                            <select class="inp select-genero" id="genero" required>
+                                <option value="" disabled selected>Gênero</option>
+                                <option value="FEMININO">Feminino</option>
+                                <option value="MASCULINO">Masculino</option>
+                                <option value="NAO_BINARIO">Não-Binário</option>
+                                <option value="PREFIRO_NAO_INFORMAR">Prefiro não informar</option>
+                                <option value="OUTRO">Outro</option>
+                            </select>
+
+                        </div>
+
+                        <input class="inp" type="tel" id="telefone" placeholder="Telefone" autocomplete="off" required>
 
                         <input class="inp" type="text" id="nascimento" placeholder="Data de nascimento"
                             onfocus="this.type='date'" onblur="if(!this.value) this.type='text'" required>

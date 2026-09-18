@@ -643,3 +643,44 @@ a:hover {
   font-size: .75rem;
   color: var(--text-soft);
 }
+
+/* ========================= */
+/* DROPDOWN GÊNERO */
+/* ========================= */
+
+.campo-genero {
+  width: 100%;
+}
+
+.select-genero {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  cursor: pointer;
+
+  /* Seta do dropdown */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23d7d7d7' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+
+  padding-right: 40px;
+}
+
+/* Texto "Gênero" quando nada foi selecionado */
+.select-genero:invalid {
+  color: rgba(255, 255, 255, .55);
+}
+
+/* Opções abertas */
+.select-genero option {
+  background: var(--bg-card);
+  color: var(--text);
+  padding: 10px;
+}
+
+/* Quando selecionado */
+.select-genero:valid {
+  color: var(--text);
+}
