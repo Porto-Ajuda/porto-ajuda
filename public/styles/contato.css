@@ -42,26 +42,30 @@
     scroll-behavior: smooth;
   }
   
-  body {
+ body {
     overflow-x: hidden;
+    overflow-y: auto;
+
+    min-height: 100vh;
+
     font-family: 'Poppins', sans-serif;
     color: var(--text);
-  
+
     background:
-      radial-gradient(circle at top,
-        var(--bg-card) 0%,
-        var(--bg-section) 45%,
-        var(--bg-main) 100%);
-        overflow: hidden;
-    
-  }
+        radial-gradient(circle at top,
+            var(--bg-card) 0%,
+            var(--bg-section) 45%,
+            var(--bg-main) 100%);
+
+    background-attachment: fixed;
+}
 
 .corpo {
-    position: absolute;
-    width: 500px;
-    margin-left: 35%;
-    margin-bottom: 120px;
-    bottom: 2em;
+    width: min(500px, 90%);
+    margin: 0 auto;
+
+    padding-top: 140px;
+    padding-bottom: 100px;
 }
 
 /* Título */
@@ -80,9 +84,8 @@
     text-align: center;
 }
 
-/* Caixa do formulário */
-.container {
-
+/* Formulário */
+.form {
     width: 100%;
 
     padding: 35px;
@@ -96,15 +99,6 @@
     backdrop-filter: blur(8px);
 
     box-shadow: 0 0 25px rgba(0, 0, 0, 0.35);
-}
-
-/* Formulário */
-form {
-
-    display: flex;
-    flex-direction: column;
-
-    gap: 18px;
 }
 
 /* Campos */
@@ -208,10 +202,6 @@ button:hover {
     transform: translateY(-2px);
 
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
-}
-
-#footer {
-    margin-top: 42em;
 }
 
 textarea::-webkit-scrollbar {
