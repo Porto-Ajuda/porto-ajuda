@@ -1,5 +1,7 @@
+/* =========================================================
+   RESET / GERAL
+   ========================================================= */
 
-/* geral */
 * {
   box-sizing: border-box;
 }
@@ -8,17 +10,37 @@ html,
 body {
   margin: 0;
   padding: 0;
+  width: 100%;
+  min-height: 100%;
+}
+
+html {
+  overflow-x: hidden;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+a {
+  text-decoration: none;
 }
 
 
-/* header */
+/* =========================================================
+   HEADER
+   ========================================================= */
+
 .navbar {
   position: fixed;
+
   top: 0;
   left: 0;
   right: 0;
 
+  width: 100%;
   height: 90px;
+
   padding: 0 30px;
 
   display: flex;
@@ -26,67 +48,88 @@ body {
   justify-content: space-between;
 
   background: rgba(58, 35, 111, 0.223);
-  backdrop-filter: blur(14px);
 
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+
+  /* Linha divisória do header */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+
   z-index: 9999;
 }
+
+
+/* =========================================================
+   LOGO
+   ========================================================= */
+
 .logo {
   display: flex;
   align-items: center;
+
   gap: 14px;
 
   margin: 0;
   padding: 0;
 
   font-family: 'Cormorant Garamond', serif;
+
   font-size: 2rem;
+
   color: var(--gold-light);
+
+  white-space: nowrap;
+}
+
+.logo-circle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
 }
 
 .logo-circle-img {
   display: block;
+
   width: 100px;
   height: auto;
 }
 
+
+/* =========================================================
+   NAVEGAÇÃO DESKTOP / TABLET
+   ========================================================= */
+
 .navbar nav {
   margin: 0;
   padding: 0;
+
+  flex-shrink: 1;
 }
 
 .nav-links {
   display: flex;
   align-items: center;
+
   gap: 35px;
 
   margin: 0;
   padding: 0;
 
   list-style: none;
-}
 
-.profile-icon {
-  width: 50px;
-  height: 50px;
-
-  margin: 0;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  border-radius: 50%;
+  white-space: nowrap;
 }
 
 .nav-links a {
+  position: relative;
+
   color: var(--text);
 
   text-decoration: none;
 
   transition: .3s;
-
-  position: relative;
 }
 
 .nav-links a:hover {
@@ -108,15 +151,49 @@ body {
 
   transition: .3s;
 }
-#barra{
-  color:var(--gold-light);
-}
+
 .nav-links a:hover::after {
   width: 100%;
 }
 
-.profile-icon:hover {
 
+/* =========================================================
+   SEPARADORES
+   ========================================================= */
+
+#barra {
+  color: var(--gold-light);
+
+  user-select: none;
+}
+
+
+/* =========================================================
+   PERFIL
+   ========================================================= */
+
+.profile-icon {
+  width: 50px;
+  height: 50px;
+
+  margin: 0;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  transition:
+    background .3s,
+    color .3s,
+    transform .3s,
+    box-shadow .3s;
+}
+
+.profile-icon:hover {
   background: var(--gold);
 
   color: var(--bg-main);
@@ -126,37 +203,315 @@ body {
 
   box-shadow:
     0 0 30px rgba(242, 170, 26, .45);
-
 }
-.fa-regular{
+
+.fa-regular {
   color: rgb(181, 128, 255);
 }
-.fa-regular:hover{
+
+.fa-regular:hover {
   color: rgb(70, 0, 167);
 }
-a{
-  text-decoration: none;
+
+
+/* =========================================================
+   ÁREA DOS BOTÕES DIREITOS DO HEADER
+   ========================================================= */
+
+.header-actions {
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+
+  flex-shrink: 0;
 }
-/* ============ */
-/* footer */
-/* ============ */
+
+
+/* =========================================================
+   BOTÃO ☰
+   ========================================================= */
+
+.menu-mobile-button {
+  display: none;
+
+  width: 50px;
+  height: 50px;
+
+  padding: 0;
+
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid rgba(255, 255, 255, 0.14);
+
+  border-radius: 50%;
+
+  background: rgba(58, 35, 111, 0.35);
+
+  color: var(--gold-light);
+
+  font-size: 1.7rem;
+
+  line-height: 1;
+
+  cursor: pointer;
+
+  transition:
+    background .3s,
+    transform .3s,
+    box-shadow .3s;
+}
+
+.menu-mobile-button:hover {
+  background: rgba(242, 170, 26, 0.18);
+
+  transform: scale(1.06);
+
+  box-shadow:
+    0 0 20px rgba(242, 170, 26, .25);
+}
+
+
+/* =========================================================
+   MENU MOBILE
+   ========================================================= */
+
+/*
+   O overlay cobre toda a página.
+
+   Enquanto estiver aberto:
+   - a página fica bloqueada;
+   - somente o painel do menu recebe interação.
+*/
+
+.menu-mobile-overlay {
+  position: fixed;
+
+  inset: 0;
+
+  display: none;
+
+  background: rgba(5, 2, 15, 0.72);
+
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+
+  z-index: 100000;
+}
+
+.menu-mobile-overlay.aberto {
+  display: block;
+}
+
+
+/* =========================================================
+   PAINEL DO MENU
+   ========================================================= */
+
+.menu-mobile {
+  position: absolute;
+
+  top: 0;
+  right: 0;
+
+  width: min(360px, 88vw);
+
+  height: 100%;
+
+  padding: 30px 25px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(35, 19, 68, 0.98),
+      rgba(16, 8, 35, 0.98)
+    );
+
+  border-left:
+    1px solid rgba(255, 255, 255, 0.16);
+
+  box-shadow:
+    -10px 0 40px rgba(0, 0, 0, 0.4);
+
+  overflow-y: auto;
+
+  transform: translateX(100%);
+
+  transition: transform .3s ease;
+}
+
+.menu-mobile-overlay.aberto .menu-mobile {
+  transform: translateX(0);
+}
+
+
+/* =========================================================
+   CABEÇALHO DO MENU
+   ========================================================= */
+
+.menu-mobile-header {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  padding-bottom: 20px;
+
+  margin-bottom: 20px;
+
+  border-bottom:
+    1px solid rgba(255, 255, 255, 0.15);
+}
+
+.menu-mobile-header h2 {
+  margin: 0;
+
+  font-family: 'Cormorant Garamond', serif;
+
+  font-size: 1.8rem;
+
+  color: var(--gold-light);
+}
+
+.menu-mobile-fechar {
+  width: 42px;
+  height: 42px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  border: 0;
+
+  border-radius: 50%;
+
+  background: transparent;
+
+  color: var(--text);
+
+  font-size: 1.8rem;
+
+  cursor: pointer;
+
+  transition: .3s;
+}
+
+.menu-mobile-fechar:hover {
+  background: rgba(255, 255, 255, 0.08);
+
+  color: var(--gold-light);
+}
+
+
+/* =========================================================
+   LINKS DO MENU MOBILE
+   ========================================================= */
+
+.menu-mobile-links {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 8px;
+
+  margin: 0;
+  padding: 0;
+
+  list-style: none;
+}
+
+.menu-mobile-links li {
+  width: 100%;
+}
+
+.menu-mobile-links a {
+  display: flex;
+
+  align-items: center;
+
+  width: 100%;
+
+  min-height: 52px;
+
+  padding: 12px 15px;
+
+  border-radius: 10px;
+
+  color: var(--text);
+
+  font-size: 1rem;
+
+  transition:
+    background .25s,
+    color .25s,
+    transform .25s;
+}
+
+.menu-mobile-links a:hover,
+.menu-mobile-links a:focus {
+  background: rgba(242, 170, 26, 0.12);
+
+  color: var(--gold-light);
+
+  transform: translateX(4px);
+}
+
+
+/* =========================================================
+   TRAVA DE SCROLL QUANDO MENU ESTÁ ABERTO
+   ========================================================= */
+
+body.menu-mobile-aberto {
+  overflow: hidden;
+}
+
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
 
 footer {
-  height: 8em;
   width: 100%;
-   top: 0;
-  left: 0;
-  right: 0;
-  padding: 0 30px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: rgba(58, 35, 111, 0.223);
-  backdrop-filter: blur(14px);
 
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);       
-  z-index: 9999;
+  min-height: 8em;
+
+  padding: 20px 30px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 30px;
+
+  background: rgba(58, 35, 111, 0.223);
+
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+
+  border-top:
+    1px solid rgba(255, 255, 255, 0.12);
+
+  border-bottom: 0;
+
+  z-index: 999;
 }
+
+
+/* =========================================================
+   LOGO FOOTER
+   ========================================================= */
 
 .footer-logo {
   font-family: 'Cormorant Garamond', serif;
@@ -164,64 +519,426 @@ footer {
   font-size: 2rem;
 
   color: var(--gold-light);
-}
 
-.footer-links {
-  display: flex;
-  gap: 40px;
-}
-
-.footer-links a {
-  color: var(--text-soft);
-
-  text-decoration: none;
-
-  transition: .3s;
-}
-
-.footer-links a:hover {
-  color: var(--gold-light);
+  flex-shrink: 0;
 }
 
 .logo-footer {
-display: flex;
+  display: flex;
+
   align-items: center;
+
   gap: 14px;
 
   margin: 0;
   padding: 0;
 
   font-family: 'Cormorant Garamond', serif;
+
   font-size: 2rem;
+
   color: var(--gold-light);
+
+  white-space: nowrap;
 }
 
-.img {
-    display: block;
+.logo-footer .img {
+  display: block;
+
   width: 100px;
   height: auto;
+
+  flex-shrink: 0;
 }
 
 .logo-name {
-  position: absolute;
-  bottom: 0;
-  position: sticky;
-  padding-left: 0px;
+  position: static;
+
+  padding: 0;
+
+  white-space: nowrap;
 }
-/* ========================= */
-/* STARS */
-/* ========================= */
+
+
+/* =========================================================
+   LINKS FOOTER
+   ========================================================= */
+
+.footer-links {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: flex-end;
+
+  gap: 40px;
+
+  flex-wrap: wrap;
+}
+
+.footer-links a,
+.footer-links button {
+  color: var(--text-soft);
+
+  text-decoration: none;
+
+  font-family: 'Poppins', sans-serif;
+
+  transition: .3s;
+}
+
+.footer-links a:hover,
+.footer-links button:hover {
+  color: var(--gold-light);
+}
+
+.footer-links button {
+  border: 0;
+
+  padding: 0;
+
+  background: transparent;
+
+  cursor: pointer;
+
+  font-size: inherit;
+}
+
+
+/* =========================================================
+   ESTRELAS
+   ========================================================= */
 
 .stars {
   position: fixed;
+
   inset: 0;
+
   z-index: -1;
+
   pointer-events: none;
 
   background-image:
-    radial-gradient(var(--gold-soft) 1px, transparent 1px);
+    radial-gradient(
+      var(--gold-soft) 1px,
+      transparent 1px
+    );
 
   background-size: 90px 90px;
 
   opacity: .18;
+}
+
+
+/* =========================================================
+   TABLETS / NOTEBOOKS MENORES
+   ========================================================= */
+
+@media (max-width: 1200px) {
+
+  .navbar {
+    padding: 0 20px;
+  }
+
+  .nav-links {
+    gap: 18px;
+  }
+
+  .nav-links a {
+    font-size: 0.9rem;
+  }
+
+  #barra {
+    display: none;
+  }
+
+  .logo {
+    gap: 10px;
+  }
+
+  .logo-circle-img {
+    width: 80px;
+  }
+
+  .footer-links {
+    gap: 25px;
+  }
+}
+
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (max-width: 1023px) and (min-width: 769px) {
+
+  .navbar {
+    height: 85px;
+
+    padding: 0 20px;
+  }
+
+  .logo {
+    font-size: 1.7rem;
+  }
+
+  .logo-circle-img {
+    width: 75px;
+  }
+
+  .nav-links {
+    gap: 14px;
+  }
+
+  .nav-links a {
+    font-size: 0.8rem;
+  }
+
+  .profile-icon {
+    width: 45px;
+    height: 45px;
+  }
+
+  footer {
+    min-height: 120px;
+
+    padding: 20px 25px;
+
+    gap: 20px;
+  }
+
+  .footer-logo {
+    font-size: 1.7rem;
+  }
+
+  .logo-footer {
+    font-size: 1.7rem;
+
+    gap: 10px;
+  }
+
+  .logo-footer .img {
+    width: 80px;
+  }
+
+  .footer-links {
+    gap: 18px;
+
+    justify-content: flex-end;
+  }
+}
+
+
+/* =========================================================
+   CELULAR
+   O MENU ☰ SÓ APARECE AQUI
+   ========================================================= */
+
+@media (max-width: 768px) {
+
+  .navbar {
+    height: 70px;
+
+    padding: 0 15px;
+
+    border-bottom:
+      1px solid rgba(255, 255, 255, 0.20);
+  }
+
+  /*
+     A navegação normal desaparece somente no mobile.
+  */
+
+  .navbar nav {
+    display: none;
+  }
+
+  .logo {
+    font-size: 1.4rem;
+
+    gap: 8px;
+  }
+
+  .logo-circle-img {
+    width: 60px;
+  }
+
+  .profile-icon {
+    width: 42px;
+    height: 42px;
+  }
+
+  /*
+     O ☰ fica ao lado do usuário.
+  */
+
+  .menu-mobile-button {
+    display: flex;
+
+    width: 42px;
+    height: 42px;
+
+    font-size: 1.45rem;
+  }
+
+
+  /* =======================================================
+     FOOTER MOBILE
+     ======================================================= */
+
+  footer {
+    width: 100%;
+
+    min-height: 0;
+
+    padding: 30px 20px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    justify-content: center;
+
+    text-align: center;
+
+    gap: 25px;
+
+    border-top:
+      1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  .footer-logo {
+    font-size: 1.5rem;
+
+    width: 100%;
+  }
+
+  .logo-footer {
+    justify-content: center;
+
+    font-size: 1.5rem;
+
+    gap: 8px;
+  }
+
+  .logo-footer .img {
+    width: 70px;
+  }
+
+  .logo-name {
+    position: static;
+
+    padding: 0;
+  }
+
+  .footer-links {
+    width: 100%;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 14px;
+  }
+
+  .footer-links a,
+  .footer-links button {
+    font-size: 0.8rem;
+
+    text-align: center;
+  }
+}
+
+
+/* =========================================================
+   CELULARES PEQUENOS
+   ========================================================= */
+
+@media (max-width: 480px) {
+
+  .navbar {
+    height: 65px;
+
+    padding: 0 12px;
+  }
+
+  .logo {
+    font-size: 1.2rem;
+
+    gap: 6px;
+  }
+
+  .logo-circle-img {
+    width: 50px;
+  }
+
+  .profile-icon {
+    width: 38px;
+    height: 38px;
+  }
+
+  .menu-mobile-button {
+    width: 38px;
+    height: 38px;
+
+    font-size: 1.3rem;
+  }
+
+  footer {
+    padding: 25px 15px;
+
+    gap: 20px;
+  }
+
+  .logo-footer {
+    font-size: 1.3rem;
+  }
+
+  .logo-footer .img {
+    width: 60px;
+  }
+}
+
+
+/* =========================================================
+   TOUCH
+   ========================================================= */
+
+@media (hover: none) {
+
+  .profile-icon:hover {
+    transform: none;
+
+    box-shadow: none;
+  }
+
+  .nav-links a:hover::after {
+    width: 0;
+  }
+}
+
+
+/* =========================================================
+   REDUÇÃO DE MOVIMENTO
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+
+    animation-iteration-count: 1 !important;
+
+    scroll-behavior: auto !important;
+
+    transition-duration: 0.01ms !important;
+  }
 }

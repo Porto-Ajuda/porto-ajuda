@@ -22,7 +22,7 @@ formulario.addEventListener("submit", function (event) {
         nomeUsuario: "",
         dataNascimento: nascimento,
         email: email,
-        genero: genero,
+        genero: genero.toUpperCase(),
         telefone: telefone,
         senha: senha
     }
