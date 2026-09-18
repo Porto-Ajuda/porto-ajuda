@@ -260,3 +260,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 });
+const accOsc = document.getElementById("criar-osc");
+accOsc.addEventListener("click", function () {
+    window.location.href = "cadastro/cadastro-osc.html";
+});
