@@ -46,6 +46,9 @@ public class Usuario implements UserDetails {
     @Column(name = "cpf", nullable = false, length = 11, unique = true)
     private Cpf cpf;
 
+    @Column(name = "cep", length = 8)
+    private String cep;
+
     @Column(name = "data_nascimento", nullable = false)
     private LocalDate dataNascimento;
 

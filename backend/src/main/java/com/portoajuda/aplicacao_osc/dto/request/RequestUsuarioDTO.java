@@ -10,6 +10,9 @@ public record RequestUsuarioDTO(
         @CPF(message = "O CPF deve ser válido")
         String cpf,
 
+        @Size(min = 8, max = 8)
+        String cep,
+
         @NotBlank(message = "O nome é obrigatório")
         String nome,
 

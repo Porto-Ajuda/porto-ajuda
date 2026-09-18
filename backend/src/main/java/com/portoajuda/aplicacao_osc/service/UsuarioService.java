@@ -45,6 +45,7 @@ public class UsuarioService {
         }
         Usuario usuario = new Usuario();
         usuario.setCpf(new Cpf(usuarioDTO.cpf()));
+        usuario.setCep(usuarioDTO.cep());
         usuario.setNome(usuarioDTO.nome());
         usuario.setNomeSocial(usuarioDTO.nomeSocial());
         usuario.setDataNascimento(usuarioDTO.dataNascimento());
