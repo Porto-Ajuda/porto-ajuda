@@ -69,22 +69,22 @@
         return "";
     }
 
-    function calcularIdade(iso) {
-        // Evita o problema de fuso horário do new Date("YYYY-MM-DD")
-        const [ano, mes, dia] = iso.split("-").map(Number);
-        const hoje = new Date();
+    // function calcularIdade(iso) {
+    //     // Evita o problema de fuso horário do new Date("YYYY-MM-DD")
+    //     const [ano, mes, dia] = iso.split("-").map(Number);
+    //     const hoje = new Date();
 
-        let idade = hoje.getFullYear() - ano;
+    //     let idade = hoje.getFullYear() - ano;
 
-        if (
-            hoje.getMonth() + 1 < mes ||
-            (hoje.getMonth() + 1 === mes && hoje.getDate() < dia)
-        ) {
-            idade--;
-        }
+    //     if (
+    //         hoje.getMonth() + 1 < mes ||
+    //         (hoje.getMonth() + 1 === mes && hoje.getDate() < dia)
+    //     ) {
+    //         idade--;
+    //     }
 
-        return idade;
-    }
+    //     return idade;
+    // }
 
     function validarCPF(valor) {
         valor = somenteNumeros(valor);
@@ -269,38 +269,44 @@
                 return false;
             }
 
-            const dataISO = normalizarData(nascimento.value);
+            // const dataISO = normalizarData(nascimento.value);
 
-            if (!dataISO) {
-                nascimento.setCustomValidity("Informe uma data de nascimento válida.");
-                nascimento.reportValidity();
-                nascimento.focus();
-                return false;
-            }
+            // if (!dataISO) {
+            //     nascimento.setCustomValidity("Informe uma data de nascimento válida.");
+            //     nascimento.reportValidity();
+            //     nascimento.focus();
+            //     return false;
+            // }
 
-            const idade = calcularIdade(dataISO);
+            // const idade = calcularIdade(dataISO);
 
-            if (idade < 16 || idade > 120) {
-                nascimento.setCustomValidity(
-                    idade < 16
-                        ? "É necessário ter 16 anos ou mais."
-                        : "Informe uma data de nascimento válida."
-                );
-                nascimento.reportValidity();
-                nascimento.focus();
-                return false;
-            }
-            nascimento.setCustomValidity("");
+            // if (idade < 16 || idade > 120) {
+            //     nascimento.setCustomValidity(
+            //         idade < 16
+            //             ? "É necessário ter 16 anos ou mais."
+            //             : "Informe uma data de nascimento válida."
+            //     );
+            //     nascimento.reportValidity();
+            //     nascimento.focus();
+            //     return false;
+            // }
+            // nascimento.setCustomValidity("");
 
-            const tel = somenteNumeros(telefone.value);
+        const telefoneNumeros = telefone.value.replace(/\D/g, '');
 
-            if (tel.length !== 10 && tel.length !== 11) {
-                telefone.setCustomValidity("Digite um telefone válido.");
-                telefone.reportValidity();
-                telefone.focus();
-                return false;
-            }
-            telefone.setCustomValidity("");
+        if (
+            telefoneNumeros.length !== 10 &&
+            telefoneNumeros.length !== 11
+        ) {
+
+            telefone.setCustomValidity('Digite um telefone válido.');
+            telefone.reportValidity();
+            telefone.focus();
+
+            return;
+        }
+
+        telefone.setCustomValidity('');
 
             if (somenteNumeros(cep.value).length !== 8) {
                 cep.setCustomValidity("Digite um CEP válido.");
@@ -327,65 +333,152 @@
     mostrarEtapa(0);
 
     // ---------- SENHA ----------
-    senhaCadastro.addEventListener("focus", () => {
-        const posicao = senhaCadastro.getBoundingClientRect();
 
-        requisitosSenha.style.display = "flex";
-        requisitosSenha.style.left = `${posicao.right + 30}px`;
-        requisitosSenha.style.top = `${posicao.top}px`;
-    });
+senhaCadastro.addEventListener('focus', () => {
+    const posicao = senhaCadastro.getBoundingClientRect();
 
-    senhaCadastro.addEventListener("blur", () => {
-        requisitosSenha.style.display = "none";
-    });
+    requisitosSenha.style.display = 'flex';
+    requisitosSenha.style.left = `${posicao.right + 30}px`;
+    requisitosSenha.style.top = `${posicao.top}px`;
+});
 
-    senhaCadastro.addEventListener("input", () => {
-        const senha = senhaCadastro.value;
-        const r = verificarSenha(senha);
+senhaCadastro.addEventListener('blur', () => {
+    requisitosSenha.style.display = 'none';
+});
 
-        reqTamanho.style.display = r.tamanho ? "none" : "block";
-        reqMaiuscula.style.display = r.maiuscula ? "none" : "block";
-        reqMinuscula.style.display = r.minuscula ? "none" : "block";
-        reqNumero.style.display = r.numero ? "none" : "block";
-        reqEspecial.style.display = r.especial ? "none" : "block";
+senhaCadastro.addEventListener('input', () => {
 
-        const pontos = Object.values(r).filter(Boolean).length;
+    const senha = senhaCadastro.value;
 
-        if (pontos === 5) {
-            requisitosSenha.style.display = "none";
-        } else if (document.activeElement === senhaCadastro) {
-            requisitosSenha.style.display = "flex";
-        }
+    const tamanho = senha.length >= 8;
+    const maiuscula = /[A-Z]/.test(senha);
+    const minuscula = /[a-z]/.test(senha);
+    const numero = /[0-9]/.test(senha);
+    const especial = /[^A-Za-z0-9]/.test(senha);
 
-        nivelSenha.style.width = `${pontos * 20}%`;
 
-        if (senha.length === 0) {
-            textoSeguranca.textContent = "Digite uma senha";
-        } else if (pontos <= 2) {
-            textoSeguranca.textContent = "Senha fraca";
-        } else if (pontos <= 4) {
-            textoSeguranca.textContent = "Senha média";
-        } else {
-            textoSeguranca.textContent = "Senha forte";
-        }
+    // =========================
+    // MOSTRA SOMENTE O QUE FALTA
+    // =========================
 
-        senhaCadastro.setCustomValidity("");
+    reqTamanho.style.display = tamanho ? 'none' : 'block';
+    reqMaiuscula.style.display = maiuscula ? 'none' : 'block';
+    reqMinuscula.style.display = minuscula ? 'none' : 'block';
+    reqNumero.style.display = numero ? 'none' : 'block';
+    reqEspecial.style.display = especial ? 'none' : 'block';
 
-        // Reavalia a confirmação
+    // =========================
+    // CALCULA A FORÇA
+    // =========================
+
+    let pontos = 0;
+
+    if (tamanho) pontos++;
+    if (maiuscula) pontos++;
+    if (minuscula) pontos++;
+    if (numero) pontos++;
+    if (especial) pontos++;
+
+    if (pontos === 5) {
+        requisitosSenha.style.display = 'none';
+    } else if (document.activeElement === senhaCadastro) {
+        requisitosSenha.style.display = 'flex';
+    }
+
+    // =========================
+    // ATUALIZA A BARRA
+    // =========================
+
+    nivelSenha.style.width = `${pontos * 20}%`;
+
+
+    if (senha.length === 0) {
+
+        textoSeguranca.textContent = 'Digite uma senha';
+
+    } else if (pontos <= 2) {
+
+        textoSeguranca.textContent = 'Senha fraca';
+
+    } else if (pontos <= 4) {
+
+        textoSeguranca.textContent = 'Senha média';
+
+    } else {
+
+        textoSeguranca.textContent = 'Senha forte';
+
+    }
+
+    confirmarSenha.setCustomValidity('');
+});
+
+confirmarSenha.addEventListener('input', () => {
+
+    if (confirmarSenha.value !== senhaCadastro.value) {
+
         confirmarSenha.setCustomValidity(
-            confirmarSenha.value && confirmarSenha.value !== senha
-                ? "As senhas não são iguais."
-                : ""
+            'As senhas não são iguais.'
         );
-    });
 
-    confirmarSenha.addEventListener("input", () => {
-        confirmarSenha.setCustomValidity(
-            confirmarSenha.value !== senhaCadastro.value
-                ? "As senhas não são iguais."
-                : ""
+    } else {
+
+        confirmarSenha.setCustomValidity('');
+
+    }
+
+});
+
+cad.addEventListener('click', (e) => {
+
+    const senha = senhaCadastro.value;
+
+    const tamanho = senha.length >= 8;
+    const maiuscula = /[A-Z]/.test(senha);
+    const minuscula = /[a-z]/.test(senha);
+    const numero = /[0-9]/.test(senha);
+    const especial = /[^A-Za-z0-9]/.test(senha);
+
+    if (!tamanho || !maiuscula || !minuscula || !numero || !especial) {
+
+        e.preventDefault();
+
+        senhaCadastro.setCustomValidity(
+            'A senha não atende aos requisitos de segurança.'
         );
-    });
+
+        senhaCadastro.reportValidity();
+        senhaCadastro.focus();
+
+        return;
+    }
+
+    senhaCadastro.setCustomValidity('');
+
+
+    // Verifica se as senhas são iguais
+    if (senhaCadastro.value !== confirmarSenha.value) {
+
+        e.preventDefault();
+
+        confirmarSenha.setCustomValidity(
+            'As senhas não são iguais.'
+        );
+
+        confirmarSenha.reportValidity();
+        confirmarSenha.focus();
+
+        return;
+    }
+
+    confirmarSenha.setCustomValidity('');
+
+});
+
+const rect = senhaCadastro.getBoundingClientRect();
+
+requisitosSenha.style.left = `${rect.right + 15}px`;
+requisitosSenha.style.top = `${rect.top}px`;
 
     // ---------- ENVIO ----------
     formCadastro.addEventListener("submit", async function (event) {

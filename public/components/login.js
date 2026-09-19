@@ -137,486 +137,470 @@
 
 })();
 
-
-const frame = document.getElementById('frame');
-const goCad = document.getElementById('goCad');
-const goLogin = document.getElementById('goLogin');
 const polygon = document.querySelector('.shape');
-const cpf = document.getElementById('cpf');
-goCad.addEventListener('click', () => {
-    frame.classList.add('flipped');
-    moveFrame('right');
+// const cpf = document.getElementById('cpf');
 
-});
+// goCad.addEventListener('click', () => {
+//     frame.classList.add('flipped');
+//     moveFrame('right');
 
-goLogin.addEventListener('click', () => {
-    frame.classList.remove('flipped');
-    moveFrame('left');
-});
+// });
 
-function moveFrame(side) {
-    if (side === 'left') {
-        frame.style.left = '15%';
-        frame.style.right = 'auto';
-    } else {
-        frame.style.right = '50%';
-        frame.style.left = 'auto';
-    }
-}
+// goLogin.addEventListener('click', () => {
+//     frame.classList.remove('flipped');
+//     moveFrame('left');
+// });
 
-cpf.addEventListener('input', () => {
+// function moveFrame(side) {
+//     if (side === 'left') {
+//         frame.style.left = '15%';
+//         frame.style.right = 'auto';
+//     } else {
+//         frame.style.right = '50%';
+//         frame.style.left = 'auto';
+//     }
+// }
 
-    const cpfValue = cpf.value.replace(/\D/g, '');
+// cpf.addEventListener('input', () => {
 
-    cpf.value = cpfValue.replace(
-        /(\d{3})(\d{3})(\d{3})(\d{2})/,
-        '$1.$2.$3-$4'
-    );
+//     const cpfValue = cpf.value.replace(/\D/g, '');
 
-    cpf.setCustomValidity('');
-});
+//     cpf.value = cpfValue.replace(
+//         /(\d{3})(\d{3})(\d{3})(\d{2})/,
+//         '$1.$2.$3-$4'
+//     );
 
-const telefone = document.getElementById('telefone');
+//     cpf.setCustomValidity('');
+// });
 
-telefone.addEventListener('input', () => {
+// const telefone = document.getElementById('telefone');
 
-    // Pega somente os números
-    let valor = telefone.value.replace(/\D/g, '');
+// telefone.addEventListener('input', () => {
 
-    // Limita a 11 números
-    valor = valor.substring(0, 11);
+//     // Pega somente os números
+//     let valor = telefone.value.replace(/\D/g, '');
 
-    // Aplica a máscara
-    if (valor.length <= 10) {
+//     // Limita a 11 números
+//     valor = valor.substring(0, 11);
 
-        valor = valor.replace(
-            /^(\d{2})(\d{4})(\d{0,4})$/,
-            '($1) $2-$3'
-        );
+//     // Aplica a máscara
+//     if (valor.length <= 10) {
 
-    } else {
+//         valor = valor.replace(
+//             /^(\d{2})(\d{4})(\d{0,4})$/,
+//             '($1) $2-$3'
+//         );
 
-        valor = valor.replace(
-            /^(\d{2})(\d{5})(\d{0,4})$/,
-            '($1) $2-$3'
-        );
-    }
+//     } else {
 
-    telefone.value = valor;
+//         valor = valor.replace(
+//             /^(\d{2})(\d{5})(\d{0,4})$/,
+//             '($1) $2-$3'
+//         );
+//     }
 
-    // Limpa erro anterior
-    telefone.setCustomValidity('');
-});
+//     telefone.value = valor;
 
-const cep = document.getElementById('cep');
+//     // Limpa erro anterior
+//     telefone.setCustomValidity('');
+// });
 
-cep.addEventListener('input', () => {
+// const cep = document.getElementById('cep');
 
-    let valor = cep.value.replace(/\D/g, '');
+// cep.addEventListener('input', () => {
 
-    // Limita a 8 números
-    valor = valor.substring(0, 8);
+//     let valor = cep.value.replace(/\D/g, '');
 
-    // Coloca o hífen
-    if (valor.length > 5) {
-        valor = valor.replace(
-            /^(\d{5})(\d{0,3})$/,
-            '$1-$2'
-        );
-    }
+//     // Limita a 8 números
+//     valor = valor.substring(0, 8);
 
-    cep.value = valor;
+//     // Coloca o hífen
+//     if (valor.length > 5) {
+//         valor = valor.replace(
+//             /^(\d{5})(\d{0,3})$/,
+//             '$1-$2'
+//         );
+//     }
 
-    // Remove eventual erro anterior
-    cep.setCustomValidity('');
-});
+//     cep.value = valor;
 
-function validarCPF(cpf) {
+//     // Remove eventual erro anterior
+//     cep.setCustomValidity('');
+// });
 
-    cpf = cpf.replace(/\D/g, '');
+// function validarCPF(cpf) {
 
-    // CPF precisa ter 11 dígitos
-    if (cpf.length !== 11) {
-        return false;
-    }
+//     cpf = cpf.replace(/\D/g, '');
 
-    // Bloqueia CPFs com todos os números iguais
-    if (/^(\d)\1{10}$/.test(cpf)) {
-        return false;
-    }
+//     // CPF precisa ter 11 dígitos
+//     if (cpf.length !== 11) {
+//         return false;
+//     }
 
-    // Primeiro dígito verificador
-    let soma = 0;
+//     // Bloqueia CPFs com todos os números iguais
+//     if (/^(\d)\1{10}$/.test(cpf)) {
+//         return false;
+//     }
 
-    for (let i = 0; i < 9; i++) {
-        soma += Number(cpf[i]) * (10 - i);
-    }
+//     // Primeiro dígito verificador
+//     let soma = 0;
 
-    let resto = (soma * 10) % 11;
+//     for (let i = 0; i < 9; i++) {
+//         soma += Number(cpf[i]) * (10 - i);
+//     }
 
-    if (resto === 10) {
-        resto = 0;
-    }
+//     let resto = (soma * 10) % 11;
 
-    if (resto !== Number(cpf[9])) {
-        return false;
-    }
+//     if (resto === 10) {
+//         resto = 0;
+//     }
 
-    // Segundo dígito verificador
-    soma = 0;
+//     if (resto !== Number(cpf[9])) {
+//         return false;
+//     }
 
-    for (let i = 0; i < 10; i++) {
-        soma += Number(cpf[i]) * (11 - i);
-    }
+//     // Segundo dígito verificador
+//     soma = 0;
 
-    resto = (soma * 10) % 11;
+//     for (let i = 0; i < 10; i++) {
+//         soma += Number(cpf[i]) * (11 - i);
+//     }
 
-    if (resto === 10) {
-        resto = 0;
-    }
+//     resto = (soma * 10) % 11;
 
-    if (resto !== Number(cpf[10])) {
-        return false;
-    }
+//     if (resto === 10) {
+//         resto = 0;
+//     }
 
-    return true;
-}
+//     if (resto !== Number(cpf[10])) {
+//         return false;
+//     }
 
-//** transição do cadastro **//
+//     return true;
+// }
 
-const nextBtn = document.getElementById('nextBtn');
-const cad = document.getElementById('cad');
-const backBtn = document.getElementById('backBtn');
+// opcoesGenero.querySelectorAll("button").forEach(opcao => {
 
-const rows = [
-    document.querySelector('.row2'),
-    document.querySelector('.row3'),
-    document.querySelector('.row4')
-];
+//     opcao.addEventListener("click", () => {
 
-let etapa = 0;
+//         generoEscolhido = opcao.dataset.valor;
 
-// Começa mostrando somente a primeira etapa
-rows.forEach((row, index) => {
-    row.style.display = index === 0 ? 'grid' : 'none';
-});
+//         generoSelecionado.textContent = opcao.textContent;
 
-cad.style.display = 'none';
-backBtn.style.display = 'none';
+//         dropdownGenero.classList.remove("aberto");
 
+//         // remove o erro
+//         dropdownGenero.classList.remove("erro");
+//         erroGenero.style.display = "none";
+//     });
 
-// AVANÇAR
-nextBtn.addEventListener('click', () => {
+// });
 
-    // Pega os campos da etapa atual
-    const campos = rows[etapa].querySelectorAll('input');
+// //** transição do cadastro **//
 
-    // Verifica se todos estão preenchidos
-    for (const campo of campos) {
+// const nextBtn = document.getElementById('nextBtn');
+// const cad = document.getElementById('cad');
+// const backBtn = document.getElementById('backBtn');
 
-        if (!campo.checkValidity()) {
-            campo.reportValidity();
-            campo.focus();
-            return;
-        }
-    }
+// const rows = [
+//     document.querySelector('.row2'),
+//     document.querySelector('.row3'),
+//     document.querySelector('.row4')
+// ];
 
-    if (etapa === 0) {
+// let etapa = 0;
 
-        if (!validarCPF(cpf.value)) {
+// // Começa mostrando somente a primeira etapa
+// rows.forEach((row, index) => {
+//     row.style.display = index === 0 ? 'grid' : 'none';
+// });
 
-            cpf.setCustomValidity('Digite um CPF válido.');
-            cpf.reportValidity();
-            cpf.focus();
+// cad.style.display = 'none';
+// backBtn.style.display = 'none';
 
-            return;
-        }
 
-        cpf.setCustomValidity('');
-    }
+// // AVANÇAR
+// nextBtn.addEventListener('click', () => {
 
-    // ==========================================
-    // VALIDA GÊNERO
-    // ==========================================
+//     // Pega os campos da etapa atual
+//     const campos = rows[etapa].querySelectorAll('input');
 
-    if (etapa === 1 && generoEscolhido === "") {
-        
-        dropdownGenero.classList.add("erro");
-        erroGenero.style.display = "block";
-        return;
-    }
+//     // Verifica se todos estão preenchidos
+//     for (const campo of campos) {
 
-    if (etapa === 1) {
-        if (!document.getElementById("genero").value) {
-    document.getElementById("erro-genero").style.display = "block";
-    return;
-}
-        const telefoneNumeros = telefone.value.replace(/\D/g, '');
+//         if (!campo.checkValidity()) {
+//             campo.reportValidity();
+//             campo.focus();
+//             return;
+//         }
+//     }
 
-        if (
-            telefoneNumeros.length !== 10 &&
-            telefoneNumeros.length !== 11
-        ) {
+//     if (etapa === 0) {
 
-            telefone.setCustomValidity('Digite um telefone válido.');
-            telefone.reportValidity();
-            telefone.focus();
+//         if (!validarCPF(cpf.value)) {
 
-            return;
-        }
+//             cpf.setCustomValidity('Digite um CPF válido.');
+//             cpf.reportValidity();
+//             cpf.focus();
 
-        telefone.setCustomValidity('');
+//             return;
+//         }
 
-        const cepNumeros = cep.value.replace(/\D/g, '');
+//         cpf.setCustomValidity('');
+//     }
 
-        if (cepNumeros.length !== 8) {
-            cep.setCustomValidity('Digite um CEP válido.');
-            cep.reportValidity();
-            cep.focus();
-            return;
-        }
+//     if (etapa === 1 && generoEscolhido === "") {
+//         dropdownGenero.classList.add("erro");
+//         erroGenero.style.display = "block";
+//         return;
+//     }
 
-        cep.setCustomValidity('');
-    }
+//     if (etapa === 1) {
 
-    // Esconde a etapa atual
-    rows[etapa].style.display = 'none';
+//         dropdownGenero.classList.remove("erro");
+//         erroGenero.style.display = "none";
 
-    // Avança
-    etapa++;
+//         const telefoneNumeros = telefone.value.replace(/\D/g, '');
 
-    // Mostra a próxima etapa
-    rows[etapa].style.display = 'grid';
+//         if (
+//             telefoneNumeros.length !== 10 &&
+//             telefoneNumeros.length !== 11
+//         ) {
 
-    // Mostra o botão Voltar
-    backBtn.style.display = 'block';
+//             telefone.setCustomValidity('Digite um telefone válido.');
+//             telefone.reportValidity();
+//             telefone.focus();
 
-    // Se chegou na última etapa
-    if (etapa === rows.length - 1) {
-        nextBtn.style.display = 'none';
-        cad.style.display = 'block';
-    }
-});
+//             return;
+//         }
 
+//         telefone.setCustomValidity('');
 
-// VOLTAR
-backBtn.addEventListener('click', () => {
+//         const cepNumeros = cep.value.replace(/\D/g, '');
 
-    // Esconde a etapa atual
-    rows[etapa].style.display = 'none';
+//         if (cepNumeros.length !== 8) {
+//             cep.setCustomValidity('Digite um CEP válido.');
+//             cep.reportValidity();
+//             cep.focus();
+//             return;
+//         }
 
-    // Volta uma etapa
-    etapa--;
+//         cep.setCustomValidity('');
+//     }
 
-    // Mostra a etapa anterior
-    rows[etapa].style.display = 'grid';
+//     // Esconde a etapa atual
+//     rows[etapa].style.display = 'none';
 
-    // Se voltou para a primeira etapa
-    if (etapa === 0) {
-        backBtn.style.display = 'none';
-    }
+//     // Avança
+//     etapa++;
 
-    // Se saiu da última etapa
-    if (etapa < rows.length - 1) {
-        nextBtn.style.display = 'block';
-        cad.style.display = 'none';
-    }
-});
+//     // Mostra a próxima etapa
+//     rows[etapa].style.display = 'grid';
 
-const formCadastro = document.querySelector('.panel-cadastro .formulario');
-const termos = document.getElementById('check-termos');
+//     // Mostra o botão Voltar
+//     backBtn.style.display = 'block';
 
-formCadastro.addEventListener('submit', (e) => {
+//     // Se chegou na última etapa
+//     if (etapa === rows.length - 1) {
+//         nextBtn.style.display = 'none';
+//         cad.style.display = 'block';
+//     }
+// });
 
-    if (!termos.checked) {
-        e.preventDefault();
-        termos.reportValidity();
-    }
 
-});
+// // VOLTAR
+// backBtn.addEventListener('click', () => {
 
-const senha = document.querySelector("#senha");
-const botoesSenha = document.querySelectorAll('.mostrar-senha');
+//     // Esconde a etapa atual
+//     rows[etapa].style.display = 'none';
 
-botoesSenha.forEach(botao => {
+//     // Volta uma etapa
+//     etapa--;
 
-    botao.addEventListener('click', () => {
+//     // Mostra a etapa anterior
+//     rows[etapa].style.display = 'grid';
 
-        const campoSenha = botao.previousElementSibling;
+//     // Se voltou para a primeira etapa
+//     if (etapa === 0) {
+//         backBtn.style.display = 'none';
+//     }
 
-        if (campoSenha.type === 'password') {
+//     // Se saiu da última etapa
+//     if (etapa < rows.length - 1) {
+//         nextBtn.style.display = 'block';
+//         cad.style.display = 'none';
+//     }
+// });
 
-            campoSenha.type = 'text';
-            botao.textContent = '🙈';
+// const formCadastro = document.querySelector('.panel-cadastro .formulario');
+// const termos = document.getElementById('check-termos');
 
-        } else {
+// formCadastro.addEventListener('submit', (e) => {
 
-            campoSenha.type = 'password';
-            botao.textContent = '👁️';
+//     if (!termos.checked) {
+//         e.preventDefault();
+//         termos.reportValidity();
+//     }
 
-        }
+// });
 
-    });
+// const senhaCadastro = document.getElementById('senha-texto');
+// const confirmarSenha = document.getElementById('confirmar-senha');
 
-});
+// const requisitosSenha = document.querySelector('.requisitos-senha');
 
-const senhaCadastro = document.getElementById('senha-texto');
-const confirmarSenha = document.getElementById('confirmar-senha');
+// senhaCadastro.addEventListener('focus', () => {
+//     const posicao = senhaCadastro.getBoundingClientRect();
 
-const requisitosSenha = document.querySelector('.requisitos-senha');
+//     requisitosSenha.style.display = 'flex';
+//     requisitosSenha.style.left = `${posicao.right + 30}px`;
+//     requisitosSenha.style.top = `${posicao.top}px`;
+// });
 
-senhaCadastro.addEventListener('focus', () => {
-    const posicao = senhaCadastro.getBoundingClientRect();
+// senhaCadastro.addEventListener('blur', () => {
+//     requisitosSenha.style.display = 'none';
+// });
 
-    requisitosSenha.style.display = 'flex';
-    requisitosSenha.style.left = `${posicao.right + 30}px`;
-    requisitosSenha.style.top = `${posicao.top}px`;
-});
+// const nivelSenha = document.getElementById('nivel-senha');
+// const textoSeguranca = document.getElementById('texto-seguranca');
 
-senhaCadastro.addEventListener('blur', () => {
-    requisitosSenha.style.display = 'none';
-});
+// const reqTamanho = document.getElementById('req-tamanho');
+// const reqMaiuscula = document.getElementById('req-maiuscula');
+// const reqMinuscula = document.getElementById('req-minuscula');
+// const reqNumero = document.getElementById('req-numero');
+// const reqEspecial = document.getElementById('req-especial');
 
-const nivelSenha = document.getElementById('nivel-senha');
-const textoSeguranca = document.getElementById('texto-seguranca');
 
-const reqTamanho = document.getElementById('req-tamanho');
-const reqMaiuscula = document.getElementById('req-maiuscula');
-const reqMinuscula = document.getElementById('req-minuscula');
-const reqNumero = document.getElementById('req-numero');
-const reqEspecial = document.getElementById('req-especial');
+// senhaCadastro.addEventListener('input', () => {
 
+//     const senha = senhaCadastro.value;
 
-senhaCadastro.addEventListener('input', () => {
+//     const tamanho = senha.length >= 8;
+//     const maiuscula = /[A-Z]/.test(senha);
+//     const minuscula = /[a-z]/.test(senha);
+//     const numero = /[0-9]/.test(senha);
+//     const especial = /[^A-Za-z0-9]/.test(senha);
 
-    const senha = senhaCadastro.value;
 
-    const tamanho = senha.length >= 8;
-    const maiuscula = /[A-Z]/.test(senha);
-    const minuscula = /[a-z]/.test(senha);
-    const numero = /[0-9]/.test(senha);
-    const especial = /[^A-Za-z0-9]/.test(senha);
+//     // =========================
+//     // MOSTRA SOMENTE O QUE FALTA
+//     // =========================
 
+//     reqTamanho.style.display = tamanho ? 'none' : 'block';
+//     reqMaiuscula.style.display = maiuscula ? 'none' : 'block';
+//     reqMinuscula.style.display = minuscula ? 'none' : 'block';
+//     reqNumero.style.display = numero ? 'none' : 'block';
+//     reqEspecial.style.display = especial ? 'none' : 'block';
 
-    // =========================
-    // MOSTRA SOMENTE O QUE FALTA
-    // =========================
+//     // =========================
+//     // CALCULA A FORÇA
+//     // =========================
 
-    reqTamanho.style.display = tamanho ? 'none' : 'block';
-    reqMaiuscula.style.display = maiuscula ? 'none' : 'block';
-    reqMinuscula.style.display = minuscula ? 'none' : 'block';
-    reqNumero.style.display = numero ? 'none' : 'block';
-    reqEspecial.style.display = especial ? 'none' : 'block';
+//     let pontos = 0;
 
-    // =========================
-    // CALCULA A FORÇA
-    // =========================
+//     if (tamanho) pontos++;
+//     if (maiuscula) pontos++;
+//     if (minuscula) pontos++;
+//     if (numero) pontos++;
+//     if (especial) pontos++;
 
-    let pontos = 0;
+//     if (pontos === 5) {
+//         requisitosSenha.style.display = 'none';
+//     } else if (document.activeElement === senhaCadastro) {
+//         requisitosSenha.style.display = 'flex';
+//     }
 
-    if (tamanho) pontos++;
-    if (maiuscula) pontos++;
-    if (minuscula) pontos++;
-    if (numero) pontos++;
-    if (especial) pontos++;
+//     // =========================
+//     // ATUALIZA A BARRA
+//     // =========================
 
-    if (pontos === 5) {
-        requisitosSenha.style.display = 'none';
-    } else if (document.activeElement === senhaCadastro) {
-        requisitosSenha.style.display = 'flex';
-    }
+//     nivelSenha.style.width = `${pontos * 20}%`;
 
-    // =========================
-    // ATUALIZA A BARRA
-    // =========================
 
-    nivelSenha.style.width = `${pontos * 20}%`;
+//     if (senha.length === 0) {
 
+//         textoSeguranca.textContent = 'Digite uma senha';
 
-    if (senha.length === 0) {
+//     } else if (pontos <= 2) {
 
-        textoSeguranca.textContent = 'Digite uma senha';
+//         textoSeguranca.textContent = 'Senha fraca';
 
-    } else if (pontos <= 2) {
+//     } else if (pontos <= 4) {
 
-        textoSeguranca.textContent = 'Senha fraca';
+//         textoSeguranca.textContent = 'Senha média';
 
-    } else if (pontos <= 4) {
+//     } else {
 
-        textoSeguranca.textContent = 'Senha média';
+//         textoSeguranca.textContent = 'Senha forte';
 
-    } else {
+//     }
 
-        textoSeguranca.textContent = 'Senha forte';
+//     confirmarSenha.setCustomValidity('');
+// });
 
-    }
+// confirmarSenha.addEventListener('input', () => {
 
-    confirmarSenha.setCustomValidity('');
-});
+//     if (confirmarSenha.value !== senhaCadastro.value) {
 
-confirmarSenha.addEventListener('input', () => {
+//         confirmarSenha.setCustomValidity(
+//             'As senhas não são iguais.'
+//         );
 
-    if (confirmarSenha.value !== senhaCadastro.value) {
+//     } else {
 
-        confirmarSenha.setCustomValidity(
-            'As senhas não são iguais.'
-        );
+//         confirmarSenha.setCustomValidity('');
 
-    } else {
+//     }
 
-        confirmarSenha.setCustomValidity('');
+// });
 
-    }
+// cad.addEventListener('click', (e) => {
 
-});
+//     const senha = senhaCadastro.value;
 
-cad.addEventListener('click', (e) => {
+//     const tamanho = senha.length >= 8;
+//     const maiuscula = /[A-Z]/.test(senha);
+//     const minuscula = /[a-z]/.test(senha);
+//     const numero = /[0-9]/.test(senha);
+//     const especial = /[^A-Za-z0-9]/.test(senha);
 
-    const senha = senhaCadastro.value;
+//     if (!tamanho || !maiuscula || !minuscula || !numero || !especial) {
 
-    const tamanho = senha.length >= 8;
-    const maiuscula = /[A-Z]/.test(senha);
-    const minuscula = /[a-z]/.test(senha);
-    const numero = /[0-9]/.test(senha);
-    const especial = /[^A-Za-z0-9]/.test(senha);
+//         e.preventDefault();
 
-    if (!tamanho || !maiuscula || !minuscula || !numero || !especial) {
+//         senhaCadastro.setCustomValidity(
+//             'A senha não atende aos requisitos de segurança.'
+//         );
 
-        e.preventDefault();
+//         senhaCadastro.reportValidity();
+//         senhaCadastro.focus();
 
-        senhaCadastro.setCustomValidity(
-            'A senha não atende aos requisitos de segurança.'
-        );
+//         return;
+//     }
 
-        senhaCadastro.reportValidity();
-        senhaCadastro.focus();
+//     senhaCadastro.setCustomValidity('');
 
-        return;
-    }
 
-    senhaCadastro.setCustomValidity('');
+//     // Verifica se as senhas são iguais
+//     if (senhaCadastro.value !== confirmarSenha.value) {
 
+//         e.preventDefault();
 
-    // Verifica se as senhas são iguais
-    if (senhaCadastro.value !== confirmarSenha.value) {
+//         confirmarSenha.setCustomValidity(
+//             'As senhas não são iguais.'
+//         );
 
-        e.preventDefault();
+//         confirmarSenha.reportValidity();
+//         confirmarSenha.focus();
 
-        confirmarSenha.setCustomValidity(
-            'As senhas não são iguais.'
-        );
+//         return;
+//     }
 
-        confirmarSenha.reportValidity();
-        confirmarSenha.focus();
+//     confirmarSenha.setCustomValidity('');
 
-        return;
-    }
+// });
 
-    confirmarSenha.setCustomValidity('');
+// const rect = senhaCadastro.getBoundingClientRect();
 
-});
-
-const rect = senhaCadastro.getBoundingClientRect();
-
-requisitosSenha.style.left = `${rect.right + 15}px`;
-requisitosSenha.style.top = `${rect.top}px`;
+// requisitosSenha.style.left = `${rect.right + 15}px`;
+// requisitosSenha.style.top = `${rect.top}px`;
