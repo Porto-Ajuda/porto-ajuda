@@ -98,7 +98,7 @@
 
             if (response.ok) {
                 localStorage.setItem("dadosUsuario", JSON.stringify(data));
-                window.location.href = "../pages/home.html";
+                window.location.href = "../pages/Porto-Ajuda.html";
                 return;
             }
 
