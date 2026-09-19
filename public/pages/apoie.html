@@ -7,11 +7,14 @@
     <title>Porto Ajuda – Apoie-nos </title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+
     <link rel="stylesheet" href="../styles/geral.css">
-    <link rel="stylesheet" href="../styles/proximity.css">
     <link rel="stylesheet" href="../styles/apoie.css">
-    <script src="../components/proximity.js" defer></script>
+
     <script src="../components/header_footer.js" defer></script>
+    <script src="../components/apoie.js" defer></script>
+
 
     <script>
         document.addEventListener("DOMContentLoaded", () => {
@@ -35,87 +38,261 @@
 
 <body>
     <header class="navbar"></header>
+
     <div class="stars"></div>
+
     <main>
+
         <section class="surgir">
             <section class="primeira_tela">
+
                 <img src="../assets/logo-night.png" alt="" class="logo">
                 <h1 class="titulo_principal">Apoie nosso Site</h1>
                 <p class="subtitulo">Ajude a transformar solidariedade em impacto</p>
+
             </section>
-            <section class="esperanca">
+
+            <section class="esperanca"></section>
+
+        </section>
+
+        <div class="divider">
+            <img class="lua" src="../assets/moon.png">
+        </div>
+
+        <section class="surgir">
+            <section class="area_pagamento">
+
+                <h2 class="titulo_pagamento">
+                    Faça uma doação pontual
+                </h2>
+
+
+                <!-- VALORES PRÉ-DEFINIDOS -->
+
+                <div class="opcoes_pagamento">
+
+                    <button type="button" class="valor-pix" data-valor="10">
+                        R$10,00
+                    </button>
+
+                    <button type="button" class="valor-pix" data-valor="25">
+                        R$25,00
+                    </button>
+
+                    <button type="button" class="valor-pix" data-valor="50">
+                        R$50,00
+                    </button>
+
+                    <button type="button" id="botao-outro">
+                        Outro
+                    </button>
+
+                </div>
+
+
+                <!-- =================================================
+         RESULTADO DO PIX
+    ================================================== -->
+
+                <div id="resultado-pix">
+
+                    <div class="qr_pagamento">
+
+                        <h3 class="titulo_qrcode">
+                            Escaneie o QR Code
+                        </h3>
+
+
+                        <!-- QR CODE -->
+
+                        <div id="qrcode" class="qrcode">
+                        </div>
+
+
+                        <!-- VALOR -->
+
+                        <p class="valor_doacao">
+                            Valor da doação:
+                            <strong id="valor-exibido"></strong>
+                        </p>
+
+
+                        <!-- CHAVE PIX -->
+
+                        <p class="exemplo_chave">
+                            CHAVE PIX INSTITUCIONAL
+                        </p>
+
+
+                        <div class="chave_pix">
+
+                            <input type="text" id="chave-pix" value="tccportoajuda@gmail.com" readonly>
+
+                            <button type="button" id="copiar-chave">
+                                COPIAR CHAVE
+                            </button>
+
+                        </div>
+
+
+                        <!-- PIX COPIA E COLA -->
+
+                        <p class="exemplo_chave">
+                            PIX COPIA E COLA
+                        </p>
+
+                        <div class="chave_pix">
+
+                            <input type="text" id="pix-copia-cola" readonly>
+
+                            <button type="button" id="copiar-pix">
+                                COPIAR PIX
+                            </button>
+
+                        </div>
+
+
+                        <p id="mensagem-copia"></p>
+
+                    </div>
+
+                </div>
+
+
+                <p class="aviso_transacao">
+                    Sua contribuição ajuda a manter o Porto Ajuda funcionando
+                    e apoiando nossas iniciativas.
+                </p>
+
             </section>
+
+
+            <!-- =====================================================
+     MODAL DE OUTRO VALOR
+====================================================== -->
+
+            <div id="modal-valor" class="modal-valor">
+
+                <div class="caixa-modal">
+
+                    <button type="button" id="fechar-modal" class="fechar-modal">
+                        ×
+                    </button>
+
+
+                    <h2>
+                        Escolha o valor
+                    </h2>
+
+                    <p>
+                        Digite quanto você deseja doar.
+                    </p>
+
+
+                    <div class="input-modal">
+
+                        <span>R$</span>
+
+                        <input type="number" id="valor" min="1" step="0.01" placeholder="0,00">
+
+                    </div>
+
+
+                    <button type="button" id="gerar-pix" class="botao-confirmar">
+                        Confirmar valor
+                    </button>
+
+                </div>
+
+            </div>
 
         </section>
         <div class="divider">
             <img class="lua" src="../assets/moon.png">
         </div>
-        <section class="surgir">
-            <section class="area_pagamento">
-                <h2 class="titulo_pagamento">Faça uma doação pontual</h2>
-                <div class="opcoes_pagamento">
-                    <a href="">R$10,00</a>
-                    <a href="">R$25,00</a>
-                    <a href="">R$50,00 </a>
-                    <a href="">Outro</a>
-                </div>
-                <div class="qr_pagamento">
-                    <img src="../assets/QRCode_Fácil_2_-removebg-preview.png" alt="" class="qrcode">
-                    <p class="exemplo_chave">CHAVE PIX INSTITUCIONAL (EMAIL)</p>
-                    <a href="" class="chave_email">portoajuda@gmail.com</a>
-                    <button class="copiar_chave">COPIAR CHAVE PIX</button>
-                </div>
-                <p class="aviso_transacao">Sua transação é segura, 100% confiável e voltada para manter o nosso site
-                    funcionando corretamente</p>
-            </section>
-        </section>
-        <div class="divider">
-            <img class="lua" src="../assets/moon.png">
-        </div>
+
+
         <section class="surgir">
             <section class="valores_site">
+
                 <p class="transparencia">Transparência e impacto</p>
                 <h2 class="titulo_transparencia">Para onde vai cada centavo?</h2>
+
                 <section class="caixas_valores_mensal">
+
                     <div class="caixa_mensalidade">
+
                         <h2 class="titulo_mensalidade">Hospedagem</h2>
-                        <p class="explicacao">Ajuda a manter o site no ar, garantindo servidores, armazenamento e acesso
-                            contínuo às nossas iniciativas.</p>
+                        <p class="explicacao">
+                            Ajuda a manter o site no ar, garantindo servidores, armazenamento e acesso contínuo às
+                            nossas iniciativas.
+                        </p>
+
                         <p class="mensalidade">R$103,00 / mês</p>
+
                     </div>
+
                     <div class="caixa_mensalidade">
+
                         <h2 class="titulo_mensalidade">Domínio do site</h2>
-                        <p class="explicacao">Manutenção do endereço oficial do site, garantindo que nossa plataforma
-                            permaneça acessível para todos.</p>
+                        <p class="explicacao">
+                            Manutenção do endereço oficial do site, garantindo que nossa plataforma permaneça acessível
+                            para todos.
+                        </p>
+
                         <p class="mensalidade">R$40,00 / ano</p>
+
                     </div>
+
                     <div class="caixa_mensalidade">
+
                         <h2 class="titulo_mensalidade">Proteção contra ataques</h2>
-                        <p class="explicacao">Investimos em segurança para proteger o site contra ataques, acessos
-                            indevidos e ameaças digitais.</p>
+                        <p class="explicacao">
+                            Investimos em segurança para proteger o site contra ataques, acessos
+                            indevidos e ameaças digitais.
+                        </p>
+
                         <p class="mensalidade">R$103 / mês</p>
+
                     </div>
+
                 </section>
+
             </section>
+
         </section>
+
         <div class="divider">
             <img class="lua" src="../assets/moon.png">
         </div>
+
         <section class="surgir">
             <section class="compartilhar_site">
+
                 <p class="participe">PARTICIPE E AJUDE</p>
                 <h2 class="titulo_participe">Não Pode Doar Agora? Ajude a Espalhar a Palavra.</h2>
-                <p class="texto_compartilhar">Compartilhe nosso projeto, quanto mais pessoas souberem, maior o impacto gerado</p>
+                <p class="texto_compartilhar">
+                    Compartilhe nosso projeto, quanto mais pessoas souberem, maior o impacto gerado
+                </p>
+
                 <div class="botoes_compartilhar">
+
                     <button class="whatsapp">WhatsApp</button>
                     <button class="instagram">Instagram</button>
                     <button class="copiar_link">Copiar Link</button>
                     <button class="email">Enviar Email</button>
+
                 </div>
+
             </section>
+
         </section>
+
     </main>
+
     <footer id="footer"></footer>
+
 </body>
 
 </html>
