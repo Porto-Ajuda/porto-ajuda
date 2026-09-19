@@ -306,7 +306,7 @@ botoesSenha.forEach(botao => {
 
 });
 
-const senhaCadastro = document.getElementById('senha-cadastro');
+const senhaCadastro = document.getElementById('senha-texto');
 const confirmarSenha = document.getElementById('confirmar-senha');
 
 const requisitosSenha = document.querySelector('.requisitos-senha');
