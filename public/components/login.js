@@ -12,7 +12,7 @@ document
         await postLogin(usuarioLogin);
     });
 
-    async function postCadastro(usuario) {
+    async function postLogin(usuarioLogin) {
 
     try {
 
@@ -25,7 +25,7 @@ document
                     "Content-Type": "application/json"
                 },
 
-                body: JSON.stringify(usuario)
+                body: JSON.stringify(usuarioLogin)
             }
         );
 
@@ -49,10 +49,12 @@ document
          * ==========================
          */
 
-        if (response.ok) {
-            mostrarAlertaCadastro(data.message || "Login efetuado com sucesso");
+         if (response.ok) {
+            localStorage.setItem("dadosUsuario", data);
+
+            window.location.href = "../pages/home.html";
             return;
-        }   
+        }
 
         if (response.status === 400) {
             mostrarAlerta("erro", "Dados inválidos", data.message || "Verifique os dados informados.");
