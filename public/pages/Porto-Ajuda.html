@@ -18,32 +18,59 @@
 
   <script src="../components/crud.js" defer></script>
 
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
+<script>
+document.addEventListener("DOMContentLoaded", () => {
 
-      const elementosSurgir = document.querySelectorAll(".surgir");
+  /* =========================
+     ANIMAÇÃO DAS SEÇÕES
+     ========================= */
 
-      const observador = new IntersectionObserver((entradas) => {
-        entradas.forEach(entrada => {
-          if (entrada.isIntersecting) {
-            entrada.target.classList.add("active");
-          }
-        });
-      }, { threshold: 0.15 });
+  const elementosSurgir =
+    document.querySelectorAll(".surgir");
 
-      elementosSurgir.forEach(el => observador.observe(el));
+  const observador =
+    new IntersectionObserver((entradas) => {
 
+      entradas.forEach(entrada => {
+
+        if (entrada.isIntersecting) {
+
+          entrada.target.classList.add("active");
+
+        }
+
+      });
+
+    }, {
+      threshold: 0.15
     });
 
-    const cards = document.querySelectorAll(".card");
+  elementosSurgir.forEach(el => {
+    observador.observe(el);
+  });
 
-    const observer = new IntersectionObserver((entries) => {
 
-      entries.forEach((entry) => {
+  /* =========================
+     ANIMAÇÃO DOS CARDS
+     ========================= */
+
+  const cards =
+    document.querySelectorAll(".card");
+
+  const observerCards =
+    new IntersectionObserver((entries) => {
+
+      entries.forEach(entry => {
 
         if (entry.isIntersecting) {
 
           entry.target.classList.add("show");
+
+          /*
+           * Depois de aparecer,
+           * não precisa observar novamente.
+           */
+          observerCards.unobserve(entry.target);
 
         }
 
@@ -53,12 +80,54 @@
       threshold: 0.2
     });
 
-    cards.forEach((card) => {
+  cards.forEach(card => {
+    observerCards.observe(card);
+  });
 
-      observer.observe(card);
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+
+  const filtros = document.querySelectorAll(".dropdown-regiao");
+
+  filtros.forEach(filtro => {
+
+    const botao = filtro.querySelector(".filter-btn");
+
+    botao.addEventListener("click", (event) => {
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      const estavaAberto = filtro.classList.contains("aberto");
+
+      // Fecha todos
+      filtros.forEach(outro => {
+        outro.classList.remove("aberto");
+      });
+
+      // Se estava fechado, abre
+      if (!estavaAberto) {
+        filtro.classList.add("aberto");
+      }
 
     });
-  </script>
+
+  });
+
+  // Clique fora fecha os filtros
+  document.addEventListener("click", () => {
+
+    filtros.forEach(filtro => {
+      filtro.classList.remove("aberto");
+    });
+
+  });
+
+});
+
+</script>
+
 </head>
 
 <body>
@@ -113,6 +182,7 @@
               <i class="fa-solid fa-caret-down"></i>
             </button>
 
+            
             <div class="regioes">
               <a href="#">Educação</a>
               <a href="#">Saúde</a>

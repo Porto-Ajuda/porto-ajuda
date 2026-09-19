@@ -306,10 +306,16 @@ Lista escondida
 .regioes::-webkit-scrollbar-thumb:hover {
     background: transparent;
 }
-.dropdown-regiao:hover .regioes {
+/* ========================= */
+/* ABERTURA DOS FILTROS */
+/* ========================= */
+
+.dropdown-regiao:hover .regioes,
+.dropdown-regiao.aberto .regioes {
     opacity: 1;
     visibility: visible;
 }
+
 
 .regioes a {
     display: block;
@@ -1478,5 +1484,653 @@ Lista escondida
   .modal-card-titulo {
     font-size: 1.7rem;
   }
+
+}
+
+/* =========================================================
+   RESPONSIVIDADE DA HOME
+   ========================================================= */
+
+
+/* =========================================================
+   TABLET / NOTEBOOK
+   ========================================================= */
+
+@media (max-width: 1200px) {
+
+  .hero {
+    padding-left: 50px;
+    padding-right: 50px;
+  }
+
+  .hero h1 {
+    font-size: 7rem;
+  }
+
+  .search-box {
+    left: 50%;
+    transform: translate(-50%, 20px);
+  }
+
+  .section {
+    padding-left: 50px;
+    padding-right: 50px;
+
+    gap: 45px;
+  }
+
+  .section-image {
+    width: 380px;
+    height: 380px;
+
+    flex-shrink: 0;
+  }
+
+  .section h2 {
+    font-size: 4.5rem;
+  }
+
+  .cards {
+    gap: 15px;
+  }
+
+  .card {
+    width: 165px;
+    height: 270px;
+  }
+}
+
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (max-width: 1023px) and (min-width: 769px) {
+
+  .hero {
+    padding:
+      120px
+      30px
+      70px;
+  }
+
+  .hero-text {
+    padding-top: 60px;
+  }
+
+  .hero h1 {
+    font-size: 6rem;
+  }
+
+  .hero p {
+    font-size: 1rem;
+  }
+
+  .search-box {
+    position: static;
+
+    transform: none;
+
+    margin:
+      50px
+      auto
+      0;
+
+    justify-content: center;
+
+    flex-wrap: wrap;
+  }
+
+
+  /* SEÇÕES */
+
+  .section,
+  .section.reverse {
+
+    flex-direction: column;
+
+    text-align: center;
+
+    padding:
+      90px
+      30px;
+
+    gap: 60px;
+  }
+
+  .section-image {
+    width: 350px;
+    height: 350px;
+  }
+
+  .section-content {
+    width: 100%;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+  }
+
+  .section h2 {
+    font-size: 4rem;
+  }
+
+  .cards {
+    justify-content: center;
+  }
+
+  .section-link {
+    font-size: 1.4rem;
+  }
+}
+
+
+/* =========================================================
+   CELULAR
+   ========================================================= */
+
+@media (max-width: 768px) {
+
+  /* =======================================================
+     HERO
+     ======================================================= */
+
+  .hero-container {
+    height: auto;
+
+    min-height: 100vh;
+  }
+
+  .hero {
+
+    min-height: 100vh;
+
+    padding:
+      100px
+      20px
+      60px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+  }
+
+  .hero-text {
+    width: 100%;
+
+    padding-top: 35px;
+  }
+
+  .sobre-label {
+
+    font-size: 0.65rem;
+
+    letter-spacing: 3px;
+
+    gap: 8px;
+
+    margin-bottom: 15px;
+  }
+
+  .sobre-label::before,
+  .sobre-label::after {
+
+    width: 25px;
+  }
+
+  .hero h1 {
+
+    font-size:
+      clamp(3.5rem, 16vw, 5rem);
+
+    line-height: .9;
+  }
+
+  .hero p {
+
+    margin-top: 25px;
+
+    font-size: 0.85rem;
+
+    line-height: 1.7;
+  }
+
+
+  /* =======================================================
+     PESQUISA
+     ======================================================= */
+
+  .search-box {
+
+    position: static;
+
+    width: 100%;
+
+    margin-top: 40px;
+
+    transform: none;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: stretch;
+
+    gap: 12px;
+  }
+
+  .search-button {
+
+    width: 100%;
+
+    height: 55px;
+
+    border-radius: 30px;
+
+    padding:
+      0
+      20px;
+
+    justify-content: flex-start;
+
+    gap: 12px;
+  }
+
+  .search-button:hover {
+
+    width: 100%;
+
+    height: 55px;
+
+    transform: none;
+
+    padding-left: 20px;
+  }
+
+  .search-button input {
+
+    width: 100%;
+
+    opacity: 1;
+
+    font-size: 14px;
+  }
+
+  .search-button:hover input {
+
+    width: 100%;
+  }
+
+  .dropdown-regiao {
+
+    width: 100%;
+  }
+
+  .filter-btn {
+
+    width: 100%;
+
+    height: 52px;
+
+    padding:
+      12px
+      20px;
+
+    font-size: 0.85rem;
+  }
+
+  .regioes {
+
+    left: 0;
+
+    width: 100%;
+
+    min-width: 0;
+
+    z-index: 100;
+  }
+
+
+  /* =======================================================
+     DIVISORES
+     ======================================================= */
+
+  .divider {
+
+    height: 55px;
+  }
+
+  .divider img {
+
+    width: 70px;
+  }
+
+
+  /* =======================================================
+     SEÇÕES
+     ======================================================= */
+
+  .section,
+  .section.reverse {
+
+    min-height: auto;
+
+    width: 100%;
+
+    padding:
+      70px
+      20px
+      80px;
+
+    flex-direction: column;
+
+    text-align: center;
+
+    gap: 55px;
+  }
+
+  .section-content {
+
+    width: 100%;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+  }
+
+  .section h2 {
+
+    font-size:
+      clamp(3rem, 13vw, 4rem);
+
+    line-height: .95;
+
+    margin-bottom: 30px;
+  }
+
+
+  /* =======================================================
+     IMAGENS
+     ======================================================= */
+
+  .section-image {
+
+    width:
+      min(80vw, 320px);
+
+    height:
+      min(80vw, 320px);
+
+    flex-shrink: 0;
+  }
+
+  .section-image > img:not(.moon1) {
+
+    width: 100%;
+
+    height: 100%;
+
+    object-fit: cover;
+
+    border-radius: 50%;
+  }
+
+  .moon1 {
+
+    top: -15px;
+
+    left: 0;
+  }
+
+  .moon1 img {
+
+    width: 90px;
+  }
+
+
+  /* =======================================================
+     CARDS
+     ======================================================= */
+
+  .cards {
+
+    width: 100%;
+
+    display: grid;
+
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+
+    gap: 14px;
+
+    justify-items: center;
+  }
+
+  .card {
+
+    width: 100%;
+
+    max-width: 180px;
+
+    height: 250px;
+
+    border-radius: 25px;
+  }
+
+  .card-post .card-img,
+  .card-post .card-overlay {
+
+    border-radius: 25px;
+  }
+
+  .card-post .card-body {
+
+    padding:
+      14px
+      12px
+      16px;
+  }
+
+  .card-post .card-titulo {
+
+    font-size: 0.9rem;
+
+    -webkit-line-clamp: 4;
+  }
+
+  .card-post .card-osc {
+
+    font-size: 0.65rem;
+  }
+
+
+  /* =======================================================
+     BOTÃO EDITAR
+     ======================================================= */
+
+  .btn-editar-secao {
+
+    bottom: -20px;
+
+    padding:
+      9px
+      16px;
+
+    font-size: 0.72rem;
+  }
+
+
+  /* =======================================================
+     LINKS DAS SEÇÕES
+     ======================================================= */
+
+  .section-link {
+
+    margin-top: 30px;
+
+    font-size: 1.3rem;
+  }
+}
+
+
+/* =========================================================
+   CELULAR PEQUENO
+   ========================================================= */
+
+@media (max-width: 480px) {
+
+  .hero {
+
+    padding:
+      90px
+      15px
+      50px;
+  }
+
+  .hero h1 {
+
+    font-size:
+      clamp(3rem, 16vw, 4rem);
+  }
+
+  .hero p {
+
+    font-size: 0.78rem;
+  }
+
+  .search-box {
+
+    margin-top: 35px;
+  }
+
+
+  .section {
+
+    padding:
+      60px
+      15px
+      70px;
+
+    gap: 45px;
+  }
+
+  .section-image {
+
+    width: 260px;
+
+    height: 260px;
+  }
+
+  .moon1 img {
+
+    width: 75px;
+  }
+
+  .section h2 {
+
+    font-size: 2.8rem;
+  }
+
+
+  .cards {
+
+    gap: 10px;
+  }
+
+  .card {
+
+    height: 220px;
+
+    border-radius: 22px;
+  }
+
+  .card-post .card-img,
+  .card-post .card-overlay {
+
+    border-radius: 22px;
+  }
+
+  .card-post .card-body {
+
+    padding: 10px;
+  }
+
+  .card-post .card-titulo {
+
+    font-size: 0.8rem;
+  }
+
+  .card-post .card-osc {
+
+    font-size: 0.58rem;
+  }
+
+  .btn-editar-secao {
+
+    font-size: 0.65rem;
+
+    padding:
+      8px
+      12px;
+  }
+
+  .divider {
+
+    height: 45px;
+  }
+
+  .divider img {
+
+    width: 55px;
+  }
+}
+
+.regioes {
+    position: absolute;
+    border-radius: 12px;
+    top: 110%;
+    min-width: 100%;
+    max-height: 200px;
+    padding-top: 8px;
+
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+
+    transition: 0.2s ease;
+    overflow-y: auto;
+
+    border: 1px solid rgba(255, 255, 255, .06);
+
+    background: rgba(255, 255, 255, .05);
+
+    z-index: 100;
+}
+
+/* Desktop */
+@media (min-width: 769px) {
+
+    .dropdown-regiao:hover .regioes {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+    }
+
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+
+    .dropdown-regiao.aberto .regioes {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+    }
 
 }
