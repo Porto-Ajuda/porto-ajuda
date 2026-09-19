@@ -135,28 +135,28 @@ async function postCadastro(usuario) {
         if (response.ok) {
             mostrarAlertaCadastro(data.message || "Sua conta foi criada com sucesso.");
             return;
-        }
-        
+        }   
+
         if (response.status === 400) {
             mostrarAlerta("erro", "Dados inválidos", data.message || "Verifique os dados informados.");
             return;
         }
-        
+
         if (response.status === 401) {
             mostrarAlerta("erro", "Não autorizado", data.message || "Você não possui autorização para realizar esta operação.");
             return;
         }
-        
+
         if (response.status === 409) {
             mostrarAlerta("aviso", "Usuário já cadastrado", data.message || "Já existe um usuário cadastrado com esses dados.");
             return;
         }
-        
+
         if (response.status >= 500) {
             mostrarAlerta("erro", "Erro no servidor", "Ocorreu um problema no servidor. Tente novamente mais tarde.");
             return;
         }
-        
+
         mostrarAlerta("erro", "Não foi possível cadastrar", data.message || `O servidor retornou o código ${response.status}.`);
 
 

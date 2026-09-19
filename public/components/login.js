@@ -1,3 +1,92 @@
+document
+    .getElementById("form-login")
+    .addEventListener("submit", async function (event) {
+
+        event.preventDefault();
+
+        const usuarioLogin = {
+            email: document.getElementById("email-login").value,
+            senha: document.getElementById("senha-login").value
+        };
+
+        await postLogin(usuarioLogin);
+    });
+
+    async function postCadastro(usuario) {
+
+    try {
+
+        const response = await fetch(
+            "https://porto-ajuda.up.railway.app/usuario/login",
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify(usuario)
+            }
+        );
+
+
+        let data = {};
+
+        const contentType =
+            response.headers.get("content-type");
+
+        if (
+            contentType &&
+            contentType.includes("application/json")
+        ) {
+            data = await response.json();
+        }
+
+
+        /*
+         * ==========================
+         * CADASTRO REALIZADO
+         * ==========================
+         */
+
+        if (response.ok) {
+            mostrarAlertaCadastro(data.message || "Login efetuado com sucesso");
+            return;
+        }   
+
+        if (response.status === 400) {
+            mostrarAlerta("erro", "Dados inválidos", data.message || "Verifique os dados informados.");
+            return;
+        }
+
+        if (response.status === 401) {
+            mostrarAlerta("erro", "Não autorizado", data.message || "Você não possui autorização para realizar esta operação.");
+            return;
+        }
+
+        if (response.status >= 500) {
+            mostrarAlerta("erro", "Erro no servidor", "Ocorreu um problema no servidor. Tente novamente mais tarde.");
+            return;
+        }
+
+        mostrarAlerta("erro", "Não foi possível efetuar o login", data.message || `O servidor retornou o código ${response.status}.`);
+
+
+
+    } catch (error) {
+
+        console.error("Erro ao realizar login:", error);
+
+        mostrarAlerta(
+            "erro",
+            "Erro de conexão",
+            "Não foi possível conectar ao servidor."
+        );
+
+    }
+}
+
+
 const frame = document.getElementById('frame');
 const goCad = document.getElementById('goCad');
 const goLogin = document.getElementById('goLogin');
