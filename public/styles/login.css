@@ -483,17 +483,208 @@ a:hover {
   color: var(--gold);
 }
 
+/* ========================= */
+/* ALERTA PERSONALIZADO */
+/* ========================= */
+
 .alerta-personalizado {
-  position: fixed;
-  inset: 0;
+    position: fixed;
+    inset: 0;
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
-  background: rgba(0, 0, 0, .65);
+    padding: 20px;
 
-  z-index: 9999;
+    background: rgba(7, 11, 41, .78);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+
+    z-index: 99999;
+
+    animation: aparecerFundo .25s ease;
+}
+
+.alerta-personalizado[hidden] {
+    display: none;
+}
+
+.caixa-alerta {
+    width: min(420px, 90vw);
+
+    padding: 35px 30px;
+
+    text-align: center;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(32, 38, 95, .98),
+            rgba(21, 27, 79, .98)
+        );
+
+    border: 1px solid var(--border);
+
+    border-radius: 28px;
+
+    box-shadow:
+        0 25px 70px rgba(0, 0, 0, .55),
+        inset 0 1px 0 rgba(255, 255, 255, .12);
+
+    animation: aparecerAlerta .35s cubic-bezier(.22, 1, .36, 1);
+}
+
+.icone-alerta {
+    width: 70px;
+    height: 70px;
+
+    margin: 0 auto 18px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    font-size: 30px;
+
+    background: rgba(69, 201, 154, .12);
+    color: var(--success);
+
+    border: 1px solid rgba(69, 201, 154, .35);
+
+    box-shadow:
+        0 0 30px rgba(69, 201, 154, .12);
+}
+
+.caixa-alerta h2 {
+    margin-bottom: 10px;
+
+    font-family: 'Cormorant Garamond', serif;
+
+    font-size: 2.2rem;
+
+    color: var(--text);
+}
+
+.caixa-alerta p {
+    margin-bottom: 25px;
+
+    color: var(--text-soft);
+
+    font-size: .95rem;
+
+    line-height: 1.6;
+}
+
+.btn-alerta {
+    min-width: 140px;
+
+    border: none;
+
+    padding: 12px 30px;
+
+    border-radius: 14px;
+
+    background: var(--gold);
+
+    color: var(--bg-main);
+
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        background .3s ease,
+        transform .3s ease,
+        box-shadow .3s ease;
+}
+
+.btn-alerta:hover {
+    background: var(--gold-light);
+
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 8px 25px rgba(245, 181, 46, .25);
+}
+
+
+/* ========================= */
+/* ESTADOS */
+/* ========================= */
+
+.alerta-sucesso .icone-alerta {
+    color: var(--success);
+
+    background: rgba(69, 201, 154, .12);
+
+    border-color: rgba(69, 201, 154, .35);
+
+    box-shadow:
+        0 0 30px rgba(69, 201, 154, .15);
+}
+
+.alerta-erro .icone-alerta {
+    color: var(--error);
+
+    background: rgba(240, 107, 122, .12);
+
+    border-color: rgba(240, 107, 122, .35);
+
+    box-shadow:
+        0 0 30px rgba(240, 107, 122, .15);
+}
+
+.alerta-aviso .icone-alerta {
+    color: var(--warning);
+
+    background: rgba(245, 181, 46, .12);
+
+    border-color: rgba(245, 181, 46, .35);
+
+    box-shadow:
+        0 0 30px rgba(245, 181, 46, .15);
+}
+
+.alerta-info .icone-alerta {
+    color: var(--info);
+
+    background: rgba(108, 168, 255, .12);
+
+    border-color: rgba(108, 168, 255, .35);
+
+    box-shadow:
+        0 0 30px rgba(108, 168, 255, .15);
+}
+
+
+/* ========================= */
+/* ANIMAÇÕES */
+/* ========================= */
+
+@keyframes aparecerFundo {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes aparecerAlerta {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(.94);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }
 
 .caixa-alerta {
@@ -643,44 +834,355 @@ a:hover {
   font-size: .75rem;
   color: var(--text-soft);
 }
+/* ========================================= */
+/* ALERTA DE CADASTRO CONCLUÍDO */
+/* ========================================= */
 
-/* ========================= */
-/* DROPDOWN GÊNERO */
-/* ========================= */
+.alerta-cadastro {
+    position: fixed;
+    inset: 0;
 
-.campo-genero {
-  width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+
+    background:
+        rgba(7, 8, 25, .78);
+
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+
+    z-index: 999999;
+
+    animation: fundoCadastro .3s ease;
 }
 
-.select-genero {
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-
-  cursor: pointer;
-
-  /* Seta do dropdown */
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23d7d7d7' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
-
-  background-repeat: no-repeat;
-  background-position: right 14px center;
-
-  padding-right: 40px;
+.alerta-cadastro[hidden] {
+    display: none;
 }
 
-/* Texto "Gênero" quando nada foi selecionado */
-.select-genero:invalid {
-  color: rgba(255, 255, 255, .55);
+
+/* ========================================= */
+/* CAIXA */
+/* ========================================= */
+
+.caixa-cadastro {
+    position: relative;
+
+    width: min(440px, 92vw);
+
+    padding: 42px 35px 35px;
+
+    text-align: center;
+
+    border-radius: 30px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(62, 40, 113, .98),
+            rgba(35, 24, 68, .99)
+        );
+
+    border: 1px solid rgba(242, 170, 26, .25);
+
+    box-shadow:
+        0 30px 90px rgba(0, 0, 0, .6),
+        0 0 50px rgba(242, 170, 26, .08),
+        inset 0 1px 0 rgba(255, 255, 255, .08);
+
+    animation:
+        caixaCadastro .45s cubic-bezier(.22, 1, .36, 1);
 }
 
-/* Opções abertas */
-.select-genero option {
-  background: var(--bg-card);
-  color: var(--text);
-  padding: 10px;
+
+/* brilho decorativo */
+
+.caixa-cadastro::before {
+    content: "";
+
+    position: absolute;
+
+    width: 180px;
+    height: 180px;
+
+    top: -90px;
+    right: -90px;
+
+    border-radius: 50%;
+
+    background:
+        rgba(242, 170, 26, .12);
+
+    filter: blur(35px);
+
+    pointer-events: none;
 }
 
-/* Quando selecionado */
-.select-genero:valid {
-  color: var(--text);
+
+/* ========================================= */
+/* ÍCONE */
+/* ========================================= */
+
+.icone-cadastro {
+    position: relative;
+
+    width: 82px;
+    height: 82px;
+
+    margin: 0 auto 22px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(242, 170, 26, .22),
+            rgba(242, 170, 26, .08)
+        );
+
+    border: 1px solid rgba(242, 170, 26, .45);
+
+    color: var(--gold);
+
+    font-size: 34px;
+
+    box-shadow:
+        0 0 0 8px rgba(242, 170, 26, .04),
+        0 0 35px rgba(242, 170, 26, .15);
+
+    animation:
+        iconeCadastro .6s ease .15s both;
+}
+
+.icone-cadastro i {
+    animation:
+        checkCadastro .5s ease .45s both;
+}
+
+
+/* ========================================= */
+/* CONTEÚDO */
+/* ========================================= */
+
+.conteudo-cadastro {
+    position: relative;
+    z-index: 1;
+}
+
+.badge-cadastro {
+    display: inline-block;
+
+    margin-bottom: 12px;
+
+    padding: 5px 13px;
+
+    border-radius: 20px;
+
+    background:
+        rgba(242, 170, 26, .10);
+
+    border:
+        1px solid rgba(242, 170, 26, .22);
+
+    color: var(--gold-light);
+
+    font-size: .72rem;
+
+    font-weight: 600;
+
+    text-transform: uppercase;
+
+    letter-spacing: 1px;
+}
+
+
+.conteudo-cadastro h2 {
+    margin-bottom: 15px;
+
+    color: var(--text);
+
+    font-family:
+        'Cormorant Garamond',
+        serif;
+
+    font-size: 2.6rem;
+
+    line-height: .95;
+}
+
+.conteudo-cadastro h2 span {
+    color: var(--gold);
+}
+
+
+.conteudo-cadastro p {
+    max-width: 350px;
+
+    margin: 0 auto 28px;
+
+    color: var(--text-soft);
+
+    font-size: .9rem;
+
+    line-height: 1.7;
+}
+
+
+/* ========================================= */
+/* BOTÃO */
+/* ========================================= */
+
+.btn-ir-login {
+    position: relative;
+    z-index: 1;
+
+    width: 100%;
+
+    padding: 14px 20px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+
+    border: none;
+    border-radius: 15px;
+
+    background:
+        linear-gradient(
+            135deg,
+            var(--gold),
+            var(--gold-light)
+        );
+
+    color: var(--bg-main);
+
+    font-family: 'Poppins', sans-serif;
+
+    font-size: .9rem;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        transform .3s ease,
+        box-shadow .3s ease,
+        filter .3s ease;
+}
+
+.btn-ir-login:hover {
+    transform: translateY(-3px);
+
+    filter: brightness(1.05);
+
+    box-shadow:
+        0 12px 30px rgba(242, 170, 26, .25);
+}
+
+.btn-ir-login i {
+    transition: transform .3s ease;
+}
+
+.btn-ir-login:hover i {
+    transform: translateX(5px);
+}
+
+
+/* ========================================= */
+/* ANIMAÇÕES */
+/* ========================================= */
+
+@keyframes fundoCadastro {
+
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+
+}
+
+@keyframes caixaCadastro {
+
+    from {
+        opacity: 0;
+        transform:
+            translateY(25px)
+            scale(.94);
+    }
+
+    to {
+        opacity: 1;
+        transform:
+            translateY(0)
+            scale(1);
+    }
+
+}
+
+@keyframes iconeCadastro {
+
+    from {
+        opacity: 0;
+        transform: scale(.5);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+}
+
+@keyframes checkCadastro {
+
+    from {
+        opacity: 0;
+        transform: scale(.5);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+}
+
+
+/* ========================================= */
+/* CELULAR */
+/* ========================================= */
+
+@media (max-width: 500px) {
+
+    .caixa-cadastro {
+        padding: 35px 25px 28px;
+        border-radius: 25px;
+    }
+
+    .icone-cadastro {
+        width: 72px;
+        height: 72px;
+
+        font-size: 29px;
+    }
+
+    .conteudo-cadastro h2 {
+        font-size: 2.2rem;
+    }
+
+    .conteudo-cadastro p {
+        font-size: .85rem;
+    }
+
 }

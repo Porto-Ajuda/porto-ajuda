@@ -30,9 +30,11 @@ main {
     font-family: poppins, sans-serif;
     font-size: 1.5rem;
 }
-.primeira_tela{
+
+.primeira_tela {
     min-height: 100dvh;
 }
+
 .introducao_jornal {
     width: 100%;
     min-height: 100dvh;
@@ -107,7 +109,7 @@ main {
 }
 
 .noticia img {
-    width: 35%;
+    width: 30%;
     border-radius: 5%;
 }
 
@@ -129,27 +131,128 @@ main {
     min-width: 0;
     overflow-wrap: break-word;
 }
-.noticia_informacao{
+
+.noticia_informacao {
     display: flex;
     flex-direction: column;
     gap: 1em;
 }
-.acessar_noticia{
+
+.acessar_noticia {
     width: 15%;
     color: var(--gold-light);
     font-family: poppins, sans-serif;
     font-size: 1rem;
 }
-.acessar_noticia:hover{
+
+.acessar_noticia:hover {
     width: 20%;
     font-size: 1.5rem;
     color: var(--gold-dark);
-   text-decoration: underline;
-   transition: 1s;
+    text-decoration: underline;
+    transition: 1s;
 }
-.noticias{
+
+.noticias {
     display: flex;
     flex-direction: column;
     gap: 5em;
     padding-bottom: 2em;
+}
+
+@media (max-width: 1024px) and (min-width: 601px) {
+
+    .titulo {
+        font-size: 5rem;
+        line-height: 0.95;
+        width: 100%;
+        max-width: 100%;
+        text-align: center;
+        overflow-wrap: break-word;
+    }
+
+    .noticia {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 0 5em 3em;
+        gap: 1.8em;
+    }
+
+    .noticia img {
+        width: 100%;
+        max-width: 700px;
+        align-self: center;
+    }
+
+    .noticia_informacao {
+        width: 100%;
+    }
+
+    .manchete {
+        font-size: 2.8rem;
+    }
+
+    .noticia_subtitulo {
+        font-size: 1.1rem;
+        line-height: 1.5;
+    }
+
+    .acessar_noticia {
+        width: fit-content;
+    }
+
+    .acessar_noticia:hover {
+        width: fit-content;
+    }
+}
+
+
+/* =========================
+   CELULAR
+   ========================= */
+
+@media (max-width: 600px) {
+    .titulo {
+        font-size: 3.2rem;
+        line-height: 0.95;
+        width: 100%;
+        max-width: 100%;
+        text-align: center;
+        overflow-wrap: break-word;
+    }
+
+    .noticia {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 0 1.5em 2.5em;
+        gap: 1.5em;
+    }
+
+    .noticia img {
+        width: 100%;
+        max-width: none;
+    }
+
+    .noticia_informacao {
+        width: 100%;
+    }
+
+    .manchete {
+        font-size: 2rem;
+        line-height: 1.1;
+    }
+
+    .noticia_subtitulo {
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+
+    .acessar_noticia {
+        width: fit-content;
+    }
+
+    .acessar_noticia:hover {
+        width: fit-content;
+        font-size: 1rem;
+    }
 }

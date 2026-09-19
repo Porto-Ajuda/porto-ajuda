@@ -19,6 +19,46 @@
     <script src="../components/header_footer.js" defer></script>
     <script src="../components/acessibilidade.js" defer></script>
 </head>
+<!-- ========================= -->
+<!-- ALERTA DE CADASTRO -->
+<!-- ========================= -->
+
+<div id="alerta-cadastro" class="alerta-cadastro" hidden>
+
+    <div class="caixa-cadastro">
+
+        <div class="icone-cadastro">
+            <i class="fa-solid fa-check"></i>
+        </div>
+
+        <div class="conteudo-cadastro">
+
+            <span class="badge-cadastro">
+                Cadastro concluído
+            </span>
+
+            <h2>Bem-vindo ao<br><span>Porto Ajuda!</span></h2>
+
+            <p>
+                Sua conta foi criada com sucesso.
+                Agora você já pode entrar e começar
+                a fazer parte da nossa comunidade.
+            </p>
+
+        </div>
+
+        <button
+            type="button"
+            id="btn-ir-login"
+            class="btn-ir-login"
+        >
+            Continuar para o login
+            <i class="fa-solid fa-arrow-right"></i>
+        </button>
+
+    </div>
+
+</div>
 
 <body>
     <div class="stars"></div>
@@ -129,7 +169,7 @@
                     <!-- ETAPA 3 -->
                     <div class="row4">
                         <div class="campo-senha">
-                            <input class="inp senha" id="senha-cadastro" type="password" placeholder="Senha" required>
+                            <input class="inp senha" type="password" id="senha-texto" placeholder="Senha" required>
                             <button type="button" class="mostrar-senha">👁️</button>
                         </div>
 
