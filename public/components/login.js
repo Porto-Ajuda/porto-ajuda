@@ -314,13 +314,28 @@ nextBtn.addEventListener('click', () => {
     // ==========================================
 
     if (etapa === 1 && generoEscolhido === "") {
+        
         dropdownGenero.classList.add("erro");
         erroGenero.style.display = "block";
         return;
     }
 
     if (etapa === 1) {
+        if (!document.getElementById("genero").value) {
+        document.getElementById("dropdown-genero").classList.add("erro");
+        document.getElementById("erro-genero").style.display = "block";
+        return;
+    }
 
+    if (!validarIdade()) {
+        const nasc = document.getElementById("nascimento");
+        nasc.setCustomValidity("É necessário ter 16 anos ou mais.");
+        nasc.reportValidity();
+        nasc.focus();
+        return;
+    }
+    document.getElementById("nascimento").setCustomValidity("");
+}
         const telefoneNumeros = telefone.value.replace(/\D/g, '');
 
         if (
@@ -590,70 +605,3 @@ const rect = senhaCadastro.getBoundingClientRect();
 
 requisitosSenha.style.left = `${rect.right + 15}px`;
 requisitosSenha.style.top = `${rect.top}px`;
-
-
-const dropdownGenero =
-    document.getElementById("dropdown-genero");
-
-const botaoGenero =
-    document.getElementById("botao-genero");
-
-const opcoesGenero =
-    document.getElementById("opcoes-genero");
-
-const generoSelecionado =
-    document.getElementById("genero-selecionado");
-
-const erroGenero =
-    document.getElementById("erro-genero");
-
-
-let generoEscolhido = "";
-
-
-// ABRIR / FECHAR
-
-botaoGenero.addEventListener("click", () => {
-
-    dropdownGenero.classList.toggle("aberto");
-
-});
-
-
-// SELECIONAR
-
-opcoesGenero
-    .querySelectorAll("button")
-    .forEach(opcao => {
-
-        opcao.addEventListener("click", () => {
-
-            generoEscolhido =
-                opcao.dataset.valor;
-
-            generoSelecionado.textContent =
-                opcao.textContent;
-
-            dropdownGenero.classList.remove("aberto");
-
-            // Remove erro
-            dropdownGenero.classList.remove("erro");
-
-            erroGenero.style.display = "none";
-
-        });
-
-    });
-
-
-// CLICAR FORA
-
-document.addEventListener("click", (evento) => {
-
-    if (!dropdownGenero.contains(evento.target)) {
-
-        dropdownGenero.classList.remove("aberto");
-
-    }
-
-});

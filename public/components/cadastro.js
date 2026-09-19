@@ -1,3 +1,30 @@
+const dropdownGenero = document.getElementById("dropdown-genero");
+const botaoGenero = document.getElementById("botao-genero");
+const textoGenero = document.getElementById("genero-selecionado");
+const inputGenero = document.getElementById("genero");
+const erroGenero = document.getElementById("erro-genero");
+
+// abre/fecha
+botaoGenero.addEventListener("click", () => {
+    dropdownGenero.classList.toggle("aberto"); // ajuste ao nome de classe do seu CSS
+});
+
+document.querySelectorAll("#opcoes-genero button").forEach(opcao => {
+    opcao.addEventListener("click", () => {
+        inputGenero.value = opcao.dataset.valor;
+        textoGenero.textContent = opcao.textContent.trim();
+        dropdownGenero.classList.remove("aberto", "erro");
+        erroGenero.style.display = "none";
+    });
+});
+
+// fecha ao clicar fora
+document.addEventListener("click", (e) => {
+    if (!dropdownGenero.contains(e.target)) {
+        dropdownGenero.classList.remove("aberto");
+    }
+});
+
 document
     .getElementById("form-cadastro")
     .addEventListener("submit", async function (event) {
@@ -19,7 +46,7 @@ document
 
             email: document.querySelector("#form-cadastro input[type='email']").value,
 
-            genero: document.getElementById("genero").value.toUpperCase(),
+            genero: document.getElementById("genero").value.toUpperCase().replace(/-/g, "_"),
 
             telefone: somenteNumeros(document.getElementById("telefone").value),
 
@@ -73,6 +100,8 @@ document
 
         if (formulario) {
             formulario.reset();
+            document.getElementById("genero").value = "";
+document.getElementById("genero-selecionado").textContent = "Gênero";
         }
 
         /*
