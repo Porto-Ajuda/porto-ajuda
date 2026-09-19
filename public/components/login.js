@@ -49,9 +49,8 @@ document
          * ==========================
          */
 
-         if (response.ok) {
-            localStorage.setItem("dadosUsuario", data);
-
+        if (response.ok) {
+            localStorage.setItem("dadosUsuario", JSON.stringify(data));
             window.location.href = "../pages/home.html";
             return;
         }
