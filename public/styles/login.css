@@ -1186,3 +1186,179 @@ a:hover {
     }
 
 }
+
+/* ========================= */
+/* RESPONSIVIDADE ATUALIZADA */
+/* ========================= */
+
+/* Telas Médias (Tablets, até 1024px) */
+@media (max-width: 1024px) {
+  .polygon {
+    opacity: 0.3; /* Suaviza a forma geométrica */
+  }
+  
+  .frame {
+    width: 85vw;
+  }
+  
+  /* Mantém o frame mais ao centro durante a animação */
+  .frame.flipped .panel-login,
+  .frame .panel-login {
+    padding: 40px;
+  }
+}
+
+/* Telas Pequenas (Smartphones, até 768px) */
+@media (max-width: 768px) {
+  body {
+    padding: 15px;
+    align-items: center;
+  }
+
+  .polygon {
+    display: none; /* Oculta a lua e a forma para priorizar o formulário */
+  }
+
+  .frame {
+    position: relative;
+    left: 0 !important; /* Anula o left: 15% do JavaScript */
+    right: 0 !important; /* Anula o right: 50% do JavaScript */
+    margin: 0 auto;
+    width: 100%;
+    max-width: 500px;
+    height: auto;
+    min-height: auto;
+    padding-bottom: 20px;
+  }
+
+  .panel {
+    position: relative;
+    padding: 30px 20px;
+    opacity: 1;
+    transform: none !important; /* Desativa a transição lateral em mobile */
+  }
+
+  /* Oculta o painel inativo usando display ao invés de transform */
+  .panel-cadastro {
+    display: none;
+  }
+  
+  .frame.flipped .panel-login {
+    display: none;
+  }
+  
+  .frame.flipped .panel-cadastro {
+    display: flex;
+    transform: none;
+  }
+
+  .title {
+    font-size: 2.8rem;
+  }
+
+  .row2, .row3, .row4 {
+    padding: 0; /* Remove os 50px de padding laterais do desktop */
+  }
+
+  /* Ajusta o pop-up de requisitos da senha para não quebrar a tela */
+  .requisitos-senha {
+    position: static;
+    width: 100%;
+    margin-top: 10px;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+  }
+}
+
+/* Telas Muito Pequenas (Smartphones estreitos, até 480px) */
+@media (max-width: 480px) {
+  .title {
+    font-size: 2.2rem;
+  }
+
+  .subtitulo {
+    font-size: 0.85rem;
+    margin-bottom: 25px;
+  }
+
+  .panel {
+    padding: 25px 15px;
+  }
+
+  .inp {
+    font-size: 0.85rem;
+    padding: 12px;
+  }
+
+  .btn {
+    padding: 14px;
+    font-size: 0.85rem;
+  }
+  
+  .opcoes h2 {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 1286px) {
+  /* Remove o triângulo lateral e a lua em telas menores que 1286px */
+  .polygon {
+    display: none;
+  }
+
+  /* Centraliza o form e permite que ele preencha melhor o espaço */
+  .frame {
+    position: relative;
+    left: 0 !important;
+    right: 0 !important;
+    margin: 0 auto;
+    width: min(90vw, 550px);
+  }
+}
+
+/* ========================================= */
+/* MODO PAISAGEM (CELULARES E TABLETS DEITADOS) */
+/* ========================================= */
+
+@media (max-height: 650px), (orientation: landscape) and (max-width: 1024px) {
+  body {
+    /* Libera a rolagem da página quando a tela for muito baixa */
+    overflow-y: auto !important; 
+    align-items: flex-start; /* Alinha ao topo para não cortar o cabeçalho */
+    padding: 20px 0;
+  }
+
+  .frame {
+    margin-top: 0; /* Remove a margem superior de 15vh */
+    height: auto;
+    min-height: auto;
+    max-height: 95vh;
+    /* Permite rolar o conteúdo dentro do próprio quadro se ele for maior que a tela */
+    overflow-y: auto; 
+  }
+
+  .frame .panel-login,
+  .frame .panel-cadastro {
+    padding: 20px 15px !important;
+  }
+
+  .title {
+    font-size: 2.2rem;
+    margin-bottom: 5px;
+  }
+
+  .subtitulo {
+    font-size: 0.85rem;
+    margin-bottom: 15px;
+  }
+
+  .row2, .row3, .row4 {
+    padding: 0 10px;
+  }
+
+  .form-sec {
+    padding: 15px;
+  }
+}

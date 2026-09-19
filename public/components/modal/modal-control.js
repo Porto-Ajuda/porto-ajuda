@@ -74,27 +74,31 @@ document.addEventListener("click", (event) => {
 
 });
 
-function mostrarAlerta(mensagem) {
+function mostrarAlerta(tipo, titulo, mensagem) {
+
+    const icones = {
+        erro: "fa-circle-xmark",
+        aviso: "fa-triangle-exclamation",
+        sucesso: "fa-circle-check"
+    };
 
     const alerta = document.createElement("div");
-
-    alerta.className = "alerta-personalizado";
+    alerta.className = `alerta-personalizado alerta-${tipo}`;
 
     alerta.innerHTML = `
         <div class="caixa-alerta">
             <div class="icone-alerta">
-                <i class="fa-solid fa-triangle-exclamation"></i>
+                <i class="fa-solid ${icones[tipo] || icones.aviso}"></i>
             </div>
-
-            <h2>Atenção</h2>
-
-            <p>${mensagem}</p>
-
-            <button type="button" class="btn-alerta">
-                Entendi
-            </button>
+            <h2></h2>
+            <p></p>
+            <button type="button" class="btn-alerta">Entendi</button>
         </div>
     `;
+
+    // textContent evita interpretar HTML vindo do servidor
+    alerta.querySelector("h2").textContent = titulo || "Atenção";
+    alerta.querySelector("p").textContent = mensagem || "";
 
     document.body.appendChild(alerta);
 
