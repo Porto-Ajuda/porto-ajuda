@@ -133,96 +133,31 @@ async function postCadastro(usuario) {
          */
 
         if (response.ok) {
-
-            mostrarAlertaCadastro(
-                data.message ||
-                "Sua conta foi criada com sucesso."
-            );
-        }
-
-
-        /*
-         * ==========================
-         * ERRO 400
-         * ==========================
-         */
+            mostrarAlertaCadastro(data.message || "Sua conta foi criada com sucesso.");
+            return;
+        }   
 
         if (response.status === 400) {
-
-            mostrarAlerta(
-                "erro",
-                "Dados inválidos",
-                data.message ||
-                "Verifique os dados informados."
-            );
-
+            mostrarAlerta("erro", "Dados inválidos", data.message || "Verifique os dados informados.");
+            return;
         }
-
-
-        /*
-         * ==========================
-         * ERRO 401
-         * ==========================
-         */
 
         if (response.status === 401) {
-
-            mostrarAlerta(
-                "erro",
-                "Não autorizado",
-                data.message ||
-                "Você não possui autorização para realizar esta operação."
-            );
+            mostrarAlerta("erro", "Não autorizado", data.message || "Você não possui autorização para realizar esta operação.");
+            return;
         }
-
-
-        /*
-         * ==========================
-         * ERRO 409
-         * ==========================
-         */
 
         if (response.status === 409) {
-
-            mostrarAlerta(
-                "aviso",
-                "Usuário já cadastrado",
-                data.message ||
-                "Já existe um usuário cadastrado com esses dados."
-            );
-
+            mostrarAlerta("aviso", "Usuário já cadastrado", data.message || "Já existe um usuário cadastrado com esses dados.");
+            return;
         }
-
-
-        /*
-         * ==========================
-         * ERRO 500+
-         * ==========================
-         */
 
         if (response.status >= 500) {
-
-            mostrarAlerta(
-                "erro",
-                "Erro no servidor",
-                "Ocorreu um problema no servidor. Tente novamente mais tarde."
-            );
-
+            mostrarAlerta("erro", "Erro no servidor", "Ocorreu um problema no servidor. Tente novamente mais tarde.");
+            return;
         }
 
-
-        /*
-         * ==========================
-         * OUTROS ERROS
-         * ==========================
-         */
-
-        mostrarAlerta(
-            "erro",
-            "Não foi possível cadastrar",
-            data.message ||
-            `O servidor retornou o código ${response.status}.`
-        );
+        mostrarAlerta("erro", "Não foi possível cadastrar", data.message || `O servidor retornou o código ${response.status}.`);
 
 
 
