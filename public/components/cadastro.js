@@ -17,7 +17,7 @@ document
 
             email: document.querySelector("#form-cadastro input[type='email']").value,
 
-            genero: document.getElementById("genero").value,
+            genero: document.getElementById("genero").value.toUpperCase(),
 
             telefone: document.getElementById("telefone").value,
 
@@ -143,8 +143,6 @@ async function postCadastro(usuario) {
                 data.message ||
                 "Sua conta foi criada com sucesso."
             );
-
-            return data;
         }
 
 
@@ -163,7 +161,6 @@ async function postCadastro(usuario) {
                 "Verifique os dados informados."
             );
 
-            return null;
         }
 
 
@@ -181,8 +178,6 @@ async function postCadastro(usuario) {
                 data.message ||
                 "Você não possui autorização para realizar esta operação."
             );
-
-            return null;
         }
 
 
@@ -201,7 +196,6 @@ async function postCadastro(usuario) {
                 "Já existe um usuário cadastrado com esses dados."
             );
 
-            return null;
         }
 
 
@@ -219,7 +213,6 @@ async function postCadastro(usuario) {
                 "Ocorreu um problema no servidor. Tente novamente mais tarde."
             );
 
-            return null;
         }
 
 
@@ -236,7 +229,6 @@ async function postCadastro(usuario) {
             `O servidor retornou o código ${response.status}.`
         );
 
-        return null;
 
 
     } catch (error) {
@@ -249,7 +241,6 @@ async function postCadastro(usuario) {
             "Não foi possível conectar ao servidor."
         );
 
-        return null;
     }
 }
 
