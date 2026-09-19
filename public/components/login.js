@@ -232,6 +232,30 @@ function validarCPF(cpf) {
     return true;
 }
 
+function validarIdade() {
+    const nascimento = document.getElementById("nascimento").value;
+
+    if (!nascimento) {
+        return false;
+    }
+
+    const dataNascimento = new Date(nascimento);
+    const hoje = new Date();
+
+    let idade = hoje.getFullYear() - dataNascimento.getFullYear();
+
+    const mes = hoje.getMonth() - dataNascimento.getMonth();
+
+    if (
+        mes < 0 ||
+        (mes === 0 && hoje.getDate() < dataNascimento.getDate())
+    ) {
+        idade--;
+    }
+
+    return idade >= 16;
+}
+
 //** transição do cadastro **//
 
 const nextBtn = document.getElementById('nextBtn');
@@ -283,6 +307,16 @@ nextBtn.addEventListener('click', () => {
         }
 
         cpf.setCustomValidity('');
+    }
+
+    // ==========================================
+    // VALIDA GÊNERO
+    // ==========================================
+
+    if (etapa === 1 && generoEscolhido === "") {
+        dropdownGenero.classList.add("erro");
+        erroGenero.style.display = "block";
+        return;
     }
 
     if (etapa === 1) {
@@ -490,17 +524,6 @@ senhaCadastro.addEventListener('input', () => {
     confirmarSenha.setCustomValidity('');
 });
 
-
-function atualizarRequisito(elemento, passou, texto) {
-
-    if (passou) {
-        elemento.textContent = '✓ ' + texto;
-    } else {
-        elemento.textContent = '✗ ' + texto;
-    }
-
-}
-
 confirmarSenha.addEventListener('input', () => {
 
     if (confirmarSenha.value !== senhaCadastro.value) {
@@ -567,3 +590,70 @@ const rect = senhaCadastro.getBoundingClientRect();
 
 requisitosSenha.style.left = `${rect.right + 15}px`;
 requisitosSenha.style.top = `${rect.top}px`;
+
+
+const dropdownGenero =
+    document.getElementById("dropdown-genero");
+
+const botaoGenero =
+    document.getElementById("botao-genero");
+
+const opcoesGenero =
+    document.getElementById("opcoes-genero");
+
+const generoSelecionado =
+    document.getElementById("genero-selecionado");
+
+const erroGenero =
+    document.getElementById("erro-genero");
+
+
+let generoEscolhido = "";
+
+
+// ABRIR / FECHAR
+
+botaoGenero.addEventListener("click", () => {
+
+    dropdownGenero.classList.toggle("aberto");
+
+});
+
+
+// SELECIONAR
+
+opcoesGenero
+    .querySelectorAll("button")
+    .forEach(opcao => {
+
+        opcao.addEventListener("click", () => {
+
+            generoEscolhido =
+                opcao.dataset.valor;
+
+            generoSelecionado.textContent =
+                opcao.textContent;
+
+            dropdownGenero.classList.remove("aberto");
+
+            // Remove erro
+            dropdownGenero.classList.remove("erro");
+
+            erroGenero.style.display = "none";
+
+        });
+
+    });
+
+
+// CLICAR FORA
+
+document.addEventListener("click", (evento) => {
+
+    if (!dropdownGenero.contains(evento.target)) {
+
+        dropdownGenero.classList.remove("aberto");
+
+    }
+
+});

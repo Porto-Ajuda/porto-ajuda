@@ -42,8 +42,19 @@ function escolherIcone(categoria) {
 }
 
 // Cadastrar sede Porto Ajuda
-L.marker([-24.00839596435377, -46.43535299604137]).addTo(map)
-    .bindPopup('Porto Ajuda.<br> Sede.')
+const iconeSede = L.icon({
+    iconUrl: '../assets/logo-night.png',
+    iconSize: [50, 50],
+    iconAnchor: [25, 50],
+    popupAnchor: [0, -50]
+});
+
+L.marker(
+    [-24.00839596435377, -46.43535299604137],
+    { icon: iconeSede }
+)
+    .addTo(map)
+    .bindPopup('Porto Ajuda.<br>Sede.')
     .openPopup();
 
 // Calculo distancia usuario e ongs

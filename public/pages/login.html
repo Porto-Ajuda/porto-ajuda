@@ -47,11 +47,7 @@
 
         </div>
 
-        <button
-            type="button"
-            id="btn-ir-login"
-            class="btn-ir-login"
-        >
+        <button type="button" id="btn-ir-login" class="btn-ir-login">
             Continuar para o login
             <i class="fa-solid fa-arrow-right"></i>
         </button>
@@ -143,18 +139,50 @@
                     <!-- ETAPA 2 -->
                     <div class="row3">
 
-                        <div class="campo-genero">
+                        <div class="dropdown-genero" id="dropdown-genero">
 
-                            <select class="inp select-genero" id="genero" required>
-                                <option value="" disabled selected>Gênero</option>
-                                <option value="FEMININO">Feminino</option>
-                                <option value="MASCULINO">Masculino</option>
-                                <option value="NAO_BINARIO">Não-Binário</option>
-                                <option value="PREFIRO_NAO_INFORMAR">Prefiro não informar</option>
-                                <option value="OUTRO">Outro</option>
-                            </select>
+                            <button type="button" class="dropdown-botao" id="botao-genero">
+
+                                <span id="genero-selecionado">
+                                    Gênero
+                                </span>
+
+                                <span class="seta">
+                                    ⌄
+                                </span>
+
+                            </button>
+
+
+                            <div class="dropdown-opcoes" id="opcoes-genero">
+
+                                <button type="button" data-valor="masculino">
+                                    Masculino
+                                </button>
+
+                                <button type="button" data-valor="feminino">
+                                    Feminino
+                                </button>
+
+                                <button type="button" data-valor="nao-binario">
+                                    Não-Binário
+                                </button>
+
+                                <button type="button" data-valor="outro">
+                                    Outro
+                                </button>
+
+                                <button type="button" data-valor="prefiro-nao-informar">
+                                    Prefiro não informar
+                                </button>
+
+                            </div>
 
                         </div>
+
+                        <p id="erro-genero" class="erro-genero">
+                            Selecione uma opção.
+                        </p>
 
                         <input class="inp" type="tel" id="telefone" placeholder="Telefone" autocomplete="off" required>
 
