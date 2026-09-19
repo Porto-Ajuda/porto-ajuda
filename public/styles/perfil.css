@@ -1638,8 +1638,17 @@ body {
 
         white-space: nowrap;
     }
-
-
+    #filtros-registro{
+        margin-top: 13%;
+    }
+    .painel-aba .divider {
+        margin-bottom: 18%;
+        margin-top: 3%;
+    }
+    
+    .foto-perfil {
+        margin-left: 27%;
+    }
     .resumo-registro {
         grid-template-columns: 1fr;
     }
