@@ -1,39 +1,34 @@
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap');
 
-/* ========================= */
-/* PALETA */
-/* ========================= */
+
+/* =========================================================
+   PALETA
+========================================================= */
 
 :root {
-  /* FUNDOS */
 
   --bg-main: #161928;
   --bg-section: #2E1C50;
   --bg-card: #3E2871;
   --bg-card-hover: #453B80;
 
-  /* DETALHES */
-
   --primary: #4A5492;
   --secondary: #5B68AC;
-
-  /* DOURADOS */
 
   --gold: #F2AA1A;
   --gold-dark: #DDAA41;
   --gold-light: #F9C86B;
   --gold-soft: #FCE0A1;
 
-  /* TEXTOS */
-
   --text: #FFFFFF;
   --text-soft: #d7d7d7;
 
 }
 
-/* ========================= */
-/* RESET */
-/* ========================= */
+
+/* =========================================================
+   RESET
+========================================================= */
 
 * {
   margin: 0;
@@ -46,8 +41,11 @@ html {
 }
 
 body {
+
   overflow-x: hidden;
+
   font-family: 'Poppins', sans-serif;
+
   color: var(--text);
 
   background:
@@ -59,14 +57,19 @@ body {
     );
 }
 
-/* ========================= */
-/* STARS */
-/* ========================= */
+
+/* =========================================================
+   ESTRELAS
+========================================================= */
 
 .stars {
+
   position: fixed;
+
   inset: 0;
+
   z-index: -1;
+
   pointer-events: none;
 
   background-image:
@@ -76,348 +79,790 @@ body {
     );
 
   background-size: 90px 90px;
+
   opacity: .18;
 }
 
-/* ========================= */
-/* ANIMAÇÃO DE SURGIR */
-/* ========================= */
+
+/* =========================================================
+   ANIMAÇÃO DAS SEÇÕES
+========================================================= */
 
 .surgir {
+
   opacity: 0;
+
   transform: translateX(-60px);
-  transition: all 0.8s ease;
+
+  transition:
+    opacity .8s ease,
+    transform .8s ease;
 }
 
 .surgir.active {
+
   opacity: 1;
+
   transform: translateX(0);
 }
 
-/* ========================= */
-/* DIVISOR */
-/* ========================= */
 
-.divider {
-  position: relative;
-
-  width: 100%;
-  height: 80px;
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  bottom: 13.5em;
-}
-
-.divider::before {
-  content: "";
-
-  position: absolute;
-  width: 100%;
-  height: 1px;
-
-  background: linear-gradient(
-    to right,
-    transparent,
-    rgba(255, 255, 255, 0.25),
-    transparent
-  );
-}
-
-.divider img {
-  position: relative;
-
-  width: 100px;
-  height: auto;
-  padding: 0 10px;
-
-  z-index: 2;
-  border-radius: 50%;
-}
-
- .divider img {
-  background: #2b1c4b;
-}
-
-
-/* ========================= */
-/* HERO */
-/* ========================= */
+/* =========================================================
+   HERO
+========================================================= */
 
 .hero-container {
+
   position: relative;
 
   width: 100%;
-  height: 100vh;
-  overflow: hidden;
+
+  min-height: 850px;
+
+  padding: 150px 7% 100px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 60px;
 }
 
+
+/* =========================================================
+   INFORMAÇÕES DA ONG
+========================================================= */
+
+.infos-ong {
+
+  width: 48%;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: flex-start;
+
+  position: relative;
+
+  z-index: 2;
+}
+
+
+/* =========================================================
+   CATEGORIA
+========================================================= */
+
 .sobre-label {
-  display: inline-flex;
-  align-items: left;
+
+  display: flex;
+
+  align-items: center;
+
   gap: 14px;
 
-  font-size: 0.75rem;
-  letter-spacing: 5px;
-  text-transform: uppercase;
   color: var(--text-soft);
+
+  font-size: .75rem;
+
+  letter-spacing: 4px;
+
+  text-transform: uppercase;
 
   margin-bottom: 20px;
 }
 
-
-.hero {
-  min-height: 100vh;
+#categoria {
 
   display: flex;
-  align-items: left;
-  justify-content: space-between;
 
-  padding:
-    150px 90px 80px;
+  align-items: center;
+
+  gap: 10px;
+
+  color: var(--text-soft);
+
+  font-weight: 500;
 }
 
-.hero-text {
+#categoria svg {
+
+  flex-shrink: 0;
+}
+
+
+/* =========================================================
+   NOME
+========================================================= */
+
+.nome-ong {
+
   width: 100%;
-  text-align: left;
-  padding-top: 130px;
 }
 
 .hero-container h1 {
-  font-size: 8rem;
-  line-height: .95;
-  text-align: left;
+
   font-family: 'Cormorant Garamond', serif;
+
+  font-size: clamp(
+    4rem,
+    7vw,
+    8rem
+  );
+
+  line-height: .9;
+
   font-weight: 600;
-  left:-30%;
+
+  color: var(--gold-light);
+
+  margin: 0;
+
+  word-break: break-word;
 }
 
 #nome-ong {
-  color: var(--gold-light);
-  padding-left: 40px;
-  margin-top: 7%;
+
+  padding: 0;
+
+  margin: 0;
 }
 
+
+/* =========================================================
+   DESCRIÇÃO
+========================================================= */
+
 #descricao-ong {
-  margin-top: 30px;
+
+  width: 90%;
+
+  margin-top: 35px;
 
   line-height: 1.8;
 
   color: var(--text-soft);
 
-  font-size: 1.1rem;
-  padding-left: 40px;
-  margin-top: 2%;
+  font-size: 1.05rem;
 }
-#categoria {
-  color: var(--text-soft);
-  font-weight: 600;
-  padding-left: 60px;
-  margin-top: 6%;
-  position: absolute;
-}
-#Doacao {
-  background: #261b42;
-  color: var(--text-soft);
-  font-weight: 600;
-  padding: 10px 20px;
-  border: 1px solid var(--gold);
-  border-radius: 50px;
-  cursor: pointer;
-  margin-top: 30px;
-  transition: all 0.6s ease;
-  margin-left: 40px;
-  width: 400px;
-  height: 50px;
-  font-size: 1.5rem;
-  font-family: 'times new roman', serif;
-  position: absolute;
-  padding-left: 110px;
 
+#descricao-texto {
+
+  margin: 0;
 }
-#Doacao:hover {
-  background: linear-gradient(to right, var(--gold), var(--text-soft));
-  color: var(--bg-main);
-  border: 1px solid #261b42;
+
+
+/* =========================================================
+   BOTÃO DE DOAÇÃO
+========================================================= */
+
+#Doacao,
+#Doacao-footer {
+
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  min-height: 50px;
+
+  padding: 10px 35px;
+
+  background: #261b42;
+
+  color: var(--text-soft);
+
+  border: 1px solid var(--gold);
+
+  border-radius: 50px;
+
+  text-decoration: none;
+
+  font-family: 'Times New Roman', serif;
+
+  font-size: 1.35rem;
+
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background .4s ease,
+    color .4s ease,
+    transform .3s ease,
+    box-shadow .3s ease;
 }
-.infos-ong {
-  margin-top: 5%;
+
+#Doacao {
+
+  margin-top: 35px;
 }
-/* ========================= */
-/* CARROSSEL */
-/* ========================= */
-.carrossel {
-    width: 46%;
-    height: 550px;
-    overflow: hidden;
-    border-radius: 28px;
-    position: absolute;
-    mask-image: linear-gradient(
-        to right,
-        transparent 0%,
-        black 8%,
-        black 92%,
-        transparent 100%
+
+#Doacao:hover,
+#Doacao-footer:hover {
+
+  background:
+    linear-gradient(
+      to right,
+      var(--gold),
+      var(--gold-light)
     );
-    left: 50%;
-    bottom: 20em;
+
+  color: var(--bg-main);
+
+  transform: translateY(-3px);
+
+  box-shadow:
+    0 8px 25px rgba(242, 170, 26, .2);
+}
+
+
+/* =========================================================
+   CARROSSEL
+========================================================= */
+
+.carrossel {
+
+  width: 46%;
+
+  height: 550px;
+
+  overflow: hidden;
+
+  border-radius: 28px;
+
+  position: relative;
+
+  mask-image:
+    linear-gradient(
+      to right,
+      transparent 0%,
+      black 8%,
+      black 92%,
+      transparent 100%
+    );
+
+  -webkit-mask-image:
+    linear-gradient(
+      to right,
+      transparent 0%,
+      black 8%,
+      black 92%,
+      transparent 100%
+    );
 }
 
 .carrossel-track {
-    display: flex;
-    height: 100%;
-    transition: transform 1.2s ease-in-out;
+
+  display: flex;
+
+  height: 100%;
+
+  transition:
+    transform 1.2s ease-in-out;
 }
 
 .carrossel img {
-    min-width: 100%;
-    height: 100%;
-    object-fit: cover;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
-}
 
-/* ========================= */
-/* detalhes da ong */
-/* ========================= */
+  min-width: 100%;
 
-.sobre-ong {
-  display: flex;
-  align-items: left;
-  padding-left: 40px;
-  padding-right: 40px;
-  padding-bottom: 7%;
-  height: 50vh;
   width: 100%;
 
+  height: 100%;
+
+  object-fit: cover;
+
+  flex-shrink: 0;
 }
 
-.sobre-text p {
-  width: 50%;
-  text-align: left;
-  padding-left: 40px;
-  bottom: 100%;
-  position:absolute;
-}
 
-.sobre-label h2 {
-  display: inline-flex;
-  align-items: left;
-  gap: 14px;
-  font-size: 2.25rem;
-  letter-spacing: 5px;
-  text-transform: uppercase;
-  color: var(--gold-light);
-  bottom: 125%;
-  position: absolute;
-  padding-left: 40px;
-  font-family: 'Cormorant Garamond', serif;
-}
-.divider-doacao {
+/* =========================================================
+   DIVISOR COM LUA
+========================================================= */
+
+.divider {
+
   position: relative;
 
   width: 100%;
-  height: 80px;
+
+  height: 100px;
 
   display: flex;
+
   justify-content: center;
+
   align-items: center;
-  bottom: 7em;
+
+  margin-top: -20px;
 }
-.divider-doacao::before {
+
+.divider::before {
+
   content: "";
 
   position: absolute;
+
   width: 100%;
+
   height: 1px;
 
-  background: linear-gradient(
-    to right,
-    transparent,
-    rgba(255, 255, 255, 0.25),
-    transparent
-  );
+  background:
+    linear-gradient(
+      to right,
+      transparent,
+      rgba(255, 255, 255, .25),
+      transparent
+    );
 }
 
-#Doacao-footer {
-  background: #261b42;
+.divider img {
+
+  position: relative;
+
+  z-index: 2;
+
+  width: 100px;
+
+  height: 100px;
+
+  padding: 10px;
+
+  border-radius: 50%;
+
+  background: #2b1c4b;
+}
+
+
+/* =========================================================
+   SEÇÃO SOBRE
+========================================================= */
+
+.sobre-ong {
+
+  width: 100%;
+
+  padding:
+    80px 7% 120px;
+
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1fr)
+    minmax(300px, 400px);
+
+  column-gap: 80px;
+
+  row-gap: 60px;
+
+  align-items: start;
+}
+
+
+/* =========================================================
+   TÍTULOS DAS SEÇÕES
+========================================================= */
+
+.sobre-label h2 {
+
+  margin: 0;
+
+  color: var(--gold-light);
+
+  font-family: 'Cormorant Garamond', serif;
+
+  font-size: 2.4rem;
+
+  line-height: 1;
+
+  letter-spacing: 4px;
+
+  text-transform: uppercase;
+}
+
+
+/* =========================================================
+   TEXTOS
+========================================================= */
+
+.sobre-text {
+
+  max-width: 850px;
+}
+
+.sobre-text p {
+
   color: var(--text-soft);
-  font-weight: 600;
-  padding: 10px 20px;
-  border: 1px solid var(--gold);
-  border-radius: 50px;
-  cursor: pointer;
-  margin-top: 30px;
-  transition: all 0.6s ease;
-  margin-left: 40px;
-  width: 450px;
-  height: 50px;
-  font-size: 1.5rem;
-  font-family: 'times new roman', serif;
-  position: absolute;
-  padding-left: 110px;
-  padding-right: 110px;
-  bottom: 3em;
-  z-index: 9999;
-}
-#Doacao-footer:hover {
-  background: linear-gradient(to right, var(--gold), var(--text-soft));
-  color: var(--bg-main);
-  border: 1px solid #261b42;
+
+  font-size: 1rem;
+
+  line-height: 1.9;
+
+  margin: 0;
 }
 
-/* ========================= */
-/*ods */
-/* ========================= */
+
+/* =========================================================
+   PÚBLICO E ATUAÇÃO
+========================================================= */
+
+#publico-texto {
+
+  margin-top: 0;
+}
+
+
+/* =========================================================
+   LISTA DE ATUAÇÃO
+========================================================= */
+
+#servicos-lista {
+
+  list-style: none;
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 12px;
+
+  margin: 0;
+
+  padding: 0;
+}
+
+#servicos-lista li {
+
+  position: relative;
+
+  padding-left: 25px;
+
+  color: var(--text-soft);
+
+  line-height: 1.7;
+}
+
+#servicos-lista li::before {
+
+  content: "✦";
+
+  position: absolute;
+
+  left: 0;
+
+  top: 0;
+
+  color: var(--gold);
+
+  font-size: .9rem;
+}
+
+
+/* =========================================================
+   ODS
+========================================================= */
 
 .ods-container {
-  padding-left: 75%;
+
+  grid-column: 1 / -1;
+
+  width: 100%;
+
+  padding-top: 30px;
+}
+
+.ods-container .sobre-label {
+
+  margin-bottom: 30px;
+}
+
+.ods {
+
   display: flex;
-  justify-content: flex-end;
-  align-items: right;
-  text-align: right;
+
+  flex-wrap: wrap;
+
+  align-items: center;
+
   gap: 20px;
-  bottom: 15em;
-  position: absolute;
 }
-.ods-container h2{
+
+.ods-item {
+
+  width: 140px;
+
+  height: 140px;
+
+  border-radius: 14px;
+
+  overflow: hidden;
+
+  transition:
+    transform .3s ease,
+    box-shadow .3s ease;
+}
+
+.ods-item:hover {
+
+  transform: translateY(-6px);
+
+  box-shadow:
+    0 10px 25px rgba(0, 0, 0, .3);
+}
+
+.ods-item img {
+
+  display: block;
+
+  width: 100%;
+
+  height: 100%;
+
+  object-fit: cover;
+}
+
+
+/* =========================================================
+   BOTÃO DE DOAÇÃO INFERIOR
+========================================================= */
+
+#Doacao-footer {
+
+  margin:
+    0 auto 40px;
+
+  display: flex;
+
+  width: fit-content;
+
+  min-width: 320px;
+}
+
+
+/* =========================================================
+   COMPARTILHAR
+========================================================= */
+
+.compartilhar {
+
+  display: flex;
+
+  justify-content: center;
+
+  width: fit-content;
+
+  margin:
+    20px auto 30px;
+
+  color: var(--primary);
+
+  text-decoration: underline;
+
+  transition:
+    color .3s ease;
+}
+
+.compartilhar:hover {
+
   color: var(--text-soft);
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 2.25rem;
-  letter-spacing: 5px;
-  text-transform: uppercase;
-  position: absolute;
-  bottom: 12em;
 }
-.ods-item img{
-width: 150px;
+
+
+/* =========================================================
+   REGIÃO
+========================================================= */
+
+#regiao {
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 10px;
+
+  width: fit-content;
+
+  margin:
+    30px auto 80px;
+
+  color: #adaaaa;
+
+  font-family: 'Cormorant Garamond', serif;
+
+  font-size: 1.4rem;
+
+  font-weight: 600;
+}
+
+#regiao svg {
+
+  flex-shrink: 0;
+}
+
+
+/* =========================================================
+   DIVISOR FINAL
+========================================================= */
+
+.divider-doacao {
+
+  width: 100%;
+
+  height: 1px;
+
+  background:
+    linear-gradient(
+      to right,
+      transparent,
+      rgba(255, 255, 255, .25),
+      transparent
+    );
+
+  margin-bottom: 30px;
+}
+
+
+/* =========================================================
+   RESPONSIVIDADE
+========================================================= */
+
+@media (max-width: 1000px) {
+
+  .hero-container {
+
+    min-height: auto;
+
+    padding:
+      130px 7% 80px;
+
+    flex-direction: column;
+
+    align-items: stretch;
+  }
+
+  .infos-ong {
+
+    width: 100%;
+  }
+
+  .carrossel {
+
+    width: 100%;
+
+    height: 450px;
+  }
+
+  .sobre-ong {
+
+    grid-template-columns: 1fr;
+
+    padding:
+      70px 7% 100px;
+
+    gap: 25px;
+  }
+
+  .ods-container {
+
+    grid-column: 1;
+  }
 
 }
-.ods{
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    padding-bottom: 6.5em;
-}
-.compartilhar{
-  position: absolute;
-  bottom: 6em;
-  left: 70%;
-  text-decoration: underline;
-  color: var(--primary);
-  z-index: 999;
-}
-.compartilhar:hover{
-  color: var(--text-soft);
-}
-#regiao{
-  color: rgb(173, 170, 170);
-  font-weight: 600;
-  padding-left: 83%;
-  margin-top: 6%;
-  position: absolute;
-  bottom: 4em;
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 1.5rem;
-  z-index: 99;
+
+
+@media (max-width: 600px) {
+
+  .hero-container {
+
+    padding:
+      110px 25px 60px;
+
+    gap: 40px;
+  }
+
+  .hero-container h1 {
+
+    font-size: 4rem;
+  }
+
+  #descricao-ong {
+
+    width: 100%;
+
+    font-size: .95rem;
+  }
+
+  #Doacao {
+
+    width: 100%;
+
+    margin-top: 25px;
+  }
+
+  .carrossel {
+
+    height: 320px;
+
+    border-radius: 20px;
+  }
+
+  .divider img {
+
+    width: 80px;
+
+    height: 80px;
+  }
+
+  .sobre-ong {
+
+    padding:
+      60px 25px 80px;
+  }
+
+  .sobre-label h2 {
+
+    font-size: 1.8rem;
+
+    letter-spacing: 3px;
+  }
+
+  .sobre-text p {
+
+    font-size: .9rem;
+
+    line-height: 1.8;
+  }
+
+  .ods {
+
+    gap: 12px;
+  }
+
+  .ods-item {
+
+    width: 105px;
+
+    height: 105px;
+  }
+
+  #Doacao-footer {
+
+    min-width: 0;
+
+    width: calc(100% - 50px);
+
+    margin:
+      0 25px 30px;
+  }
+
+  #regiao {
+
+    margin-bottom: 60px;
+  }
+
 }

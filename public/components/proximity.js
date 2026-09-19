@@ -188,7 +188,7 @@ async function carregarOngs() {
 
     </div>
 
-    <a href="ong.html?id=${ong.id}" class="botao-ong">
+    <a href="ong-profile.html?id=${ong.id}" class="botao-ong">
         Ver ONG
     </a>
 `;
