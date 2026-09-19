@@ -9,8 +9,8 @@
     <title>Porto Ajuda</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>.
-    <link rel="preconnect" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
     <link rel="stylesheet" href="../styles/login.css">
     <link rel="stylesheet" href="../styles/geral.css">
     <link rel="stylesheet" href="../styles/acessibilidade.css">
@@ -19,9 +19,48 @@
     <script src="../components/header_footer.js" defer></script>
     <script src="../components/acessibilidade.js" defer></script>
 </head>
+<!-- ========================= -->
+<!-- ALERTA DE CADASTRO -->
+<!-- ========================= -->
+
+<div id="alerta-cadastro" class="alerta-cadastro" hidden>
+
+    <div class="caixa-cadastro">
+
+        <div class="icone-cadastro">
+            <i class="fa-solid fa-check"></i>
+        </div>
+
+        <div class="conteudo-cadastro">
+
+            <span class="badge-cadastro">
+                Cadastro concluído
+            </span>
+
+            <h2>Bem-vindo ao<br><span>Porto Ajuda!</span></h2>
+
+            <p>
+                Sua conta foi criada com sucesso.
+                Agora você já pode entrar e começar
+                a fazer parte da nossa comunidade.
+            </p>
+
+        </div>
+
+        <button
+            type="button"
+            id="btn-ir-login"
+            class="btn-ir-login"
+        >
+            Continuar para o login
+            <i class="fa-solid fa-arrow-right"></i>
+        </button>
+
+    </div>
+
+</div>
 
 <body>
-    <div class="stars"></div>
     <div class="stars"></div>
     <header class="navbar"></header>
     <div class="moon">
@@ -49,29 +88,14 @@
                     Faça login e continue ajudando.
                 </p>
 
-                <form class="formulario" id="form-login" autocomplete="off">
+                <form class="formulario" autocomplete="off">
 
                     <input class="inp" type="text" placeholder="CPF" autocomplete="off" maxlength="14" required>
-<div class="campo-senha">
 
-    <input
-        class="inp senha"
-        id="senha-cadastro"
-        type="password"
-        placeholder="Senha"
-        required
-    >
-
-    <button
-        type="button"
-        class="mostrar-senha"
-        id="mostrar-senha-cadastro"
-        aria-label="Mostrar senha"
-    >
-        <i class="fa-solid fa-eye"></i>
-    </button>
-
-</div>
+                    <div class="campo-senha">
+                        <input id="senha" class="inp senha" type="password" placeholder="Senha" required>
+                        <button type="button" class="mostrar-senha">👁️</button>
+                    </div>
 
                     <button class="btn" type="submit">
                         Fazer Login
@@ -111,10 +135,7 @@
 
                         <input class="inp" id="cpf" type="text" placeholder="CPF" maxlength="14" autocomplete="off"
                             required>
-                        <input class="inp" id="cpf" type="text" placeholder="CPF" maxlength="14" autocomplete="off"
-                            required>
 
-                        <input class="inp" type="email" placeholder="E-mail" required>
                         <input class="inp" type="email" placeholder="E-mail" required>
 
                     </div>
@@ -136,14 +157,10 @@
                         </div>
 
                         <input class="inp" type="tel" id="telefone" placeholder="Telefone" autocomplete="off" required>
-                        <input class="inp" type="tel" id="telefone" placeholder="Telefone" autocomplete="off" required>
 
                         <input class="inp" type="text" id="nascimento" placeholder="Data de nascimento"
                             onfocus="this.type='date'" onblur="if(!this.value) this.type='text'" required>
-                            onfocus="this.type='date'" onblur="if(!this.value) this.type='text'" required>
 
-                        <input class="inp" type="text" id="cep" placeholder="CEP" maxlength="9" autocomplete="off"
-                            required>
                         <input class="inp" type="text" id="cep" placeholder="CEP" maxlength="9" autocomplete="off"
                             required>
 
@@ -151,102 +168,10 @@
 
                     <!-- ETAPA 3 -->
                     <div class="row4">
-
-                        <input class="inp" type="password" placeholder="Senha">
-
-                        <input class="inp" type="password" placeholder="Confirmar Senha">
-
-                        <div class="opcoes">
-
-                            <h2>Ao se cadastrar neste site, você afirma que</h2>
-
-                            <label>
-                                <input id="check-termos" type="checkbox" name="termos"                                    value="aceito" required>
-                                Concorda com nossos
-                                <button class="open-modal style-open-modal" data-modal="modal-termos"
-                                    type="button">Termos de Uso</button>
-                                e nossas políticas de
-                                <button class="open-modal style-open-modal" data-modal="modal-lgpd"
-                                    type="button">Privacidade &amp; Uso de Dados</button>
-                            </label>
-
+                        <div class="campo-senha">
+                            <input class="inp senha" type="password" id="senha-texto" placeholder="Senha" required>
+                            <button type="button" class="mostrar-senha">👁️</button>
                         </div>
-
-                    </div>
-
-                    <button class="btn" type="button" id="nextBtn">
-                        Próximo
-                    </button>
-<!DOCTYPE html>
-<html lang="pt-BR">
-
-<head>
-
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Porto Ajuda</title>
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
-    <link rel="stylesheet" href="../styles/login.css">
-    <link rel="stylesheet" href="../styles/geral.css">
-     <link rel="stylesheet" href="../styles/acessibilidade.css">
-    <script src="../components/login.js" defer></script>
-    <script src="../components/header_footer.js" defer></script>
-    <script src="../components/acessibilidade.js" defer></script>
-</head>
-
-<body>
-<div class="stars"></div>
-    <header class="navbar"></header>
-    <div class="moon">
-    </div>
-    <div class="polygon">
-        <div class="shape">
-            <img src="../assets/moon.png" alt="lua" id="moonT">
-        </div>
-    </div>
-
-
-    <div class="frame" id="frame">
-
-
-        <div class="panel panel-login">
-
-            <div class="form-sec">
-
-                <h1 class="title">
-                    Porto <span>Ajuda</span>
-                </h1>
-
-                <p class="subtitulo">
-                    Pequenas ações podem transformar vidas.<br>
-                    Faça login e continue ajudando.
-                </p>
-
-                <form class="formulario" autocomplete="off">
-
-                    <input class="inp" type="text" placeholder="CPF" autocomplete="off" maxlength="14">
-
-                    <div class="campo-senha">
-                        <input id="senha" class="inp" type="password" placeholder="Senha">
-                        <button type="button" id="mostrar-senha">👁️</button>
-                    </div>
-
-                    <button class="btn" type="submit">
-                        Fazer Login
-                    </button>
-
-                </form>
-
-                <p class="sw">
-                    Ainda não possui uma conta?
-                    <a id="goCad">Cadastre-se</a>
-                </p>
-
-            </div>
 
                         <div class="seguranca-senha">
 
@@ -258,33 +183,17 @@
 
                         </div>
 
-                     <div class="campo-senha">
-
-    <input
-        class="inp senha"
-        id="confirmar-senha"
-        type="password"
-        placeholder="Confirmar Senha"
-        required
-    >
-
-    <button
-        type="button"
-        class="mostrar-senha"
-        id="mostrarSenha"
-        aria-label="Mostrar senha"
-    >
-        <i class="fa-solid fa-eye"></i>
-    </button>
-
-</div>
+                        <div class="campo-senha">
+                            <input class="inp senha" id="confirmar-senha" type="password" placeholder="Confirmar Senha"
+                                required>
+                            <button type="button" class="mostrar-senha">👁️</button>
+                        </div>
 
                         <div class="opcoes">
 
                             <h2>Ao se cadastrar neste site, você afirma que</h2>
 
                             <label>
-                                <input id="check-termos" type="checkbox" name="termos" value="aceito" required>
                                 <input id="check-termos" type="checkbox" name="termos" value="aceito" required>
                                 Concorda com nossos
                                 <button class="open-modal style-open-modal" data-modal="modal-termos"
@@ -304,15 +213,6 @@
                             Voltar
                         </button>
 
-                    <div class="botoes-navegacao">
-
-                        <button class="btn" type="button" id="backBtn">
-                            Voltar
-                        </button>
-
-                        <button class="btn" type="button" id="nextBtn">
-                            Próximo
-                        </button>
                         <button class="btn" type="button" id="nextBtn">
                             Próximo
                         </button>
@@ -320,11 +220,7 @@
                         <button class="btn" type="submit" id="cad">
                             Cadastrar
                         </button>
-                        <button class="btn" type="submit" id="cad">
-                            Cadastrar
-                        </button>
 
-                    </div>
                     </div>
 
                 </form>
@@ -335,18 +231,6 @@
                 </p>
 
             </div>
-        </div>
-    </div>
-
-    <div class="requisitos-senha">
-
-        <span id="req-tamanho">8 caracteres</span>
-        <span id="req-maiuscula">Letra maiúscula</span>
-        <span id="req-minuscula">Letra minúscula</span>
-        <span id="req-numero">Número</span>
-        <span id="req-especial">Caractere especial</span>
-
-    </div>
         </div>
     </div>
 

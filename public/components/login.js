@@ -1,17 +1,17 @@
 const frame = document.getElementById('frame');
 const goCad = document.getElementById('goCad');
 const goLogin = document.getElementById('goLogin');
-const cpfCadastro = document.getElementById('cpf');
-
+const polygon = document.querySelector('.shape');
+const cpf = document.getElementById('cpf');
 goCad.addEventListener('click', () => {
     frame.classList.add('flipped');
     moveFrame('right');
-    
+
 });
 
 goLogin.addEventListener('click', () => {
-  frame.classList.remove('flipped');
-  moveFrame('left');
+    frame.classList.remove('flipped');
+    moveFrame('left');
 });
 
 function moveFrame(side) {
@@ -24,12 +24,11 @@ function moveFrame(side) {
     }
 }
 
+cpf.addEventListener('input', () => {
 
-cpfCadastro.addEventListener('input', () => {
+    const cpfValue = cpf.value.replace(/\D/g, '');
 
-      const cpfValue = cpfCadastro.value.replace(/\D/g, '');
-
-      cpfCadastro.value = cpfValue.replace(
+    cpf.value = cpfValue.replace(
         /(\d{3})(\d{3})(\d{3})(\d{2})/,
         '$1.$2.$3-$4'
     );
@@ -37,8 +36,117 @@ cpfCadastro.addEventListener('input', () => {
     cpf.setCustomValidity('');
 });
 
-// ---- Navegação por etapas do cadastro ----
+const telefone = document.getElementById('telefone');
+
+telefone.addEventListener('input', () => {
+
+    // Pega somente os números
+    let valor = telefone.value.replace(/\D/g, '');
+
+    // Limita a 11 números
+    valor = valor.substring(0, 11);
+
+    // Aplica a máscara
+    if (valor.length <= 10) {
+
+        valor = valor.replace(
+            /^(\d{2})(\d{4})(\d{0,4})$/,
+            '($1) $2-$3'
+        );
+
+    } else {
+
+        valor = valor.replace(
+            /^(\d{2})(\d{5})(\d{0,4})$/,
+            '($1) $2-$3'
+        );
+    }
+
+    telefone.value = valor;
+
+    // Limpa erro anterior
+    telefone.setCustomValidity('');
+});
+
+const cep = document.getElementById('cep');
+
+cep.addEventListener('input', () => {
+
+    let valor = cep.value.replace(/\D/g, '');
+
+    // Limita a 8 números
+    valor = valor.substring(0, 8);
+
+    // Coloca o hífen
+    if (valor.length > 5) {
+        valor = valor.replace(
+            /^(\d{5})(\d{0,3})$/,
+            '$1-$2'
+        );
+    }
+
+    cep.value = valor;
+
+    // Remove eventual erro anterior
+    cep.setCustomValidity('');
+});
+
+function validarCPF(cpf) {
+
+    cpf = cpf.replace(/\D/g, '');
+
+    // CPF precisa ter 11 dígitos
+    if (cpf.length !== 11) {
+        return false;
+    }
+
+    // Bloqueia CPFs com todos os números iguais
+    if (/^(\d)\1{10}$/.test(cpf)) {
+        return false;
+    }
+
+    // Primeiro dígito verificador
+    let soma = 0;
+
+    for (let i = 0; i < 9; i++) {
+        soma += Number(cpf[i]) * (10 - i);
+    }
+
+    let resto = (soma * 10) % 11;
+
+    if (resto === 10) {
+        resto = 0;
+    }
+
+    if (resto !== Number(cpf[9])) {
+        return false;
+    }
+
+    // Segundo dígito verificador
+    soma = 0;
+
+    for (let i = 0; i < 10; i++) {
+        soma += Number(cpf[i]) * (11 - i);
+    }
+
+    resto = (soma * 10) % 11;
+
+    if (resto === 10) {
+        resto = 0;
+    }
+
+    if (resto !== Number(cpf[10])) {
+        return false;
+    }
+
+    return true;
+}
+
+//** transição do cadastro **//
+
 const nextBtn = document.getElementById('nextBtn');
+const cad = document.getElementById('cad');
+const backBtn = document.getElementById('backBtn');
 
 const rows = [
     document.querySelector('.row2'),
@@ -48,50 +156,324 @@ const rows = [
 
 let etapa = 0;
 
-function atualizarEtapas() {
-    rows.forEach((row, index) => {
-        row.style.display = index === etapa ? 'grid' : 'none';
-    });
-    backBtn.style.display = etapa === 0 ? 'none' : 'block';
-    nextBtn.style.display = etapa === rows.length - 1 ? 'none' : 'block';
-    cad.style.display = etapa === rows.length - 1 ? 'block' : 'none';
-}
+// Começa mostrando somente a primeira etapa
+rows.forEach((row, index) => {
+    row.style.display = index === 0 ? 'grid' : 'none';
+});
+
+cad.style.display = 'none';
+backBtn.style.display = 'none';
+
 
 // AVANÇAR
 nextBtn.addEventListener('click', () => {
+
+    // Pega os campos da etapa atual
+    const campos = rows[etapa].querySelectorAll('input');
+
+    // Verifica se todos estão preenchidos
+    for (const campo of campos) {
+
+        if (!campo.checkValidity()) {
+            campo.reportValidity();
+            campo.focus();
+            return;
+        }
+    }
+
+    if (etapa === 0) {
+
+        if (!validarCPF(cpf.value)) {
+
+            cpf.setCustomValidity('Digite um CPF válido.');
+            cpf.reportValidity();
+            cpf.focus();
+
+            return;
+        }
+
+        cpf.setCustomValidity('');
+    }
+
+    if (etapa === 1) {
+
+        const telefoneNumeros = telefone.value.replace(/\D/g, '');
+
+        if (
+            telefoneNumeros.length !== 10 &&
+            telefoneNumeros.length !== 11
+        ) {
+
+            telefone.setCustomValidity('Digite um telefone válido.');
+            telefone.reportValidity();
+            telefone.focus();
+
+            return;
+        }
+
+        telefone.setCustomValidity('');
+
+        const cepNumeros = cep.value.replace(/\D/g, '');
+
+        if (cepNumeros.length !== 8) {
+            cep.setCustomValidity('Digite um CEP válido.');
+            cep.reportValidity();
+            cep.focus();
+            return;
+        }
+
+        cep.setCustomValidity('');
+    }
+
+    // Esconde a etapa atual
     rows[etapa].style.display = 'none';
+
+    // Avança
     etapa++;
 
-    if (etapa < rows.length) {
+    // Mostra a próxima etapa
+    rows[etapa].style.display = 'grid';
 
-        rows[etapa].style.display = 'grid';
+    // Mostra o botão Voltar
+    backBtn.style.display = 'block';
 
-        nextBtn.style.display =
-            etapa === rows.length - 1 ? 'none' : 'block';
+    // Se chegou na última etapa
+    if (etapa === rows.length - 1) {
+        nextBtn.style.display = 'none';
+        cad.style.display = 'block';
+    }
+});
 
-        cad.style.display =
-            etapa === rows.length - 1 ? 'block' : 'none';
+
+// VOLTAR
+backBtn.addEventListener('click', () => {
+
+    // Esconde a etapa atual
+    rows[etapa].style.display = 'none';
+
+    // Volta uma etapa
+    etapa--;
+
+    // Mostra a etapa anterior
+    rows[etapa].style.display = 'grid';
+
+    // Se voltou para a primeira etapa
+    if (etapa === 0) {
+        backBtn.style.display = 'none';
     }
 
-});const form = document.querySelector('.formulario');
-const termos = document.getElementById('termos');
+    // Se saiu da última etapa
+    if (etapa < rows.length - 1) {
+        nextBtn.style.display = 'block';
+        cad.style.display = 'none';
+    }
+});
 
-form.addEventListener('submit', (e) => {
+const formCadastro = document.querySelector('.panel-cadastro .formulario');
+const termos = document.getElementById('check-termos');
+
+formCadastro.addEventListener('submit', (e) => {
+
     if (!termos.checked) {
-        e.preventDefault(); 
-       
+        e.preventDefault();
+        termos.reportValidity();
     }
+
 });
 
 const senha = document.querySelector("#senha");
-const botao = document.querySelector("#mostrar-senha");
+const botoesSenha = document.querySelectorAll('.mostrar-senha');
 
-botao.addEventListener("click", () => {
-    if (senha.type === "password") {
-        senha.type = "text";
-        botao.textContent = "🙈";
-    } else {
-        senha.type = "password";
-        botao.textContent = "👁️";
-    }
+botoesSenha.forEach(botao => {
+
+    botao.addEventListener('click', () => {
+
+        const campoSenha = botao.previousElementSibling;
+
+        if (campoSenha.type === 'password') {
+
+            campoSenha.type = 'text';
+            botao.textContent = '🙈';
+
+        } else {
+
+            campoSenha.type = 'password';
+            botao.textContent = '👁️';
+
+        }
+
+    });
+
 });
+
+const senhaCadastro = document.getElementById('senha-cadastro');
+const confirmarSenha = document.getElementById('confirmar-senha');
+
+const requisitosSenha = document.querySelector('.requisitos-senha');
+
+senhaCadastro.addEventListener('focus', () => {
+    const posicao = senhaCadastro.getBoundingClientRect();
+
+    requisitosSenha.style.display = 'flex';
+    requisitosSenha.style.left = `${posicao.right + 30}px`;
+    requisitosSenha.style.top = `${posicao.top}px`;
+});
+
+senhaCadastro.addEventListener('blur', () => {
+    requisitosSenha.style.display = 'none';
+});
+
+const nivelSenha = document.getElementById('nivel-senha');
+const textoSeguranca = document.getElementById('texto-seguranca');
+
+const reqTamanho = document.getElementById('req-tamanho');
+const reqMaiuscula = document.getElementById('req-maiuscula');
+const reqMinuscula = document.getElementById('req-minuscula');
+const reqNumero = document.getElementById('req-numero');
+const reqEspecial = document.getElementById('req-especial');
+
+
+senhaCadastro.addEventListener('input', () => {
+
+    const senha = senhaCadastro.value;
+
+    const tamanho = senha.length >= 8;
+    const maiuscula = /[A-Z]/.test(senha);
+    const minuscula = /[a-z]/.test(senha);
+    const numero = /[0-9]/.test(senha);
+    const especial = /[^A-Za-z0-9]/.test(senha);
+
+
+    // =========================
+    // MOSTRA SOMENTE O QUE FALTA
+    // =========================
+
+    reqTamanho.style.display = tamanho ? 'none' : 'block';
+    reqMaiuscula.style.display = maiuscula ? 'none' : 'block';
+    reqMinuscula.style.display = minuscula ? 'none' : 'block';
+    reqNumero.style.display = numero ? 'none' : 'block';
+    reqEspecial.style.display = especial ? 'none' : 'block';
+
+    // =========================
+    // CALCULA A FORÇA
+    // =========================
+
+    let pontos = 0;
+
+    if (tamanho) pontos++;
+    if (maiuscula) pontos++;
+    if (minuscula) pontos++;
+    if (numero) pontos++;
+    if (especial) pontos++;
+
+    if (pontos === 5) {
+        requisitosSenha.style.display = 'none';
+    } else if (document.activeElement === senhaCadastro) {
+        requisitosSenha.style.display = 'flex';
+    }
+
+    // =========================
+    // ATUALIZA A BARRA
+    // =========================
+
+    nivelSenha.style.width = `${pontos * 20}%`;
+
+
+    if (senha.length === 0) {
+
+        textoSeguranca.textContent = 'Digite uma senha';
+
+    } else if (pontos <= 2) {
+
+        textoSeguranca.textContent = 'Senha fraca';
+
+    } else if (pontos <= 4) {
+
+        textoSeguranca.textContent = 'Senha média';
+
+    } else {
+
+        textoSeguranca.textContent = 'Senha forte';
+
+    }
+
+    confirmarSenha.setCustomValidity('');
+});
+
+
+function atualizarRequisito(elemento, passou, texto) {
+
+    if (passou) {
+        elemento.textContent = '✓ ' + texto;
+    } else {
+        elemento.textContent = '✗ ' + texto;
+    }
+
+}
+
+confirmarSenha.addEventListener('input', () => {
+
+    if (confirmarSenha.value !== senhaCadastro.value) {
+
+        confirmarSenha.setCustomValidity(
+            'As senhas não são iguais.'
+        );
+
+    } else {
+
+        confirmarSenha.setCustomValidity('');
+
+    }
+
+});
+
+cad.addEventListener('click', (e) => {
+
+    const senha = senhaCadastro.value;
+
+    const tamanho = senha.length >= 8;
+    const maiuscula = /[A-Z]/.test(senha);
+    const minuscula = /[a-z]/.test(senha);
+    const numero = /[0-9]/.test(senha);
+    const especial = /[^A-Za-z0-9]/.test(senha);
+
+    if (!tamanho || !maiuscula || !minuscula || !numero || !especial) {
+
+        e.preventDefault();
+
+        senhaCadastro.setCustomValidity(
+            'A senha não atende aos requisitos de segurança.'
+        );
+
+        senhaCadastro.reportValidity();
+        senhaCadastro.focus();
+
+        return;
+    }
+
+    senhaCadastro.setCustomValidity('');
+
+
+    // Verifica se as senhas são iguais
+    if (senhaCadastro.value !== confirmarSenha.value) {
+
+        e.preventDefault();
+
+        confirmarSenha.setCustomValidity(
+            'As senhas não são iguais.'
+        );
+
+        confirmarSenha.reportValidity();
+        confirmarSenha.focus();
+
+        return;
+    }
+
+    confirmarSenha.setCustomValidity('');
+
+});
+
+const rect = senhaCadastro.getBoundingClientRect();
+
+requisitosSenha.style.left = `${rect.right + 15}px`;
+requisitosSenha.style.top = `${rect.top}px`;
