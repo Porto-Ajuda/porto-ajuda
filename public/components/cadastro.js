@@ -4,35 +4,30 @@ document
 
         event.preventDefault();
 
-        const usuario = {
-            cpf: document.getElementById("cpf").value,
+        const somenteNumeros = (valor) => valor.replace(/\D/g, "");
 
-            cep: document.getElementById("cep").value.replace(/\D/g, ""),
+        const usuario = {
+            cpf: somenteNumeros(document.getElementById("cpf").value),
+
+            cep: somenteNumeros(document.getElementById("cep").value),
 
             nome: document.querySelector("#form-cadastro input[placeholder='Nome']").value,
 
             nomeSocial: "",
 
-            dataNascimento: converterDataParaISO(document.getElementById("nascimento").value),
+            dataNascimento: document.getElementById("nascimento").value,
 
             email: document.querySelector("#form-cadastro input[type='email']").value,
 
             genero: document.getElementById("genero").value.toUpperCase(),
 
-            telefone: document.getElementById("telefone").value,
+            telefone: somenteNumeros(document.getElementById("telefone").value),
 
-            senha:document.getElementById("senha-texto").value
+            senha: document.getElementById("senha-texto").value
         };
-
 
         await postCadastro(usuario);
     });
-
-    function converterDataParaISO(data) {
-    const [dia, mes, ano] = data.split("/");
-
-    return `${ano}-${mes}-${dia}`;
-    }
 
     function mostrarAlertaCadastro(mensagem) {
 
