@@ -8,30 +8,50 @@ const cidadeRecebedor = "PRAIA GRANDE";
 
 
 // =========================================================
-// ELEMENTOS DO HTML
+// ELEMENTOS
 // =========================================================
 
-const botoesValor = document.querySelectorAll(".valor-pix");
+const botoesValor =
+    document.querySelectorAll(".valor-pix");
 
-const botaoOutro = document.getElementById("botao-outro");
+const botaoOutro =
+    document.getElementById("botao-outro");
 
-const campoOutroValor = document.querySelector(".outro-valor");
+const modalValor =
+    document.getElementById("modal-valor");
 
-const inputValor = document.getElementById("valor");
+const fecharModal =
+    document.getElementById("fechar-modal");
 
-const botaoGerar = document.getElementById("gerar-pix");
+const inputValor =
+    document.getElementById("valor");
 
-const resultadoPix = document.getElementById("resultado-pix");
+const botaoGerar =
+    document.getElementById("gerar-pix");
 
-const qrCode = document.getElementById("qrcode");
+const resultadoPix =
+    document.getElementById("resultado-pix");
 
-const valorExibido = document.getElementById("valor-exibido");
+const qrcode =
+    document.getElementById("qrcode");
 
-const pixCopiaCola = document.getElementById("pix-copia-cola");
+const valorExibido =
+    document.getElementById("valor-exibido");
 
-const botaoCopiar = document.getElementById("copiar-pix");
+const chavePixInput =
+    document.getElementById("chave-pix");
 
-const mensagemCopia = document.getElementById("mensagem-copia");
+const copiarChave =
+    document.getElementById("copiar-chave");
+
+const pixCopiaCola =
+    document.getElementById("pix-copia-cola");
+
+const botaoCopiar =
+    document.getElementById("copiar-pix");
+
+const mensagemCopia =
+    document.getElementById("mensagem-copia");
 
 
 // =========================================================
@@ -50,14 +70,15 @@ function limparTexto(texto) {
 
 
 // =========================================================
-// CRIAR CAMPO PIX
+// CAMPO TLV
 // =========================================================
 
 function campoPix(id, valor) {
 
-    const tamanho = valor.length
-        .toString()
-        .padStart(2, "0");
+    const tamanho =
+        valor.length
+            .toString()
+            .padStart(2, "0");
 
     return id + tamanho + valor;
 
@@ -65,7 +86,7 @@ function campoPix(id, valor) {
 
 
 // =========================================================
-// CALCULAR CRC16-CCITT
+// CRC16-CCITT
 // =========================================================
 
 function calcularCRC16(payload) {
@@ -80,7 +101,8 @@ function calcularCRC16(payload) {
 
             if ((crc & 0x8000) !== 0) {
 
-                crc = (crc << 1) ^ 0x1021;
+                crc =
+                    (crc << 1) ^ 0x1021;
 
             } else {
 
@@ -103,60 +125,50 @@ function calcularCRC16(payload) {
 
 
 // =========================================================
-// GERAR PIX COPIA E COLA
+// GERAR PIX
 // =========================================================
 
 function gerarPix(valor) {
-
-    // -----------------------------------------
-    // VALIDAÇÃO
-    // -----------------------------------------
 
     valor = Number(valor);
 
     if (!Number.isFinite(valor) || valor <= 0) {
 
-        alert("Digite um valor válido para a doação.");
+        alert("Digite um valor válido.");
 
         return null;
 
     }
 
 
-    // -----------------------------------------
-    // DADOS DO RECEBEDOR
-    // -----------------------------------------
+    const nome =
+        limparTexto(nomeRecebedor)
+            .substring(0, 25);
 
-    const nome = limparTexto(nomeRecebedor)
-        .substring(0, 25);
-
-    const cidade = limparTexto(cidadeRecebedor)
-        .substring(0, 15);
+    const cidade =
+        limparTexto(cidadeRecebedor)
+            .substring(0, 15);
 
 
-    // -----------------------------------------
-    // 00 - PAYLOAD FORMAT INDICATOR
-    // -----------------------------------------
+    // 00 - Payload Format Indicator
 
-    const payloadFormat = campoPix(
-        "00",
-        "01"
-    );
+    const payloadFormat =
+        campoPix("00", "01");
 
 
-    // -----------------------------------------
-    // 26 - MERCHANT ACCOUNT INFORMATION
-    // -----------------------------------------
+    // 26 - Merchant Account Information
 
-    const gui = campoPix(
-        "00",
-        "BR.GOV.BCB.PIX"
-    );
+    const gui =
+        campoPix(
+            "00",
+            "BR.GOV.BCB.PIX"
+        );
 
-    const chave = campoPix(
-        "01",
-        chavePix
-    );
+    const chave =
+        campoPix(
+            "01",
+            chavePix
+        );
 
     const merchantAccountInformation =
         campoPix(
@@ -165,9 +177,7 @@ function gerarPix(valor) {
         );
 
 
-    // -----------------------------------------
-    // 52 - MERCHANT CATEGORY CODE
-    // -----------------------------------------
+    // 52 - Merchant Category Code
 
     const merchantCategoryCode =
         campoPix(
@@ -176,9 +186,7 @@ function gerarPix(valor) {
         );
 
 
-    // -----------------------------------------
-    // 53 - MOEDA
-    // -----------------------------------------
+    // 53 - Moeda
 
     const moeda =
         campoPix(
@@ -187,9 +195,7 @@ function gerarPix(valor) {
         );
 
 
-    // -----------------------------------------
-    // 54 - VALOR
-    // -----------------------------------------
+    // 54 - Valor
 
     const valorFormatado =
         valor.toFixed(2);
@@ -201,9 +207,7 @@ function gerarPix(valor) {
         );
 
 
-    // -----------------------------------------
-    // 58 - PAÍS
-    // -----------------------------------------
+    // 58 - País
 
     const pais =
         campoPix(
@@ -212,9 +216,7 @@ function gerarPix(valor) {
         );
 
 
-    // -----------------------------------------
-    // 59 - NOME DO RECEBEDOR
-    // -----------------------------------------
+    // 59 - Nome
 
     const nomePix =
         campoPix(
@@ -223,9 +225,7 @@ function gerarPix(valor) {
         );
 
 
-    // -----------------------------------------
-    // 60 - CIDADE
-    // -----------------------------------------
+    // 60 - Cidade
 
     const cidadePix =
         campoPix(
@@ -234,9 +234,7 @@ function gerarPix(valor) {
         );
 
 
-    // -----------------------------------------
-    // 62 - DADOS ADICIONAIS
-    // -----------------------------------------
+    // 62 - TXID
 
     const txid =
         campoPix(
@@ -251,9 +249,7 @@ function gerarPix(valor) {
         );
 
 
-    // -----------------------------------------
-    // MONTAR PAYLOAD
-    // -----------------------------------------
+    // Montar payload
 
     let payload =
         payloadFormat +
@@ -267,9 +263,7 @@ function gerarPix(valor) {
         dadosAdicionais;
 
 
-    // -----------------------------------------
-    // CRC16
-    // -----------------------------------------
+    // CRC
 
     payload += "6304";
 
@@ -290,25 +284,24 @@ function gerarPix(valor) {
 
 function mostrarPix(valor) {
 
-    const pix = gerarPix(valor);
+    const pix =
+        gerarPix(valor);
 
     if (!pix) {
         return;
     }
 
 
-    // -----------------------------------------
-    // VERIFICAR QR CODE
-    // -----------------------------------------
+    // Verifica biblioteca
 
     if (typeof QRCode === "undefined") {
 
         console.error(
-            "A biblioteca QRCode não foi carregada."
+            "QRCode não foi carregado."
         );
 
         alert(
-            "Não foi possível carregar o gerador de QR Code."
+            "A biblioteca do QR Code não foi carregada."
         );
 
         return;
@@ -316,33 +309,28 @@ function mostrarPix(valor) {
     }
 
 
-    // -----------------------------------------
-    // LIMPAR QR CODE ANTERIOR
-    // -----------------------------------------
+    // Limpar QR anterior
 
-    qrCode.innerHTML = "";
+    qrcode.innerHTML = "";
 
 
-    // -----------------------------------------
-    // GERAR NOVO QR CODE
-    // -----------------------------------------
+    // Gerar QR
 
-    new QRCode(qrCode, {
+    new QRCode(qrcode, {
 
         text: pix,
 
-        width: 220,
+        width: 275,
 
-        height: 220,
+        height: 275,
 
-        correctLevel: QRCode.CorrectLevel.M
+        correctLevel:
+            QRCode.CorrectLevel.M
 
     });
 
 
-    // -----------------------------------------
-    // MOSTRAR VALOR
-    // -----------------------------------------
+    // Mostrar valor
 
     valorExibido.textContent =
         Number(valor).toLocaleString(
@@ -354,30 +342,24 @@ function mostrarPix(valor) {
         );
 
 
-    // -----------------------------------------
-    // MOSTRAR PIX COPIA E COLA
-    // -----------------------------------------
+    // Colocar PIX Copia e Cola
 
-    pixCopiaCola.value = pix;
-
-
-    // -----------------------------------------
-    // MOSTRAR ÁREA DO PIX
-    // -----------------------------------------
-
-    resultadoPix.style.display = "block";
+    pixCopiaCola.value =
+        pix;
 
 
-    // -----------------------------------------
-    // LIMPAR MENSAGEM
-    // -----------------------------------------
+    // Mostrar resultado
+
+    resultadoPix.style.display =
+        "block";
+
+
+    // Limpar mensagem
 
     mensagemCopia.textContent = "";
 
 
-    // -----------------------------------------
-    // ROLAR ATÉ O QR CODE
-    // -----------------------------------------
+    // Rolar até o resultado
 
     resultadoPix.scrollIntoView({
         behavior: "smooth",
@@ -399,14 +381,7 @@ botoesValor.forEach(botao => {
             Number(botao.dataset.valor);
 
 
-        // Coloca o valor no campo
-
-        if (inputValor) {
-            inputValor.value = valor;
-        }
-
-
-        // Remove seleção anterior
+        // Remover seleção anterior
 
         botoesValor.forEach(botaoAtual => {
 
@@ -415,12 +390,12 @@ botoesValor.forEach(botao => {
         });
 
 
-        // Marca botão selecionado
+        // Selecionar botão
 
         botao.classList.add("ativo");
 
 
-        // Gera PIX
+        // Gerar PIX
 
         mostrarPix(valor);
 
@@ -430,137 +405,177 @@ botoesValor.forEach(botao => {
 
 
 // =========================================================
-// BOTÃO "OUTRO"
+// ABRIR MODAL "OUTRO"
 // =========================================================
 
-if (botaoOutro) {
+botaoOutro.addEventListener("click", () => {
 
-    botaoOutro.addEventListener("click", () => {
+    modalValor.style.display =
+        "flex";
 
-        if (!campoOutroValor) {
-            return;
-        }
+    inputValor.value = "";
 
+    setTimeout(() => {
 
-        // Mostra campo
+        inputValor.focus();
 
-        campoOutroValor.style.display = "flex";
+    }, 100);
 
-
-        // Remove seleção dos valores prontos
-
-        botoesValor.forEach(botao => {
-
-            botao.classList.remove("ativo");
-
-        });
+});
 
 
-        // Coloca foco no campo
+// =========================================================
+// FECHAR MODAL
+// =========================================================
 
-        if (inputValor) {
+fecharModal.addEventListener("click", () => {
 
-            inputValor.focus();
+    modalValor.style.display =
+        "none";
 
-        }
+});
+
+
+// =========================================================
+// CLICAR FORA DA CAIXA
+// =========================================================
+
+modalValor.addEventListener("click", evento => {
+
+    if (evento.target === modalValor) {
+
+        modalValor.style.display =
+            "none";
+
+    }
+
+});
+
+
+// =========================================================
+// CONFIRMAR OUTRO VALOR
+// =========================================================
+
+botaoGerar.addEventListener("click", () => {
+
+    const valor =
+        Number(inputValor.value);
+
+
+    if (!Number.isFinite(valor) || valor <= 0) {
+
+        alert(
+            "Digite um valor maior que R$ 0,00."
+        );
+
+        inputValor.focus();
+
+        return;
+
+    }
+
+
+    // Fechar modal
+
+    modalValor.style.display =
+        "none";
+
+
+    // Tirar seleção dos botões
+
+    botoesValor.forEach(botao => {
+
+        botao.classList.remove("ativo");
 
     });
 
-}
+
+    // Gerar PIX
+
+    mostrarPix(valor);
+
+});
 
 
 // =========================================================
-// BOTÃO GERAR PIX
+// ENTER NO MODAL
 // =========================================================
 
-if (botaoGerar) {
+inputValor.addEventListener("keydown", evento => {
 
-    botaoGerar.addEventListener("click", () => {
+    if (evento.key === "Enter") {
 
-        if (!inputValor) {
-            return;
-        }
+        evento.preventDefault();
 
+        botaoGerar.click();
 
-        const valor =
-            Number(inputValor.value);
+    }
 
-
-        mostrarPix(valor);
-
-    });
-
-}
+});
 
 
 // =========================================================
-// ENTER NO CAMPO DE VALOR
+// COPIAR CHAVE PIX
 // =========================================================
 
-if (inputValor) {
+copiarChave.addEventListener("click", async () => {
 
-    inputValor.addEventListener("keydown", (evento) => {
+    try {
 
-        if (evento.key === "Enter") {
+        await navigator.clipboard.writeText(
+            chavePix
+        );
 
-            evento.preventDefault();
+        mensagemCopia.textContent =
+            "Chave PIX copiada!";
 
-            const valor =
-                Number(inputValor.value);
+    } catch (erro) {
 
-            mostrarPix(valor);
+        chavePixInput.select();
 
-        }
+        document.execCommand("copy");
 
-    });
+        mensagemCopia.textContent =
+            "Chave PIX copiada!";
 
-}
+    }
+
+});
 
 
 // =========================================================
-// COPIAR PIX
+// COPIAR PIX COPIA E COLA
 // =========================================================
 
-if (botaoCopiar) {
+botaoCopiar.addEventListener("click", async () => {
 
-    botaoCopiar.addEventListener("click", async () => {
-
-        const pix =
-            pixCopiaCola.value;
+    const pix =
+        pixCopiaCola.value;
 
 
-        if (!pix) {
-            return;
-        }
+    if (!pix) {
+        return;
+    }
 
 
-        try {
+    try {
 
-            await navigator.clipboard.writeText(pix);
+        await navigator.clipboard.writeText(
+            pix
+        );
 
-            mensagemCopia.textContent =
-                "PIX Copia e Cola copiado!";
+        mensagemCopia.textContent =
+            "PIX Copia e Cola copiado!";
 
+    } catch (erro) {
 
-        } catch (erro) {
+        pixCopiaCola.select();
 
-            // Fallback para navegadores
-            // que bloqueiam clipboard API
+        document.execCommand("copy");
 
-            pixCopiaCola.select();
+        mensagemCopia.textContent =
+            "PIX Copia e Cola copiado!";
 
-            pixCopiaCola.setSelectionRange(
-                0,
-                99999
-            );
+    }
 
-            document.execCommand("copy");
-
-            mensagemCopia.textContent =
-                "PIX Copia e Cola copiado!";
-
-        }
-
-    });
-
-}
+});

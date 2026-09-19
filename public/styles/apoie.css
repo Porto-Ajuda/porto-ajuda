@@ -96,6 +96,10 @@ main {
    ÁREA DE PAGAMENTO
 ========================================================= */
 
+/* =========================================================
+   ÁREA DE PAGAMENTO
+========================================================= */
+
 .area_pagamento {
     width: 100%;
     min-height: 100dvh;
@@ -110,6 +114,519 @@ main {
     gap: 1.5em;
 
     padding: 5em 2em;
+}
+
+
+/* =========================================================
+   TÍTULO
+========================================================= */
+
+.titulo_pagamento {
+    margin: 0;
+
+    text-align: center;
+
+    color: var(--gold);
+
+    font-size: 4.5rem;
+
+    font-family: 'Cormorant Garamond', serif;
+
+    font-weight: 600;
+
+    line-height: 0.95;
+}
+
+
+/* =========================================================
+   BOTÕES DE VALOR
+========================================================= */
+
+.opcoes_pagamento {
+    display: flex;
+
+    justify-content: center;
+    align-items: center;
+
+    gap: 2.5em;
+
+    margin-top: 1em;
+}
+
+
+.opcoes_pagamento button {
+    min-width: 90px;
+
+    padding: 0.45em 0.7em;
+
+    border: 2px solid var(--text-soft);
+
+    border-radius: 0.6em;
+
+    background: transparent;
+
+    color: var(--text-soft);
+
+    font-family: Poppins, sans-serif;
+
+    font-size: 1.35rem;
+
+    cursor: pointer;
+
+    transition: 0.25s;
+}
+
+
+.opcoes_pagamento button:hover,
+.opcoes_pagamento button.ativo {
+    background-color: var(--gold);
+
+    border-color: var(--gold);
+
+    color: var(--bg-section);
+
+    transform: translateY(-2px);
+}
+
+
+/* =========================================================
+   RESULTADO DO PIX
+========================================================= */
+
+#resultado-pix {
+    width: min(625px, 90%);
+
+    display: none;
+
+    margin-top: 1em;
+}
+
+
+/* =========================================================
+   CAIXA DO QR CODE
+========================================================= */
+
+.qr_pagamento {
+    width: 100%;
+
+    box-sizing: border-box;
+
+    padding: 2em;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 1em;
+
+    border: 2px solid #81758f;
+
+    border-radius: 1em;
+
+    background-color: var(--bg-section);
+}
+
+
+/* =========================================================
+   TÍTULO QR CODE
+========================================================= */
+
+.titulo_qrcode {
+    margin: 0;
+
+    color: var(--text);
+
+    font-family: Poppins, sans-serif;
+
+    font-size: 1.5rem;
+}
+
+
+/* =========================================================
+   QR CODE
+========================================================= */
+
+.qrcode {
+    width: 275px;
+    height: 275px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 0.5em;
+
+    box-sizing: border-box;
+
+    background-color: white;
+
+    border-radius: 0.2em;
+}
+
+
+.qrcode img,
+.qrcode canvas {
+    max-width: 100%;
+    max-height: 100%;
+}
+
+
+/* =========================================================
+   VALOR DA DOAÇÃO
+========================================================= */
+
+.valor_doacao {
+    margin: 0;
+
+    color: var(--text);
+
+    font-family: Poppins, sans-serif;
+
+    font-size: 1.2rem;
+}
+
+
+.valor_doacao strong {
+    color: var(--text);
+}
+
+
+/* =========================================================
+   TEXTO CHAVE
+========================================================= */
+
+.exemplo_chave {
+    margin: 0;
+
+    color: white;
+
+    font-family: Poppins, sans-serif;
+
+    font-size: 0.85rem;
+
+    text-align: center;
+}
+
+
+/* =========================================================
+   CHAVE PIX / COPIA E COLA
+========================================================= */
+
+.chave_pix {
+    width: min(375px, 100%);
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    gap: 0.7em;
+}
+
+
+#chave-pix,
+#pix-copia-cola {
+    width: 100%;
+
+    box-sizing: border-box;
+
+    padding: 0.65em;
+
+    border: 2px solid var(--gold);
+
+    border-radius: 0.5em;
+
+    outline: none;
+
+    background-color: var(--bg-card);
+
+    color: var(--gold);
+
+    font-family: Poppins, sans-serif;
+
+    text-align: center;
+}
+
+
+#copiar-chave,
+#copiar-pix {
+    width: 100%;
+
+    padding: 0.75em 2em;
+
+    border: none;
+
+    border-radius: 0.5em;
+
+    background-color: var(--gold-dark);
+
+    color: var(--bg-section);
+
+    font-family: Poppins, sans-serif;
+
+    cursor: pointer;
+
+    transition: 0.25s;
+}
+
+
+#copiar-chave:hover,
+#copiar-pix:hover {
+    background-color: var(--gold-light);
+}
+
+
+/* =========================================================
+   MENSAGEM DE CÓPIA
+========================================================= */
+
+#mensagem-copia {
+    min-height: 1em;
+
+    margin: 0;
+
+    color: var(--gold-light);
+
+    font-family: Poppins, sans-serif;
+
+    font-size: 0.8rem;
+}
+
+
+/* =========================================================
+   AVISO
+========================================================= */
+
+.aviso_transacao {
+    max-width: 850px;
+
+    margin: 0;
+
+    text-align: center;
+
+    color: var(--text-soft);
+
+    font-family: Poppins, sans-serif;
+
+    font-size: 0.85rem;
+
+    line-height: 1.6;
+}
+
+
+/* =========================================================
+   MODAL DE OUTRO VALOR
+========================================================= */
+
+.modal-valor {
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 9999;
+
+    display: none;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 1em;
+
+    background-color: rgba(0, 0, 0, 0.65);
+
+    backdrop-filter: blur(5px);
+}
+
+
+/* =========================================================
+   CAIXA DO MODAL
+========================================================= */
+
+.caixa-modal {
+    position: relative;
+
+    width: min(400px, 90%);
+
+    box-sizing: border-box;
+
+    padding: 2.5em;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    gap: 1em;
+
+    border: 2px solid var(--gold-light);
+
+    border-radius: 1em;
+
+    background: linear-gradient(
+        145deg,
+        #3d2775,
+        #28194f
+    );
+
+    box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+
+.caixa-modal h2 {
+    margin: 0;
+
+    color: var(--gold);
+
+    font-family: 'Cormorant Garamond', serif;
+
+    font-size: 2.5rem;
+}
+
+
+.caixa-modal p {
+    margin: 0;
+
+    color: var(--text-soft);
+
+    font-family: Poppins, sans-serif;
+
+    text-align: center;
+}
+
+
+/* =========================================================
+   BOTÃO FECHAR
+========================================================= */
+
+.fechar-modal {
+    position: absolute;
+
+    top: 0.5em;
+    right: 0.7em;
+
+    border: none;
+
+    background: transparent;
+
+    color: var(--text-soft);
+
+    font-size: 2rem;
+
+    line-height: 1;
+
+    cursor: pointer;
+
+    transition: 0.2s;
+}
+
+
+.fechar-modal:hover {
+    color: var(--gold);
+}
+
+
+/* =========================================================
+   INPUT DO MODAL
+========================================================= */
+
+.input-modal {
+    width: 100%;
+
+    height: 48px;
+
+    box-sizing: border-box;
+
+    display: flex;
+
+    align-items: center;
+
+    border: 2px solid var(--gold);
+
+    border-radius: 0.5em;
+
+    background-color: var(--bg-section);
+
+    overflow: hidden;
+}
+
+
+.input-modal span {
+    padding-left: 1em;
+
+    color: var(--gold);
+
+    font-family: Poppins, sans-serif;
+}
+
+
+.input-modal input {
+    width: 100%;
+    height: 100%;
+
+    box-sizing: border-box;
+
+    border: none;
+    outline: none;
+
+    padding: 0 0.7em;
+
+    background: transparent;
+
+    color: var(--text);
+
+    font-family: Poppins, sans-serif;
+
+    font-size: 1rem;
+}
+
+
+/* Remove setas do input number */
+
+.input-modal input::-webkit-inner-spin-button,
+.input-modal input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+
+    margin: 0;
+}
+
+
+/* =========================================================
+   BOTÃO CONFIRMAR
+========================================================= */
+
+.botao-confirmar {
+    width: 100%;
+
+    padding: 0.8em;
+
+    border: none;
+
+    border-radius: 0.5em;
+
+    background-color: var(--gold);
+
+    color: var(--bg-section);
+
+    font-family: Poppins, sans-serif;
+
+    font-size: 1rem;
+
+    cursor: pointer;
+
+    transition: 0.25s;
+}
+
+
+.botao-confirmar:hover {
+    background-color: var(--gold-light);
 }
 
 
