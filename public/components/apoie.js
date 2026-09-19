@@ -579,3 +579,172 @@ botaoCopiar.addEventListener("click", async () => {
     }
 
 });
+
+// ==========================================
+// COMPARTILHAMENTO DO SITE
+// ==========================================
+
+const botaoWhatsapp = document.querySelector(".whatsapp");
+const botaoInstagram = document.querySelector(".instagram");
+const botaoCopiarLink = document.querySelector(".copiar_link");
+const botaoEmail = document.querySelector(".email");
+
+
+// Link da página atual
+const linkSite = window.location.href;
+
+
+// Mensagem utilizada no compartilhamento
+const mensagemCompartilhar =
+    "Conheça o Porto Ajuda e faça parte dessa iniciativa!";
+
+
+// ==========================================
+// WHATSAPP
+// ==========================================
+
+botaoWhatsapp.addEventListener("click", () => {
+
+    const texto =
+        `${mensagemCompartilhar}\n\n${linkSite}`;
+
+    const urlWhatsapp =
+        `https://wa.me/?text=${encodeURIComponent(texto)}`;
+
+    window.open(
+        urlWhatsapp,
+        "_blank"
+    );
+
+});
+
+
+// ==========================================
+// COPIAR LINK
+// ==========================================
+
+botaoCopiarLink.addEventListener("click", async () => {
+
+    try {
+
+        await navigator.clipboard.writeText(linkSite);
+
+        botaoCopiarLink.textContent = "Link copiado!";
+
+        setTimeout(() => {
+
+            botaoCopiarLink.textContent = "Copiar Link";
+
+        }, 2000);
+
+    } catch (erro) {
+
+        // Fallback para navegadores mais antigos
+
+        const campo =
+            document.createElement("input");
+
+        campo.value = linkSite;
+
+        document.body.appendChild(campo);
+
+        campo.select();
+
+        document.execCommand("copy");
+
+        campo.remove();
+
+        botaoCopiarLink.textContent = "Link copiado!";
+
+        setTimeout(() => {
+
+            botaoCopiarLink.textContent = "Copiar Link";
+
+        }, 2000);
+
+    }
+
+});
+
+
+// ==========================================
+// EMAIL
+// ==========================================
+
+botaoEmail.addEventListener("click", () => {
+
+    const assunto =
+        "Conheça o Porto Ajuda";
+
+    const corpo =
+        `${mensagemCompartilhar}\n\n${linkSite}`;
+
+    const mailto =
+        `mailto:?subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(corpo)}`;
+
+    window.location.href = mailto;
+
+});
+
+
+// ==========================================
+// INSTAGRAM
+// ==========================================
+
+botaoInstagram.addEventListener("click", async () => {
+
+    // Em celulares/navegadores que suportam
+    // compartilhamento nativo
+
+    if (navigator.share) {
+
+        try {
+
+            await navigator.share({
+
+                title: "Porto Ajuda",
+
+                text: mensagemCompartilhar,
+
+                url: linkSite
+
+            });
+
+        } catch (erro) {
+
+            // Usuário fechou o menu de compartilhamento.
+            // Não fazemos nada.
+
+        }
+
+        return;
+
+    }
+
+
+    // Se o navegador não tiver compartilhamento nativo,
+    // copia o link.
+
+    try {
+
+        await navigator.clipboard.writeText(linkSite);
+
+        botaoInstagram.textContent =
+            "Link copiado!";
+
+        setTimeout(() => {
+
+            botaoInstagram.textContent =
+                "Instagram";
+
+        }, 2000);
+
+    } catch (erro) {
+
+        alert(
+            "Copie o link desta página e compartilhe no Instagram."
+        );
+
+    }
+
+});
