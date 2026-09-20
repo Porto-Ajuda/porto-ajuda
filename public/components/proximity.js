@@ -122,24 +122,33 @@ function localizarUsuario() {
 
 }
 
-
-
 // Criar ongs
 
 async function carregarOngs() {
 
-    let localizacao = null;
+    const telaCarregamento = document.querySelector("#tela-carregamento");
 
     // Tenta localizar o usuário
-    try {
 
-        localizacao = await localizarUsuario();
+    const localizacao = await Promise.race([
 
-    } catch (erro) {
+        localizarUsuario(),
 
-        console.log("Localização do usuário não disponível.");
+        new Promise(resolve => {
 
-    }
+            setTimeout(() => {
+
+                console.log(
+                    "Tempo limite de localização atingido."
+                );
+
+                resolve(null);
+
+            }, 10000);
+
+        })
+
+    ]);
 
     ongs.forEach(ong => {
 
@@ -241,6 +250,9 @@ async function carregarOngs() {
             .appendChild(card);
 
     });
+
+    telaCarregamento.classList.add("oculto");
+
 }
 
 carregarOngs();

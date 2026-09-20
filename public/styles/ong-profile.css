@@ -49,12 +49,10 @@ body {
   color: var(--text);
 
   background:
-    radial-gradient(
-      circle at top,
+    radial-gradient(circle at top,
       var(--bg-card) 0%,
       var(--bg-section) 45%,
-      var(--bg-main) 100%
-    );
+      var(--bg-main) 100%);
 }
 
 
@@ -73,10 +71,8 @@ body {
   pointer-events: none;
 
   background-image:
-    radial-gradient(
-      var(--gold-soft) 1px,
-      transparent 1px
-    );
+    radial-gradient(var(--gold-soft) 1px,
+      transparent 1px);
 
   background-size: 90px 90px;
 
@@ -206,11 +202,9 @@ body {
 
   font-family: 'Cormorant Garamond', serif;
 
-  font-size: clamp(
-    4rem,
-    7vw,
-    8rem
-  );
+  font-size: clamp(4rem,
+      7vw,
+      8rem);
 
   line-height: .9;
 
@@ -305,11 +299,9 @@ body {
 #Doacao-footer:hover {
 
   background:
-    linear-gradient(
-      to right,
+    linear-gradient(to right,
       var(--gold),
-      var(--gold-light)
-    );
+      var(--gold-light));
 
   color: var(--bg-main);
 
@@ -337,22 +329,18 @@ body {
   position: relative;
 
   mask-image:
-    linear-gradient(
-      to right,
+    linear-gradient(to right,
       transparent 0%,
       black 8%,
       black 92%,
-      transparent 100%
-    );
+      transparent 100%);
 
   -webkit-mask-image:
-    linear-gradient(
-      to right,
+    linear-gradient(to right,
       transparent 0%,
       black 8%,
       black 92%,
-      transparent 100%
-    );
+      transparent 100%);
 }
 
 .carrossel-track {
@@ -411,12 +399,10 @@ body {
   height: 1px;
 
   background:
-    linear-gradient(
-      to right,
+    linear-gradient(to right,
       transparent,
       rgba(255, 255, 255, .25),
-      transparent
-    );
+      transparent);
 }
 
 .divider img {
@@ -451,8 +437,7 @@ body {
   display: grid;
 
   grid-template-columns:
-    minmax(0, 1fr)
-    minmax(300px, 400px);
+    minmax(0, 1fr) minmax(300px, 400px);
 
   column-gap: 80px;
 
@@ -716,12 +701,10 @@ body {
   height: 1px;
 
   background:
-    linear-gradient(
-      to right,
+    linear-gradient(to right,
       transparent,
       rgba(255, 255, 255, .25),
-      transparent
-    );
+      transparent);
 
   margin-bottom: 30px;
 }
@@ -864,5 +847,915 @@ body {
 
     margin-bottom: 60px;
   }
+
+}
+
+/* ===================================================== */
+/* MODAL DE DOAÇÃO */
+/* ===================================================== */
+
+#modal-doacao {
+  position: fixed;
+  inset: 0;
+
+  display: none;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+
+  background: rgba(10, 8, 25, 0.78);
+  backdrop-filter: blur(8px);
+
+  z-index: 9999;
+}
+
+
+/* ===================================================== */
+/* CAIXA */
+/* ===================================================== */
+
+.caixa-doacao {
+  width: min(620px, 94vw);
+  max-height: 90vh;
+
+  padding: 24px 28px;
+
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  background:
+    linear-gradient(145deg,
+      #3e2871,
+      #211a3e);
+
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 26px;
+
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.45),
+    0 0 30px rgba(74, 84, 146, 0.18);
+
+  color: var(--text);
+
+  animation: aparecerDoacao .25s ease;
+
+  /* Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(242, 170, 26, .45) transparent;
+}
+
+/* Barra de rolagem do modal */
+
+.caixa-doacao::-webkit-scrollbar {
+  width: 6px;
+}
+
+.caixa-doacao::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.caixa-doacao::-webkit-scrollbar-thumb {
+  background: rgba(242, 170, 26, .45);
+  border-radius: 20px;
+}
+
+.caixa-doacao::-webkit-scrollbar-thumb:hover {
+  background: var(--gold);
+}
+
+/* ===================================================== */
+/* CABEÇALHO */
+/* ===================================================== */
+
+.cabecalho-doacao {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 14px;
+}
+
+.cabecalho-doacao h2 {
+  margin: 0;
+
+  font-family: "Cormorant Garamond", serif;
+  font-size: 2rem;
+  font-weight: 700;
+
+  color: var(--gold);
+}
+
+.cabecalho-doacao p {
+  margin: 2px 0 0;
+
+  font-family: "Poppins", sans-serif;
+  font-size: .78rem;
+
+  color: var(--text-soft);
+}
+
+.fechar-doacao {
+  width: 34px;
+  height: 34px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: none;
+  border-radius: 50%;
+
+  background: rgba(255, 255, 255, .08);
+
+  color: var(--text-soft);
+
+  font-size: 1.4rem;
+
+  cursor: pointer;
+
+  transition: .2s ease;
+}
+
+.fechar-doacao:hover {
+  background: rgba(242, 170, 26, .15);
+  color: var(--gold);
+  transform: rotate(90deg);
+}
+
+
+/* ===================================================== */
+/* VALORES */
+/* ===================================================== */
+
+.valores-doacao {
+  margin-bottom: 16px;
+}
+
+.valores-doacao h3 {
+  margin: 0 0 8px;
+
+  font-size: .9rem;
+  font-weight: 500;
+
+  color: var(--text-soft);
+}
+
+.botoes-valores {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+
+.valor-pix,
+#botao-outro {
+  min-height: 38px;
+
+  border: 1px solid rgba(242, 170, 26, .35);
+  border-radius: 10px;
+
+  background: rgba(74, 84, 146, .35);
+
+  color: var(--text);
+
+  font-family: "Poppins", sans-serif;
+  font-size: .78rem;
+  font-weight: 500;
+
+  cursor: pointer;
+
+  transition: .2s ease;
+}
+
+.valor-pix:hover,
+#botao-outro:hover,
+.valor-pix.ativo {
+  background: var(--gold);
+  border-color: var(--gold);
+
+  color: #211a3e;
+
+  transform: translateY(-1px);
+}
+
+
+/* ===================================================== */
+/* RESULTADO PIX */
+/* ===================================================== */
+
+#resultado-pix {
+  display: none;
+
+  padding-top: 16px;
+
+  border-top: 1px solid rgba(255, 255, 255, .10);
+}
+
+.pix-titulo {
+  text-align: center;
+
+  margin-bottom: 10px;
+}
+
+.pix-titulo h3 {
+  margin: 0;
+
+  color: var(--gold);
+
+  font-size: 1.25rem;
+}
+
+.pix-titulo p {
+  margin: 2px 0 0;
+
+  color: var(--text-soft);
+
+  font-size: .76rem;
+}
+
+
+/* ===================================================== */
+/* QR CODE */
+/* ===================================================== */
+
+.qrcode {
+  width: 220px;
+  height: 220px;
+
+  margin: 10px auto 8px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 8px;
+
+  background: white;
+
+  border-radius: 20px;
+
+  box-shadow:
+    0 8px 25px rgba(0, 0, 0, .25);
+}
+
+.qrcode img,
+.qrcode canvas {
+  width: 204px !important;
+  height: 204px !important;
+
+  display: block;
+}
+
+
+/* ===================================================== */
+/* VALOR */
+/* ===================================================== */
+
+.valor-final {
+  text-align: center;
+
+  margin: 4px 0 14px;
+}
+
+.valor-final span {
+  display: block;
+
+  font-size: .72rem;
+
+  color: var(--text-soft);
+}
+
+.valor-final strong {
+  display: block;
+
+  margin-top: 1px;
+
+  font-size: 1.55rem;
+
+  color: var(--gold);
+}
+
+
+/* ===================================================== */
+/* CAMPOS PIX */
+/* ===================================================== */
+
+.campo-pix {
+  margin-top: 10px;
+}
+
+.campo-pix label {
+  display: block;
+
+  margin-bottom: 5px;
+
+  font-size: .75rem;
+  font-weight: 500;
+
+  color: var(--text-soft);
+}
+
+.linha-copiar {
+  display: flex;
+  gap: 8px;
+}
+
+.linha-copiar input,
+.linha-copiar textarea {
+  flex: 1;
+
+  min-width: 0;
+
+  border: 1px solid rgba(255, 255, 255, .10);
+  border-radius: 11px;
+
+  background: rgba(15, 13, 35, .38);
+
+  color: var(--text);
+
+  font-family: "Poppins", sans-serif;
+  font-size: .72rem;
+
+  outline: none;
+}
+
+.linha-copiar input {
+  height: 42px;
+
+  padding: 0 12px;
+}
+
+.linha-copiar textarea {
+  height: 52px;
+
+  padding: 8px 12px;
+
+  resize: none;
+}
+
+.linha-copiar input:focus,
+.linha-copiar textarea:focus {
+  border-color: rgba(242, 170, 26, .45);
+}
+
+
+/* ===================================================== */
+/* BOTÕES COPIAR */
+/* ===================================================== */
+
+.linha-copiar button {
+  flex: 0 0 78px;
+
+  border: none;
+  border-radius: 11px;
+
+  background: var(--secondary);
+
+  color: white;
+
+  font-family: "Poppins", sans-serif;
+  font-size: .72rem;
+  font-weight: 500;
+
+  cursor: pointer;
+
+  transition: .2s ease;
+}
+
+.linha-copiar button:hover {
+  background: var(--gold);
+  color: #211a3e;
+}
+
+#pix-copia-cola {
+    font-family: "Poppins", sans-serif;
+    font-size: .68rem;
+    letter-spacing: .01em;
+    line-height: 1.45;
+
+    background: rgba(15, 13, 35, .55);
+
+    color: #d7d7d7;
+
+    border: 1px solid rgba(255, 255, 255, .10);
+}
+
+/* ===================================================== */
+/* MENSAGEM */
+/* ===================================================== */
+
+.mensagem-copia {
+  min-height: 16px;
+
+  margin: 6px 0 0;
+
+  text-align: center;
+
+  font-size: .7rem;
+
+  color: var(--gold-light);
+}
+
+
+/* ===================================================== */
+/* ANIMAÇÃO */
+/* ===================================================== */
+
+@keyframes aparecerDoacao {
+
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+}
+
+/* ===================================================== */
+/* MODAL - OUTRO VALOR */
+/* ===================================================== */
+
+.modal-valor {
+    position: fixed;
+    inset: 0;
+
+    display: none;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+
+    background: rgba(10, 8, 25, .78);
+    backdrop-filter: blur(8px);
+
+    z-index: 10000;
+}
+
+
+/* ===================================================== */
+/* CAIXA */
+/* ===================================================== */
+
+.caixa-valor {
+    position: relative;
+
+    width: min(420px, 92vw);
+
+    padding: 30px;
+
+    background:
+        linear-gradient(
+            145deg,
+            #3e2871,
+            #211a3e
+        );
+
+    border: 1px solid rgba(255, 255, 255, .12);
+    border-radius: 26px;
+
+    box-shadow:
+        0 20px 60px rgba(0, 0, 0, .5),
+        0 0 30px rgba(74, 84, 146, .18);
+
+    color: var(--text);
+
+    animation: aparecerValor .25s ease;
+}
+
+
+/* ===================================================== */
+/* BOTÃO FECHAR */
+/* ===================================================== */
+
+.fechar-modal {
+    position: absolute;
+
+    top: 14px;
+    right: 14px;
+
+    width: 34px;
+    height: 34px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 1px solid rgba(255, 255, 255, .10);
+    border-radius: 50%;
+
+    background: rgba(255, 255, 255, .06);
+
+    color: var(--text-soft);
+
+    font-size: 1.3rem;
+    line-height: 1;
+
+    cursor: pointer;
+
+    transition: .2s ease;
+}
+
+.fechar-modal:hover {
+    background: rgba(242, 170, 26, .15);
+
+    border-color: var(--gold);
+
+    color: var(--gold);
+
+    transform: rotate(90deg);
+}
+
+
+/* ===================================================== */
+/* TÍTULO */
+/* ===================================================== */
+
+.caixa-valor h2 {
+    margin: 0 40px 5px 0;
+
+    font-family: "Cormorant Garamond", serif;
+
+    font-size: 2rem;
+    font-weight: 700;
+
+    color: var(--gold);
+}
+
+.caixa-valor p {
+    margin: 0 0 20px;
+
+    font-family: "Poppins", sans-serif;
+
+    font-size: .85rem;
+
+    color: var(--text-soft);
+}
+
+
+/* ===================================================== */
+/* CAMPO DO VALOR */
+/* ===================================================== */
+
+.campo-valor {
+    display: flex;
+    align-items: center;
+
+    width: 100%;
+    height: 52px;
+
+    margin-bottom: 15px;
+
+    padding: 0 14px;
+
+    box-sizing: border-box;
+
+    background: rgba(15, 13, 35, .45);
+
+    border: 1px solid rgba(255, 255, 255, .12);
+    border-radius: 13px;
+
+    transition: .2s ease;
+}
+
+.campo-valor:focus-within {
+    border-color: rgba(242, 170, 26, .65);
+
+    box-shadow:
+        0 0 0 3px rgba(242, 170, 26, .08);
+}
+
+
+/* R$ */
+
+.campo-valor span {
+    margin-right: 8px;
+
+    color: var(--gold);
+
+    font-family: "Poppins", sans-serif;
+
+    font-size: .9rem;
+    font-weight: 600;
+}
+
+
+/* INPUT */
+
+.campo-valor input {
+    width: 100%;
+
+    padding: 0;
+
+    border: none;
+    outline: none;
+
+    background: transparent;
+
+    color: var(--text);
+
+    font-family: "Poppins", sans-serif;
+
+    font-size: .95rem;
+}
+
+.campo-valor input::placeholder {
+    color: rgba(215, 215, 215, .45);
+}
+
+
+/* ===================================================== */
+/* BOTÃO GERAR PIX */
+/* ===================================================== */
+
+#gerar-pix {
+    width: 100%;
+    height: 46px;
+
+    border: 1px solid rgba(242, 170, 26, .45);
+    border-radius: 12px;
+
+    background:
+        linear-gradient(
+            145deg,
+            #F9C86B,
+            #F2AA1A
+        );
+
+    color: #211a3e;
+
+    font-family: "Poppins", sans-serif;
+
+    font-size: .85rem;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    box-shadow:
+        0 5px 15px rgba(242, 170, 26, .15);
+
+    transition:
+        transform .2s ease,
+        box-shadow .2s ease,
+        filter .2s ease;
+}
+
+#gerar-pix:hover {
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 8px 20px rgba(242, 170, 26, .25);
+
+    filter: brightness(1.05);
+}
+
+#gerar-pix:active {
+    transform: translateY(0);
+}
+
+
+/* ===================================================== */
+/* ANIMAÇÃO */
+/* ===================================================== */
+
+@keyframes aparecerValor {
+
+    from {
+        opacity: 0;
+        transform: translateY(10px) scale(.96);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+
+}
+
+
+/* ===================================================== */
+/* RESPONSIVO */
+/* ===================================================== */
+
+@media (max-width: 600px) {
+
+  #modal-doacao {
+    padding: 10px;
+  }
+
+  .caixa-doacao {
+    width: 96vw;
+
+    padding: 20px 18px;
+
+    border-radius: 20px;
+  }
+
+  .cabecalho-doacao h2 {
+    font-size: 1.7rem;
+  }
+
+  .botoes-valores {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .qrcode {
+    width: 200px;
+    height: 200px;
+  }
+
+  .qrcode img,
+  .qrcode canvas {
+    width: 184px !important;
+    height: 184px !important;
+  }
+
+  .linha-copiar button {
+    flex-basis: 68px;
+  }
+
+}
+
+/* ===================================================== */
+/* AVISO PIX */
+/* ===================================================== */
+
+.aviso-pix {
+    position: fixed;
+    inset: 0;
+
+    display: none;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+
+    background: rgba(10, 8, 25, .72);
+    backdrop-filter: blur(7px);
+
+    z-index: 11000;
+}
+
+
+/* ===================================================== */
+/* CAIXA */
+/* ===================================================== */
+
+.caixa-aviso-pix {
+    width: min(390px, 90vw);
+
+    padding: 28px 26px;
+
+    text-align: center;
+
+    background:
+        linear-gradient(
+            145deg,
+            #3e2871,
+            #211a3e
+        );
+
+    border: 1px solid rgba(242, 170, 26, .28);
+    border-radius: 24px;
+
+    box-shadow:
+        0 20px 60px rgba(0, 0, 0, .5),
+        0 0 30px rgba(242, 170, 26, .08);
+
+    animation: aparecerAviso .25s ease;
+}
+
+
+/* ===================================================== */
+/* ÍCONE */
+/* ===================================================== */
+
+.icone-aviso-pix {
+    width: 48px;
+    height: 48px;
+
+    margin: 0 auto 14px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background:
+        rgba(242, 170, 26, .12);
+
+    border: 1px solid rgba(242, 170, 26, .35);
+
+    color: var(--gold);
+
+    font-family: "Poppins", sans-serif;
+
+    font-size: 1.4rem;
+    font-weight: 700;
+}
+
+
+/* ===================================================== */
+/* TÍTULO */
+/* ===================================================== */
+
+.caixa-aviso-pix h2 {
+    margin: 0 0 8px;
+
+    font-family: "Cormorant Garamond", serif;
+
+    font-size: 1.8rem;
+    font-weight: 700;
+
+    color: var(--gold);
+}
+
+
+/* ===================================================== */
+/* TEXTO */
+/* ===================================================== */
+
+.caixa-aviso-pix p {
+    margin: 0 auto 22px;
+
+    max-width: 320px;
+
+    font-family: "Poppins", sans-serif;
+
+    font-size: .82rem;
+    line-height: 1.6;
+
+    color: var(--text-soft);
+}
+
+
+/* ===================================================== */
+/* BOTÃO */
+/* ===================================================== */
+
+#fechar-aviso-pix {
+    width: 100%;
+    height: 44px;
+
+    border: 1px solid rgba(242, 170, 26, .4);
+    border-radius: 11px;
+
+    background:
+        linear-gradient(
+            145deg,
+            #5B68AC,
+            #4A5492
+        );
+
+    color: white;
+
+    font-family: "Poppins", sans-serif;
+
+    font-size: .8rem;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: .2s ease;
+}
+
+#fechar-aviso-pix:hover {
+    background:
+        linear-gradient(
+            145deg,
+            #F9C86B,
+            #F2AA1A
+        );
+
+    color: #211a3e;
+
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 6px 18px rgba(242, 170, 26, .18);
+}
+
+
+/* ===================================================== */
+/* ANIMAÇÃO */
+/* ===================================================== */
+
+@keyframes aparecerAviso {
+
+    from {
+        opacity: 0;
+        transform: translateY(10px) scale(.96);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 
 }

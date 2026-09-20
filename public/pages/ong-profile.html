@@ -9,6 +9,7 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>\
 
   <link rel="stylesheet" href="../styles/ong-profile.css" />
   <link rel="stylesheet" href="../styles/geral.css">
@@ -81,8 +82,7 @@
 
             <div id="categoria">
 
-              <svg width="20" height="20" viewBox="0 0 13 13"
-                fill="none" xmlns="http://www.w3.org/2000/svg">
+              <svg width="20" height="20" viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg">
 
                 <path
                   d="M8.28665 5.52197C8.24611 5.46715 8.2255 5.39984 8.22781 5.32991C8.23013 5.25999 8.25527 5.19115 8.29953 5.13347C8.34379 5.07579 8.40484 5.03231 8.47373 5.00944C8.54263 4.98656 8.61572 4.98547 8.6823 5.00635C8.8625 5.06349 9.06056 5.06108 9.24735 4.99949C9.43414 4.9379 9.59979 4.82037 9.71991 4.66421C9.84003 4.50805 9.90829 4.3215 9.91463 4.13202C9.92098 3.94254 9.86508 3.76014 9.75516 3.61165C9.64523 3.46317 9.48707 3.35642 9.304 3.30717C9.12092 3.25792 8.92257 3.26874 8.73814 3.33804C8.55372 3.40734 8.39295 3.53145 8.27951 3.69212C8.16607 3.8528 8.10594 4.04153 8.10798 4.23056C8.10838 4.27342 8.10015 4.31652 8.08373 4.35737C8.06732 4.39822 8.04306 4.43606 8.01233 4.46868C7.98159 4.5013 7.94497 4.52807 7.90459 4.5475C7.86421 4.56692 7.82085 4.5786 7.77697 4.58186C7.7331 4.58513 7.68958 4.57993 7.64889 4.56655C7.6082 4.55316 7.57115 4.53188 7.53984 4.50387C7.50853 4.47587 7.48358 4.44172 7.46641 4.40337C7.44925 4.36502 7.4402 4.32321 7.43979 4.28034C7.43655 3.95178 7.54129 3.62382 7.73864 3.34469C7.93598 3.06555 8.2155 2.84996 8.53608 2.72965C8.85667 2.60934 9.20142 2.59067 9.5196 2.67634C9.83777 2.76201 10.1126 2.94753 10.3036 3.20561C10.4947 3.46368 10.5919 3.78069 10.581 4.11002C10.57 4.43934 10.4515 4.76359 10.2428 5.03508C10.0341 5.30658 9.74634 5.51097 9.42175 5.61823C9.09716 5.72548 8.7529 5.72992 8.43961 5.63089C8.37763 5.6111 8.32436 5.57317 8.28665 5.52197Z"
@@ -119,11 +119,9 @@
 
           <!-- Doação -->
 
-          <a href="https://venge.io"
-            id="Doacao"
-            class="btn">
+          <button id="Doacao" class="btn">
             Realizar doação
-          </a>
+          </button>
 
         </div>
 
@@ -136,21 +134,13 @@
 
           <div class="carrossel-track">
 
-            <img
-              src="../assets/ong1.jpg"
-              alt="Imagem da iniciativa">
+            <img src="../assets/ong1.jpg" alt="Imagem da iniciativa">
 
-            <img
-              src="../assets/ong2.jpg"
-              alt="Imagem da iniciativa">
+            <img src="../assets/ong2.jpg" alt="Imagem da iniciativa">
 
-            <img
-              src="../assets/ong3.png"
-              alt="Imagem da iniciativa">
+            <img src="../assets/ong3.png" alt="Imagem da iniciativa">
 
-            <img
-              src="../assets/ong4.jpg"
-              alt="Imagem da iniciativa">
+            <img src="../assets/ong4.jpg" alt="Imagem da iniciativa">
 
           </div>
 
@@ -167,10 +157,7 @@
 
     <div class="divider">
 
-      <img
-        class="lua1"
-        src="../assets/moon.png"
-        alt="">
+      <img class="lua1" src="../assets/moon.png" alt="">
 
     </div>
 
@@ -235,36 +222,18 @@
           <h2>ODS relacionadas</h2>
         </div>
 
-        <div
-          class="ods"
-          id="ods-container">
+        <div class="ods" id="ods-container">
         </div>
 
       </div>
 
     </div>
 
-
-    <!-- ========================= -->
-    <!-- DOAÇÃO -->
-    <!-- ========================= -->
-
-    <a
-      href="https://venge.io"
-      id="Doacao-footer"
-      class="btn">
-      Doar para a iniciativa
-    </a>
-
-
     <!-- ========================= -->
     <!-- COMPARTILHAR -->
     <!-- ========================= -->
 
-    <a
-      href="#"
-      class="compartilhar"
-      id="compartilhar">
+    <a href="#" class="compartilhar" id="compartilhar">
 
       <span>
         Compartilhar iniciativa
@@ -279,22 +248,12 @@
 
     <div id="regiao">
 
-      <svg
-        width="25"
-        height="25"
-        viewBox="0 0 24 24"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg">
+      <svg width="25" height="25" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 
-        <path
-          d="M12 21C12 21 19 14.5 19 8.5C19 4.91 15.87 2 12 2C8.13 2 5 4.91 5 8.5C5 14.5 12 21 12 21Z"
+        <path d="M12 21C12 21 19 14.5 19 8.5C19 4.91 15.87 2 12 2C8.13 2 5 4.91 5 8.5C5 14.5 12 21 12 21Z"
           fill="#929292" />
 
-        <circle
-          cx="12"
-          cy="8.5"
-          r="3"
-          fill="#161928" />
+        <circle cx="12" cy="8.5" r="3" fill="#161928" />
 
       </svg>
 
@@ -313,6 +272,206 @@
   <!-- ========================= -->
 
   <footer id="footer"></footer>
+
+
+  <!-- ========================================================= -->
+  <!-- MODAL DE DOAÇÃO -->
+  <!-- ========================================================= -->
+
+  <div id="modal-doacao" class="modal-doacao">
+
+    <div class="caixa-doacao">
+
+      <!-- CABEÇALHO -->
+
+      <div class="cabecalho-doacao">
+
+        <div>
+          <h2>Realizar doação</h2>
+
+          <p id="nome-ong-doacao">
+            Doação para a ONG
+          </p>
+        </div>
+
+        <button id="fechar-doacao" class="fechar-doacao" type="button">
+          &times;
+        </button>
+
+      </div>
+
+
+      <!-- VALORES -->
+
+      <div class="valores-doacao">
+
+        <h3>Escolha um valor</h3>
+
+        <div class="botoes-valores">
+
+          <button class="valor-pix" data-valor="10" type="button">
+            R$ 10
+          </button>
+
+          <button class="valor-pix" data-valor="20" type="button">
+            R$ 20
+          </button>
+
+          <button class="valor-pix" data-valor="50" type="button">
+            R$ 50
+          </button>
+
+          <button id="botao-outro" type="button">
+            Outro valor
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <!-- RESULTADO PIX -->
+
+      <div id="resultado-pix" class="resultado-pix">
+
+        <div class="pix-titulo">
+
+          <h3>Pagamento via PIX</h3>
+
+          <p>
+            Escaneie o QR Code ou use o PIX Copia e Cola.
+          </p>
+
+        </div>
+
+
+        <!-- QR CODE -->
+
+        <div id="qrcode" class="qrcode"></div>
+
+
+        <!-- VALOR -->
+
+        <div class="valor-final">
+
+          <span>Valor da doação</span>
+
+          <strong id="valor-exibido">
+            R$ 0,00
+          </strong>
+
+        </div>
+
+
+        <!-- CHAVE PIX -->
+
+        <div class="campo-pix">
+
+          <label for="chave-pix">
+            Chave PIX
+          </label>
+
+          <div class="linha-copiar">
+
+            <input id="chave-pix" type="text" readonly>
+
+            <button id="copiar-chave" type="button">
+              Copiar
+            </button>
+
+          </div>
+
+        </div>
+
+
+        <!-- PIX COPIA E COLA -->
+
+        <div class="campo-pix">
+
+          <label for="pix-copia-cola">
+            PIX Copia e Cola
+          </label>
+
+          <div class="linha-copiar">
+
+            <textarea id="pix-copia-cola" readonly rows="3"></textarea>
+
+            <button id="copiar-pix" type="button">
+              Copiar
+            </button>
+
+          </div>
+
+        </div>
+
+
+        <!-- MENSAGEM -->
+
+        <p id="mensagem-copia" class="mensagem-copia"></p>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- ========================================================= -->
+  <!-- MODAL OUTRO VALOR -->
+  <!-- ========================================================= -->
+
+  <div id="modal-valor" class="modal-valor">
+
+    <div class="caixa-valor">
+
+      <button id="fechar-modal" class="fechar-modal" type="button">
+        &times;
+      </button>
+
+      <h2>Escolha o valor</h2>
+
+      <p>
+        Digite o valor que deseja doar.
+      </p>
+
+      <div class="campo-valor">
+
+        <span>R$</span>
+
+        <input id="valor" type="number" min="1" step="0.01" placeholder="0,00">
+
+      </div>
+
+      <button id="gerar-pix" class="btn" type="button">
+        Gerar PIX
+      </button>
+
+    </div>
+
+  </div>
+
+  <!-- AVISO PIX -->
+  <div id="aviso-pix" class="aviso-pix">
+
+    <div class="caixa-aviso-pix">
+
+      <div class="icone-aviso-pix">
+        !
+      </div>
+
+      <h2>PIX não disponível</h2>
+
+      <p id="texto-aviso-pix">
+        Esta ONG ainda não possui uma chave PIX cadastrada.
+      </p>
+
+      <button id="fechar-aviso-pix" type="button">
+        Entendi
+      </button>
+
+    </div>
+
+  </div>
 
 </body>
 

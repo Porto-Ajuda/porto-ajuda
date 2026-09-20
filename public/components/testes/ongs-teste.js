@@ -29,14 +29,16 @@ const ongs = [
         latitude: -24.024220,
         longitude: -46.479764,
 
-        ods: [2, 3, 10]
+        ods: [2, 3, 10],
+
+        pix: null
     },
 
 
     {
         id: 2,
         nome: "CRAS",
-        tipo: "Serviço público",
+        tipo: "PUBLICO",
         categoria: "Assistência Social",
 
         descricao:
@@ -59,7 +61,9 @@ const ongs = [
         latitude: -24.019597,
         longitude: -46.476472,
 
-        ods: [1, 3, 10, 16]
+        ods: [1, 3, 10, 16],
+
+        pix: null
     },
 
 
@@ -93,7 +97,9 @@ const ongs = [
         latitude: -23.964563,
         longitude: -46.380521,
 
-        ods: [1, 3, 10, 16]
+        ods: [1, 3, 10, 16],
+
+        pix: null
     },
 
 
@@ -123,7 +129,9 @@ const ongs = [
         latitude: -23.967060,
         longitude: -46.404049,
 
-        ods: [1, 3, 10, 16]
+        ods: [1, 3, 10, 16],
+
+        pix: null
     },
 
 
@@ -153,7 +161,9 @@ const ongs = [
         latitude: -23.949897,
         longitude: -46.397579,
 
-        ods: [1, 3, 10, 16]
+        ods: [1, 3, 10, 16],
+
+        pix: null
     },
 
 
@@ -183,7 +193,9 @@ const ongs = [
         latitude: -23.939570,
         longitude: -46.418360,
 
-        ods: [1, 3, 10, 16]
+        ods: [1, 3, 10, 16],
+
+        pix: null
     },
 
 
@@ -213,7 +225,9 @@ const ongs = [
         latitude: -23.985907,
         longitude: -46.486263,
 
-        ods: [1, 3, 10, 16]
+        ods: [1, 3, 10, 16],
+
+        pix: null
     },
 
 
@@ -243,7 +257,9 @@ const ongs = [
         latitude: -23.950637,
         longitude: -46.465868,
 
-        ods: [1, 3, 10, 16]
+        ods: [1, 3, 10, 16],
+
+        pix: null
     },
 
 
@@ -274,7 +290,9 @@ const ongs = [
         latitude: -23.967479,
         longitude: -46.391505,
 
-        ods: [1, 3, 10, 16]
+        ods: [1, 3, 10, 16],
+
+        pix: null
     },
 
 
@@ -304,7 +322,9 @@ const ongs = [
         latitude: -23.967280,
         longitude: -46.376197,
 
-        ods: [1, 2, 10, 17]
+        ods: [1, 2, 10, 17],
+
+        pix: null
     },
 
 
@@ -338,7 +358,9 @@ const ongs = [
         latitude: -23.961586,
         longitude: -46.315634,
 
-        ods: [1, 3, 10, 16]
+        ods: [1, 3, 10, 16],
+
+        pix: null
     },
 
 
@@ -368,7 +390,9 @@ const ongs = [
         latitude: null,
         longitude: null,
 
-        ods: [1, 3, 10, 16]
+        ods: [1, 3, 10, 16],
+
+        pix: null
     },
 
 
@@ -398,7 +422,9 @@ const ongs = [
         latitude: -23.940977,
         longitude: -46.364981,
 
-        ods: [1, 3, 10, 16]
+        ods: [1, 3, 10, 16],
+
+        pix: null
     },
 
 
@@ -428,7 +454,9 @@ const ongs = [
         latitude: -23.939668,
         longitude: -46.388126,
 
-        ods: [1, 3, 10, 16]
+        ods: [1, 3, 10, 16],
+
+        pix: null
     },
 
 
@@ -458,7 +486,9 @@ const ongs = [
         latitude: -23.929887,
         longitude: -46.365697,
 
-        ods: [1, 3, 10, 16]
+        ods: [1, 3, 10, 16],
+
+        pix: null
     },
 
 
@@ -488,7 +518,9 @@ const ongs = [
         latitude: -23.942676,
         longitude: -46.346748,
 
-        ods: [1, 3, 10, 16]
+        ods: [1, 3, 10, 16],
+
+        pix: null
     },
 
 
@@ -521,7 +553,9 @@ const ongs = [
         latitude: -23.961212,
         longitude: -46.309183,
 
-        ods: [3, 11, 15]
+        ods: [3, 11, 15],
+
+        pix: null
     },
 
 
@@ -550,7 +584,9 @@ const ongs = [
         latitude: -23.955434,
         longitude: -46.345885,
 
-        ods: [3, 11, 15]
+        ods: [3, 11, 15],
+
+        pix: null
     },
 
 
@@ -579,7 +615,9 @@ const ongs = [
         latitude: -23.951428,
         longitude: -46.334620,
 
-        ods: [3, 11, 15]
+        ods: [3, 11, 15],
+
+        pix: null
     },
 
 
@@ -613,7 +651,9 @@ const ongs = [
         latitude: -23.947518,
         longitude: -46.320458,
 
-        ods: [11, 12, 13, 15]
+        ods: [11, 12, 13, 15],
+
+        pix: null
     },
 
 
@@ -647,7 +687,9 @@ const ongs = [
         latitude: -23.950810,
         longitude: -46.322802,
 
-        ods: [1, 2, 10, 17]
+        ods: [1, 2, 10, 17],
+
+        pix: null
     },
 
 
@@ -682,7 +724,13 @@ const ongs = [
 
         imagem: "../assets/maos-que-ajudam.png",
 
-        ods: [3, 10, 11]
+        ods: [3, 10, 11],
+
+        pix: {
+            chave: "tccportoajuda@gmail.com",
+            nome: "PORTO AJUDA",
+            cidade: "PRAIA GRANDE"
+        }
     }
 
 ];
