@@ -99,7 +99,11 @@ const ongs = [
 
         ods: [1, 3, 10, 16],
 
-        pix: null
+        pix: {
+            chave: "tccportoajuda@gmail.com",
+            nome: "PORTO AJUDA",
+            cidade: "PRAIA GRANDE"
+        }
     },
 
 
@@ -726,11 +730,7 @@ const ongs = [
 
         ods: [3, 10, 11],
 
-        pix: {
-            chave: "tccportoajuda@gmail.com",
-            nome: "PORTO AJUDA",
-            cidade: "PRAIA GRANDE"
-        }
+        pix: null
     }
 
 ];

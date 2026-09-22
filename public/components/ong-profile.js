@@ -1043,14 +1043,28 @@ document.addEventListener("DOMContentLoaded", () => {
                     valor <= 0
                 ) {
 
-                    alert(
-                        "Digite um valor maior que R$ 0,00."
-                    );
+                    const textoAvisoPix =
+                        document.querySelector("#texto-aviso-pix");
+
+                    const avisoPix =
+                        document.querySelector("#aviso-pix");
+
+                    if (textoAvisoPix) {
+
+                        textoAvisoPix.textContent =
+                            "Digite um valor maior que R$ 0,00.";
+
+                    }
+
+                    if (avisoPix) {
+
+                        avisoPix.style.display = "flex";
+
+                    }
 
                     inputValor.focus();
 
                     return;
-
                 }
 
 
