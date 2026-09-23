@@ -943,121 +943,87 @@ footer {
   }
 }
 
-
-
-
-
-/* =====================================================
-   ACESSIBILIDADE - PORTO AJUDA
+/* =========================================================
+   ACESSIBILIDADE
+   PORTO AJUDA
    MODO CLARO + ALTO CONTRASTE
-===================================================== */
+========================================================= */
 
 
-/* =====================================================
-   MODO CLARO
-===================================================== */
+/* =========================================================
+   PALETA DO MODO CLARO
+========================================================= */
 
 body.modo-claro {
 
-    /* =========================
-       FUNDOS
-    ========================= */
-
+    /* FUNDOS */
     --bg-main: #DCE8E4;
     --bg-section: #A8D3BA;
     --bg-card: #81B09B;
     --bg-card-hover: #63A27A;
 
-    /* =========================
-       CORES PRINCIPAIS
-    ========================= */
-
+    /* CORES PRINCIPAIS */
     --primary: #679D6B;
     --secondary: #63A27A;
 
-    /* =========================
-       DOURADOS / DESTAQUES
-    ========================= */
-
+    /* DOURADOS */
     --gold: #FFBB35;
+    --gold-dark: #DDC69E;
     --gold-light: #FFDA8B;
+    --gold-soft: #FFF9DC;
 
-    /* =========================
-       TEXTOS
-    ========================= */
+    /* TEXTOS */
+    --text: #1A241E;
+    --text-soft: #35443B;
 
-    --text-main: #1A241E;
-    --text-secondary: #35443B;
-
-    /* =========================
-       CORES CLARAS
-    ========================= */
-
+    /* AUXILIARES */
     --white: #F6F5EE;
     --cream: #FFF9DC;
 }
 
 
-/* =====================================================
-   FUNDO GERAL
-===================================================== */
+/* =========================================================
+   MODO CLARO — BASE
+========================================================= */
 
 body.modo-claro {
 
-    background-color: var(--bg-main);
-    color: var(--text-main);
+    color: var(--text);
+
+    background:
+        radial-gradient(
+            circle at top,
+            var(--bg-card) 0%,
+            var(--bg-section) 45%,
+            var(--bg-main) 100%
+        );
 
 }
 
 
-/* =====================================================
-   SEÇÕES
-===================================================== */
+/* =========================================================
+   FUNDO DECORATIVO — ESTRELAS
+========================================================= */
 
-body.modo-claro section {
+body.modo-claro .stars {
 
-    background-color: var(--bg-section);
-    color: var(--text-main);
+    background-image:
+        radial-gradient(
+            #679D6B 1px,
+            transparent 1px
+        );
 
+    opacity: .15;
 }
 
 
-/* =====================================================
-   CARDS
-===================================================== */
+/* =========================================================
+   TEXTOS GERAIS
+========================================================= */
 
-body.modo-claro .card {
-
-    background-color: var(--bg-card);
-    color: var(--text-main);
-
+body.modo-claro p {
+    color: var(--text-soft);
 }
-
-
-body.modo-claro .card:hover {
-
-    background-color: var(--bg-card-hover);
-
-}
-
-
-/* =====================================================
-   TEXTOS
-===================================================== */
-
-body.modo-claro p,
-body.modo-claro span,
-body.modo-claro li,
-body.modo-claro label {
-
-    color: var(--text-main);
-
-}
-
-
-/* =====================================================
-   TÍTULOS
-===================================================== */
 
 body.modo-claro h1,
 body.modo-claro h2,
@@ -1065,275 +1031,1195 @@ body.modo-claro h3,
 body.modo-claro h4,
 body.modo-claro h5,
 body.modo-claro h6 {
+    color: var(--text);
+}
 
-    color: var(--text-secondary);
+
+/* =========================================================
+   TÍTULOS / DESTAQUES
+========================================================= */
+
+body.modo-claro .sobre-titulo,
+body.modo-claro .sobre-section-titulo,
+body.modo-claro .section h2,
+body.modo-claro .hero h1,
+body.modo-claro .pilar h3,
+body.modo-claro .modal-titulo,
+body.modo-claro .modal-card-titulo {
+    color: var(--text);
+}
+
+
+body.modo-claro .sobre-titulo span,
+body.modo-claro .sobre-section-titulo span,
+body.modo-claro .hero h1 span,
+body.modo-claro .section h2 span,
+body.modo-claro .section-tag,
+body.modo-claro .participe,
+body.modo-claro .titulo_participe {
+    color: #679D6B;
+}
+
+
+/* =========================================================
+   LABELS
+========================================================= */
+
+body.modo-claro .sobre-label {
+    color: var(--text-soft);
+}
+
+body.modo-claro .sobre-label::before,
+body.modo-claro .sobre-label::after {
+    background: rgba(26, 36, 30, .30);
+}
+
+
+/* =========================================================
+   DIVISOR
+========================================================= */
+
+body.modo-claro .divider::before {
+
+    background:
+        linear-gradient(
+            to right,
+            transparent,
+            rgba(26, 36, 30, .30),
+            transparent
+        );
+}
+
+
+/* Fundos atrás do símbolo do divisor */
+
+body.modo-claro .esperanca .divider img {
+    background: #A8D3BA;
+}
+
+body.modo-claro .destaque .divider img {
+    background: #81B09B;
+}
+
+body.modo-claro .voluntario .divider img {
+    background: #679D6B;
+}
+
+
+/* =========================================================
+   MISSÃO
+========================================================= */
+
+body.modo-claro .missao-card {
+
+    background:
+        linear-gradient(
+            to bottom,
+            rgba(103, 157, 107, .20),
+            rgba(168, 211, 186, .75)
+        );
+
+    border-color: rgba(26, 36, 30, .15);
 
 }
 
 
-/* =====================================================
-   LINKS
-===================================================== */
+body.modo-claro .missao-card:hover {
 
-body.modo-claro a {
+    border-color: rgba(103, 157, 107, .55);
 
-    color: var(--primary);
-
-}
-
-
-body.modo-claro a:hover {
-
-    color: var(--secondary);
+    box-shadow:
+        0 20px 50px rgba(26, 36, 30, .15),
+        0 0 40px rgba(103, 157, 107, .12);
 
 }
 
 
-/* =====================================================
-   BOTÕES
-===================================================== */
+body.modo-claro .missao-icone {
 
-body.modo-claro button {
+    border-color: rgba(103, 157, 107, .65);
 
-    background-color: var(--primary);
-    color: #ffffff;
-    border: 1px solid var(--primary);
+    background: rgba(103, 157, 107, .10);
 
-}
-
-
-body.modo-claro button:hover {
-
-    background-color: var(--secondary);
-    border-color: var(--secondary);
+    box-shadow:
+        0 0 25px rgba(103, 157, 107, .15);
 
 }
 
 
-/* =====================================================
-   INPUTS
-===================================================== */
+body.modo-claro .missao-icone svg {
+    stroke: #679D6B;
+}
 
-body.modo-claro input,
-body.modo-claro textarea,
-body.modo-claro select {
 
-    background-color: var(--white);
-    color: var(--text-main);
+body.modo-claro .missao-texto p {
+    color: var(--text-soft);
+}
 
-    border: 2px solid var(--primary);
+
+body.modo-claro .missao-texto strong {
+    color: #679D6B;
+}
+
+
+body.modo-claro .missao-texto p + p {
+    color: rgba(53, 68, 59, .75);
+}
+
+
+/* =========================================================
+   PILARES
+========================================================= */
+
+body.modo-claro .pilar {
+
+    background:
+        linear-gradient(
+            to bottom,
+            rgba(103, 157, 107, .20),
+            rgba(168, 211, 186, .85)
+        );
+
+    border-color: rgba(26, 36, 30, .12);
 
 }
 
 
-/* =====================================================
-   PLACEHOLDER
-===================================================== */
+body.modo-claro .pilar:hover {
 
-body.modo-claro input::placeholder,
-body.modo-claro textarea::placeholder {
+    background:
+        linear-gradient(
+            to bottom,
+            rgba(99, 162, 122, .35),
+            rgba(129, 176, 155, .90)
+        );
+
+    border-color: rgba(103, 157, 107, .45);
+
+    box-shadow:
+        0 20px 40px rgba(26, 36, 30, .18),
+        0 0 30px rgba(103, 157, 107, .12);
+
+}
+
+
+body.modo-claro .pilar-icone {
+
+    border-color: rgba(103, 157, 107, .55);
+
+    background: rgba(103, 157, 107, .08);
+
+}
+
+
+body.modo-claro .pilar:hover .pilar-icone {
+
+    background: rgba(103, 157, 107, .15);
+
+    box-shadow:
+        0 0 20px rgba(103, 157, 107, .18);
+
+}
+
+
+body.modo-claro .pilar-icone svg {
+    stroke: #679D6B;
+}
+
+
+body.modo-claro .pilar h3 {
+    color: var(--text);
+}
+
+
+body.modo-claro .pilar p {
+    color: var(--text-soft);
+}
+
+
+/* =========================================================
+   CITAÇÃO
+========================================================= */
+
+body.modo-claro .citacao {
+
+    background:
+        linear-gradient(
+            to bottom,
+            rgba(103, 157, 107, .18),
+            rgba(168, 211, 186, .80)
+        );
+
+    border-color: rgba(103, 157, 107, .25);
+
+}
+
+
+body.modo-claro .citacao:hover {
+
+    border-color: rgba(103, 157, 107, .45);
+
+    box-shadow:
+        0 0 50px rgba(103, 157, 107, .10);
+
+}
+
+
+body.modo-claro .aspas-abre,
+body.modo-claro .aspas-fecha {
+    color: #679D6B;
+}
+
+
+body.modo-claro .citacao blockquote {
+    color: var(--text);
+}
+
+
+/* =========================================================
+   HERO / HOME
+========================================================= */
+
+body.modo-claro .hero-container {
+
+    color: var(--text-soft);
+
+    background:
+        rgba(255, 255, 255, .30);
+
+}
+
+
+body.modo-claro .hero p {
+    color: var(--text-soft);
+}
+
+
+body.modo-claro .section-content {
+    color: var(--text);
+}
+
+
+/* =========================================================
+   SEARCH
+========================================================= */
+
+body.modo-claro .search-button {
+
+    background: rgba(255, 255, 255, .45);
+
+    border-color: rgba(26, 36, 30, .15);
+
+}
+
+
+body.modo-claro .search-button input {
+
+    color: var(--text);
+
+}
+
+
+body.modo-claro .search-button input::placeholder {
+
+    color: rgba(26, 36, 30, .55);
+
+}
+
+
+body.modo-claro .search-button:hover {
+
+    background: #FFBB35;
+
+    color: #1A241E;
+
+}
+
+
+/* =========================================================
+   CARDS PRINCIPAIS
+========================================================= */
+
+body.modo-claro .card {
+
+    background:
+        linear-gradient(
+            to bottom,
+            rgba(103, 157, 107, .25),
+            rgba(168, 211, 186, .90)
+        );
+
+    border-color: rgba(26, 36, 30, .12);
+
+    box-shadow:
+        0 10px 30px rgba(26, 36, 30, .10);
+
+}
+
+
+body.modo-claro .card:hover {
+
+    background:
+        linear-gradient(
+            to bottom,
+            rgba(99, 162, 122, .40),
+            rgba(129, 176, 155, .95)
+        );
+
+    border-color: rgba(103, 157, 107, .45);
+
+    box-shadow:
+        0 20px 40px rgba(26, 36, 30, .18);
+
+}
+
+
+body.modo-claro .card-post .card-titulo {
+    color: var(--text);
+}
+
+
+body.modo-claro .card-post .card-osc {
+    color: #679D6B;
+}
+
+
+body.modo-claro .card-sem-img {
+
+    background:
+        linear-gradient(
+            145deg,
+            #81B09B,
+            #A8D3BA
+        );
+
+    color: rgba(26, 36, 30, .15);
+
+}
+
+
+/* =========================================================
+   LINKS DE SEÇÃO
+========================================================= */
+
+body.modo-claro .section-link {
+
+    color: #679D6B;
+
+}
+
+
+body.modo-claro .section-link:hover {
+
+    color: #63A27A;
+
+}
+
+
+/* =========================================================
+   NAVBAR
+========================================================= */
+
+body.modo-claro .navbar {
+
+    background:
+        rgba(168, 211, 186, .90);
+
+    border-bottom-color:
+        rgba(26, 36, 30, .18);
+
+    color: var(--text);
+
+}
+
+
+body.modo-claro .navbar nav {
+    color: var(--text);
+}
+
+
+body.modo-claro .navbar a {
+    color: var(--text);
+}
+
+
+body.modo-claro .navbar a:hover {
+    color: #679D6B;
+}
+
+
+body.modo-claro .menu-mobile-button {
+
+    background:
+        rgba(255, 255, 255, .35);
+
+    border-color:
+        rgba(26, 36, 30, .20);
+
+    color: #679D6B;
+
+}
+
+
+/* =========================================================
+   MENU MOBILE
+========================================================= */
+
+body.modo-claro .menu-mobile-overlay {
+
+    background:
+        rgba(26, 36, 30, .45);
+
+}
+
+
+body.modo-claro .menu-mobile-header {
+
+    border-bottom-color:
+        rgba(26, 36, 30, .15);
+
+}
+
+
+body.modo-claro .menu-mobile-header h2 {
+    color: #679D6B;
+}
+
+
+body.modo-claro .menu-mobile-links a {
+
+    color: var(--text);
+
+}
+
+
+body.modo-claro .menu-mobile-links a:hover {
+
+    background:
+        rgba(103, 157, 107, .12);
+
+    color: #679D6B;
+
+}
+
+
+/* =========================================================
+   FOOTER
+========================================================= */
+
+body.modo-claro footer {
+
+    background:
+        rgba(103, 157, 107, .95);
+
+    color: #FFFFFF;
+
+    border-top:
+        1px solid rgba(26, 36, 30, .20);
+
+}
+
+
+body.modo-claro .logo-footer,
+body.modo-claro .footer-logo {
+    color: #FFFFFF;
+}
+
+
+body.modo-claro .footer-links a,
+body.modo-claro .footer-links button {
+
+    color: #F6F5EE;
+
+}
+
+
+body.modo-claro .footer-links a:hover,
+body.modo-claro .footer-links button:hover {
+
+    color: #FFF9DC;
+
+}
+
+
+/* =========================================================
+   MAPA / ONGS
+========================================================= */
+
+body.modo-claro .section-ongs {
+
+    background: #F6F5EE;
+
+    color: #1A241E;
+
+}
+
+
+body.modo-claro .barra-pesquisa {
+
+    background: #FFFFFF;
+
+}
+
+
+body.modo-claro .barra-pesquisa input {
+
+    background: transparent;
+
+    color: #1A241E;
+
+}
+
+
+body.modo-claro .barra-pesquisa input::placeholder {
 
     color: #5B685F;
 
 }
 
 
-/* =====================================================
-   INPUT EM FOCO
-===================================================== */
+body.modo-claro .barra-pesquisa button {
+
+    background: #FFFFFF;
+
+    color: #679D6B;
+
+}
+
+
+body.modo-claro .filtros button {
+
+    background: #F6F5EE;
+
+    color: #35443B;
+
+    border-color: #B8C8BE;
+
+}
+
+
+body.modo-claro .filtros button:hover {
+
+    background: #A8D3BA;
+
+    border-color: #679D6B;
+
+}
+
+
+body.modo-claro .ong {
+
+    border-top-color: #D4DDD8;
+
+}
+
+
+body.modo-claro .ong:hover {
+
+    background: #FFDA8B;
+
+}
+
+
+body.modo-claro .ong-info h3 {
+
+    color: #1A241E;
+
+}
+
+
+body.modo-claro .ong-info p {
+
+    color: #35443B;
+
+}
+
+
+body.modo-claro .ong-info span {
+
+    color: #5B685F;
+
+}
+
+
+body.modo-claro .ong-imagem {
+
+    background: #E5ECE8;
+
+}
+
+
+/* =========================================================
+   SCROLLBAR
+========================================================= */
+
+body.modo-claro .section-ongs::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+
+body.modo-claro .section-ongs::-webkit-scrollbar-thumb {
+    background: #679D6B;
+}
+
+
+body.modo-claro .section-ongs::-webkit-scrollbar-thumb:hover {
+    background: #63A27A;
+}
+
+
+/* =========================================================
+   MODAIS
+========================================================= */
+
+body.modo-claro .modal-overlay {
+
+    background:
+        rgba(26, 36, 30, .55);
+
+}
+
+
+body.modo-claro .modal-container,
+body.modo-claro .modal-card-container {
+
+    background:
+        linear-gradient(
+            155deg,
+            rgba(220, 232, 228, .98),
+            rgba(168, 211, 186, .98)
+        );
+
+    border-color:
+        rgba(26, 36, 30, .15);
+
+    box-shadow:
+        0 30px 80px rgba(26, 36, 30, .25);
+
+    color: var(--text);
+
+}
+
+
+body.modo-claro .modal-header {
+
+    border-bottom-color:
+        rgba(26, 36, 30, .12);
+
+    background:
+        rgba(255, 255, 255, .30);
+
+}
+
+
+body.modo-claro .modal-titulo,
+body.modo-claro .modal-title {
+
+    color: #679D6B;
+
+}
+
+
+body.modo-claro .modal-fechar,
+body.modo-claro .close-modal {
+
+    background:
+        rgba(255, 255, 255, .45);
+
+    color: #1A241E;
+
+}
+
+
+body.modo-claro .modal-fechar:hover,
+body.modo-claro .close-modal:hover {
+
+    background: #FFBB35;
+
+    color: #1A241E;
+
+}
+
+
+body.modo-claro .modal-corpo,
+body.modo-claro .modal-body {
+
+    color: #35443B;
+
+}
+
+
+body.modo-claro .modal-body h2 {
+
+    color: #679D6B;
+
+}
+
+
+body.modo-claro .modal-body h3 {
+
+    color: #1A241E;
+
+}
+
+
+body.modo-claro .modal-footer {
+
+    border-top-color:
+        rgba(26, 36, 30, .12);
+
+    background:
+        rgba(255, 255, 255, .25);
+
+}
+
+
+body.modo-claro .confirm-modal {
+
+    background: #679D6B;
+
+    color: #FFFFFF;
+
+}
+
+
+body.modo-claro .confirm-modal:hover {
+
+    background: #63A27A;
+
+}
+
+
+/* =========================================================
+   FORMULÁRIOS DOS MODAIS
+========================================================= */
+
+body.modo-claro .form-input,
+body.modo-claro .form-textarea {
+
+    background:
+        rgba(255, 255, 255, .65);
+
+    border-color:
+        rgba(26, 36, 30, .20);
+
+    color: #1A241E;
+
+}
+
+
+body.modo-claro .form-input::placeholder,
+body.modo-claro .form-textarea::placeholder {
+
+    color: rgba(26, 36, 30, .50);
+
+}
+
+
+body.modo-claro .form-input:focus,
+body.modo-claro .form-textarea:focus {
+
+    border-color: #679D6B;
+
+    box-shadow:
+        0 0 0 3px rgba(103, 157, 107, .15);
+
+}
+
+
+/* =========================================================
+   LOGIN / CADASTRO
+========================================================= */
+
+body.modo-claro .form {
+
+    background:
+        rgba(246, 245, 238, .90);
+
+    border-color:
+        rgba(103, 157, 107, .30);
+
+    box-shadow:
+        0 0 25px rgba(26, 36, 30, .18);
+
+}
+
+
+body.modo-claro .title {
+
+    color: #679D6B;
+
+}
+
+
+body.modo-claro input,
+body.modo-claro textarea,
+body.modo-claro select {
+
+    background:
+        rgba(255, 255, 255, .75);
+
+    color: #1A241E;
+
+    border-color:
+        rgba(103, 157, 107, .50);
+
+}
+
+
+body.modo-claro input::placeholder,
+body.modo-claro textarea::placeholder {
+
+    color: rgba(26, 36, 30, .50);
+
+}
+
 
 body.modo-claro input:focus,
 body.modo-claro textarea:focus,
 body.modo-claro select:focus {
 
-    outline: 2px solid var(--gold);
-    border-color: var(--gold);
+    border-color: #679D6B;
+
+    box-shadow:
+        0 0 12px rgba(103, 157, 107, .20);
 
 }
 
 
-/* =====================================================
-   NAVBAR
-===================================================== */
+body.modo-claro #cad {
 
-body.modo-claro .navbar {
+    background: #679D6B;
 
-    background-color: var(--bg-section);
-    color: var(--text-main);
+    color: #FFFFFF;
 
 }
 
 
-/* =====================================================
-   FOOTER
-===================================================== */
+body.modo-claro #cad:hover {
 
-body.modo-claro footer {
-
-    background-color: var(--primary);
-    color: #ffffff;
+    background: #63A27A;
 
 }
 
 
-/* =====================================================
-   DIVISORES
-===================================================== */
+/* =========================================================
+   APOIE / DOAÇÃO
+========================================================= */
 
-body.modo-claro .divider {
+body.modo-claro .area_pagamento,
+body.modo-claro .valores_site,
+body.modo-claro .compartilhar_site {
 
-    background-color: var(--gold);
-
-}
-
-
-/* =====================================================
-   DESTAQUES / OURO
-===================================================== */
-
-body.modo-claro .destaque {
-
-    color: var(--gold);
+    color: var(--text);
 
 }
 
 
-/* =====================================================
-   MODAIS
-===================================================== */
+body.modo-claro .opcoes_pagamento button,
+body.modo-claro .opcoes_pagamento a {
 
-body.modo-claro .modal-overlay {
+    border-color: #679D6B;
 
-    background-color: rgba(0, 0, 0, 0.55);
+    color: #35443B;
 
-}
-
-
-body.modo-claro dialog {
-
-    background: linear-gradient(
-        135deg,
-        #A8D3BA,
-        #DCE8E4
-    );
-
-    color: var(--text-main);
-
-    border: 2px solid var(--primary);
+    background: transparent;
 
 }
 
 
-/* =====================================================
-   BOTÃO DE FECHAR
-===================================================== */
+body.modo-claro .opcoes_pagamento button:hover,
+body.modo-claro .opcoes_pagamento button.ativo {
 
-body.modo-claro .close-modal {
+    background: #679D6B;
 
-    color: var(--text-main);
+    border-color: #679D6B;
+
+    color: #FFFFFF;
 
 }
 
 
-/* =====================================================
+body.modo-claro .qr_pagamento,
+body.modo-claro .caixa_mensalidade {
+
+    background:
+        rgba(246, 245, 238, .75);
+
+    border-color:
+        rgba(103, 157, 107, .30);
+
+    color: #1A241E;
+
+}
+
+
+body.modo-claro .texto_compartilhar,
+body.modo-claro .transparencia {
+
+    color: #35443B;
+
+}
+
+
+body.modo-claro .botoes_compartilhar button {
+
+    border-color: #679D6B;
+
+    color: #35443B;
+
+}
+
+
+body.modo-claro .botoes_compartilhar button:hover {
+
+    background: #679D6B;
+
+    color: #FFFFFF;
+
+}
+
+
+/* =========================================================
+   MODAL DE VALOR
+========================================================= */
+
+body.modo-claro .modal-valor {
+
+    background:
+        rgba(26, 36, 30, .55);
+
+}
+
+
+body.modo-claro .caixa-modal {
+
+    background:
+        linear-gradient(
+            145deg,
+            #DCE8E4,
+            #A8D3BA
+        );
+
+    border-color: #679D6B;
+
+    color: #1A241E;
+
+}
+
+
+body.modo-claro .caixa-modal h2 {
+
+    color: #679D6B;
+
+}
+
+
+body.modo-claro .caixa-modal p {
+
+    color: #35443B;
+
+}
+
+
+body.modo-claro .input-modal {
+
+    background: rgba(255, 255, 255, .70);
+
+    border-color: #679D6B;
+
+}
+
+
+body.modo-claro .input-modal span {
+
+    color: #679D6B;
+
+}
+
+
+body.modo-claro .input-modal input {
+
+    color: #1A241E;
+
+}
+
+
+body.modo-claro .fechar-modal {
+
+    color: #35443B;
+
+}
+
+
+body.modo-claro .fechar-modal:hover {
+
+    color: #679D6B;
+
+}
+
+
+/* =========================================================
+   PAINEL DE ACESSIBILIDADE — MODO CLARO
+========================================================= */
+
+body.modo-claro #botao-acessibilidade {
+
+    background: #679D6B;
+
+    color: #FFFFFF;
+
+    box-shadow:
+        0 4px 12px rgba(26, 36, 30, .25);
+
+}
+
+
+body.modo-claro #painel-acessibilidade {
+
+    background: #F6F5EE;
+
+    color: #1A241E;
+
+    border-color: #B8C8BE;
+
+    box-shadow:
+        0 8px 30px rgba(26, 36, 30, .25);
+
+}
+
+
+body.modo-claro .acessibilidade-cabecalho {
+
+    border-bottom-color: #D4DDD8;
+
+}
+
+
+body.modo-claro .acessibilidade-cabecalho h2 {
+
+    color: #679D6B;
+
+}
+
+
+body.modo-claro #fechar-acessibilidade {
+
+    color: #1A241E;
+
+}
+
+
+body.modo-claro .acessibilidade-conteudo h3 {
+
+    color: #5B685F;
+
+}
+
+
+body.modo-claro .controle-fonte button,
+body.modo-claro .opcao-acessibilidade {
+
+    background: #FFFFFF;
+
+    color: #1A241E;
+
+    border-color: #B8C8BE;
+
+}
+
+
+body.modo-claro .controle-fonte button:hover,
+body.modo-claro .opcao-acessibilidade:hover {
+
+    background: #A8D3BA;
+
+    border-color: #679D6B;
+
+}
+
+
+/* =========================================================
    SELEÇÃO DE TEXTO
-===================================================== */
+========================================================= */
 
 body.modo-claro ::selection {
 
-    background-color: var(--gold);
-    color: #000000;
+    background: #FFBB35;
+
+    color: #1A241E;
 
 }
 
 
-/* =====================================================
+/* =========================================================
+   =========================================================
    ALTO CONTRASTE
-===================================================== */
+   =========================================================
+   ========================================================= */
 
 body.alto-contraste {
 
-    /* =========================
-       FUNDOS
-    ========================= */
-
+    /* FUNDOS */
     --bg-main: #000000;
     --bg-section: #000000;
     --bg-card: #000000;
-    --bg-card-hover: #1A1A1A;
+    --bg-card-hover: #111111;
 
-    /* =========================
-       CORES PRINCIPAIS
-    ========================= */
-
+    /* PRINCIPAIS */
     --primary: #FFFFFF;
     --secondary: #FFFFFF;
 
-    /* =========================
-       DESTAQUES
-    ========================= */
-
+    /* DESTAQUE */
     --gold: #FFFF00;
+    --gold-dark: #FFFF00;
     --gold-light: #FFFF00;
+    --gold-soft: #FFFF00;
 
-    /* =========================
-       TEXTOS
-    ========================= */
-
-    --text-main: #FFFFFF;
-    --text-secondary: #FFFFFF;
-
-    /* =========================
-       CORES CLARAS
-    ========================= */
-
-    --white: #FFFFFF;
-    --cream: #FFFFFF;
+    /* TEXTOS */
+    --text: #FFFFFF;
+    --text-soft: #FFFFFF;
 
 }
 
 
-/* =====================================================
-   FUNDO
-===================================================== */
+/* =========================================================
+   BASE
+========================================================= */
 
 body.alto-contraste {
 
-    background-color: #000000;
-    color: #FFFFFF;
+    background: #000000 !important;
+
+    color: #FFFFFF !important;
 
 }
 
 
-/* =====================================================
-   SEÇÕES
-===================================================== */
+/* =========================================================
+   ELEMENTOS DECORATIVOS
+========================================================= */
 
-body.alto-contraste section {
+body.alto-contraste .stars {
 
-    background-color: #000000;
-    color: #FFFFFF;
+    opacity: 0;
 
 }
 
 
-/* =====================================================
+/* =========================================================
    TEXTOS
-===================================================== */
+========================================================= */
 
 body.alto-contraste p,
-body.alto-contraste span,
 body.alto-contraste li,
-body.alto-contraste label {
+body.alto-contraste label,
+body.alto-contraste span {
 
     color: #FFFFFF;
 
 }
 
-
-/* =====================================================
-   TÍTULOS
-===================================================== */
 
 body.alto-contraste h1,
 body.alto-contraste h2,
@@ -1347,9 +2233,9 @@ body.alto-contraste h6 {
 }
 
 
-/* =====================================================
+/* =========================================================
    LINKS
-===================================================== */
+========================================================= */
 
 body.alto-contraste a {
 
@@ -1361,185 +2247,808 @@ body.alto-contraste a {
 body.alto-contraste a:hover {
 
     color: #FFFFFF;
-    background-color: #000000;
 
 }
 
 
-/* =====================================================
-   CARDS
-===================================================== */
-
-body.alto-contraste .card {
-
-    background-color: #000000;
-    color: #FFFFFF;
-
-    border: 2px solid #FFFFFF;
-
-}
-
-
-body.alto-contraste .card:hover {
-
-    background-color: #1A1A1A;
-
-}
-
-
-/* =====================================================
-   BOTÕES
-===================================================== */
-
-body.alto-contraste button {
-
-    background-color: #000000;
-    color: #FFFFFF;
-
-    border: 2px solid #FFFFFF;
-
-}
-
-
-body.alto-contraste button:hover {
-
-    background-color: #FFFFFF;
-    color: #000000;
-
-}
-
-
-/* =====================================================
-   INPUTS
-===================================================== */
-
-body.alto-contraste input,
-body.alto-contraste textarea,
-body.alto-contraste select {
-
-    background-color: #000000;
-    color: #FFFFFF;
-
-    border: 2px solid #FFFFFF;
-
-}
-
-
-/* =====================================================
-   PLACEHOLDER
-===================================================== */
-
-body.alto-contraste input::placeholder,
-body.alto-contraste textarea::placeholder {
-
-    color: #CCCCCC;
-
-}
-
-
-/* =====================================================
-   INPUT EM FOCO
-===================================================== */
-
-body.alto-contraste input:focus,
-body.alto-contraste textarea:focus,
-body.alto-contraste select:focus {
-
-    outline: 3px solid #FFFF00;
-    border-color: #FFFF00;
-
-}
-
-
-/* =====================================================
+/* =========================================================
    NAVBAR
-===================================================== */
+========================================================= */
 
 body.alto-contraste .navbar {
 
-    background-color: #000000;
+    background: #000000 !important;
+
+    border-bottom:
+        2px solid #FFFFFF;
+
     color: #FFFFFF;
 
-    border-bottom: 2px solid #FFFFFF;
-
 }
 
 
-/* =====================================================
-   FOOTER
-===================================================== */
+body.alto-contraste .navbar a {
 
-body.alto-contraste footer {
-
-    background-color: #000000;
     color: #FFFFFF;
 
-    border-top: 2px solid #FFFFFF;
-
 }
 
 
-/* =====================================================
-   DIVISORES
-===================================================== */
-
-body.alto-contraste .divider {
-
-    background-color: #FFFFFF;
-
-}
-
-
-/* =====================================================
-   DESTAQUES
-===================================================== */
-
-body.alto-contraste .destaque {
+body.alto-contraste .navbar a:hover {
 
     color: #FFFF00;
 
 }
 
 
-/* =====================================================
+body.alto-contraste .menu-mobile-button {
+
+    background: #000000;
+
+    border:
+        2px solid #FFFFFF;
+
+    color: #FFFFFF;
+
+}
+
+
+/* =========================================================
+   MENU MOBILE
+========================================================= */
+
+body.alto-contraste .menu-mobile-overlay {
+
+    background:
+        rgba(0, 0, 0, .90);
+
+}
+
+
+body.alto-contraste .menu-mobile-header {
+
+    background: #000000;
+
+    border-bottom:
+        2px solid #FFFFFF;
+
+}
+
+
+body.alto-contraste .menu-mobile-header h2 {
+
+    color: #FFFF00;
+
+}
+
+
+body.alto-contraste .menu-mobile-links a {
+
+    color: #FFFFFF;
+
+}
+
+
+body.alto-contraste .menu-mobile-links a:hover {
+
+    background: #FFFFFF;
+
+    color: #000000;
+
+}
+
+
+/* =========================================================
+   HERO / SEÇÕES
+========================================================= */
+
+body.alto-contraste .hero,
+body.alto-contraste .section,
+body.alto-contraste .sobre-hero,
+body.alto-contraste .sobre-section {
+
+    background: #000000 !important;
+
+    color: #FFFFFF;
+
+}
+
+
+body.alto-contraste .hero-container {
+
+    background: #000000;
+
+    border:
+        2px solid #FFFFFF;
+
+}
+
+
+body.alto-contraste .hero p,
+body.alto-contraste .sobre-subtitulo {
+
+    color: #FFFFFF;
+
+}
+
+
+/* =========================================================
+   DIVISOR
+========================================================= */
+
+body.alto-contraste .divider::before {
+
+    background: #FFFFFF;
+
+}
+
+
+body.alto-contraste .divider img {
+
+    background: #000000 !important;
+
+}
+
+
+/* =========================================================
+   MISSÃO / PILARES / CITAÇÃO
+========================================================= */
+
+body.alto-contraste .missao-card,
+body.alto-contraste .pilar,
+body.alto-contraste .citacao {
+
+    background: #000000 !important;
+
+    color: #FFFFFF;
+
+    border:
+        2px solid #FFFFFF;
+
+    box-shadow: none;
+
+}
+
+
+body.alto-contraste .missao-icone,
+body.alto-contraste .pilar-icone {
+
+    background: #000000;
+
+    border:
+        2px solid #FFFF00;
+
+    box-shadow: none;
+
+}
+
+
+body.alto-contraste .missao-icone svg,
+body.alto-contraste .pilar-icone svg {
+
+    stroke: #FFFF00;
+
+}
+
+
+body.alto-contraste .missao-texto p,
+body.alto-contraste .missao-texto p + p,
+body.alto-contraste .pilar p {
+
+    color: #FFFFFF;
+
+}
+
+
+body.alto-contraste .missao-texto strong {
+
+    color: #FFFF00;
+
+}
+
+
+body.alto-contraste .aspas-abre,
+body.alto-contraste .aspas-fecha {
+
+    color: #FFFF00;
+
+}
+
+
+body.alto-contraste .citacao blockquote {
+
+    color: #FFFFFF;
+
+}
+
+
+/* =========================================================
+   CARDS
+========================================================= */
+
+body.alto-contraste .card,
+body.alto-contraste .card-post {
+
+    background: #000000 !important;
+
+    border:
+        2px solid #FFFFFF;
+
+    color: #FFFFFF;
+
+    box-shadow: none;
+
+}
+
+
+body.alto-contraste .card:hover {
+
+    background: #111111 !important;
+
+    border-color: #FFFF00;
+
+}
+
+
+body.alto-contraste .card-post .card-titulo {
+
+    color: #FFFFFF;
+
+}
+
+
+body.alto-contraste .card-post .card-osc {
+
+    color: #FFFF00;
+
+}
+
+
+body.alto-contraste .card-sem-img {
+
+    background: #000000;
+
+    color: #FFFFFF;
+
+}
+
+
+/* =========================================================
+   BOTÕES
+========================================================= */
+
+body.alto-contraste button {
+
+    background: #000000;
+
+    color: #FFFFFF;
+
+    border:
+        2px solid #FFFFFF;
+
+}
+
+
+body.alto-contraste button:hover {
+
+    background: #FFFFFF;
+
+    color: #000000;
+
+    border-color: #FFFFFF;
+
+}
+
+
+/* =========================================================
+   INPUTS
+========================================================= */
+
+body.alto-contraste input,
+body.alto-contraste textarea,
+body.alto-contraste select {
+
+    background: #000000 !important;
+
+    color: #FFFFFF !important;
+
+    border:
+        2px solid #FFFFFF !important;
+
+}
+
+
+body.alto-contraste input::placeholder,
+body.alto-contraste textarea::placeholder {
+
+    color: #FFFFFF;
+
+    opacity: .75;
+
+}
+
+
+body.alto-contraste input:focus,
+body.alto-contraste textarea:focus,
+body.alto-contraste select:focus {
+
+    border-color: #FFFF00 !important;
+
+    outline:
+        3px solid #FFFF00;
+
+    box-shadow: none;
+
+}
+
+
+/* =========================================================
+   MAPA / LISTA DE ONGS
+========================================================= */
+
+body.alto-contraste .section-ongs {
+
+    background: #000000 !important;
+
+    color: #FFFFFF;
+
+    border:
+        2px solid #FFFFFF;
+
+}
+
+
+body.alto-contraste .barra-pesquisa {
+
+    background: #000000;
+
+    border:
+        2px solid #FFFFFF;
+
+}
+
+
+body.alto-contraste .barra-pesquisa input {
+
+    background: #000000;
+
+    color: #FFFFFF;
+
+}
+
+
+body.alto-contraste .barra-pesquisa button {
+
+    background: #000000;
+
+    color: #FFFF00;
+
+}
+
+
+body.alto-contraste .filtros button {
+
+    background: #000000;
+
+    color: #FFFFFF;
+
+    border:
+        2px solid #FFFFFF;
+
+}
+
+
+body.alto-contraste .filtros button:hover {
+
+    background: #FFFFFF;
+
+    color: #000000;
+
+}
+
+
+body.alto-contraste .ong {
+
+    background: #000000;
+
+    color: #FFFFFF;
+
+    border-top:
+        2px solid #FFFFFF;
+
+}
+
+
+body.alto-contraste .ong:hover {
+
+    background: #FFFFFF;
+
+    color: #000000;
+
+}
+
+
+body.alto-contraste .ong-info h3,
+body.alto-contraste .ong-info p,
+body.alto-contraste .ong-info span {
+
+    color: #FFFFFF;
+
+}
+
+
+/* =========================================================
+   FOOTER
+========================================================= */
+
+body.alto-contraste footer {
+
+    background: #000000 !important;
+
+    color: #FFFFFF;
+
+    border-top:
+        2px solid #FFFFFF;
+
+}
+
+
+body.alto-contraste .footer-links a,
+body.alto-contraste .footer-links button {
+
+    color: #FFFFFF;
+
+}
+
+
+body.alto-contraste .footer-links a:hover,
+body.alto-contraste .footer-links button:hover {
+
+    color: #FFFF00;
+
+}
+
+
+/* =========================================================
    MODAIS
-===================================================== */
+========================================================= */
 
-body.alto-contraste .modal-overlay {
+body.alto-contraste .modal-overlay,
+body.alto-contraste .modal-valor {
 
-    background-color: rgba(0, 0, 0, 0.9);
-
-}
-
-
-body.alto-contraste dialog {
-
-    background-color: #000000;
-    color: #FFFFFF;
-
-    border: 3px solid #FFFFFF;
+    background:
+        rgba(0, 0, 0, .95);
 
 }
 
 
-/* =====================================================
-   BOTÃO FECHAR
-===================================================== */
+body.alto-contraste .modal-container,
+body.alto-contraste .modal-card-container,
+body.alto-contraste .caixa-modal {
 
-body.alto-contraste .close-modal {
+    background: #000000 !important;
 
     color: #FFFFFF;
 
+    border:
+        3px solid #FFFFFF;
+
+    box-shadow: none;
+
 }
 
 
-/* =====================================================
+body.alto-contraste .modal-header,
+body.alto-contraste .modal-footer {
+
+    background: #000000;
+
+    border-color: #FFFFFF;
+
+}
+
+
+body.alto-contraste .modal-titulo,
+body.alto-contraste .modal-title,
+body.alto-contraste .caixa-modal h2 {
+
+    color: #FFFF00;
+
+}
+
+
+body.alto-contraste .modal-body,
+body.alto-contraste .modal-corpo,
+body.alto-contraste .caixa-modal p {
+
+    color: #FFFFFF;
+
+}
+
+
+body.alto-contraste .modal-body h2 {
+
+    color: #FFFF00;
+
+}
+
+
+body.alto-contraste .modal-body h3 {
+
+    color: #FFFFFF;
+
+}
+
+
+body.alto-contraste .close-modal,
+body.alto-contraste .modal-fechar,
+body.alto-contraste .fechar-modal {
+
+    background: #000000;
+
+    color: #FFFFFF;
+
+    border:
+        2px solid #FFFFFF;
+
+}
+
+
+body.alto-contraste .close-modal:hover,
+body.alto-contraste .modal-fechar:hover,
+body.alto-contraste .fechar-modal:hover {
+
+    background: #FFFFFF;
+
+    color: #000000;
+
+}
+
+
+/* =========================================================
+   MODAL / FORMULÁRIO
+========================================================= */
+
+body.alto-contraste .form-input,
+body.alto-contraste .form-textarea,
+body.alto-contraste .input-modal {
+
+    background: #000000 !important;
+
+    color: #FFFFFF !important;
+
+    border:
+        2px solid #FFFFFF !important;
+
+}
+
+
+body.alto-contraste .confirm-modal {
+
+    background: #FFFF00;
+
+    color: #000000;
+
+    border:
+        2px solid #FFFF00;
+
+}
+
+
+body.alto-contraste .confirm-modal:hover {
+
+    background: #FFFFFF;
+
+    color: #000000;
+
+}
+
+
+/* =========================================================
+   LOGIN / CADASTRO
+========================================================= */
+
+body.alto-contraste .form {
+
+    background: #000000 !important;
+
+    color: #FFFFFF;
+
+    border:
+        2px solid #FFFFFF;
+
+    box-shadow: none;
+
+}
+
+
+body.alto-contraste .title {
+
+    color: #FFFF00;
+
+}
+
+
+body.alto-contraste #cad {
+
+    background: #FFFF00;
+
+    color: #000000;
+
+    border:
+        2px solid #FFFF00;
+
+}
+
+
+body.alto-contraste #cad:hover {
+
+    background: #FFFFFF;
+
+    color: #000000;
+
+}
+
+
+/* =========================================================
+   DOAÇÃO
+========================================================= */
+
+body.alto-contraste .qr_pagamento,
+body.alto-contraste .caixa_mensalidade {
+
+    background: #000000 !important;
+
+    color: #FFFFFF;
+
+    border:
+        2px solid #FFFFFF;
+
+}
+
+
+body.alto-contraste .opcoes_pagamento button,
+body.alto-contraste .opcoes_pagamento a {
+
+    background: #000000;
+
+    color: #FFFFFF;
+
+    border:
+        2px solid #FFFFFF;
+
+}
+
+
+body.alto-contraste .opcoes_pagamento button:hover,
+body.alto-contraste .opcoes_pagamento button.ativo {
+
+    background: #FFFF00;
+
+    color: #000000;
+
+    border-color: #FFFF00;
+
+}
+
+
+body.alto-contraste .botoes_compartilhar button {
+
+    background: #000000;
+
+    color: #FFFFFF;
+
+    border:
+        2px solid #FFFFFF;
+
+}
+
+
+body.alto-contraste .botoes_compartilhar button:hover {
+
+    background: #FFFFFF;
+
+    color: #000000;
+
+}
+
+
+/* =========================================================
+   PAINEL DE ACESSIBILIDADE
+========================================================= */
+
+body.alto-contraste #botao-acessibilidade {
+
+    background: #000000;
+
+    color: #FFFFFF;
+
+    border:
+        3px solid #FFFFFF;
+
+    box-shadow: none;
+
+}
+
+
+body.alto-contraste #painel-acessibilidade {
+
+    background: #000000;
+
+    color: #FFFFFF;
+
+    border:
+        3px solid #FFFFFF;
+
+    box-shadow: none;
+
+}
+
+
+body.alto-contraste .acessibilidade-cabecalho {
+
+    border-bottom:
+        2px solid #FFFFFF;
+
+}
+
+
+body.alto-contraste .acessibilidade-cabecalho h2 {
+
+    color: #FFFF00;
+
+}
+
+
+body.alto-contraste #fechar-acessibilidade {
+
+    background: #000000;
+
+    color: #FFFFFF;
+
+    border: none;
+
+}
+
+
+body.alto-contraste .acessibilidade-conteudo h3 {
+
+    color: #FFFFFF;
+
+}
+
+
+body.alto-contraste .controle-fonte button,
+body.alto-contraste .opcao-acessibilidade {
+
+    background: #000000;
+
+    color: #FFFFFF;
+
+    border:
+        2px solid #FFFFFF;
+
+}
+
+
+body.alto-contraste .controle-fonte button:hover,
+body.alto-contraste .opcao-acessibilidade:hover {
+
+    background: #FFFFFF;
+
+    color: #000000;
+
+}
+
+
+/* =========================================================
    SELEÇÃO DE TEXTO
-===================================================== */
+========================================================= */
 
 body.alto-contraste ::selection {
 
-    background-color: #FFFF00;
+    background: #FFFF00;
+
     color: #000000;
 
 }
