@@ -850,6 +850,51 @@ window.carregarVLibras =
 
     };
 
+/* =========================================================
+FECHAMENTO DO VLibras
+========================================================= */
+
+window.addEventListener(
+    "vp-widget-close",
+    () => {
+
+        const dados =
+            localStorage.getItem(
+                "portoAjudaPreferencias"
+            );
+
+        if (!dados) {
+            return;
+        }
+
+        try {
+
+            const preferencias =
+                JSON.parse(dados);
+
+            preferencias.libras = false;
+
+            localStorage.setItem(
+                "portoAjudaPreferencias",
+                JSON.stringify(preferencias)
+            );
+
+            console.log(
+                "VLibras fechado. libras = false"
+            );
+
+        } catch (erro) {
+
+            console.error(
+                "Erro ao salvar preferência do VLibras:",
+                erro
+            );
+
+        }
+
+    }
+);
+
 
 /* =========================================================
    ESCONDER BOTÃO OFICIAL DO VLibras
@@ -987,6 +1032,7 @@ function esconderPopupVLibras() {
 
 }
 
+let vlibrasEstavaAberto = false;
 
 /* =========================================================
    OBSERVADOR DO VLibras

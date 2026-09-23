@@ -942,3 +942,604 @@ footer {
     transition-duration: 0.01ms !important;
   }
 }
+
+
+
+
+
+/* =====================================================
+   ACESSIBILIDADE - PORTO AJUDA
+   MODO CLARO + ALTO CONTRASTE
+===================================================== */
+
+
+/* =====================================================
+   MODO CLARO
+===================================================== */
+
+body.modo-claro {
+
+    /* =========================
+       FUNDOS
+    ========================= */
+
+    --bg-main: #DCE8E4;
+    --bg-section: #A8D3BA;
+    --bg-card: #81B09B;
+    --bg-card-hover: #63A27A;
+
+    /* =========================
+       CORES PRINCIPAIS
+    ========================= */
+
+    --primary: #679D6B;
+    --secondary: #63A27A;
+
+    /* =========================
+       DOURADOS / DESTAQUES
+    ========================= */
+
+    --gold: #FFBB35;
+    --gold-light: #FFDA8B;
+
+    /* =========================
+       TEXTOS
+    ========================= */
+
+    --text-main: #1A241E;
+    --text-secondary: #35443B;
+
+    /* =========================
+       CORES CLARAS
+    ========================= */
+
+    --white: #F6F5EE;
+    --cream: #FFF9DC;
+}
+
+
+/* =====================================================
+   FUNDO GERAL
+===================================================== */
+
+body.modo-claro {
+
+    background-color: var(--bg-main);
+    color: var(--text-main);
+
+}
+
+
+/* =====================================================
+   SEÇÕES
+===================================================== */
+
+body.modo-claro section {
+
+    background-color: var(--bg-section);
+    color: var(--text-main);
+
+}
+
+
+/* =====================================================
+   CARDS
+===================================================== */
+
+body.modo-claro .card {
+
+    background-color: var(--bg-card);
+    color: var(--text-main);
+
+}
+
+
+body.modo-claro .card:hover {
+
+    background-color: var(--bg-card-hover);
+
+}
+
+
+/* =====================================================
+   TEXTOS
+===================================================== */
+
+body.modo-claro p,
+body.modo-claro span,
+body.modo-claro li,
+body.modo-claro label {
+
+    color: var(--text-main);
+
+}
+
+
+/* =====================================================
+   TÍTULOS
+===================================================== */
+
+body.modo-claro h1,
+body.modo-claro h2,
+body.modo-claro h3,
+body.modo-claro h4,
+body.modo-claro h5,
+body.modo-claro h6 {
+
+    color: var(--text-secondary);
+
+}
+
+
+/* =====================================================
+   LINKS
+===================================================== */
+
+body.modo-claro a {
+
+    color: var(--primary);
+
+}
+
+
+body.modo-claro a:hover {
+
+    color: var(--secondary);
+
+}
+
+
+/* =====================================================
+   BOTÕES
+===================================================== */
+
+body.modo-claro button {
+
+    background-color: var(--primary);
+    color: #ffffff;
+    border: 1px solid var(--primary);
+
+}
+
+
+body.modo-claro button:hover {
+
+    background-color: var(--secondary);
+    border-color: var(--secondary);
+
+}
+
+
+/* =====================================================
+   INPUTS
+===================================================== */
+
+body.modo-claro input,
+body.modo-claro textarea,
+body.modo-claro select {
+
+    background-color: var(--white);
+    color: var(--text-main);
+
+    border: 2px solid var(--primary);
+
+}
+
+
+/* =====================================================
+   PLACEHOLDER
+===================================================== */
+
+body.modo-claro input::placeholder,
+body.modo-claro textarea::placeholder {
+
+    color: #5B685F;
+
+}
+
+
+/* =====================================================
+   INPUT EM FOCO
+===================================================== */
+
+body.modo-claro input:focus,
+body.modo-claro textarea:focus,
+body.modo-claro select:focus {
+
+    outline: 2px solid var(--gold);
+    border-color: var(--gold);
+
+}
+
+
+/* =====================================================
+   NAVBAR
+===================================================== */
+
+body.modo-claro .navbar {
+
+    background-color: var(--bg-section);
+    color: var(--text-main);
+
+}
+
+
+/* =====================================================
+   FOOTER
+===================================================== */
+
+body.modo-claro footer {
+
+    background-color: var(--primary);
+    color: #ffffff;
+
+}
+
+
+/* =====================================================
+   DIVISORES
+===================================================== */
+
+body.modo-claro .divider {
+
+    background-color: var(--gold);
+
+}
+
+
+/* =====================================================
+   DESTAQUES / OURO
+===================================================== */
+
+body.modo-claro .destaque {
+
+    color: var(--gold);
+
+}
+
+
+/* =====================================================
+   MODAIS
+===================================================== */
+
+body.modo-claro .modal-overlay {
+
+    background-color: rgba(0, 0, 0, 0.55);
+
+}
+
+
+body.modo-claro dialog {
+
+    background: linear-gradient(
+        135deg,
+        #A8D3BA,
+        #DCE8E4
+    );
+
+    color: var(--text-main);
+
+    border: 2px solid var(--primary);
+
+}
+
+
+/* =====================================================
+   BOTÃO DE FECHAR
+===================================================== */
+
+body.modo-claro .close-modal {
+
+    color: var(--text-main);
+
+}
+
+
+/* =====================================================
+   SELEÇÃO DE TEXTO
+===================================================== */
+
+body.modo-claro ::selection {
+
+    background-color: var(--gold);
+    color: #000000;
+
+}
+
+
+/* =====================================================
+   ALTO CONTRASTE
+===================================================== */
+
+body.alto-contraste {
+
+    /* =========================
+       FUNDOS
+    ========================= */
+
+    --bg-main: #000000;
+    --bg-section: #000000;
+    --bg-card: #000000;
+    --bg-card-hover: #1A1A1A;
+
+    /* =========================
+       CORES PRINCIPAIS
+    ========================= */
+
+    --primary: #FFFFFF;
+    --secondary: #FFFFFF;
+
+    /* =========================
+       DESTAQUES
+    ========================= */
+
+    --gold: #FFFF00;
+    --gold-light: #FFFF00;
+
+    /* =========================
+       TEXTOS
+    ========================= */
+
+    --text-main: #FFFFFF;
+    --text-secondary: #FFFFFF;
+
+    /* =========================
+       CORES CLARAS
+    ========================= */
+
+    --white: #FFFFFF;
+    --cream: #FFFFFF;
+
+}
+
+
+/* =====================================================
+   FUNDO
+===================================================== */
+
+body.alto-contraste {
+
+    background-color: #000000;
+    color: #FFFFFF;
+
+}
+
+
+/* =====================================================
+   SEÇÕES
+===================================================== */
+
+body.alto-contraste section {
+
+    background-color: #000000;
+    color: #FFFFFF;
+
+}
+
+
+/* =====================================================
+   TEXTOS
+===================================================== */
+
+body.alto-contraste p,
+body.alto-contraste span,
+body.alto-contraste li,
+body.alto-contraste label {
+
+    color: #FFFFFF;
+
+}
+
+
+/* =====================================================
+   TÍTULOS
+===================================================== */
+
+body.alto-contraste h1,
+body.alto-contraste h2,
+body.alto-contraste h3,
+body.alto-contraste h4,
+body.alto-contraste h5,
+body.alto-contraste h6 {
+
+    color: #FFFF00;
+
+}
+
+
+/* =====================================================
+   LINKS
+===================================================== */
+
+body.alto-contraste a {
+
+    color: #00FFFF;
+
+}
+
+
+body.alto-contraste a:hover {
+
+    color: #FFFFFF;
+    background-color: #000000;
+
+}
+
+
+/* =====================================================
+   CARDS
+===================================================== */
+
+body.alto-contraste .card {
+
+    background-color: #000000;
+    color: #FFFFFF;
+
+    border: 2px solid #FFFFFF;
+
+}
+
+
+body.alto-contraste .card:hover {
+
+    background-color: #1A1A1A;
+
+}
+
+
+/* =====================================================
+   BOTÕES
+===================================================== */
+
+body.alto-contraste button {
+
+    background-color: #000000;
+    color: #FFFFFF;
+
+    border: 2px solid #FFFFFF;
+
+}
+
+
+body.alto-contraste button:hover {
+
+    background-color: #FFFFFF;
+    color: #000000;
+
+}
+
+
+/* =====================================================
+   INPUTS
+===================================================== */
+
+body.alto-contraste input,
+body.alto-contraste textarea,
+body.alto-contraste select {
+
+    background-color: #000000;
+    color: #FFFFFF;
+
+    border: 2px solid #FFFFFF;
+
+}
+
+
+/* =====================================================
+   PLACEHOLDER
+===================================================== */
+
+body.alto-contraste input::placeholder,
+body.alto-contraste textarea::placeholder {
+
+    color: #CCCCCC;
+
+}
+
+
+/* =====================================================
+   INPUT EM FOCO
+===================================================== */
+
+body.alto-contraste input:focus,
+body.alto-contraste textarea:focus,
+body.alto-contraste select:focus {
+
+    outline: 3px solid #FFFF00;
+    border-color: #FFFF00;
+
+}
+
+
+/* =====================================================
+   NAVBAR
+===================================================== */
+
+body.alto-contraste .navbar {
+
+    background-color: #000000;
+    color: #FFFFFF;
+
+    border-bottom: 2px solid #FFFFFF;
+
+}
+
+
+/* =====================================================
+   FOOTER
+===================================================== */
+
+body.alto-contraste footer {
+
+    background-color: #000000;
+    color: #FFFFFF;
+
+    border-top: 2px solid #FFFFFF;
+
+}
+
+
+/* =====================================================
+   DIVISORES
+===================================================== */
+
+body.alto-contraste .divider {
+
+    background-color: #FFFFFF;
+
+}
+
+
+/* =====================================================
+   DESTAQUES
+===================================================== */
+
+body.alto-contraste .destaque {
+
+    color: #FFFF00;
+
+}
+
+
+/* =====================================================
+   MODAIS
+===================================================== */
+
+body.alto-contraste .modal-overlay {
+
+    background-color: rgba(0, 0, 0, 0.9);
+
+}
+
+
+body.alto-contraste dialog {
+
+    background-color: #000000;
+    color: #FFFFFF;
+
+    border: 3px solid #FFFFFF;
+
+}
+
+
+/* =====================================================
+   BOTÃO FECHAR
+===================================================== */
+
+body.alto-contraste .close-modal {
+
+    color: #FFFFFF;
+
+}
+
+
+/* =====================================================
+   SELEÇÃO DE TEXTO
+===================================================== */
+
+body.alto-contraste ::selection {
+
+    background-color: #FFFF00;
+    color: #000000;
+
+}
