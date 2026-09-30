@@ -1759,3 +1759,579 @@ body {
     }
 
 }
+
+/* ======================================== */
+/* ODS */
+/* ======================================== */
+
+.ods-item {
+    cursor: pointer;
+
+    transition:
+        transform 0.25s ease,
+        filter 0.25s ease;
+}
+
+.ods-item:hover {
+    transform: translateY(-5px);
+
+    filter:
+        drop-shadow(
+            0 8px 15px
+            rgba(242, 170, 26, 0.25)
+        );
+}
+
+
+/* ======================================== */
+/* MODAL ODS */
+/* ======================================== */
+
+.modal-ods {
+    position: fixed;
+
+    inset: 0;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 30px;
+
+    background: rgba(0, 0, 0, 0.72);
+
+    z-index: 10000;
+
+    opacity: 0;
+    visibility: hidden;
+
+    transition:
+        opacity 0.3s ease,
+        visibility 0.3s ease;
+}
+
+
+.modal-ods.aberto {
+    opacity: 1;
+    visibility: visible;
+}
+
+
+/* ======================================== */
+/* CAIXA PRINCIPAL */
+/* ======================================== */
+
+.modal-ods-caixa {
+    position: relative;
+
+    width: min(950px, 95vw);
+
+    height: min(85vh, 800px);
+
+    display: flex;
+
+    flex-direction: column;
+
+    background:
+        linear-gradient(
+            145deg,
+            #3d2775,
+            #28194f
+        );
+
+    border:
+        1px solid
+        rgba(242, 170, 26, 0.5);
+
+    border-radius: 20px;
+
+    box-shadow:
+        0 25px 70px
+        rgba(0, 0, 0, 0.55),
+
+        0 0 35px
+        rgba(242, 170, 26, 0.12);
+
+    overflow: hidden;
+
+    transform:
+        translateY(25px)
+        scale(0.96);
+
+    transition:
+        transform 0.3s ease;
+}
+
+
+.modal-ods.aberto
+.modal-ods-caixa {
+    transform:
+        translateY(0)
+        scale(1);
+}
+
+
+/* ======================================== */
+/* CABEÇALHO FIXO */
+/* ======================================== */
+
+.modal-ods-cabecalho {
+    position: relative;
+
+    flex-shrink: 0;
+
+    min-height: 85px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    padding:
+        18px
+        65px
+        18px
+        35px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #3d2775,
+            #321f61
+        );
+
+    border-bottom:
+        1px solid
+        rgba(242, 170, 26, 0.25);
+
+    box-shadow:
+        0 5px 20px
+        rgba(0, 0, 0, 0.18);
+
+    z-index: 10;
+}
+
+
+/* ======================================== */
+/* TÍTULO DO CABEÇALHO */
+/* ======================================== */
+
+.modal-ods-cabecalho-titulo {
+    display: flex;
+
+    align-items: baseline;
+
+    gap: 15px;
+
+    min-width: 0;
+}
+
+
+.modal-ods-numero {
+    flex-shrink: 0;
+
+    color: #F2AA1A;
+
+    font-family:
+        "Cormorant Garamond",
+        serif;
+
+    font-size: 24px;
+
+    font-weight: 600;
+
+    letter-spacing: 2px;
+}
+
+
+.modal-ods-titulo {
+    margin: 0;
+
+    color: #FFFFFF;
+
+    font-family:
+        "Cormorant Garamond",
+        serif;
+
+    font-size: 34px;
+
+    line-height: 1.1;
+
+    font-weight: 600;
+}
+
+
+/* ======================================== */
+/* BOTÃO FECHAR */
+/* ======================================== */
+
+.fechar-modal-ods {
+    position: absolute;
+
+    top: 50%;
+    right: 22px;
+
+    transform: translateY(-50%);
+
+    width: 40px;
+    height: 40px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.15);
+
+    border-radius: 50%;
+
+    background:
+        rgba(0, 0, 0, 0.15);
+
+    color: #FFFFFF;
+
+    font-size: 29px;
+
+    line-height: 1;
+
+    cursor: pointer;
+
+    transition:
+        color 0.2s ease,
+        background 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.2s ease;
+}
+
+
+.fechar-modal-ods:hover {
+    color: #F2AA1A;
+
+    background:
+        rgba(242, 170, 26, 0.10);
+
+    border-color:
+        rgba(242, 170, 26, 0.5);
+
+    transform:
+        translateY(-50%)
+        rotate(90deg);
+}
+
+
+/* ======================================== */
+/* ÁREA DE SCROLL */
+/* ======================================== */
+
+.modal-ods-scroll {
+    flex: 1;
+
+    min-height: 0;
+
+    overflow-y: auto;
+
+    overflow-x: hidden;
+
+    padding: 40px;
+}
+
+
+/* ======================================== */
+/* BARRA DE SCROLL */
+/* ======================================== */
+
+/* Firefox */
+
+.modal-ods-scroll {
+    scrollbar-width: thin;
+
+    scrollbar-color:
+        #F2AA1A
+        rgba(255, 255, 255, 0.08);
+}
+
+
+/* Chrome / Edge / Safari */
+
+.modal-ods-scroll::-webkit-scrollbar {
+    width: 9px;
+}
+
+
+.modal-ods-scroll::-webkit-scrollbar-track {
+    background:
+        rgba(255, 255, 255, 0.06);
+
+    border-radius: 10px;
+}
+
+
+.modal-ods-scroll::-webkit-scrollbar-thumb {
+    background:
+        linear-gradient(
+            180deg,
+            #F9C86B,
+            #F2AA1A
+        );
+
+    border-radius: 10px;
+
+    border:
+        2px solid
+        #2d1d57;
+}
+
+
+.modal-ods-scroll::-webkit-scrollbar-thumb:hover {
+    background:
+        #FCE0A1;
+}
+
+
+/* ======================================== */
+/* CONTEÚDO */
+/* ======================================== */
+
+.modal-ods-conteudo {
+    display: grid;
+
+    grid-template-columns:
+        220px 1fr;
+
+    gap: 40px;
+
+    align-items: start;
+}
+
+
+/* ======================================== */
+/* IMAGEM */
+/* ======================================== */
+
+.modal-ods-imagem {
+    position: sticky;
+
+    top: 0;
+}
+
+
+.modal-ods-img {
+    display: block;
+
+    width: 100%;
+
+    max-width: 220px;
+
+    height: auto;
+
+    border-radius: 12px;
+
+    box-shadow:
+        0 10px 30px
+        rgba(0, 0, 0, 0.35);
+}
+
+
+/* ======================================== */
+/* LINHA DOURADA */
+/* ======================================== */
+
+.modal-ods-linha {
+    width: 80px;
+
+    height: 3px;
+
+    margin-bottom: 25px;
+
+    background: #F2AA1A;
+
+    border-radius: 5px;
+}
+
+
+/* ======================================== */
+/* DESCRIÇÃO */
+/* ======================================== */
+
+.modal-ods-descricao {
+    margin: 0 0 25px;
+
+    color: #FFFFFF;
+
+    font-family:
+        "Poppins",
+        sans-serif;
+
+    font-size: 17px;
+
+    font-weight: 500;
+
+    line-height: 1.7;
+}
+
+
+/* ======================================== */
+/* TÍTULOS DAS SEÇÕES */
+/* ======================================== */
+
+.modal-ods-informacoes h3 {
+    margin:
+        30px 0 10px;
+
+    color: #F2AA1A;
+
+    font-family:
+        "Cormorant Garamond",
+        serif;
+
+    font-size: 25px;
+
+    font-weight: 600;
+}
+
+
+/* ======================================== */
+/* TEXTOS */
+/* ======================================== */
+
+.modal-ods-busca,
+.modal-ods-contribuicao {
+    margin: 0;
+
+    color: #E8E4EF;
+
+    font-family:
+        "Poppins",
+        sans-serif;
+
+    font-size: 15px;
+
+    line-height: 1.8;
+}
+
+
+/* ======================================== */
+/* METAS */
+/* ======================================== */
+
+.modal-ods-metas {
+    margin: 0;
+
+    padding-left: 22px;
+
+    color: #E8E4EF;
+
+    font-family:
+        "Poppins",
+        sans-serif;
+
+    font-size: 15px;
+
+    line-height: 1.8;
+}
+
+
+.modal-ods-metas li {
+    margin-bottom: 8px;
+
+    padding-left: 5px;
+}
+
+
+.modal-ods-metas li::marker {
+    color: #F2AA1A;
+}
+
+
+/* ======================================== */
+/* RESPONSIVIDADE */
+/* ======================================== */
+
+@media (max-width: 700px) {
+
+    .modal-ods {
+        padding: 15px;
+    }
+
+
+    .modal-ods-caixa {
+        width: 100%;
+
+        height: 90vh;
+
+        border-radius: 16px;
+    }
+
+
+    .modal-ods-cabecalho {
+        min-height: 75px;
+
+        padding:
+            15px
+            60px
+            15px
+            20px;
+    }
+
+
+    .modal-ods-cabecalho-titulo {
+        gap: 10px;
+
+        flex-direction: column;
+
+        align-items: flex-start;
+    }
+
+
+    .modal-ods-numero {
+        font-size: 18px;
+    }
+
+
+    .modal-ods-titulo {
+        font-size: 27px;
+    }
+
+
+    .modal-ods-scroll {
+        padding: 25px 20px;
+    }
+
+
+    .modal-ods-conteudo {
+        grid-template-columns: 1fr;
+
+        gap: 25px;
+    }
+
+
+    .modal-ods-imagem {
+        position: static;
+
+        text-align: center;
+    }
+
+
+    .modal-ods-img {
+        width: 150px;
+
+        margin: 0 auto;
+    }
+
+
+    .modal-ods-informacoes h3 {
+        font-size: 23px;
+    }
+
+
+    .fechar-modal-ods {
+        right: 15px;
+
+        width: 36px;
+        height: 36px;
+    }
+}

@@ -728,7 +728,7 @@ const ongs = [
 
         imagem: "../assets/maos-que-ajudam.png",
 
-        ods: [3, 10, 11],
+        ods: [3, 8, 10, 12, 16, 17],
 
         pix: null
     }

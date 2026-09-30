@@ -1,3 +1,629 @@
+// ========================================
+// DADOS DAS ODS
+// ========================================
+
+const dadosODS = {
+
+    1: {
+        titulo: "Erradicação da Pobreza",
+
+        descricao:
+            "Erradicar a pobreza em todas as suas formas e em todos os lugares.",
+
+        busca:
+            "A ODS 1 busca reduzir a pobreza em suas diferentes dimensões, ampliar a proteção social e garantir que pessoas em situação de vulnerabilidade tenham acesso a recursos, serviços básicos e oportunidades.",
+
+        metas: [
+            "Erradicar a pobreza extrema.",
+            "Reduzir significativamente a proporção de pessoas vivendo na pobreza.",
+            "Ampliar sistemas e medidas de proteção social.",
+            "Garantir acesso a serviços básicos e recursos econômicos.",
+            "Aumentar a resiliência de pessoas em situação de vulnerabilidade."
+        ],
+
+        contribuicao:
+            "ONGs podem contribuir oferecendo assistência social, alimentação, moradia, capacitação, acesso a serviços e apoio direto a pessoas e famílias em situação de vulnerabilidade."
+    },
+
+
+    2: {
+        titulo: "Fome Zero e Agricultura Sustentável",
+
+        descricao:
+            "Acabar com a fome, alcançar a segurança alimentar e melhoria da nutrição e promover a agricultura sustentável.",
+
+        busca:
+            "A ODS 2 busca garantir que todas as pessoas tenham acesso regular a alimentos seguros, nutritivos e suficientes, além de combater todas as formas de má nutrição e promover sistemas alimentares sustentáveis.",
+
+        metas: [
+            "Acabar com a fome e garantir acesso a alimentos seguros e nutritivos.",
+            "Combater todas as formas de má nutrição.",
+            "Promover uma agricultura sustentável e produtiva.",
+            "Aumentar a produtividade e a renda de pequenos produtores.",
+            "Preservar a diversidade genética de sementes, plantas e animais."
+        ],
+
+        contribuicao:
+            "ONGs podem contribuir por meio da distribuição de alimentos, cozinhas comunitárias, combate ao desperdício, apoio a agricultores e iniciativas de segurança alimentar."
+    },
+
+
+    3: {
+        titulo: "Saúde e Bem-Estar",
+
+        descricao:
+            "Assegurar uma vida saudável e promover o bem-estar para todas as pessoas, em todas as idades.",
+
+        busca:
+            "A ODS 3 busca melhorar a saúde da população, reduzir mortes evitáveis, combater doenças e ampliar o acesso a serviços de saúde e prevenção.",
+
+        metas: [
+            "Reduzir a mortalidade materna.",
+            "Reduzir mortes evitáveis de recém-nascidos e crianças.",
+            "Combater doenças transmissíveis.",
+            "Promover a saúde mental e o bem-estar.",
+            "Ampliar o acesso universal aos serviços de saúde."
+        ],
+
+        contribuicao:
+            "ONGs podem atuar com prevenção, atendimento, campanhas de saúde, apoio psicológico, orientação, promoção de hábitos saudáveis e encaminhamento para serviços públicos."
+    },
+
+
+    4: {
+        titulo: "Educação de Qualidade",
+
+        descricao:
+            "Assegurar a educação inclusiva, equitativa e de qualidade e promover oportunidades de aprendizagem ao longo da vida.",
+
+        busca:
+            "A ODS 4 busca garantir que todas as pessoas tenham acesso a uma educação de qualidade, inclusiva e equitativa.",
+
+        metas: [
+            "Garantir educação básica gratuita e de qualidade.",
+            "Ampliar o acesso à educação infantil.",
+            "Aumentar o acesso ao ensino técnico e superior.",
+            "Desenvolver competências relevantes para o trabalho.",
+            "Promover educação para o desenvolvimento sustentável."
+        ],
+
+        contribuicao:
+            "ONGs podem oferecer reforço escolar, cursos, oficinas, bibliotecas, acesso à tecnologia, capacitação profissional e atividades educativas."
+    },
+
+
+    5: {
+        titulo: "Igualdade de Gênero",
+
+        descricao:
+            "Alcançar a igualdade de gênero e empoderar todas as mulheres e meninas.",
+
+        busca:
+            "A ODS 5 busca eliminar a discriminação e a violência contra mulheres e meninas e ampliar sua participação e autonomia.",
+
+        metas: [
+            "Eliminar todas as formas de discriminação contra mulheres e meninas.",
+            "Combater a violência e a exploração.",
+            "Eliminar práticas prejudiciais às meninas e mulheres.",
+            "Reconhecer e valorizar o trabalho de cuidado.",
+            "Promover a participação e a igualdade de oportunidades."
+        ],
+
+        contribuicao:
+            "ONGs podem oferecer acolhimento, orientação, capacitação, apoio social, educação e serviços de proteção para mulheres e meninas."
+    },
+
+
+    6: {
+        titulo: "Água Potável e Saneamento",
+
+        descricao:
+            "Assegurar a disponibilidade e a gestão sustentável da água e do saneamento para todas as pessoas.",
+
+        busca:
+            "A ODS 6 busca garantir acesso universal à água potável, saneamento e higiene, além de promover a gestão sustentável dos recursos hídricos.",
+
+        metas: [
+            "Garantir acesso universal à água potável.",
+            "Garantir saneamento e higiene adequados.",
+            "Melhorar a qualidade da água.",
+            "Aumentar a eficiência no uso da água.",
+            "Proteger ecossistemas relacionados à água."
+        ],
+
+        contribuicao:
+            "ONGs podem desenvolver projetos de saneamento, educação ambiental, acesso à água, preservação de recursos hídricos e higiene."
+    },
+
+
+    7: {
+        titulo: "Energia Limpa e Acessível",
+
+        descricao:
+            "Assegurar o acesso confiável, sustentável, moderno e a preço acessível à energia para todas as pessoas.",
+
+        busca:
+            "A ODS 7 busca ampliar o acesso à energia e aumentar a participação de fontes renováveis e tecnologias mais eficientes.",
+
+        metas: [
+            "Garantir acesso universal à energia.",
+            "Aumentar a participação das energias renováveis.",
+            "Melhorar a eficiência energética.",
+            "Ampliar o acesso a tecnologias de energia limpa.",
+            "Fortalecer a infraestrutura energética sustentável."
+        ],
+
+        contribuicao:
+            "ONGs podem atuar com educação energética, projetos de energia solar, eficiência energética e acesso à energia em comunidades vulneráveis."
+    },
+
+
+    8: {
+        titulo: "Trabalho Decente e Crescimento Econômico",
+
+        descricao:
+            "Promover o crescimento econômico sustentado, inclusivo e sustentável, emprego pleno e produtivo e trabalho decente para todas as pessoas.",
+
+        busca:
+            "A ODS 8 busca promover oportunidades de trabalho digno, crescimento econômico sustentável e condições adequadas de trabalho.",
+
+        metas: [
+            "Promover crescimento econômico sustentável.",
+            "Aumentar oportunidades de trabalho decente.",
+            "Reduzir o desemprego entre jovens.",
+            "Eliminar trabalho forçado e trabalho infantil.",
+            "Proteger direitos trabalhistas."
+        ],
+
+        contribuicao:
+            "ONGs podem oferecer capacitação profissional, orientação para o mercado de trabalho, empreendedorismo e programas de inclusão produtiva."
+    },
+
+
+    9: {
+        titulo: "Indústria, Inovação e Infraestrutura",
+
+        descricao:
+            "Construir infraestruturas resilientes, promover a industrialização inclusiva e sustentável e fomentar a inovação.",
+
+        busca:
+            "A ODS 9 busca desenvolver infraestrutura sustentável, estimular a inovação e ampliar o acesso a tecnologias e oportunidades econômicas.",
+
+        metas: [
+            "Desenvolver infraestrutura sustentável e resiliente.",
+            "Promover industrialização inclusiva.",
+            "Ampliar o acesso de pequenas empresas a recursos.",
+            "Modernizar infraestruturas de forma sustentável.",
+            "Aumentar a pesquisa e a inovação."
+        ],
+
+        contribuicao:
+            "ONGs podem desenvolver projetos tecnológicos, capacitação digital, inovação social e iniciativas que ampliem o acesso à infraestrutura."
+    },
+
+
+    10: {
+        titulo: "Redução das Desigualdades",
+
+        descricao:
+            "Reduzir a desigualdade dentro dos países e entre eles.",
+
+        busca:
+            "A ODS 10 busca promover a inclusão social, econômica e política e reduzir desigualdades relacionadas à renda e às condições sociais.",
+
+        metas: [
+            "Aumentar a renda da população mais pobre.",
+            "Promover inclusão social, econômica e política.",
+            "Garantir igualdade de oportunidades.",
+            "Reduzir práticas discriminatórias.",
+            "Facilitar migração segura e responsável."
+        ],
+
+        contribuicao:
+            "ONGs podem atuar diretamente com populações vulneráveis, oferecendo assistência social, educação, inclusão profissional e acesso a direitos."
+    },
+
+
+    11: {
+        titulo: "Cidades e Comunidades Sustentáveis",
+
+        descricao:
+            "Tornar as cidades e os assentamentos humanos inclusivos, seguros, resilientes e sustentáveis.",
+
+        busca:
+            "A ODS 11 busca melhorar as cidades, tornando-as mais acessíveis, seguras, inclusivas e sustentáveis para todas as pessoas.",
+
+        metas: [
+            "Garantir acesso à habitação adequada.",
+            "Melhorar o transporte público.",
+            "Promover urbanização inclusiva e sustentável.",
+            "Proteger o patrimônio cultural e natural.",
+            "Reduzir impactos ambientais das cidades."
+        ],
+
+        contribuicao:
+            "ONGs podem trabalhar com moradia, mobilidade, espaços públicos, meio ambiente, inclusão urbana e apoio a comunidades."
+    },
+
+
+    12: {
+        titulo: "Consumo e Produção Responsáveis",
+
+        descricao:
+            "Assegurar padrões de produção e de consumo sustentáveis.",
+
+        busca:
+            "A ODS 12 busca reduzir o desperdício e tornar a produção e o consumo mais eficientes e sustentáveis.",
+
+        metas: [
+            "Promover uso eficiente dos recursos naturais.",
+            "Reduzir desperdício de alimentos.",
+            "Diminuir a geração de resíduos.",
+            "Estimular reciclagem e reutilização.",
+            "Promover práticas empresariais sustentáveis."
+        ],
+
+        contribuicao:
+            "ONGs podem atuar com reciclagem, reaproveitamento, educação ambiental, combate ao desperdício e consumo consciente."
+    },
+
+
+    13: {
+        titulo: "Ação Contra a Mudança Global do Clima",
+
+        descricao:
+            "Tomar medidas urgentes para combater a mudança climática e seus impactos.",
+
+        busca:
+            "A ODS 13 busca fortalecer a capacidade de adaptação às mudanças climáticas e ampliar ações de educação, conscientização e planejamento climático.",
+
+        metas: [
+            "Fortalecer a adaptação às mudanças climáticas.",
+            "Aumentar a resiliência diante de eventos climáticos.",
+            "Integrar medidas climáticas às políticas públicas.",
+            "Ampliar educação e conscientização climática.",
+            "Mobilizar recursos para ações climáticas."
+        ],
+
+        contribuicao:
+            "ONGs podem atuar com educação ambiental, recuperação de áreas degradadas, prevenção de riscos e projetos de adaptação climática."
+    },
+
+
+    14: {
+        titulo: "Vida na Água",
+
+        descricao:
+            "Conservar e usar de forma sustentável os oceanos, mares e recursos marinhos para o desenvolvimento sustentável.",
+
+        busca:
+            "A ODS 14 busca proteger os ecossistemas marinhos, combater a poluição e promover o uso sustentável dos oceanos e recursos marinhos.",
+
+        metas: [
+            "Reduzir a poluição dos oceanos.",
+            "Proteger ecossistemas marinhos e costeiros.",
+            "Combater a pesca predatória.",
+            "Promover pesca sustentável.",
+            "Conservar áreas marinhas."
+        ],
+
+        contribuicao:
+            "ONGs podem desenvolver ações de limpeza de praias, educação ambiental, proteção da fauna marinha e preservação de ecossistemas costeiros."
+    },
+
+
+    15: {
+        titulo: "Vida Terrestre",
+
+        descricao:
+            "Proteger, recuperar e promover o uso sustentável dos ecossistemas terrestres, combater a desertificação e deter a perda de biodiversidade.",
+
+        busca:
+            "A ODS 15 busca preservar florestas, ecossistemas terrestres e biodiversidade, além de combater a degradação do solo e a perda de espécies.",
+
+        metas: [
+            "Proteger ecossistemas terrestres.",
+            "Promover manejo sustentável das florestas.",
+            "Combater a desertificação.",
+            "Reduzir a perda de biodiversidade.",
+            "Combater o tráfico de espécies protegidas."
+        ],
+
+        contribuicao:
+            "ONGs podem trabalhar com proteção animal, reflorestamento, conservação ambiental, recuperação de áreas e educação ambiental."
+    },
+
+
+    16: {
+        titulo: "Paz, Justiça e Instituições Eficazes",
+
+        descricao:
+            "Promover sociedades pacíficas e inclusivas, proporcionar acesso à justiça para todos e construir instituições eficazes, responsáveis e inclusivas.",
+
+        busca:
+            "A ODS 16 busca promover sociedades pacíficas, reduzir a violência, ampliar o acesso à justiça e fortalecer instituições transparentes e responsáveis.",
+
+        metas: [
+            "Reduzir violência e mortes relacionadas à violência.",
+            "Combater abuso, exploração e tráfico de pessoas.",
+            "Garantir acesso igualitário à justiça.",
+            "Reduzir corrupção e suborno.",
+            "Garantir acesso público à informação."
+        ],
+
+        contribuicao:
+            "ONGs podem atuar na defesa de direitos, assistência jurídica, proteção de grupos vulneráveis, prevenção da violência e fortalecimento da cidadania."
+    },
+
+
+    17: {
+        titulo: "Parcerias e Meios de Implementação",
+
+        descricao:
+            "Fortalecer os meios de implementação e revitalizar a parceria global para o desenvolvimento sustentável.",
+
+        busca:
+            "A ODS 17 reconhece que o cumprimento dos demais objetivos depende de cooperação, recursos, tecnologia, conhecimento e parcerias entre governos, organizações e sociedade civil.",
+
+        metas: [
+            "Mobilizar recursos financeiros para o desenvolvimento sustentável.",
+            "Ampliar cooperação científica e tecnológica.",
+            "Fortalecer capacidades institucionais.",
+            "Promover um sistema de comércio mais justo.",
+            "Fortalecer parcerias entre governos, empresas e sociedade civil."
+        ],
+
+        contribuicao:
+            "ONGs podem estabelecer parcerias, compartilhar conhecimento, mobilizar voluntários e recursos e trabalhar conjuntamente com outras organizações."
+    }
+
+};
+
+
+// ========================================
+// CRIAR MODAL DAS ODS
+// ========================================
+
+const modalODS =
+    document.createElement("div");
+
+modalODS.classList.add("modal-ods");
+
+modalODS.innerHTML = `
+
+    <div class="modal-ods-caixa">
+
+        <!-- CABEÇALHO FIXO -->
+        <div class="modal-ods-cabecalho">
+
+            <div class="modal-ods-cabecalho-titulo">
+                <span class="modal-ods-numero"></span>
+                <h2 class="modal-ods-titulo"></h2>
+            </div>
+
+            <button
+                class="fechar-modal-ods"
+                aria-label="Fechar explicação da ODS"
+            >
+                &times;
+            </button>
+
+        </div>
+
+
+        <!-- CONTEÚDO COM SCROLL -->
+        <div class="modal-ods-scroll">
+
+            <div class="modal-ods-conteudo">
+
+                <div class="modal-ods-imagem">
+
+                    <img
+                        class="modal-ods-img"
+                        src=""
+                        alt=""
+                    >
+
+                </div>
+
+                <div class="modal-ods-informacoes">
+
+                    <div class="modal-ods-linha"></div>
+
+                    <p class="modal-ods-descricao"></p>
+
+                    <h3>
+                        O que essa ODS busca?
+                    </h3>
+
+                    <p class="modal-ods-busca"></p>
+
+                    <h3>
+                        Principais metas
+                    </h3>
+
+                    <ul class="modal-ods-metas"></ul>
+
+                    <h3>
+                        Como uma ONG pode contribuir?
+                    </h3>
+
+                    <p class="modal-ods-contribuicao"></p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+`;
+
+document.body.appendChild(modalODS);
+
+
+// ========================================
+// ABRIR MODAL DAS ODS
+// ========================================
+
+function abrirModalODS(numero) {
+
+    const dados =
+        dadosODS[numero];
+
+    if (!dados) {
+
+        console.warn(
+            `Não existem informações cadastradas para a ODS ${numero}.`
+        );
+
+        return;
+    }
+
+
+    // Imagem
+
+    const imagem =
+        modalODS.querySelector(
+            ".modal-ods-img"
+        );
+
+    imagem.src =
+        `../assets/ods${numero}.png`;
+
+    imagem.alt =
+        `ODS ${numero} - ${dados.titulo}`;
+
+
+    // Número
+
+    modalODS.querySelector(
+        ".modal-ods-numero"
+    ).textContent =
+        `ODS ${numero}`;
+
+
+    // Título
+
+    modalODS.querySelector(
+        ".modal-ods-titulo"
+    ).textContent =
+        dados.titulo;
+
+
+    // Descrição
+
+    modalODS.querySelector(
+        ".modal-ods-descricao"
+    ).textContent =
+        dados.descricao;
+
+
+    // O que busca
+
+    modalODS.querySelector(
+        ".modal-ods-busca"
+    ).textContent =
+        dados.busca;
+
+
+    // Metas
+
+    const listaMetas =
+        modalODS.querySelector(
+            ".modal-ods-metas"
+        );
+
+    listaMetas.innerHTML = "";
+
+
+    dados.metas.forEach(meta => {
+
+        const li =
+            document.createElement("li");
+
+        li.textContent = meta;
+
+        listaMetas.appendChild(li);
+
+    });
+
+
+    // Contribuição das ONGs
+
+    modalODS.querySelector(
+        ".modal-ods-contribuicao"
+    ).textContent =
+        dados.contribuicao;
+
+
+    // Abre
+
+    modalODS.classList.add("aberto");
+
+    document.body.style.overflow = "hidden";
+}
+
+
+// ========================================
+// FECHAR MODAL
+// ========================================
+
+function fecharModalODS() {
+
+    modalODS.classList.remove("aberto");
+
+    document.body.style.overflow = "";
+}
+
+
+// Fechar pelo X
+
+modalODS
+    .querySelector(".fechar-modal-ods")
+    .addEventListener(
+        "click",
+        fecharModalODS
+    );
+
+
+// Fechar clicando fora
+
+modalODS.addEventListener(
+    "click",
+    evento => {
+
+        if (
+            evento.target === modalODS
+        ) {
+
+            fecharModalODS();
+
+        }
+
+    }
+);
+
+
+// Fechar com ESC
+
+document.addEventListener(
+    "keydown",
+    evento => {
+
+        if (
+            evento.key === "Escape" &&
+            modalODS.classList.contains("aberto")
+        ) {
+
+            fecharModalODS();
+
+        }
+
+    }
+);
+
 document.addEventListener("DOMContentLoaded", () => {
 
     // ========================================
@@ -225,17 +851,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 item.classList.add("ods-item");
 
+                // Guarda qual ODS é essa
+                item.dataset.ods = numero;
+
 
                 const imagem =
                     document.createElement("img");
-
-                /*
-                 * Se suas imagens forem PNG:
-                 * ods1.png, ods2.png...
-                 *
-                 * Caso alguma seja .webp,
-                 * altere o nome do arquivo.
-                 */
 
                 imagem.src =
                     `../assets/ods${numero}.png`;
@@ -257,15 +878,26 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 containerOds.appendChild(item);
 
+
+                // ========================================
+                // CLIQUE NA ODS
+                // ========================================
+
+                item.addEventListener("click", () => {
+
+                    abrirModalODS(numero);
+
+                });
+
             });
 
         } else {
 
             containerOds.innerHTML = `
-                <p>
-                    Nenhuma ODS cadastrada para esta iniciativa.
-                </p>
-            `;
+            <p>
+                Nenhuma ODS cadastrada para esta iniciativa.
+            </p>
+        `;
         }
     }
 

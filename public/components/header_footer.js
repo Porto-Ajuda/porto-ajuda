@@ -1,4 +1,26 @@
 /* =========================================================
+   TOUR
+========================================================= */
+
+const cssTour = document.createElement("link");
+
+cssTour.rel = "stylesheet";
+
+cssTour.href =
+    "../styles/tour.css";
+
+document.head.appendChild(cssTour);
+
+
+const jsTour =
+    document.createElement("script");
+
+jsTour.src =
+    "../components/tour.js";
+
+document.body.appendChild(jsTour);
+
+/* =========================================================
    MODAL
    ========================================================= */
 
@@ -153,6 +175,181 @@ document
         cabecalho
     );
 
+/* =========================================================
+   MENU ATIVO + BARRA DESLIZANTE
+   ========================================================= */
+
+const navegacao = document.querySelector(".nav-links");
+
+if (navegacao) {
+
+    const linksNavegacao =
+        navegacao.querySelectorAll("a");
+
+    /*
+     * Cria uma única barra que vai
+     * deslizar entre os links.
+     */
+
+    const indicador =
+        document.createElement("span");
+
+    indicador.classList.add("indicador-menu");
+
+    navegacao.appendChild(indicador);
+
+
+    /*
+     * Descobre a página atual.
+     */
+
+    const paginaAtual =
+        window.location.pathname
+            .split("/")
+            .pop()
+            .toLowerCase();
+
+
+    let linkAtual = null;
+
+
+    /*
+     * Procura qual link corresponde
+     * à página atual.
+     */
+
+    linksNavegacao.forEach(link => {
+
+        const href =
+            link.getAttribute("href");
+
+        if (!href) return;
+
+        const paginaLink =
+            href
+                .split("/")
+                .pop()
+                .split("?")[0]
+                .toLowerCase();
+
+        if (paginaLink === paginaAtual) {
+
+            link.classList.add("ativo");
+
+            linkAtual = link;
+
+        }
+
+    });
+
+
+    /*
+     * Move a barra para um link.
+     */
+
+    function moverIndicador(link) {
+
+        if (!link) return;
+
+        const linkRect =
+            link.getBoundingClientRect();
+
+        const menuRect =
+            navegacao.getBoundingClientRect();
+
+        indicador.style.left =
+            `${linkRect.left - menuRect.left}px`;
+
+        indicador.style.width =
+            `${linkRect.width}px`;
+    }
+
+
+    /*
+     * Posiciona inicialmente
+     * na página atual.
+     */
+
+    moverIndicador(linkAtual);
+
+
+    /*
+     * Mouse sobre os links.
+     */
+
+    linksNavegacao.forEach(link => {
+
+        link.addEventListener(
+            "mouseenter",
+            () => {
+
+                linksNavegacao.forEach(
+                    outroLink => {
+
+                        outroLink.classList.remove(
+                            "menu-hover"
+                        );
+
+                    }
+                );
+
+                link.classList.add(
+                    "menu-hover"
+                );
+
+                moverIndicador(link);
+
+            }
+        );
+
+    });
+
+
+    /*
+     * Quando sai do menu,
+     * volta para a página atual.
+     */
+
+    navegacao.addEventListener(
+        "mouseleave",
+        () => {
+
+            linksNavegacao.forEach(link => {
+
+                link.classList.remove(
+                    "menu-hover"
+                );
+
+            });
+
+            moverIndicador(linkAtual);
+
+        }
+    );
+
+
+    /*
+     * Recalcula a posição caso a
+     * janela seja redimensionada.
+     */
+
+    window.addEventListener(
+        "resize",
+        () => {
+
+            const linkVisivel =
+                navegacao.querySelector(
+                    ".menu-hover"
+                );
+
+            moverIndicador(
+                linkVisivel || linkAtual
+            );
+
+        }
+    );
+
+}
 
 /* =========================================================
    MENU MOBILE
@@ -532,6 +729,11 @@ const rodape = `
     <a href="contato.html">
         Contato
     </a>
+
+    <button id="btn-tour" class="btn-tour" type="button" title="Iniciar tour do site">
+    <i class="fa-solid fa-circle-question"></i>
+    <span>Tour pelo site</span>
+</button>
 
 </div>
 

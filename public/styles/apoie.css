@@ -469,11 +469,9 @@ main {
 
     border-radius: 1em;
 
-    background: linear-gradient(
-        145deg,
-        #3d2775,
-        #28194f
-    );
+    background: linear-gradient(145deg,
+            #3d2775,
+            #28194f);
 
     box-shadow:
         0 20px 60px rgba(0, 0, 0, 0.5);
@@ -1206,7 +1204,7 @@ main {
    ========================= */
 
 /* WhatsApp */
-.whatsapp:hover {
+/* .whatsapp:hover {
     color: #25D366;
     border-color: #25D366;
     box-shadow: 0 0 15px rgba(37, 211, 102, 0.3);
@@ -1217,11 +1215,11 @@ main {
             invert(67%) sepia(76%)
             saturate(478%) hue-rotate(91deg)
             brightness(91%) contrast(87%);
-}
+} */
 
 
 /* Instagram */
-.instagram:hover {
+/* .instagram:hover {
     color: #E1306C;
     border-color: #E1306C;
     box-shadow: 0 0 15px rgba(225, 48, 108, 0.3);
@@ -1232,11 +1230,11 @@ main {
             invert(31%) sepia(93%)
             saturate(2804%) hue-rotate(317deg)
             brightness(91%) contrast(90%);
-}
+} */
 
 
 /* Copiar Link */
-.copiar_link:hover {
+/* .copiar_link:hover {
     color: #4DA3FF;
     border-color: #4DA3FF;
     box-shadow: 0 0 15px rgba(77, 163, 255, 0.3);
@@ -1247,11 +1245,11 @@ main {
             invert(59%) sepia(89%)
             saturate(1354%) hue-rotate(186deg)
             brightness(101%) contrast(101%);
-}
+} */
 
 
 /* E-mail */
-.email:hover {
+/* .email:hover {
     color: #EA4335;
     border-color: #EA4335;
     box-shadow: 0 0 15px rgba(234, 67, 53, 0.3);
@@ -1262,6 +1260,29 @@ main {
             invert(39%) sepia(91%)
             saturate(2224%) hue-rotate(338deg)
             brightness(96%) contrast(94%);
+} */
+
+/* ========================= */
+/* BOTÕES DE COMPARTILHAMENTO */
+/* ========================= */
+
+.whatsapp:hover,
+.instagram:hover,
+.copiar_link:hover,
+.email:hover {
+    color: #F2AA1A;
+    border-color: #F2AA1A;
+    box-shadow: 0 0 15px rgba(242, 170, 26, 0.3);
+}
+
+
+/* Ícones */
+
+.whatsapp:hover::before,
+.instagram:hover::before,
+.copiar_link:hover::before,
+.email:hover::before {
+    filter: brightness(0) saturate(100%) invert(70%) sepia(97%) saturate(1200%) hue-rotate(359deg) brightness(101%) contrast(91%);
 }
 
 /* =========================================================

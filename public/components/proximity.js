@@ -122,6 +122,34 @@ function localizarUsuario() {
 
 }
 
+function destacarOng(ongId) {
+
+    const cardOng = document.getElementById(`ong-${ongId}`);
+
+    if (!cardOng) return;
+
+    // Remove destaque dos outros cards
+    document
+        .querySelectorAll(".ong.ong-selecionada")
+        .forEach(card => {
+            card.classList.remove("ong-selecionada");
+        });
+
+    // Destaca o card correto
+    cardOng.classList.add("ong-selecionada");
+
+    // Rola a lista até o card
+    cardOng.scrollIntoView({
+        behavior: "smooth",
+        block: "center"
+    });
+
+    // Remove o destaque depois de 2,5 segundos
+    setTimeout(() => {
+        cardOng.classList.remove("ong-selecionada");
+    }, 2500);
+}
+
 // Criar ongs
 
 async function carregarOngs() {
@@ -175,6 +203,7 @@ async function carregarOngs() {
         const card = document.createElement("div");
 
         card.classList.add("ong");
+        card.id = `ong-${ong.id}`;
 
         card.innerHTML = `
     <div class="ong-imagem">
@@ -208,7 +237,12 @@ async function carregarOngs() {
             ong.longitude != null
         ) {
 
-            card.addEventListener("click", () => {
+            card.addEventListener("click", (evento) => {
+
+                // Não interfere no botão "Ver ONG"
+                if (evento.target.closest(".botao-ong")) {
+                    return;
+                }
 
                 map.setView(
                     [
@@ -232,16 +266,22 @@ async function carregarOngs() {
 
             });
 
-            L.marker(
+            const marcador = L.marker(
                 [ong.latitude, ong.longitude],
                 { icon: icone }
             )
                 .addTo(map)
                 .bindPopup(`
-                    <strong>${ong.nome}</strong><br>
-                    ${ong.categoria}<br>
-                    ${ong.endereco}
-                `);
+            <strong>${ong.nome}</strong><br>
+            ${ong.categoria}<br>
+            ${ong.endereco}
+        `);
+
+            marcador.on("click", () => {
+
+                destacarOng(ong.id);
+
+            });
 
         }
 

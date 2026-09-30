@@ -15,118 +15,119 @@
 
   <script src="../components/Porto-Ajuda.js" defer></script>
   <script src="../components/header_footer.js" defer></script>
+  <script src="../components/tour.js" defer></script>
 
   <script src="../components/crud.js" defer></script>
 
-<script>
-document.addEventListener("DOMContentLoaded", () => {
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
 
-  /* =========================
-     ANIMAÇÃO DAS SEÇÕES
-     ========================= */
+      /* =========================
+         ANIMAÇÃO DAS SEÇÕES
+         ========================= */
 
-  const elementosSurgir =
-    document.querySelectorAll(".surgir");
+      const elementosSurgir =
+        document.querySelectorAll(".surgir");
 
-  const observador =
-    new IntersectionObserver((entradas) => {
+      const observador =
+        new IntersectionObserver((entradas) => {
 
-      entradas.forEach(entrada => {
+          entradas.forEach(entrada => {
 
-        if (entrada.isIntersecting) {
+            if (entrada.isIntersecting) {
 
-          entrada.target.classList.add("active");
+              entrada.target.classList.add("active");
 
-        }
+            }
+
+          });
+
+        }, {
+          threshold: 0.15
+        });
+
+      elementosSurgir.forEach(el => {
+        observador.observe(el);
+      });
+
+
+      /* =========================
+         ANIMAÇÃO DOS CARDS
+         ========================= */
+
+      const cards =
+        document.querySelectorAll(".card");
+
+      const observerCards =
+        new IntersectionObserver((entries) => {
+
+          entries.forEach(entry => {
+
+            if (entry.isIntersecting) {
+
+              entry.target.classList.add("show");
+
+              /*
+               * Depois de aparecer,
+               * não precisa observar novamente.
+               */
+              observerCards.unobserve(entry.target);
+
+            }
+
+          });
+
+        }, {
+          threshold: 0.2
+        });
+
+      cards.forEach(card => {
+        observerCards.observe(card);
+      });
+
+    });
+
+    document.addEventListener("DOMContentLoaded", () => {
+
+      const filtros = document.querySelectorAll(".dropdown-regiao");
+
+      filtros.forEach(filtro => {
+
+        const botao = filtro.querySelector(".filter-btn");
+
+        botao.addEventListener("click", (event) => {
+
+          event.preventDefault();
+          event.stopPropagation();
+
+          const estavaAberto = filtro.classList.contains("aberto");
+
+          // Fecha todos
+          filtros.forEach(outro => {
+            outro.classList.remove("aberto");
+          });
+
+          // Se estava fechado, abre
+          if (!estavaAberto) {
+            filtro.classList.add("aberto");
+          }
+
+        });
 
       });
 
-    }, {
-      threshold: 0.15
-    });
+      // Clique fora fecha os filtros
+      document.addEventListener("click", () => {
 
-  elementosSurgir.forEach(el => {
-    observador.observe(el);
-  });
-
-
-  /* =========================
-     ANIMAÇÃO DOS CARDS
-     ========================= */
-
-  const cards =
-    document.querySelectorAll(".card");
-
-  const observerCards =
-    new IntersectionObserver((entries) => {
-
-      entries.forEach(entry => {
-
-        if (entry.isIntersecting) {
-
-          entry.target.classList.add("show");
-
-          /*
-           * Depois de aparecer,
-           * não precisa observar novamente.
-           */
-          observerCards.unobserve(entry.target);
-
-        }
+        filtros.forEach(filtro => {
+          filtro.classList.remove("aberto");
+        });
 
       });
 
-    }, {
-      threshold: 0.2
     });
 
-  cards.forEach(card => {
-    observerCards.observe(card);
-  });
-
-});
-
-document.addEventListener("DOMContentLoaded", () => {
-
-  const filtros = document.querySelectorAll(".dropdown-regiao");
-
-  filtros.forEach(filtro => {
-
-    const botao = filtro.querySelector(".filter-btn");
-
-    botao.addEventListener("click", (event) => {
-
-      event.preventDefault();
-      event.stopPropagation();
-
-      const estavaAberto = filtro.classList.contains("aberto");
-
-      // Fecha todos
-      filtros.forEach(outro => {
-        outro.classList.remove("aberto");
-      });
-
-      // Se estava fechado, abre
-      if (!estavaAberto) {
-        filtro.classList.add("aberto");
-      }
-
-    });
-
-  });
-
-  // Clique fora fecha os filtros
-  document.addEventListener("click", () => {
-
-    filtros.forEach(filtro => {
-      filtro.classList.remove("aberto");
-    });
-
-  });
-
-});
-
-</script>
+  </script>
 
 </head>
 
@@ -151,10 +152,6 @@ document.addEventListener("DOMContentLoaded", () => {
       <div class="hero-container">
 
         <div class="hero-text">
-
-          <div class="sobre-label">
-            <span>Home</span>
-          </div>
 
           <h1>
             DOE <br>
@@ -182,17 +179,17 @@ document.addEventListener("DOMContentLoaded", () => {
               <i class="fa-solid fa-caret-down"></i>
             </button>
 
-            
+
             <div class="regioes">
               <a href="#">Educação</a>
               <a href="#">Saúde</a>
               <a href="#">Meio Ambiente</a>
               <a href="#">Animais</a>
               <a href="#">Cultura</a>
-              <a href="#">Esporte</a>              
+              <a href="#">Esporte</a>
               <a href="#">Inclusão social</a>
               <a href="#">Combate à Pobreza</a>
-              
+
             </div>
           </div>
 
