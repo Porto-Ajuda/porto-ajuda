@@ -1,5 +1,13 @@
 @import url(proximity.css);
 
+html,
+body {
+    height: auto;
+    min-height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
 main {
     padding-top: 4%;
     box-sizing: border-box;

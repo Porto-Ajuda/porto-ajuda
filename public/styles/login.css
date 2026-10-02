@@ -76,16 +76,23 @@ html {
 }
 
 body {
+  width: 100%;
+  min-height: 100vh;
+
+  margin: 0;
+
   overflow-x: hidden;
+  overflow-y: auto;
+
   font-family: 'Poppins', sans-serif;
   color: var(--text);
 
   background:
     radial-gradient(circle at top,
-      var(--bg-card) 100%,
+      var(--bg-card) 0%,
       var(--bg-section) 45%,
-      var(--bg-main) 0%);
-  overflow: hidden;
+      var(--bg-main) 100%);
+
   display: flex;
   align-items: center;
   justify-content: center;
@@ -98,24 +105,6 @@ body {
   width: 100%;
   height: 100%;
 }
-
-body {
-  overflow: hidden;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  font-family: 'Poppins', sans-serif;
-  color: var(--text);
-
-  background:
-    radial-gradient(circle at top,
-      var(--bg-card) 0%,
-      var(--bg-section) 45%,
-      var(--bg-main) 100%);
-}
-
 
 /* ========================= */
 /* FRAME */
@@ -1222,31 +1211,31 @@ a:hover {
 
 
 .dropdown-genero {
-    position: relative;
-    width: 260px;
+  position: relative;
+  width: 260px;
 }
 
 .erro-genero {
-    display: none;
-    position: absolute;
+  display: none;
+  position: absolute;
 
-    top: 50%;
-    left: calc(100% + 15px);
+  top: 50%;
+  left: calc(100% + 15px);
 
-    transform: translateY(-50%);
+  transform: translateY(-50%);
 
-    margin: 0;
+  margin: 0;
 
-    color: #ff7b7b;
-    font-family: Poppins, sans-serif;
-    font-size: 0.85rem;
-    white-space: nowrap;
+  color: #ff7b7b;
+  font-family: Poppins, sans-serif;
+  font-size: 0.85rem;
+  white-space: nowrap;
 
-    z-index: 20;
+  z-index: 20;
 }
 
 .dropdown-genero.erro .dropdown-botao {
-    border-color: #ff7b7b;
+  border-color: #ff7b7b;
 }
 
 
@@ -1310,92 +1299,153 @@ a:hover {
 
 }
 
+/* =====================================================
+   RESPONSIVIDADE
+   ===================================================== */
 
-/* ========================================= */
-/* CELULAR */
-/* ========================================= */
+/* -----------------------------------------------------
+   DESKTOP
+   ----------------------------------------------------- */
 
-@media (max-width: 500px) {
-
-  .caixa-cadastro {
-    padding: 35px 25px 28px;
-    border-radius: 25px;
-  }
-
-  .icone-cadastro {
-    width: 72px;
-    height: 72px;
-
-    font-size: 29px;
-  }
-
-  .conteudo-cadastro h2 {
-    font-size: 2.2rem;
-  }
-
-  .conteudo-cadastro p {
-    font-size: .85rem;
-  }
-
-}
-
-/* ========================= */
-/* RESPONSIVIDADE ATUALIZADA */
-/* ========================= */
-
-/* Telas Médias (Tablets, até 1024px) */
-@media (max-width: 1024px) {
-  .polygon {
-    opacity: 0.3;
-    /* Suaviza a forma geométrica */
-  }
+@media (min-width: 1025px) {
 
   .frame {
-    width: 85vw;
+    position: absolute;
+
+    left: 10%;
+    right: auto;
+
+    width: min(70vw, 550px);
+    height: min(79vh, 540px);
+
+    margin-top: 15vh;
   }
 
-  /* Mantém o frame mais ao centro durante a animação */
-  .frame.flipped .panel-login,
-  .frame .panel-login {
-    padding: 40px;
-  }
 }
 
-/* Telas Pequenas (Smartphones, até 768px) */
-@media (max-width: 768px) {
+
+/* -----------------------------------------------------
+   TABLETS / TELAS MÉDIAS
+   ----------------------------------------------------- */
+
+@media (min-width: 769px) and (max-width: 1024px) {
+
   body {
-    padding: 15px;
-    align-items: center;
+    padding: 30px;
+    overflow-y: auto;
   }
 
   .polygon {
     display: none;
-    /* Oculta a lua e a forma para priorizar o formulário */
   }
 
   .frame {
     position: relative;
-    left: 0 !important;
-    /* Anula o left: 15% do JavaScript */
-    right: 0 !important;
-    /* Anula o right: 50% do JavaScript */
-    margin: 0 auto;
+
+    left: auto !important;
+    right: auto !important;
+
+    width: min(90vw, 550px);
+
+    height: auto;
+    min-height: 650px;
+
+    margin: 70px auto 30px;
+
+    overflow: hidden;
+  }
+
+  .frame .panel-login,
+  .frame .panel-cadastro {
+    padding: 40px 30px;
+  }
+
+}
+
+
+/* -----------------------------------------------------
+   CELULAR
+   ----------------------------------------------------- */
+
+@media (max-width: 768px) {
+
+  html,
+  body {
+    width: 100%;
+    min-height: 100%;
+  }
+
+  body {
+    display: block;
+
+    padding: 0 12px 25px;
+
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .polygon {
+    display: none;
+  }
+
+  /* =========================
+       FRAME
+       ========================= */
+
+  .frame {
+
+    position: relative;
+
+    left: auto !important;
+    right: auto !important;
+
     width: 100%;
     max-width: 500px;
+
     height: auto;
-    min-height: auto;
-    padding-bottom: 20px;
+    min-height: 0;
+
+    margin: 90px auto 25px;
+
+    overflow: visible;
+
+    border-radius: 24px;
   }
+
+
+  /* =========================
+       PAINÉIS
+       ========================= */
 
   .panel {
+
     position: relative;
-    padding: 30px 20px;
-    opacity: 1;
+
+    width: 100%;
+
+    padding: 25px 18px;
+
+    display: flex;
+    flex-direction: column;
+
     transform: none !important;
-    /* Desativa a transição lateral em mobile */
   }
 
-  /* Oculta o painel inativo usando display ao invés de transform */
+
+  .frame .panel-login {
+    padding: 30px 18px;
+  }
+
+
+  .frame .panel-cadastro {
+    padding: 30px 18px;
+  }
+
+
+  /* =========================
+       TROCA LOGIN / CADASTRO
+       ========================= */
+
   .panel-cadastro {
     display: none;
   }
@@ -1406,125 +1456,197 @@ a:hover {
 
   .frame.flipped .panel-cadastro {
     display: flex;
-    transform: none;
+
+    opacity: 1;
+    pointer-events: all;
+
+    transform: none !important;
   }
 
+
+  /* =========================
+       TÍTULO
+       ========================= */
+
   .title {
-    font-size: 2.8rem;
+    font-size: 2.7rem;
+    line-height: .9;
+
+    margin-bottom: 10px;
   }
+
+
+  .subtitulo {
+    font-size: .9rem;
+    line-height: 1.5;
+
+    margin-bottom: 25px;
+  }
+
+
+  /* =========================
+       FORMULÁRIO
+       ========================= */
+
+  .form-sec {
+    width: 100%;
+    padding: 0;
+  }
+
+  .formulario {
+    width: 100%;
+    gap: 12px;
+  }
+
 
   .row2,
   .row3,
   .row4 {
+    width: 100%;
+
     padding: 0;
-    /* Remove os 50px de padding laterais do desktop */
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 10px;
   }
 
-  /* Ajusta o pop-up de requisitos da senha para não quebrar a tela */
-  .requisitos-senha {
-    position: static;
+
+  .inp {
     width: 100%;
-    margin-top: 10px;
-    background: transparent;
-    border: none;
-    box-shadow: none;
-    padding: 0;
+
+    font-size: .9rem;
+
+    padding: 11px 12px;
   }
+
+  /* =========================
+       BOTÕES
+       ========================= */
+
+  .btn {
+
+    width: 100%;
+
+    padding: 13px;
+
+    font-size: .9rem;
+  }
+
+
+  .botoes-navegacao {
+
+    width: 100%;
+
+    display: flex;
+
+    gap: 10px;
+  }
+
+  .botoes-navegacao .btn {
+    flex: 1;
+  }
+
 }
 
-/* Telas Muito Pequenas (Smartphones estreitos, até 480px) */
+
+/* -----------------------------------------------------
+   CELULARES PEQUENOS
+   ----------------------------------------------------- */
+
 @media (max-width: 480px) {
-  .title {
-    font-size: 2.2rem;
+
+  body {
+    padding-left: 10px;
+    padding-right: 10px;
   }
 
-  .subtitulo {
-    font-size: 0.85rem;
-    margin-bottom: 25px;
+  .frame {
+
+    width: 100%;
+
+    margin-top: 85px;
+
+    border-radius: 22px;
   }
 
   .panel {
-    padding: 25px 15px;
-  }
-
-  .inp {
-    font-size: 0.85rem;
-    padding: 12px;
-  }
-
-  .btn {
-    padding: 14px;
-    font-size: 0.85rem;
-  }
-
-  .opcoes h2 {
-    font-size: 1rem;
-  }
-}
-
-@media (max-width: 1286px) {
-
-  /* Remove o triângulo lateral e a lua em telas menores que 1286px */
-  .polygon {
-    display: none;
-  }
-
-  /* Centraliza o form e permite que ele preencha melhor o espaço */
-  .frame {
-    position: relative;
-    left: 0 !important;
-    right: 0 !important;
-    margin: 0 auto;
-    width: min(90vw, 550px);
-  }
-}
-
-/* ========================================= */
-/* MODO PAISAGEM (CELULARES E TABLETS DEITADOS) */
-/* ========================================= */
-
-@media (max-height: 650px),
-(orientation: landscape) and (max-width: 1024px) {
-  body {
-    /* Libera a rolagem da página quando a tela for muito baixa */
-    overflow-y: auto !important;
-    align-items: flex-start;
-    /* Alinha ao topo para não cortar o cabeçalho */
-    padding: 20px 0;
-  }
-
-  .frame {
-    margin-top: 0;
-    /* Remove a margem superior de 15vh */
-    height: auto;
-    min-height: auto;
-    max-height: 95vh;
-    /* Permite rolar o conteúdo dentro do próprio quadro se ele for maior que a tela */
-    overflow-y: auto;
+    padding: 22px 15px;
   }
 
   .frame .panel-login,
   .frame .panel-cadastro {
-    padding: 20px 15px !important;
+    padding: 25px 15px;
   }
 
   .title {
-    font-size: 2.2rem;
-    margin-bottom: 5px;
+    font-size: 2.25rem;
   }
 
   .subtitulo {
-    font-size: 0.85rem;
-    margin-bottom: 15px;
+    font-size: .82rem;
+
+    margin-bottom: 20px;
   }
 
-  .row2,
-  .row3,
-  .row4 {
-    padding: 0 10px;
+  .inp {
+    font-size: .84rem;
+
+    padding: 11px;
   }
 
-  .form-sec {
-    padding: 15px;
+  .btn {
+    padding: 12px;
+
+    font-size: .84rem;
   }
+
+  .requisitos-senha {
+    width: calc(100vw - 40px);
+    max-width: 340px;
+
+    padding: 12px 14px;
+
+    border-radius: 14px;
+
+    z-index: 999999;
+  }
+
+  .requisitos-senha span {
+    font-size: .72rem;
+    line-height: 1.45;
+  }
+}
+
+
+/* -----------------------------------------------------
+   CELULAR DEITADO / TELA BAIXA
+   ----------------------------------------------------- */
+
+@media (max-height: 650px) {
+
+  body {
+    overflow-y: auto;
+    display: block;
+  }
+
+  .frame {
+
+    margin-top: 80px;
+    margin-bottom: 25px;
+
+    height: auto;
+    max-height: none;
+  }
+
+  .requisitos-senha {
+    width: calc(100vw - 30px);
+    max-width: 340px;
+  }
+
+  .requisitos-senha span {
+    font-size: .70rem;
+  }
+
 }

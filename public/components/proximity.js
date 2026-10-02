@@ -81,45 +81,49 @@ function calcularDistancia(lat1, lon1, lat2, lon2) {
 
 // Localizar usuario
 function localizarUsuario() {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
 
-        navigator.geolocation.getCurrentPosition(function (position) {
+        navigator.geolocation.getCurrentPosition(
 
-            const latitude = position.coords.latitude;
-            const longitude = position.coords.longitude;
+            function (position) {
 
-            posicaoUsuario = [latitude - 0.08, longitude - 0.05];
+                const latitude = position.coords.latitude;
+                const longitude = position.coords.longitude;
 
-            map.setView(posicaoUsuario, zoomInicial);
+                posicaoUsuario = [latitude, longitude];
 
-            console.log("Latitude:", latitude);
-            console.log("Longitude:", longitude);
+                map.setView(posicaoUsuario, zoomInicial);
 
-            L.circleMarker([latitude, longitude], {
-                radius: 10,
-                fillColor: "red",
-                color: "black",
-                weight: 2,
-                fillOpacity: 1
-            })
-                .addTo(map)
-                .bindPopup("Você está aqui!");
+                console.log("Latitude:", latitude);
+                console.log("Longitude:", longitude);
 
-            resolve({
-                latitude: latitude,
-                longitude: longitude
-            });
-        },
+                L.circleMarker([latitude, longitude], {
+                    radius: 10,
+                    fillColor: "red",
+                    color: "black",
+                    weight: 2,
+                    fillOpacity: 1
+                })
+                    .addTo(map)
+                    .bindPopup("Você está aqui!");
 
-
+                resolve({
+                    latitude: latitude,
+                    longitude: longitude
+                });
+            },
 
             function (error) {
-                console.log("Não foi possível obter a localização.");
-                reject(error);
+
+                console.log(
+                    "Não foi possível obter a localização.",
+                    error
+                );
+
+                resolve(null);
             }
         );
-    })
-
+    });
 }
 
 function destacarOng(ongId) {
@@ -246,11 +250,16 @@ async function carregarOngs() {
 
                 map.setView(
                     [
-                        ong.latitude - 0.0020,
-                        ong.longitude - 0.0020
+                        ong.latitude,
+                        ong.longitude
                     ],
                     19
                 );
+
+                // No celular, fecha a lista depois de selecionar a ONG
+                if (window.innerWidth <= 768) {
+                    fecharPainelOngs();
+                }
 
             });
 
@@ -279,7 +288,21 @@ async function carregarOngs() {
 
             marcador.on("click", () => {
 
-                destacarOng(ong.id);
+                // Se o painel estiver fechado, abre primeiro
+                if (painelOngs.classList.contains("fechado")) {
+
+                    abrirPainelOngs();
+
+                    // Espera a animação do painel terminar
+                    setTimeout(() => {
+                        destacarOng(ong.id);
+                    }, 350);
+
+                } else {
+
+                    destacarOng(ong.id);
+
+                }
 
             });
 
@@ -296,3 +319,29 @@ async function carregarOngs() {
 }
 
 carregarOngs();
+
+const painelOngs = document.querySelector("#painel-ongs");
+const botaoFecharOngs = document.querySelector("#botao-fechar-ongs");
+const botaoAbrirOngs = document.querySelector("#botao-abrir-ongs");
+
+function fecharPainelOngs() {
+    painelOngs.classList.add("fechado");
+}
+
+function abrirPainelOngs() {
+    painelOngs.classList.remove("fechado");
+
+    // Leaflet precisa recalcular o tamanho
+    setTimeout(() => {
+        map.invalidateSize();
+    }, 350);
+}
+
+botaoFecharOngs.addEventListener("click", fecharPainelOngs);
+botaoAbrirOngs.addEventListener("click", abrirPainelOngs);
+
+
+// Celular começa fechado
+if (window.innerWidth <= 768) {
+    fecharPainelOngs();
+}

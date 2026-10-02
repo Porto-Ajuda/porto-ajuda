@@ -55,11 +55,24 @@ body {
             var(--bg-main) 100%);
 }
 
+html,
+body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
 /*=======================*/
 /*----MAPA----*/
 /*=====================*/
 #map {
-    height: 1880px;
+    position: fixed;
+    top: 90px;
+    left: 0;
+
+    width: 100%;
+    height: calc(100vh - 90px);
+
     z-index: 0;
 }
 
@@ -73,52 +86,20 @@ body {
     z-index: 6;
 }
 
-.blur {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 35em;
-    height: 100%;
-    background: #00000069;
-    backdrop-filter: blur(10px);
-    z-index: 1;
-}
-
 .section-ongs {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 35em;
+    width: 100%;
     height: 100%;
-    z-index: 2;
+
+    margin-top: 0;
+    padding-bottom: 20px;
+
+    overflow-y: auto;
+    overflow-x: hidden;
+
     text-align: center;
 }
 
-.baduh {
-    top: 30em;
-
-}
-
-.painel-esquerdo {
-    position: fixed;
-    left: 0;
-    top: 0;
-
-    width: 380px;
-    height: 100vh;
-
-    background: white;
-
-    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
-
-    z-index: 1000;
-
-    overflow-y: auto;
-
-}
-
 .section-ongs {
-    margin-top: 90px;
     padding-bottom: 5vh;
     height: calc(100vh - 40px);
     overflow-y: auto;
@@ -288,10 +269,6 @@ body {
 
 .botao-ong:active {
     transform: scale(0.97);
-}
-
-#map {
-    position: relative;
 }
 
 #botao-inicio {
@@ -465,4 +442,219 @@ body {
     background-color: rgba(242, 170, 26, 0.25);
     box-shadow: inset 4px 0 0 #F2AA1A;
     transform: translateX(4px);
+}
+
+/* ========================================
+   PAINEL DE ONGs
+======================================== */
+
+#painel-ongs {
+    padding-top: 5px;;
+    position: fixed;
+
+    top: 90px;
+    left: 0;
+
+    width: 37%;
+    height: calc(100vh - 90px);
+
+    z-index: 1000;
+
+    background: rgba(46, 28, 80, 0.35);
+
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+
+    overflow: visible;
+
+    transition: transform 0.35s ease;
+}
+
+
+/* Conteúdo interno */
+
+.conteudo-ongs {
+    width: 100%;
+    height: 100%;
+
+    overflow: hidden;
+}
+
+/* ========================================
+   BOTÃO FECHAR PAINEL
+======================================== */
+#botao-fechar-ongs {
+    position: absolute;
+
+    top: 50%;
+    right: -22px;
+
+    transform: translateY(-50%);
+
+    width: 44px;
+    height: 44px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+
+    border: 3px solid white;
+    border-radius: 50%;
+
+    background: #4A5492;
+    color: white;
+
+    cursor: pointer;
+
+    z-index: 1002;
+
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.35);
+
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
+}
+
+#botao-fechar-ongs:hover {
+    background: #5B68AC;
+
+    transform:
+        translateY(-50%) scale(1.08);
+}
+
+#botao-fechar-ongs i {
+    font-size: 15px;
+}
+
+/* ========================================
+   PAINEL FECHADO
+======================================== */
+
+#painel-ongs.fechado {
+    transform: translateX(-100%);
+}
+
+
+/* Quando estiver fechado,
+   o botão acompanha o painel */
+
+#painel-ongs.fechado #botao-fechar-ongs {
+    display: none;
+}
+
+/* ========================================
+   BOTÃO ABRIR
+======================================== */
+
+#botao-abrir-ongs {
+    position: fixed;
+
+    top: 55%;
+    left: 0;
+
+    transform: translateY(-50%);
+
+    width: 44px;
+    height: 44px;
+
+    display: none;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+
+    border: 3px solid white;
+    border-radius: 50%;
+
+    background: #4A5492;
+    color: white;
+
+    cursor: pointer;
+
+    z-index: 1002;
+
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.35);
+
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
+}
+
+#botao-abrir-ongs:hover {
+    background: #5B68AC;
+
+    transform:
+        translateY(-50%) scale(1.08);
+}
+
+#botao-abrir-ongs i {
+    font-size: 15px;
+}
+
+/* Quando o painel estiver fechado,
+   mostra o botão de abrir */
+
+#painel-ongs.fechado {
+    transform: translateX(-100%);
+}
+
+#painel-ongs.fechado+#botao-abrir-ongs {
+    display: flex;
+}
+
+
+/* ========================================
+   SCROLLBAR
+======================================== */
+
+.conteudo-ongs::-webkit-scrollbar {
+    width: 8px;
+}
+
+.conteudo-ongs::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.15);
+}
+
+.conteudo-ongs::-webkit-scrollbar-thumb {
+    background: #5B68AC;
+    border-radius: 10px;
+}
+
+.conteudo-ongs::-webkit-scrollbar-thumb:hover {
+    background: #6d79c0;
+}
+
+@media (max-width: 768px) {
+
+    #painel-ongs {
+        width: 85%;
+
+        top: 90px;
+        height: calc(100vh - 90px);
+
+        transform: translateX(-100%);
+    }
+
+    #painel-ongs.fechado {
+        transform: translateX(-100%);
+    }
+
+    #painel-ongs:not(.fechado) {
+        transform: translateX(0);
+    }
+
+    #botao-abrir-ongs {
+        display: flex;
+
+        top: 50%;
+        left: 0;
+    }
+
+    #painel-ongs:not(.fechado)+#botao-abrir-ongs {
+        display: none;
+    }
+
 }
