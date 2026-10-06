@@ -81,65 +81,106 @@ function calcularDistancia(lat1, lon1, lat2, lon2) {
 
 // Localizar usuario
 function localizarUsuario() {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
 
-        navigator.geolocation.getCurrentPosition(function (position) {
+        navigator.geolocation.getCurrentPosition(
 
-            const latitude = position.coords.latitude;
-            const longitude = position.coords.longitude;
+            function (position) {
 
-            posicaoUsuario = [latitude - 0.08, longitude - 0.05];
+                const latitude = position.coords.latitude;
+                const longitude = position.coords.longitude;
 
-            map.setView(posicaoUsuario, zoomInicial);
+                posicaoUsuario = [latitude, longitude];
 
-            console.log("Latitude:", latitude);
-            console.log("Longitude:", longitude);
+                map.setView(posicaoUsuario, zoomInicial);
 
-            L.circleMarker([latitude, longitude], {
-                radius: 10,
-                fillColor: "red",
-                color: "black",
-                weight: 2,
-                fillOpacity: 1
-            })
-                .addTo(map)
-                .bindPopup("Você está aqui!");
+                console.log("Latitude:", latitude);
+                console.log("Longitude:", longitude);
 
-            resolve({
-                latitude: latitude,
-                longitude: longitude
-            });
-        },
+                L.circleMarker([latitude, longitude], {
+                    radius: 10,
+                    fillColor: "red",
+                    color: "black",
+                    weight: 2,
+                    fillOpacity: 1
+                })
+                    .addTo(map)
+                    .bindPopup("Você está aqui!");
 
-
+                resolve({
+                    latitude: latitude,
+                    longitude: longitude
+                });
+            },
 
             function (error) {
-                console.log("Não foi possível obter a localização.");
-                reject(error);
+
+                console.log(
+                    "Não foi possível obter a localização.",
+                    error
+                );
+
+                resolve(null);
             }
         );
-    })
-
+    });
 }
 
+function destacarOng(ongId) {
 
+    const cardOng = document.getElementById(`ong-${ongId}`);
+
+    if (!cardOng) return;
+
+    // Remove destaque dos outros cards
+    document
+        .querySelectorAll(".ong.ong-selecionada")
+        .forEach(card => {
+            card.classList.remove("ong-selecionada");
+        });
+
+    // Destaca o card correto
+    cardOng.classList.add("ong-selecionada");
+
+    // Rola a lista até o card
+    cardOng.scrollIntoView({
+        behavior: "smooth",
+        block: "center"
+    });
+
+    // Remove o destaque depois de 2,5 segundos
+    setTimeout(() => {
+        cardOng.classList.remove("ong-selecionada");
+    }, 2500);
+}
 
 // Criar ongs
 
 async function carregarOngs() {
 
-    let localizacao = null;
+    const telaCarregamento = document.querySelector("#tela-carregamento");
 
     // Tenta localizar o usuário
-    try {
 
-        localizacao = await localizarUsuario();
+    const localizacao = await Promise.race([
 
-    } catch (erro) {
+        localizarUsuario(),
 
-        console.log("Localização do usuário não disponível.");
+        new Promise(resolve => {
 
-    }
+            setTimeout(() => {
+
+                console.log(
+                    "Tempo limite de localização atingido."
+                );
+
+                resolve(null);
+
+            }, 10000);
+
+        })
+
+    ]);
 
     ongs.forEach(ong => {
 
@@ -166,6 +207,7 @@ async function carregarOngs() {
         const card = document.createElement("div");
 
         card.classList.add("ong");
+        card.id = `ong-${ong.id}`;
 
         card.innerHTML = `
     <div class="ong-imagem">
@@ -188,7 +230,7 @@ async function carregarOngs() {
 
     </div>
 
-    <a href="ong.html?id=${ong.id}" class="botao-ong">
+    <a href="ong-profile.html?id=${ong.id}" class="botao-ong">
         Ver ONG
     </a>
 `;
@@ -199,15 +241,25 @@ async function carregarOngs() {
             ong.longitude != null
         ) {
 
-            card.addEventListener("click", () => {
+            card.addEventListener("click", (evento) => {
+
+                // Não interfere no botão "Ver ONG"
+                if (evento.target.closest(".botao-ong")) {
+                    return;
+                }
 
                 map.setView(
                     [
-                        ong.latitude - 0.0020,
-                        ong.longitude - 0.0020
+                        ong.latitude,
+                        ong.longitude
                     ],
                     19
                 );
+
+                // No celular, fecha a lista depois de selecionar a ONG
+                if (window.innerWidth <= 768) {
+                    fecharPainelOngs();
+                }
 
             });
 
@@ -223,16 +275,36 @@ async function carregarOngs() {
 
             });
 
-            L.marker(
+            const marcador = L.marker(
                 [ong.latitude, ong.longitude],
                 { icon: icone }
             )
                 .addTo(map)
                 .bindPopup(`
-                    <strong>${ong.nome}</strong><br>
-                    ${ong.categoria}<br>
-                    ${ong.endereco}
-                `);
+            <strong>${ong.nome}</strong><br>
+            ${ong.categoria}<br>
+            ${ong.endereco}
+        `);
+
+            marcador.on("click", () => {
+
+                // Se o painel estiver fechado, abre primeiro
+                if (painelOngs.classList.contains("fechado")) {
+
+                    abrirPainelOngs();
+
+                    // Espera a animação do painel terminar
+                    setTimeout(() => {
+                        destacarOng(ong.id);
+                    }, 350);
+
+                } else {
+
+                    destacarOng(ong.id);
+
+                }
+
+            });
 
         }
 
@@ -241,6 +313,35 @@ async function carregarOngs() {
             .appendChild(card);
 
     });
+
+    telaCarregamento.classList.add("oculto");
+
 }
 
 carregarOngs();
+
+const painelOngs = document.querySelector("#painel-ongs");
+const botaoFecharOngs = document.querySelector("#botao-fechar-ongs");
+const botaoAbrirOngs = document.querySelector("#botao-abrir-ongs");
+
+function fecharPainelOngs() {
+    painelOngs.classList.add("fechado");
+}
+
+function abrirPainelOngs() {
+    painelOngs.classList.remove("fechado");
+
+    // Leaflet precisa recalcular o tamanho
+    setTimeout(() => {
+        map.invalidateSize();
+    }, 350);
+}
+
+botaoFecharOngs.addEventListener("click", fecharPainelOngs);
+botaoAbrirOngs.addEventListener("click", abrirPainelOngs);
+
+
+// Celular começa fechado
+if (window.innerWidth <= 768) {
+    fecharPainelOngs();
+}
