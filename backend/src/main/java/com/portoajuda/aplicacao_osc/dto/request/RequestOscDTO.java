@@ -1,6 +1,7 @@
 package com.portoajuda.aplicacao_osc.dto.request;
 
 import com.portoajuda.aplicacao_osc.enums.CausaSocial;
+import jakarta.persistence.Column;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import org.hibernate.validator.constraints.URL;
@@ -18,6 +19,8 @@ public record RequestOscDTO(
     @NotBlank(message = "Nome da OSC inválido")
     String nome,
 
+    String logo,
+
     @NotBlank(message = "Pix inválido")
     String pix,
 
@@ -32,6 +35,23 @@ public record RequestOscDTO(
     String email,
 
     String telefone,
+
+    @URL(message = "Url inválida")
+    String instagram,
+
+    String bairro,
+
+    String rua,
+
+    String numero,
+
+    String complemento,
+
+    String latitude,
+
+    String longitude,
+
+    String diasHorariosFuncionamento,
 
     @URL(message = "Url inválida")
     String site,

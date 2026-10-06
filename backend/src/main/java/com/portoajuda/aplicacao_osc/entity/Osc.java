@@ -51,6 +51,9 @@ public class Osc {
     @Column(name = "nome", nullable = false, length = 255)
     private String nome;
 
+    @Column(name = "logo", length = 1000)
+    private String logo;
+
     @Column(name = "ativo", nullable = false)
     private boolean ativo;
 
@@ -70,6 +73,9 @@ public class Osc {
     @Column(name = "telefone", length = 15)
     private String telefone;
 
+    @Column(name = "instagram", length = 500)
+    private String instagram;
+
     @Column(name = "site", length = 255)
     private String site;
 
@@ -78,6 +84,27 @@ public class Osc {
 
     @Column(name = "cep", nullable = false, length = 9)
     private String cep;
+
+    @Column(name = "bairro", nullable = false, length = 100)
+    private String bairro;
+
+    @Column(name = "rua", nullable = false, length = 100)
+    private String rua;
+
+    @Column(name = "numero", length = 100)
+    private String numero;
+
+    @Column(name = "complemento", length = 100)
+    private String complemento;
+
+    @Column(name = "latitude", length = 100)
+    private String latitude;
+
+    @Column(name = "longitude", length = 100)
+    private String longitude;
+
+    @Column(name = "dias_funcionamento", length = 100)
+    private String diasHorariosFuncionamento;
 
     @CreationTimestamp
     @Column(name = "data_criacao", nullable = false, updatable = false)

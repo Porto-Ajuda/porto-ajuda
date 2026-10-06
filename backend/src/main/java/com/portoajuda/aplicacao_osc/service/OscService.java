@@ -43,15 +43,24 @@ public class OscService {
         osc.setCnpj(new Cnpj(oscDTO.cnpj()));
         osc.setCausas(oscDTO.causas());
         osc.setNome(oscDTO.nome());
+        osc.setLogo(oscDTO.logo());
+
         osc.setChavePix(oscDTO.pix());
         osc.setTipoChavePix(TipoChavePix.valueOf(oscDTO.tipoPix()));
+
         osc.setDescricao(oscDTO.descricao());
         osc.setEmail(new Email(oscDTO.email()));
         osc.setTelefone(oscDTO.telefone());
-        osc.setSite(oscDTO.site());
-        osc.setCidade(oscDTO.cidade());
-        osc.setCep(oscDTO.cep());
+        osc.setInstagram(oscDTO.instagram());
 
+        osc.setCep(oscDTO.cep());
+        osc.setCidade(oscDTO.cidade());
+        osc.setBairro(oscDTO.bairro());
+        osc.setRua(oscDTO.rua());
+        osc.setNumero(oscDTO.numero());
+        osc.setComplemento(oscDTO.complemento());
+        osc.setDiasHorariosFuncionamento(oscDTO.diasHorariosFuncionamento());
+        osc.setSite(oscDTO.site());
 
         Usuario usuario = usuarioRepository.findById(usuarioAuth.getId())
                 .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado"));
