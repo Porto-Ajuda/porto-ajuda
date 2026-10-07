@@ -38,9 +38,16 @@ public class GeocodingService {
 
         if (resposta == null || resposta.length == 0) {
             throw new IllegalArgumentException(
-                    "Endereço não encontrado"
+                    "Endereço não encontrado para: " +
+                            rua + ", " + numero + ", " +
+                            cidade + ", " + cep
             );
         }
+
+        System.out.println("CEP: " + cep);
+        System.out.println("Cidade: " + cidade);
+        System.out.println("Rua: " + rua);
+        System.out.println("Número: " + numero);
 
         return new Coordenadas(
                 Double.parseDouble(resposta[0].lat()),

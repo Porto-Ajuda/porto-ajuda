@@ -4,6 +4,7 @@ import com.portoajuda.aplicacao_osc.enums.CausaSocial;
 import jakarta.persistence.Column;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import org.hibernate.validator.constraints.URL;
 import org.hibernate.validator.constraints.br.CNPJ;
 
@@ -39,8 +40,10 @@ public record RequestOscDTO(
     @URL(message = "Url inválida")
     String instagram,
 
+    @NotBlank(message = "Obrigatório definir bairro")
     String bairro,
 
+    @NotBlank(message = "Obrigatório definir rua")
     String rua,
 
     String numero,
@@ -56,5 +59,6 @@ public record RequestOscDTO(
     String cidade,
 
     @NotBlank(message = "Necessário definir cep")
+    @Pattern( regexp = "^\\d{5}-\\d{3}$", message = "CEP deve estar no formato 00000-000" )
     String cep
 ) {}
