@@ -98,10 +98,10 @@ public class Osc {
     private String complemento;
 
     @Column(name = "latitude", length = 100)
-    private String latitude;
+    private double latitude;
 
     @Column(name = "longitude", length = 100)
-    private String longitude;
+    private double longitude;
 
     @Column(name = "dias_funcionamento", length = 100)
     private String diasHorariosFuncionamento;

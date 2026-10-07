@@ -47,10 +47,6 @@ public record RequestOscDTO(
 
     String complemento,
 
-    String latitude,
-
-    String longitude,
-
     String diasHorariosFuncionamento,
 
     @URL(message = "Url inválida")

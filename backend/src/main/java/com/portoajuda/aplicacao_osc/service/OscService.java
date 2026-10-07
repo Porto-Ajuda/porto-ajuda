@@ -3,6 +3,7 @@ package com.portoajuda.aplicacao_osc.service;
 import com.portoajuda.aplicacao_osc.dto.request.RequestNewMembroDTO;
 import com.portoajuda.aplicacao_osc.dto.request.RequestOscDTO;
 import com.portoajuda.aplicacao_osc.dto.request.UpdateOscDTO;
+import com.portoajuda.aplicacao_osc.dto.response.Coordenadas;
 import com.portoajuda.aplicacao_osc.entity.*;
 import com.portoajuda.aplicacao_osc.enums.TipoChavePix;
 import com.portoajuda.aplicacao_osc.repository.OscMembrosRepository;
@@ -33,6 +34,7 @@ public class OscService {
     private final UsuarioRepository usuarioRepository;
     private final RoleRepository roleRepository;
     private final OscMembrosRepository membrosRepository;
+    private final GeocodingService geocodingService;
 
     @Transactional
     public void create(RequestOscDTO oscDTO, Usuario usuarioAuth) {
@@ -59,8 +61,19 @@ public class OscService {
         osc.setRua(oscDTO.rua());
         osc.setNumero(oscDTO.numero());
         osc.setComplemento(oscDTO.complemento());
+
         osc.setDiasHorariosFuncionamento(oscDTO.diasHorariosFuncionamento());
         osc.setSite(oscDTO.site());
+
+        Coordenadas coordenadas = geocodingService.buscarCoordenadas(
+                oscDTO.cep(),
+                oscDTO.cidade(),
+                oscDTO.rua(),
+                oscDTO.numero()
+        );
+        osc.setLatitude(coordenadas.latitude());
+        osc.setLongitude(coordenadas.longitude());
+
 
         Usuario usuario = usuarioRepository.findById(usuarioAuth.getId())
                 .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado"));
