@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de OSC | Porto Ajuda</title>
+
+    <link rel="stylesheet" href="../styles/cadastro-osc.css">
+    <link rel="stylesheet" href="../styles/geral.css">
+    <link rel="stylesheet" href="../styles/acessibilidade.css">
+
+    <script src="../components/cadastro-osc.js" defer></script>
+    <script src="../components/header_footer.js" defer></script>
+    <script src="../components/acessibilidade.js" defer></script>
+</head>
+
+<body>
+
+    <div id="alerta-cadastro" class="alerta-cadastro" role="dialog" aria-modal="true" aria-labelledby="titulo-alerta-cadastro" hidden>
+        <div class="caixa-cadastro">
+            <div class="icone-cadastro"><i class="fa-solid fa-check"></i></div>
+            <div class="conteudo-cadastro">
+                <span class="badge-cadastro">Cadastro concluído</span>
+                <h2 id="titulo-alerta-cadastro">Bem-vindo ao<br><span>Porto Ajuda!</span></h2>
+                <p>Sua conta foi criada com sucesso. Agora você já pode entrar com seu CNPJ e senha e começar a fazer parte da nossa comunidade.</p>
+            </div>
+            <button type="button" id="btn-ir-login" class="btn-ir-login">
+                Continuar para o login <i class="fa-solid fa-arrow-right"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="stars"></div>
+    <header class="navbar"></header>
+
+    <div class="polygon">
+        <div class="shape">
+            <h1 class="title">Porto <span>Ajuda</span></h1>
+            <p class="subtitulo">
+                Cadastre sua OSC no Porto Ajuda e dê mais <span>visibilidade</span> às suas iniciativas sociais.
+            </p>
+        </div>
+    </div>
+
+    <div class="frame" id="frame">
+        <div class="panel panel-cadastro">
+
+            <form id="form-osc" class="form-cadastro-osc" novalidate>
+
+                <!-- PROGRESSO -->
+                <div class="progresso" aria-live="polite">
+                    <div class="progresso-texto" id="progresso-texto">Etapa 1 de 8</div>
+                    <div class="progresso-trilho"><div class="progresso-barra" id="progresso-barra"></div></div>
+                </div>
+
+                <!-- ETAPA 1 - IDENTIFICAÇÃO -->
+                <div class="row etapa-osc">
+                    <h2>Identificação da OSC</h2>
+                    <p class="descricao-etapa">Conte um pouco sobre a sua organização.</p>
+
+                    <div class="campo">
+                        <label for="nome-ong">Nome da ONG</label>
+                        <input type="text" id="nome-ong" name="nome_ong" placeholder="Nome da organização" autocomplete="organization" required>
+                    </div>
+
+                    <div class="campo">
+                        <label for="cnpj">CNPJ</label>
+                        <input type="text" id="cnpj" name="cnpj" placeholder="00.000.000/0000-00" maxlength="18" inputmode="numeric" required>
+                    </div>
+
+                    <div class="campo">
+                        <label for="logo">Logo da organização</label>
+                        <input type="file" id="logo" name="logo" accept="image/png, image/jpeg, image/webp">
+                    </div>
+                </div>
+
+                <!-- ETAPA 2 - DESCRIÇÃO -->
+                <div class="row etapa-osc">
+                    <h2>Descrição da OSC</h2>
+                    <p class="descricao-etapa">Apresente a organização para quem vai conhecê-la.</p>
+
+                    <div class="campo">
+                        <label for="descricao-curta">Descrição curta</label>
+                        <input type="text" id="descricao-curta" name="descricao_curta" maxlength="200" placeholder="Uma breve apresentação da organização" required>
+                    </div>
+
+                    <div class="campo">
+                        <label for="descricao-completa">Descrição completa</label>
+                        <textarea id="descricao-completa" name="descricao_completa" rows="5" placeholder="Conte sobre a organização, seus objetivos e atividades..." required></textarea>
+                    </div>
+
+                    <div class="campo">
+                        <label for="ano-fundacao">Ano de fundação</label>
+                        <input type="number" id="ano-fundacao" name="ano_fundacao" min="1800" max="2100" placeholder="Ex.: 2015" required>
+                    </div>
+                </div>
+
+                <!-- ETAPA 3 - CONTATO -->
+                <div class="row etapa-osc">
+                    <h2>Contato e redes sociais</h2>
+                    <p class="descricao-etapa">Informe os canais pelos quais as pessoas podem entrar em contato.</p>
+
+                    <div class="campo">
+                        <label for="email-institucional">E-mail institucional</label>
+                        <input type="email" id="email-institucional" name="email_institucional" placeholder="contato@organizacao.org.br" autocomplete="email" required>
+                    </div>
+
+                    <div class="campo metade">
+                        <label for="telefone">Telefone</label>
+                        <input type="tel" id="telefone" name="telefone" placeholder="(00) 0000-0000">
+                    </div>
+                    <div class="campo metade">
+                        <label for="whatsapp">WhatsApp</label>
+                        <input type="tel" id="whatsapp" name="whatsapp" placeholder="(00) 00000-0000">
+                    </div>
+
+                    <div class="campo metade">
+                        <label for="site">Site</label>
+                        <input type="url" id="site" name="site" placeholder="https://www.exemplo.org.br">
+                    </div>
+                    <div class="campo metade">
+                        <label for="linkedin">LinkedIn</label>
+                        <input type="url" id="linkedin" name="linkedin" placeholder="https://linkedin.com/company/organizacao">
+                    </div>
+
+                    <div class="campo metade">
+                        <label for="instagram">Instagram</label>
+                        <input type="url" id="instagram" name="instagram" placeholder="https://instagram.com/organizacao">
+                    </div>
+                    <div class="campo metade">
+                        <label for="youtube">YouTube</label>
+                        <input type="url" id="youtube" name="youtube" placeholder="https://youtube.com/@organizacao">
+                    </div>
+                </div>
+
+                <!-- ETAPA 4 - ATUAÇÃO -->
+                <div class="row etapa-osc">
+                    <h2>Áreas de atuação</h2>
+                    <p class="descricao-etapa">Informe em quais áreas a organização desenvolve suas ações.</p>
+
+                    <div class="campo metade">
+                        <label for="botao-foco">Tipo principal da ONG</label>
+
+                        <div class="dropdown" id="dropdown-foco">
+                            <input type="hidden" id="foco-principal" name="foco_principal">
+
+                            <button type="button" class="botao-dropdown" id="botao-foco" aria-haspopup="listbox">
+                                <span id="foco-selecionado">Selecione</span>
+                                <i class="fa-solid fa-chevron-down"></i>
+                            </button>
+
+                            <div class="dropdown-opcoes" id="opcoes-foco">
+                                <button type="button" data-valor="assistencia-social">Assistência Social</button>
+                                <button type="button" data-valor="protecao-animal">Proteção Animal</button>
+                                <button type="button" data-valor="meio-ambiente">Meio Ambiente</button>
+                                <button type="button" data-valor="educacao">Educação</button>
+                                <button type="button" data-valor="saude">Saúde</button>
+                                <button type="button" data-valor="direitos-humanos">Direitos Humanos</button>
+                                <button type="button" data-valor="cultura">Cultura e Arte</button>
+                                <button type="button" data-valor="esporte">Esporte e Lazer</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="campo metade">
+                        <label for="area-geografica">Área geográfica</label>
+                        <select id="area-geografica" name="area_geografica" required>
+                            <option value="">Selecione</option>
+                            <option value="bairro">Bairro</option>
+                            <option value="cidade">Cidade</option>
+                            <option value="municipal">Municipal</option>
+                            <option value="regional">Regional</option>
+                            <option value="estadual">Estadual</option>
+                            <option value="nacional">Nacional</option>
+                            <option value="internacional">Internacional</option>
+                        </select>
+                    </div>
+
+                    <div class="campo metade">
+                        <label>Áreas secundárias</label>
+                        <div class="areas-selecionadas" id="areas-selecionadas"></div>
+
+                        <button type="button" class="botao-adicionar-area" id="botao-adicionar-area">
+                            <span>+</span> Adicionar área
+                        </button>
+
+                        <div class="dropdown-secundario" id="dropdown-secundario">
+                            <div class="dropdown-opcoes" id="opcoes-secundarias">
+                                <button type="button" data-valor="assistencia-social">Assistência Social</button>
+                                <button type="button" data-valor="protecao-animal">Proteção Animal</button>
+                                <button type="button" data-valor="meio-ambiente">Meio Ambiente</button>
+                                <button type="button" data-valor="educacao">Educação</button>
+                                <button type="button" data-valor="saude">Saúde</button>
+                                <button type="button" data-valor="direitos-humanos">Direitos Humanos</button>
+                                <button type="button" data-valor="cultura">Cultura e Arte</button>
+                                <button type="button" data-valor="esporte">Esporte e Lazer</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="campo metade">
+                        <label>ODS relacionadas</label>
+                        <div class="ods-selecionadas" id="ods-selecionadas"></div>
+
+                        <button type="button" class="botao-adicionar-ods" id="botao-adicionar-ods">
+                            <span>+</span> Adicionar ODS
+                        </button>
+
+                        <div class="dropdown-ods" id="dropdown-ods">
+                            <div class="dropdown-opcoes" id="opcoes-ods">
+                                <button type="button" data-valor="1"><span class="ods-numero">ODS 1</span> Erradicação da Pobreza</button>
+                                <button type="button" data-valor="2"><span class="ods-numero">ODS 2</span> Fome Zero e Agricultura Sustentável</button>
+                                <button type="button" data-valor="3"><span class="ods-numero">ODS 3</span> Saúde e Bem-Estar</button>
+                                <button type="button" data-valor="4"><span class="ods-numero">ODS 4</span> Educação de Qualidade</button>
+                                <button type="button" data-valor="5"><span class="ods-numero">ODS 5</span> Igualdade de Gênero</button>
+                                <button type="button" data-valor="6"><span class="ods-numero">ODS 6</span> Água Potável e Saneamento</button>
+                                <button type="button" data-valor="7"><span class="ods-numero">ODS 7</span> Energia Limpa e Acessível</button>
+                                <button type="button" data-valor="8"><span class="ods-numero">ODS 8</span> Trabalho Decente e Crescimento Econômico</button>
+                                <button type="button" data-valor="9"><span class="ods-numero">ODS 9</span> Indústria, Inovação e Infraestrutura</button>
+                                <button type="button" data-valor="10"><span class="ods-numero">ODS 10</span> Redução das Desigualdades</button>
+                                <button type="button" data-valor="11"><span class="ods-numero">ODS 11</span> Cidades e Comunidades Sustentáveis</button>
+                                <button type="button" data-valor="12"><span class="ods-numero">ODS 12</span> Consumo e Produção Responsáveis</button>
+                                <button type="button" data-valor="13"><span class="ods-numero">ODS 13</span> Ação Contra a Mudança Global do Clima</button>
+                                <button type="button" data-valor="14"><span class="ods-numero">ODS 14</span> Vida na Água</button>
+                                <button type="button" data-valor="15"><span class="ods-numero">ODS 15</span> Vida Terrestre</button>
+                                <button type="button" data-valor="16"><span class="ods-numero">ODS 16</span> Paz, Justiça e Instituições Eficazes</button>
+                                <button type="button" data-valor="17"><span class="ods-numero">ODS 17</span> Parcerias e Meios de Implementação</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ETAPA 5 - ENDEREÇO -->
+                <div class="row etapa-osc">
+                    <h2>Endereço</h2>
+                    <p class="descricao-etapa">Informe o endereço da sede da organização.</p>
+
+                    <div class="campo metade">
+                        <label for="cep">CEP</label>
+                        <input type="text" id="cep" name="cep" placeholder="00000-000" maxlength="9" inputmode="numeric" autocomplete="postal-code" required>
+                    </div>
+                    <div class="campo metade">
+                        <label for="pais">País</label>
+                        <input type="text" id="pais" name="pais" value="Brasil" required>
+                    </div>
+
+                    <div class="campo metade">
+                        <label for="estado">Estado</label>
+                        <input type="text" id="estado" name="estado" placeholder="São Paulo" required>
+                    </div>
+                    <div class="campo metade">
+                        <label for="cidade">Cidade</label>
+                        <input type="text" id="cidade" name="cidade" placeholder="Cidade" required>
+                    </div>
+
+                    <div class="campo metade">
+                        <label for="bairro">Bairro</label>
+                        <input type="text" id="bairro" name="bairro" placeholder="Bairro" required>
+                    </div>
+                    <div class="campo metade">
+                        <label for="rua">Rua</label>
+                        <input type="text" id="rua" name="rua" placeholder="Nome da rua" required>
+                    </div>
+
+                    <div class="campo metade">
+                        <label for="numero">Número</label>
+                        <input type="text" id="numero" name="numero" placeholder="Número" required>
+                    </div>
+                    <div class="campo metade">
+                        <label for="complemento">Complemento</label>
+                        <input type="text" id="complemento" name="complemento" placeholder="Sala, bloco...">
+                    </div>
+                </div>
+
+                <!-- ETAPA 6 - FUNCIONAMENTO -->
+                <div class="row etapa-osc">
+                    <h2>Funcionamento e atendimento</h2>
+                    <p class="descricao-etapa">Informe como e quando a organização realiza seus atendimentos.</p>
+
+                    <div class="campo">
+                        <label>Dias de funcionamento</label>
+                        <div class="dias-semana">
+                            <label><input type="checkbox" name="dias_funcionamento[]" value="segunda"> Segunda</label>
+                            <label><input type="checkbox" name="dias_funcionamento[]" value="terca"> Terça</label>
+                            <label><input type="checkbox" name="dias_funcionamento[]" value="quarta"> Quarta</label>
+                            <label><input type="checkbox" name="dias_funcionamento[]" value="quinta"> Quinta</label>
+                            <label><input type="checkbox" name="dias_funcionamento[]" value="sexta"> Sexta</label>
+                            <label><input type="checkbox" name="dias_funcionamento[]" value="sabado"> Sábado</label>
+                            <label><input type="checkbox" name="dias_funcionamento[]" value="domingo"> Domingo</label>
+                        </div>
+                    </div>
+
+                    <div class="campo metade">
+                        <label for="horario-abertura">Abre às</label>
+                        <input type="time" id="horario-abertura" name="horario_abertura">
+                    </div>
+                    <div class="campo metade">
+                        <label for="horario-fechamento">Fecha às</label>
+                        <input type="time" id="horario-fechamento" name="horario_fechamento">
+                    </div>
+
+                    <div class="campo metade">
+                        <label>Forma de atendimento</label>
+                        <label><input type="checkbox" name="atendimento_presencial" value="1"> Atendimento presencial</label>
+                        <label><input type="checkbox" name="atendimento_online" value="1"> Atendimento online</label>
+                    </div>
+
+                    <div class="campo metade">
+                        <label>Necessita de agendamento?</label>
+                        <label><input type="radio" name="necessita_agendamento" value="sim"> Sim</label>
+                        <label><input type="radio" name="necessita_agendamento" value="nao"> Não</label>
+                    </div>
+                </div>
+
+                <!-- ETAPA 7 - VOLUNTARIADO (havia uma etapa duplicada/aninhada: unificada) -->
+                <div class="row etapa-osc">
+                    <h2>Voluntariado</h2>
+                    <p class="descricao-etapa">Informe como as pessoas podem ajudar como voluntárias.</p>
+
+                    <div class="campo">
+                        <label>Aceita voluntários?</label>
+                        <label><input type="radio" name="aceita_voluntarios" value="sim" id="voluntarios-sim" required> Sim</label>
+                        <label><input type="radio" name="aceita_voluntarios" value="nao" id="voluntarios-nao"> Não</label>
+                    </div>
+
+                    <div class="campo metade" data-voluntariado>
+                        <label for="frequencia-voluntariado">Frequência</label>
+                        <select id="frequencia-voluntariado" name="frequencia_voluntariado">
+                            <option value="">Selecione</option>
+                            <option value="pontual">Ações pontuais</option>
+                            <option value="semanal">Semanal</option>
+                            <option value="quinzenal">Quinzenal</option>
+                            <option value="mensal">Mensal</option>
+                            <option value="flexivel">Horário flexível</option>
+                        </select>
+                    </div>
+
+                    <div class="campo metade" data-voluntariado>
+                        <label for="idade-minima-voluntario">Idade mínima</label>
+                        <input type="number" id="idade-minima-voluntario" name="idade_minima_voluntario" min="0" max="99" placeholder="Ex.: 18">
+                    </div>
+
+                    <div class="campo metade" data-voluntariado>
+                        <label>Há processo seletivo?</label>
+                        <label><input type="radio" name="processo_seletivo_voluntario" value="sim"> Sim</label>
+                        <label><input type="radio" name="processo_seletivo_voluntario" value="nao"> Não</label>
+                    </div>
+
+                    <div class="campo metade" data-voluntariado>
+                        <label>Emite certificado?</label>
+                        <label><input type="radio" name="emite_certificado_voluntario" value="sim"> Sim</label>
+                        <label><input type="radio" name="emite_certificado_voluntario" value="nao"> Não</label>
+                    </div>
+
+                    <div class="campo" data-voluntariado>
+                        <label for="atividades-voluntariado">Atividades realizadas pelos voluntários</label>
+                        <textarea id="atividades-voluntariado" name="atividades_voluntariado" rows="4" placeholder="Ex.: apoio em oficinas, distribuição de alimentos, reforço escolar..."></textarea>
+                    </div>
+                </div>
+
+                <!-- ETAPA 8 - SENHA -->
+                <div class="row etapa-osc">
+                    <h2>Crie sua senha</h2>
+                    <p class="descricao-etapa">Você vai entrar na conta da OSC usando o CNPJ e esta senha.</p>
+
+                    <div class="campo">
+                        <label for="senha-osc">Senha</label>
+                        <div class="campo-senha">
+                            <input type="password" id="senha-osc" name="senha" placeholder="Crie uma senha" autocomplete="new-password" minlength="8" required>
+                            <button type="button" class="btn-olho" data-alvo="senha-osc" aria-label="Mostrar senha">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="campo">
+                        <label for="confirmar-senha-osc">Confirmar senha</label>
+                        <div class="campo-senha">
+                            <input type="password" id="confirmar-senha-osc" name="confirmar_senha" placeholder="Repita a senha" autocomplete="new-password" required>
+                            <button type="button" class="btn-olho" data-alvo="confirmar-senha-osc" aria-label="Mostrar confirmação de senha">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <ul class="requisitos" id="requisitos" aria-live="polite">
+                        <li data-req="tamanho">Mínimo de 8 caracteres</li>
+                        <li data-req="maiuscula">Uma letra maiúscula</li>
+                        <li data-req="minuscula">Uma letra minúscula</li>
+                        <li data-req="numero">Um número</li>
+                        <li data-req="especial">Um caractere especial</li>
+                        <li data-req="igual">As senhas coincidem</li>
+                    </ul>
+                </div>
+
+                <!-- NAVEGAÇÃO (sempre visível no rodapé do card) -->
+                <div class="botoes-navegacao">
+                    <button type="button" class="botao botao-voltar" id="voltar-osc">Voltar</button>
+                    <button type="button" class="botao botao-proximo" id="proximo-osc">Próximo</button>
+                    <button type="submit" class="botao botao-cadastrar" id="cadastrar-osc">Cadastrar OSC</button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+</body>
+</html>

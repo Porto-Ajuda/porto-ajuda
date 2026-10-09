@@ -1373,9 +1373,9 @@ body {
 .configuracao .botao {
     width: 180px;
     min-height: 42px;
-
+    text-decoration: none;
     justify-self: end;
-
+    
     margin: 0;
 
     padding: 10px 15px;
@@ -1384,8 +1384,18 @@ body {
 
     font-size: 0.82rem;
 }
+.configuracao .botao a {
+    color: var(--gold);
+    list-style: none;
+}
+.configuracao .botao:hover a {
+    background: var(--gold);
 
+    color: var(--bg-main);
 
+    box-shadow:
+        0 8px 20px rgba(245, 181, 46, 0.2);
+}
 /* ==========================================================
    INTERRUPTOR / CHECKBOX
    ========================================================== */
