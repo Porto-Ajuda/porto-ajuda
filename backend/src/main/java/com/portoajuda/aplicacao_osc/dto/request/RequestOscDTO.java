@@ -1,8 +1,10 @@
 package com.portoajuda.aplicacao_osc.dto.request;
 
 import com.portoajuda.aplicacao_osc.enums.CausaSocial;
+import jakarta.persistence.Column;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import org.hibernate.validator.constraints.URL;
 import org.hibernate.validator.constraints.br.CNPJ;
 
@@ -17,6 +19,8 @@ public record RequestOscDTO(
 
     @NotBlank(message = "Nome da OSC inválido")
     String nome,
+
+    String logo,
 
     @NotBlank(message = "Pix inválido")
     String pix,
@@ -34,11 +38,27 @@ public record RequestOscDTO(
     String telefone,
 
     @URL(message = "Url inválida")
+    String instagram,
+
+    @NotBlank(message = "Obrigatório definir bairro")
+    String bairro,
+
+    @NotBlank(message = "Obrigatório definir rua")
+    String rua,
+
+    String numero,
+
+    String complemento,
+
+    String diasHorariosFuncionamento,
+
+    @URL(message = "Url inválida")
     String site,
 
     @NotBlank(message = "Obrigatório definir cidade")
     String cidade,
 
     @NotBlank(message = "Necessário definir cep")
+    @Pattern( regexp = "^\\d{5}-\\d{3}$", message = "CEP deve estar no formato 00000-000" )
     String cep
 ) {}

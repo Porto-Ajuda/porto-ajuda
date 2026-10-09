@@ -36,7 +36,7 @@ public class Post {
     @Column(name = "titulo", nullable = false, length = 255)
     private String titulo;
 
-    @Column(name = "imagem_url", length = 500)
+    @Column(name = "imagem_url", length = 1000)
     private String imagemUrl;
 
     @Column(name = "conteudo", columnDefinition = "TEXT")
