@@ -1,61 +1,187 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contato</title>
+
+    <meta name="description"
+        content="Entre em contato com a equipe do Porto Ajuda para tirar dúvidas, enviar sugestões ou falar sobre parcerias.">
+
+    <meta name="theme-color" content="#231744">
+
+    <title>Contato | Porto Ajuda</title>
+
+    <!-- Fontes e ícones -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-    <link rel="stylesheet" href="../styles/contato.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <!-- CSS global: header, footer, temas e acessibilidade -->
     <link rel="stylesheet" href="../styles/geral.css">
 
+    <!-- CSS exclusivo da página de contato -->
+    <link rel="stylesheet" href="../styles/contato.css">
+
+    <!-- Componentes compartilhados -->
     <script src="../components/header_footer.js" defer></script>
+
+    <!-- Lógica do formulário: carregar apenas uma vez -->
+    <script type="module" src="../components/contato.js"></script>
 </head>
 
 <body>
 
-    <a href="Porto-Ajuda.html"></a>
+    <!-- Fundo decorativo global -->
+    <div class="stars" aria-hidden="true"></div>
 
-    <div class="stars"></div>
-
+    <!-- Cabeçalho inserido pelo JavaScript -->
     <header class="navbar"></header>
 
     <main class="corpo">
 
-        <h2 class="title">Contato</h2>
+        <section class="contato-introducao" aria-labelledby="titulo-contato">
 
-        <div class="form">
+            <span class="contato-etiqueta">
+                <i class="fa-regular fa-envelope" aria-hidden="true"></i>
+                FALE CONOSCO
+            </span>
+
+            <h1 class="title" id="titulo-contato">
+                Entre em contato
+            </h1>
+
+            <p class="contato-descricao">
+                Tem alguma dúvida, sugestão ou proposta de parceria?
+                Envie sua mensagem para a equipe do Porto Ajuda.
+            </p>
+
+            <div class="contato-divisor" aria-hidden="true"></div>
+
+            <div class="contato-informacoes">
+
+                <div class="contato-informacao">
+                    <span class="contato-icone">
+                        <i class="fa-regular fa-paper-plane" aria-hidden="true"></i>
+                    </span>
+
+                    <div>
+                        <h2>Fale com nossa equipe</h2>
+                        <p>Estamos disponíveis para ouvir você.</p>
+                    </div>
+                </div>
+
+                <div class="contato-informacao">
+                    <span class="contato-icone">
+                        <i class="fa-solid fa-hand-holding-heart" aria-hidden="true"></i>
+                    </span>
+
+                    <div>
+                        <h2>Faça parte da mudança</h2>
+                        <p>Sugestões e parcerias ajudam a fortalecer nossa iniciativa.</p>
+                    </div>
+                </div>
+
+                <div class="contato-informacao">
+                    <span class="contato-icone">
+                        <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+                    </span>
+
+                    <div>
+                        <h2>Envio seguro</h2>
+                        <p>Utilize o formulário para encaminhar sua mensagem.</p>
+                    </div>
+                </div>
+
+            </div>
+
+        </section>
+
+        <section class="form" aria-labelledby="titulo-formulario">
+
+            <div class="contato-formulario-cabecalho">
+                <span class="contato-formulario-etiqueta">PORTO AJUDA</span>
+
+                <h2 id="titulo-formulario">Envie sua mensagem</h2>
+
+                <p>Preencha os campos abaixo para entrar em contato.</p>
+            </div>
 
             <form id="form-contato">
 
                 <div class="campo-nome">
                     <label for="nome">Nome completo</label>
-                    <input type="text" id="nome" name="nome">
+
+                    <input type="text" id="nome" name="nome" maxlength="100" autocomplete="name"
+                        placeholder="Digite seu nome" required>
                 </div>
 
                 <div class="campo-email">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" name="email">
+                    <label for="email">E-mail</label>
+
+                    <input type="email" id="email" name="email" maxlength="150" autocomplete="email"
+                        placeholder="voce@exemplo.com" required>
+                </div>
+
+                <div class="campo-assunto">
+                    <label for="assunto">Assunto</label>
+
+                    <input type="text" id="assunto" name="assunto" maxlength="150"
+                        placeholder="Qual é o motivo do contato?" required>
                 </div>
 
                 <div class="campo-mensagem">
                     <label for="mensagem">Mensagem</label>
-                    <textarea id="mensagem" name="mensagem"></textarea>
+
+                    <textarea id="mensagem" name="mensagem" maxlength="5000" rows="4"
+                        placeholder="Escreva sua mensagem..." required></textarea>
+
+                    <span class="contato-ajuda">
+                        Explique sua dúvida ou sugestão com clareza.
+                    </span>
                 </div>
 
-                <button type="submit">Enviar</button>
+                <button type="submit" class="contato-botao-enviar">
+                    <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+                    Enviar mensagem
+                </button>
+
+                <p class="contato-aviso" id="status-contato" role="status" aria-live="polite"></p>
 
             </form>
 
-        </div>
+        </section>
 
     </main>
 
-    <footer id="footer"></footer>
+    <div id="notificacao-contato" class="notificacao-contato" role="status" aria-live="polite" aria-atomic="true"
+        hidden>
 
-    <script src="../components/contato.js" defer></script>
+        <div class="notificacao-icone" aria-hidden="true">
+            <i class="fa-solid fa-check"></i>
+        </div>
+
+        <div class="notificacao-conteudo">
+            <strong id="notificacao-titulo">Mensagem enviada!</strong>
+            <p id="notificacao-texto">
+                Recebemos sua mensagem e entraremos em contato.
+            </p>
+        </div>
+
+        <button type="button" class="notificacao-fechar" aria-label="Fechar notificação">
+            &times;
+        </button>
+
+        <div class="notificacao-progresso"></div>
+    </div>
+
+    <!-- Rodapé inserido pelo JavaScript -->
+    <footer id="footer"></footer>
 
 </body>
 

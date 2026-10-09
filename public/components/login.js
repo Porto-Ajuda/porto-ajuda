@@ -5,10 +5,11 @@
  * Máscaras, etapas e validações do cadastro ficam no
  * cadastro.js.
  * ===================================================== */
+
+import { getAPI_URL } from "./modoBack.js";
+
 (function () {
     "use strict";
-
-    const API_URL = "https://porto-ajuda.up.railway.app";
 
     const frame = document.getElementById("frame");
     const goCad = document.getElementById("goCad");
@@ -77,6 +78,12 @@
 
         try {
 
+            const API_URL = await getAPI_URL();
+
+            console.log("================================");
+            console.log("API ESCOLHIDA:", API_URL);
+            console.log("================================");
+
             const response = await fetch(`${API_URL}/usuario/login`, {
                 method: "POST",
                 headers: {
@@ -98,6 +105,9 @@
 
             if (response.ok) {
                 localStorage.setItem("dadosUsuario", JSON.stringify(data));
+                // window.location.href = "/";
+                // devemos tirar do comentario e apagar o que esta a baixo quando o site estiver pronto para produção
+                
                 window.location.href = "../pages/Porto-Ajuda.html";
                 return;
             }

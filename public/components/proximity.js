@@ -230,10 +230,15 @@ async function carregarOngs() {
 
     </div>
 
+    
     <a href="ong-profile.html?id=${ong.id}" class="botao-ong">
-        Ver ONG
+    Ver ONG
     </a>
-`;
+    `;
+        // Quando estiver pronto, devemos tirar o comentário do código e trocar com o de cima para que ele seja compilado e funcione corretamente.
+        // <a href="/ong-profile?id=${ong.id}" class="botao-ong">
+        //     Ver ONG
+        // </a>
 
         // Só permite clicar no mapa se houver coordenadas
         if (

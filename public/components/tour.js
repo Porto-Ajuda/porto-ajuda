@@ -404,7 +404,7 @@
                 titulo: "Apoie o Porto Ajuda",
                 texto: "Nesta página você encontra formas de contribuir para manter o projeto funcionando."
             },
-            
+
             {
                 seletor: ".valores_site",
                 titulo: "Transparência",
@@ -429,7 +429,7 @@
                 titulo: "Copiar chave Pix",
                 texto: "Use este botão para copiar a chave Pix sem precisar digitá-la manualmente."
             },
-            
+
             {
                 seletor: "#copiar-pix",
                 titulo: "Pix copia e cola",
@@ -446,6 +446,13 @@
     };
 
     const SEQUENCIA_TOUR_COMPLETO = [
+        // { pagina: "home", url: "/" },
+        // { pagina: "sobre", url: "/sobre" },
+        // { pagina: "iniciativas", url: "/iniciativas" },
+        // { pagina: "apoie", url: "/apoie" },
+        // { pagina: "mapa", url: "/proximidade" },
+        // { pagina: "ongs", url: "/oscs" }
+
         { pagina: "home", url: "Porto-Ajuda.html" },
         { pagina: "sobre", url: "sobre.html" },
         { pagina: "iniciativas", url: "iniciativas.html" },

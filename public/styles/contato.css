@@ -1,227 +1,662 @@
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Poppins:wght@300;400;500&display=swap');
-@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css');
-:root {
+/* =========================================================
+   PORTO AJUDA — CONTATO
+   Layout compacto, responsivo e acessível
+========================================================= */
 
-    /* FUNDOS */
-  
-    --bg-main: #161928;
-    --bg-section: #2E1C50;
-    --bg-card: #3E2871;
-    --bg-card-hover: #453B80;
-  
-    /* DETALHES */
-  
-    --primary: #4A5492;
-    --secondary: #5B68AC;
-  
-    /* DOURADOS */
-  
-    --gold: #F2AA1A;
-    --gold-dark: #DDAA41;
-    --gold-light: #F9C86B;
-    --gold-soft: #FCE0A1;
-  
-    /* TEXTOS */
-  
-    --text: #FFFFFF;
-    --text-soft: #d7d7d7;
-  
-  }
-  
-  /* ========================= */
-  /* RESET */
-  /* ========================= */
-  
-  * {
+body {
+    --contato-fundo: #161928;
+    --contato-painel: rgba(46, 28, 80, 0.78);
+    --contato-borda: rgba(190, 164, 239, 0.20);
+    --contato-texto: #FFFFFF;
+    --contato-texto-suave: #D7D1E5;
+    --contato-campo: rgba(22, 15, 43, 0.58);
+    --contato-destaque: #F2AA1A;
+    --contato-destaque-claro: #F9C86B;
+
     margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
-  
-  html {
-    scroll-behavior: smooth;
-  }
-  
- body {
-    overflow-x: hidden;
-    overflow-y: auto;
-
-    min-height: 100vh;
-
     font-family: 'Poppins', sans-serif;
-    color: var(--text);
+    color: var(--contato-texto);
 
     background:
-        radial-gradient(circle at top,
-            var(--bg-card) 0%,
-            var(--bg-section) 45%,
-            var(--bg-main) 100%);
-
-    background-attachment: fixed;
+        radial-gradient(ellipse at 15% 40%,
+            rgba(91, 57, 143, 0.26),
+            transparent 48%),
+        linear-gradient(135deg,
+            #161928 0%,
+            #24183D 55%,
+            #19152B 100%);
 }
+
+/* Fundo decorativo */
+
+.stars {
+    z-index: 0;
+}
+
+/* Mantém o cabeçalho acima do conteúdo */
+
+body>.navbar {
+    z-index: 9999;
+}
+
+/* =========================================================
+   LAYOUT PRINCIPAL
+========================================================= */
 
 .corpo {
-    width: min(500px, 90%);
+    position: relative;
+    z-index: 1;
+
+    width: min(1180px, calc(100% - 64px));
     margin: 0 auto;
 
-    padding-top: 140px;
-    padding-bottom: 100px;
+    padding: 116px 0 36px;
+
+    display: grid;
+    grid-template-columns: minmax(0, 0.88fr) minmax(0, 1.12fr);
+
+    align-items: center;
+    gap: clamp(36px, 6vw, 90px);
 }
 
-/* Título */
-.title {
+/* =========================================================
+   INTRODUÇÃO — COLUNA ESQUERDA
+========================================================= */
 
-    margin-bottom: 25px;
+.contato-introducao {
+    min-width: 0;
+}
 
-    font-size: 3.2rem;
+.contato-etiqueta {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
 
-    font-family: 'Cinzel', serif;
+    margin-bottom: 14px;
 
-    color: #e6c36f;
-
+    color: var(--contato-destaque-claro);
+    font-size: 0.76rem;
+    font-weight: 600;
     letter-spacing: 2px;
-
-    text-align: center;
 }
 
-/* Formulário */
-.form {
+.contato-etiqueta i {
+    font-size: 0.95rem;
+}
+
+.title {
+    margin: 0;
+
+    color: var(--contato-destaque-claro);
+
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2.8rem, 4.2vw, 4.2rem);
+    font-weight: 700;
+    line-height: 1.04;
+
+    overflow-wrap: anywhere;
+}
+
+.contato-descricao {
+    max-width: 440px;
+    margin: 20px 0 24px;
+
+    color: var(--contato-texto-suave);
+    font-size: 0.96rem;
+    line-height: 1.85;
+}
+
+.contato-divisor {
+    width: 64px;
+    height: 3px;
+    margin-bottom: 28px;
+
+    border-radius: 5px;
+
+    background: linear-gradient(90deg,
+            var(--contato-destaque),
+            var(--contato-destaque-claro));
+}
+
+/* Informações de contato */
+
+.contato-informacoes {
+    display: grid;
+    gap: 20px;
+}
+
+.contato-informacao {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+}
+
+.contato-icone {
+    flex: 0 0 44px;
+
+    width: 44px;
+    height: 44px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 1px solid rgba(242, 170, 26, 0.30);
+    border-radius: 12px;
+
+    background: rgba(242, 170, 26, 0.07);
+
+    color: var(--contato-destaque-claro);
+    font-size: 1.05rem;
+}
+
+.contato-informacao>div {
+    min-width: 0;
+}
+
+.contato-informacao h2 {
+    margin: 2px 0 5px;
+
+    color: var(--contato-texto);
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.96rem;
+    font-weight: 600;
+}
+
+.contato-informacao p {
+    margin: 0;
+
+    color: var(--contato-texto-suave);
+    font-size: 0.82rem;
+    line-height: 1.65;
+}
+
+/* =========================================================
+   FORMULÁRIO — COLUNA DIREITA
+========================================================= */
+
+.corpo>.form {
+    min-width: 0;
     width: 100%;
 
-    padding: 35px;
+    padding: clamp(24px, 3vw, 36px);
 
-    border-radius: 28px;
+    border: 1px solid var(--contato-borda);
+    border-radius: 20px;
 
-    background: rgba(48, 39, 87, 0.82);
+    background: var(--contato-painel);
 
-    border: 2px solid rgba(183, 154, 216, 0.25);
+    box-shadow:
+        0 24px 60px rgba(0, 0, 0, 0.20),
+        inset 0 1px 0 rgba(255, 255, 255, 0.035);
 
-    backdrop-filter: blur(8px);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+}
 
-    box-shadow: 0 0 25px rgba(0, 0, 0, 0.35);
+.contato-formulario-cabecalho {
+    margin-bottom: 22px;
+}
+
+.contato-formulario-etiqueta {
+    color: var(--contato-destaque-claro);
+
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 1.8px;
+}
+
+.contato-formulario-cabecalho h2 {
+    margin: 7px 0 6px;
+
+    color: var(--contato-texto);
+
+    font-family: 'Poppins', sans-serif;
+    font-size: clamp(1.35rem, 2vw, 1.7rem);
+    font-weight: 600;
+    line-height: 1.35;
+}
+
+.contato-formulario-cabecalho p {
+    margin: 0;
+
+    color: var(--contato-texto-suave);
+    font-size: 0.83rem;
+    line-height: 1.6;
 }
 
 /* Campos */
-.campo-nome,
-.campo-email,
-.campo-mensagem {
 
+#form-contato {
     display: flex;
     flex-direction: column;
+    gap: 15px;
 }
 
-/* Labels */
-label {
-
-    margin-bottom: 6px;
-
-    color: #f4ebff;
-
-    font-size: 0.95rem;
-
-    font-weight: 400;
+#form-contato>div {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
 }
 
-/* Inputs */
-input,
-textarea {
+#form-contato label {
+    color: var(--contato-texto-suave);
 
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 500;
+}
+
+#form-contato input,
+#form-contato textarea {
+    display: block;
     width: 100%;
+    min-width: 0;
 
-    padding: 14px 16px;
+    margin: 0;
+    padding: 12px 14px;
 
-    border-radius: 14px;
+    border: 1px solid rgba(190, 164, 239, 0.20);
+    border-radius: 10px;
 
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: var(--contato-campo);
+    color: var(--contato-texto);
 
-    background: rgba(255, 255, 255, 0.08);
-
-    color: white;
-
-    font-size: 1rem;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.87rem;
+    line-height: 1.5;
 
     outline: none;
 
-    transition: 0.3s;
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        background 0.2s ease;
 }
 
-/* Placeholder */
-input::placeholder,
-textarea::placeholder {
-
-    color: rgba(255, 255, 255, 0.5);
+#form-contato input {
+    height: 45px;
 }
 
-/* Foco */
-input:focus,
-textarea:focus {
+#form-contato textarea {
+    min-height: 105px;
+    max-height: 150px;
 
-    border-color: #ddb866;
-
-    background: rgba(255, 255, 255, 0.12);
-
-    box-shadow: 0 0 12px rgba(221, 184, 102, 0.25);
+    resize: vertical;
 }
 
-/* Textarea */
-textarea {
+#form-contato input::placeholder,
+#form-contato textarea::placeholder {
+    color: rgba(215, 209, 229, 0.55);
+    opacity: 1;
+}
 
-    height: 120px;
+#form-contato input:focus,
+#form-contato textarea:focus {
+    border-color: var(--contato-destaque);
 
-    resize: none;
+    background: rgba(22, 15, 43, 0.85);
+
+    box-shadow: 0 0 0 3px rgba(242, 170, 26, 0.12);
+}
+
+.contato-ajuda {
+    color: var(--contato-texto-suave);
+    font-size: 0.72rem;
+    line-height: 1.5;
 }
 
 /* Botão */
-button {
 
-    margin-top: 10px;
+#form-contato .contato-botao-enviar {
+    width: 100%;
+    min-height: 47px;
 
-    padding: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
 
-    border: none;
+    margin-top: 3px;
+    padding: 12px 18px;
 
-    border-radius: 16px;
+    border: 1px solid transparent;
+    border-radius: 10px;
 
-    background: linear-gradient(90deg,
-            #d8b15f,
-            #e7c97c);
+    background: linear-gradient(115deg,
+            #F2AA1A,
+            #F9C86B);
 
-    color: #493565;
+    color: #25183F;
 
-    font-size: 1rem;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
     font-weight: 600;
 
     cursor: pointer;
 
-    transition: 0.3s;
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        filter 0.2s ease;
 }
 
-/* Hover botão */
-button:hover {
-
+#form-contato .contato-botao-enviar:hover {
     transform: translateY(-2px);
 
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 8px 24px rgba(242, 170, 26, 0.20);
+
+    filter: brightness(1.04);
 }
 
-textarea::-webkit-scrollbar {
-    width: 5px;
-    height: 20px;
+#form-contato .contato-botao-enviar:active {
+    transform: translateY(0);
 }
 
-/* Fundo da barra */
-textarea::-webkit-scrollbar-track {
-    background: #2b2b40;
+#form-contato .contato-botao-enviar:focus-visible {
+    outline: 3px solid var(--contato-texto);
+    outline-offset: 3px;
+}
+
+.contato-aviso {
+    margin: 0;
+
+    color: var(--contato-texto-suave);
+    font-size: 0.8rem;
+    line-height: 1.6;
+
+    overflow-wrap: anywhere;
+}
+
+.contato-aviso:empty {
+    display: none;
+}
+
+/* =========================================================
+   RODAPÉ
+========================================================= */
+
+body>#footer {
+    position: relative;
+    z-index: 1;
+}
+
+/* =========================================================
+   RESPONSIVIDADE
+========================================================= */
+
+/* Notebooks menores */
+
+@media (max-width: 1100px) {
+    .corpo {
+        width: calc(100% - 48px);
+        gap: 35px;
+    }
+
+    .title {
+        font-size: clamp(2.5rem, 4vw, 3.5rem);
+    }
+
+    .contato-informacoes {
+        gap: 16px;
+    }
+}
+
+/* Tablets e telas estreitas */
+
+@media (max-width: 768px) {
+    .corpo {
+        width: min(560px, calc(100% - 32px));
+
+        padding: 94px 0 35px;
+
+        grid-template-columns: minmax(0, 1fr);
+        gap: 28px;
+    }
+
+    .title {
+        font-size: clamp(2.5rem, 9vw, 3.5rem);
+    }
+
+    .contato-descricao {
+        margin: 15px 0 20px;
+    }
+
+    .contato-divisor {
+        margin-bottom: 22px;
+    }
+
+    .contato-informacoes {
+        gap: 15px;
+    }
+
+    .contato-informacao h2 {
+        font-size: 0.9rem;
+    }
+
+    .contato-informacao p {
+        font-size: 0.8rem;
+    }
+
+    .corpo>.form {
+        padding: 24px 20px;
+    }
+}
+
+/* Celulares */
+
+@media (max-width: 480px) {
+    .corpo {
+        width: calc(100% - 28px);
+        padding-top: 84px;
+        gap: 24px;
+    }
+
+    .title {
+        font-size: 2.65rem;
+    }
+
+    .contato-descricao {
+        font-size: 0.88rem;
+        line-height: 1.7;
+    }
+
+    .contato-informacao {
+        gap: 12px;
+    }
+
+    .contato-icone {
+        flex-basis: 40px;
+        width: 40px;
+        height: 40px;
+    }
+
+    .corpo>.form {
+        padding: 21px 16px;
+        border-radius: 15px;
+    }
+
+    #form-contato {
+        gap: 13px;
+    }
+
+    #form-contato input {
+        height: 44px;
+    }
+
+    #form-contato textarea {
+        min-height: 110px;
+    }
+}
+
+/* Movimento reduzido */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .contato-botao-enviar,
+    #form-contato input,
+    #form-contato textarea {
+        transition: none;
+    }
+}
+
+/* ========================================================= NOTIFICAÇÃO PERSONALIZADA — CONTATO ========================================================= */
+.notificacao-contato {
+    position: fixed;
+    top: 108px;
+    right: 24px;
+    z-index: 100001;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    width: min(420px, calc(100vw - 32px));
+    padding: 20px 42px 24px 18px;
+    overflow: hidden;
+    background: linear-gradient(135deg, rgba(46, 28, 80, 0.98), rgba(31, 21, 55, 0.98));
+    border: 1px solid rgba(242, 170, 26, 0.35);
+    border-radius: 16px;
+    color: #FFFFFF;
+    box-shadow: 0 16px 45px rgba(0, 0, 0, 0.30), 0 0 24px rgba(139, 107, 194, 0.12);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    opacity: 0;
+    transform: translateX(24px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.notificacao-contato[hidden] {
+    display: none !important;
+}
+
+.notificacao-contato.visivel {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* Ícone */
+.notificacao-icone {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 42px;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: rgba(242, 170, 26, 0.14);
+    border: 1px solid rgba(242, 170, 26, 0.28);
+    color: #F9C86B;
+    font-size: 18px;
+}
+
+/* Conteúdo */
+.notificacao-conteudo {
+    flex: 1;
+    min-width: 0;
+}
+
+.notificacao-conteudo strong {
+    display: block;
+    margin: 1px 0 6px;
+    color: #F9C86B;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.notificacao-conteudo p {
+    margin: 0;
+    color: #E0D9EE;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.82rem;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+
+/* Fechar */
+.notificacao-fechar {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: #C8BBDD;
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+
+.notificacao-fechar:hover {
+    background: rgba(255, 255, 255, 0.10);
+    color: #FFFFFF;
+}
+
+
+/* Indicador de duração */
+.notificacao-progresso {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: #F2AA1A;
+    transform: scaleX(1);
+    transform-origin: left;
+}
+
+/* A barra dura 6 segundos */
+.notificacao-contato.visivel .notificacao-progresso {
+    animation: progresso-notificacao 6s linear forwards;
+}
+
+/* Pausa a barra quando o mouse está sobre a notificação */
+.notificacao-contato.pausada .notificacao-progresso {
+    animation-play-state: paused;
+}
+
+@keyframes progresso-notificacao {
+    from {
+        transform: scaleX(1);
+    }
+
+    to {
+        transform: scaleX(0);
+    }
+}
+
+/* Barra de rolagem exclusiva do campo Mensagem */
+#form-contato #mensagem {
+    scrollbar-width: thin;
+    scrollbar-color: #DDAA41 #241638;
+}
+
+#form-contato #mensagem::-webkit-scrollbar {
+    width: 8px;
+}
+
+#form-contato #mensagem::-webkit-scrollbar-track {
+    background: #241638;
     border-radius: 10px;
 }
 
-/* Parte que desliza */
-textarea::-webkit-scrollbar-thumb {
-    background: #9d4edd;
+#form-contato #mensagem::-webkit-scrollbar-thumb {
+    background: #DDAA41;
+    border: 2px solid #241638;
     border-radius: 10px;
 }
 
-/* Hover */
-textarea::-webkit-scrollbar-thumb:hover {
-    background: #c77dff;
+#form-contato #mensagem::-webkit-scrollbar-thumb:hover {
+    background: #F9C86B;
+}
+
+#form-contato #mensagem::-webkit-scrollbar-thumb:active {
+    background: #F2AA1A;
 }

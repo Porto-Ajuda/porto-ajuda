@@ -5,10 +5,11 @@
  * Está dentro de uma função para não colidir nomes
  * com o login.js.
  * ===================================================== */
+
+import { getAPI_URL } from "./modoBack.js";
+
 (function () {
     "use strict";
-
-    const API_URL = "https://porto-ajuda.up.railway.app";
 
     // ---------- ELEMENTOS ----------
     const formCadastro = document.getElementById("form-cadastro");
@@ -546,6 +547,8 @@
     async function postCadastro(usuario) {
 
         try {
+
+            const API_URL = await getAPI_URL();
 
             const response = await fetch(`${API_URL}/usuario/register`, {
                 method: "POST",

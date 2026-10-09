@@ -3042,3 +3042,34 @@ body.alto-contraste ::selection {
     color: #000000;
 
 }
+
+
+/* Barra de rolagem global — Porto Ajuda */
+
+/* Firefox e navegadores compatíveis */
+html {
+    scrollbar-width: thin;
+    scrollbar-color: #DDAA41 #161928;
+}
+
+/* Chrome, Edge e outros navegadores Chromium */
+html::-webkit-scrollbar {
+    width: 8px;
+}
+
+html::-webkit-scrollbar-track {
+    background: #161928;
+}
+
+html::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg,
+            #F9C86B,
+            #DDAA41,
+            #F2AA1A);
+    border-radius: 10px;
+    border: 2px solid #161928;
+}
+
+html::-webkit-scrollbar-thumb:hover {
+    background: #F9C86B;
+}
