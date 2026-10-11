@@ -1,0 +1,238 @@
+:root {
+    --fundo: #161928;
+    --painel: #2E1C50;
+    --roxo: #4A5492;
+    --dourado: #F2AA1A;
+    --dourado-claro: #FCE0A1;
+    --texto: #FFFFFF;
+    --texto-secundario: #D7D7D7;
+    --borda: rgba(242, 170, 26, 0.30);
+    --campo: rgba(22, 25, 40, 0.75);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    min-height: 100vh;
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: "Poppins", sans-serif;
+    color: var(--texto);
+
+    background:
+        radial-gradient(ellipse at top, #352454 0%, transparent 55%),
+        var(--fundo);
+}
+
+.cartao {
+    width: 100%;
+    max-width: 510px;
+    padding: 44px 36px;
+    text-align: center;
+
+    background: linear-gradient(145deg, #30204f, #211832);
+    border: 1px solid var(--borda);
+    border-radius: 24px;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+
+    animation: aparecer 0.6s ease both;
+}
+
+.icone-sucesso {
+    width: 88px;
+    height: 88px;
+    margin: 0 auto 24px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: var(--dourado);
+    background: rgba(242, 170, 26, 0.10);
+    border: 2px solid rgba(242, 170, 26, 0.55);
+    border-radius: 50%;
+    font-size: 44px;
+    font-weight: 500;
+}
+
+.marca {
+    margin-bottom: 12px;
+    color: var(--dourado-claro);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+}
+
+h1 {
+    margin-bottom: 16px;
+    font-family: "Cormorant Garamond", serif;
+    font-size: clamp(34px, 7vw, 46px);
+    line-height: 1.1;
+}
+
+#mensagem {
+    margin-bottom: 28px;
+    color: var(--texto-secundario);
+    font-size: 14px;
+    line-height: 1.9;
+}
+
+/* Formulário de reenvio */
+
+#form-reenvio {
+    margin: 24px 0 20px;
+    padding: 22px;
+    text-align: left;
+    background: rgba(22, 25, 40, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 16px;
+}
+
+#form-reenvio[hidden] {
+    display: none !important;
+}
+
+#form-reenvio label {
+    display: block;
+    margin-bottom: 10px;
+    color: var(--dourado-claro);
+    font-size: 13px;
+    font-weight: 500;
+}
+
+#email-reenvio {
+    width: 100%;
+    min-height: 48px;
+    margin-bottom: 14px;
+    padding: 12px 14px;
+
+    color: var(--texto);
+    background: var(--campo);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 10px;
+    outline: none;
+
+    font-family: inherit;
+    font-size: 14px;
+
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+#email-reenvio::placeholder {
+    color: #aaa4b8;
+}
+
+#email-reenvio:focus {
+    border-color: var(--dourado);
+    box-shadow: 0 0 0 3px rgba(242, 170, 26, 0.13);
+}
+
+.botao {
+    width: 100%;
+    min-height: 50px;
+    padding: 13px 18px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 1px solid transparent;
+    border-radius: 10px;
+
+    background: var(--dourado);
+    color: #211832;
+
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.botao:hover:not(:disabled) {
+    background: var(--dourado-claro);
+    transform: translateY(-1px);
+}
+
+.botao:focus-visible {
+    outline: 3px solid var(--texto);
+    outline-offset: 4px;
+}
+
+.botao:disabled {
+    opacity: 0.65;
+    cursor: wait;
+    transform: none;
+}
+
+#mensagem-reenvio {
+    margin-top: 12px;
+    color: var(--texto-secundario);
+    font-size: 12px;
+    line-height: 1.7;
+    overflow-wrap: anywhere;
+}
+
+#botao {
+    margin-top: 12px;
+}
+
+.rodape {
+    margin-top: 24px;
+    color: #aaa4b8;
+    font-size: 11px;
+    line-height: 1.7;
+}
+
+@keyframes aparecer {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 480px) {
+    body {
+        padding: 16px;
+    }
+
+    .cartao {
+        padding: 34px 22px;
+        border-radius: 20px;
+    }
+
+    .icone-sucesso {
+        width: 76px;
+        height: 76px;
+        font-size: 38px;
+    }
+
+    #form-reenvio {
+        padding: 17px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation: none !important;
+        transition: none !important;
+    }
+}

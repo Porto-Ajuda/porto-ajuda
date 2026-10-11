@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Confirmação de e-mail | Porto Ajuda</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Poppins:wght@400;500;600&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet" href="../styles/geral.css">
+    <link rel="stylesheet" href="../styles/confirmacao-email.css">
+
+    <script src="../components/confirmacao-email.js" defer></script>
+</head>
+
+<body>
+
+    <main class="cartao">
+        <div class="icone-sucesso" id="icone" aria-hidden="true">✓</div>
+
+        <p class="marca">Porto Ajuda</p>
+
+        <h1 id="titulo">E-mail confirmado!</h1>
+
+        <p id="mensagem" role="status" aria-live="polite">
+            Seu endereço de e-mail foi verificado com sucesso.
+        </p>
+
+        <form id="form-reenvio" hidden>
+            <label for="email-reenvio">Seu e-mail cadastrado</label>
+
+            <input type="email" id="email-reenvio" name="email" placeholder="seu@email.com" autocomplete="email"
+                required>
+
+            <button type="submit" class="botao" id="botao-reenvio">
+                Reenviar e-mail de confirmação
+            </button>
+
+            <p id="mensagem-reenvio" role="status" aria-live="polite"></p>
+        </form>
+
+        <a class="botao" id="botao" href="/login">
+            Voltar ao login →
+        </a>
+
+        <p class="rodape">
+            Conectando pessoas, fortalecendo causas.
+        </p>
+    </main>
+</body>
+
+</html>

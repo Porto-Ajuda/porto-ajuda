@@ -1,5 +1,6 @@
 package com.portoajuda.aplicacao_osc.segurity;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -11,8 +12,6 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import lombok.RequiredArgsConstructor;
-
 @Configuration
 @RequiredArgsConstructor
 @EnableWebSecurity
@@ -22,7 +21,8 @@ public class SecurityConfiguration {
         private final JwtAuthFilter jwtAuthFilter;
 
         @Bean
-        public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        public SecurityFilterChain filterChain(HttpSecurity http)
+                        throws Exception {
 
                 http
                                 .csrf(AbstractHttpConfigurer::disable)
@@ -34,14 +34,12 @@ public class SecurityConfiguration {
                                                 .frameOptions(frame -> frame.sameOrigin()))
 
                                 .sessionManagement(session -> session
-                                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                                                .sessionCreationPolicy(
+                                                                SessionCreationPolicy.STATELESS))
 
                                 .authorizeHttpRequests(auth -> auth
 
-                                                // ========================================
                                                 // FRONTEND - PÚBLICO
-                                                // ========================================
-
                                                 .requestMatchers(
                                                                 "/",
                                                                 "/apoie",
@@ -64,30 +62,32 @@ public class SecurityConfiguration {
                                                                 "/components/**",
                                                                 "/doom/**",
 
-                                                                "/error",
+                                                                // AUTENTICAÇÃO E CONFIRMAÇÃO DE E-MAIL
                                                                 "/usuario/register",
                                                                 "/usuario/login",
+                                                                "/usuario/confirmar-email",
+                                                                "/usuario/trocar-codigo",
+                                                                "/usuario/reenviar-confirmacao",
+
+                                                                // DOCUMENTAÇÃO
                                                                 "/swagger-ui.html",
                                                                 "/swagger-ui/**",
                                                                 "/v3/api-docs/**",
                                                                 "/v3/api-docs",
                                                                 "/swagger-resources/**",
                                                                 "/webjars/**",
+
+                                                                // OUTRAS ROTAS PÚBLICAS
+                                                                "/error",
                                                                 "/api/config/**",
                                                                 "/osc/list")
                                                 .permitAll()
 
-                                                // ========================================
                                                 // CORS / PREFLIGHT
-                                                // ========================================
-
                                                 .requestMatchers(HttpMethod.OPTIONS, "/**")
                                                 .permitAll()
 
-                                                // ========================================
-                                                // RESTANTE DA API - PROTEGIDO
-                                                // ========================================
-
+                                                // DEMAIS ROTAS - PROTEGIDAS
                                                 .anyRequest()
                                                 .authenticated())
 

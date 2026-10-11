@@ -1,3 +1,4 @@
+
 package com.portoajuda.aplicacao_osc.segurity;
 
 import com.portoajuda.aplicacao_osc.entity.Usuario;
@@ -7,7 +8,6 @@ import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -23,14 +23,25 @@ import java.util.function.Function;
 public class JwtService {
 
     private final String SECRET;
+
     private static final Duration TOKEN_EXPIRATION = Duration.ofMinutes(30);
 
-    public JwtService(@Value("${JWT_SECRET_KEY}") String secret) {
+    // TESTE: considera cadastros com mais de 2 minutos.
+    private static final Duration EMAIL_TOKEN_EXPIRATION = Duration.ofMinutes(2);
+
+    // PRODUÇÃO: altere para Duration.ofMinutes(30).
+    // private static final Duration EMAIL_TOKEN_EXPIRATION = Duration.ofMinutes(30);
+
+    private static final String ACCESS = "ACCESS";
+    private static final String EMAIL_VERIFICATION = "EMAIL_VERIFICATION";
+
+    public JwtService(
+            @Value("${JWT_SECRET_KEY}") String secret) {
         this.SECRET = secret;
     }
 
+    // JWT usado no login
     public String generateToken(Usuario usuario) {
-
         List<String> authorities = usuario.getAuthorities()
                 .stream()
                 .map(GrantedAuthority::getAuthority)
@@ -38,36 +49,65 @@ public class JwtService {
 
         Map<String, Object> claims = new HashMap<>();
         claims.put("authorities", authorities);
+        claims.put("purpose", ACCESS);
 
-        return createToken(claims, usuario.getId().toString());
+        return createToken(
+                claims,
+                usuario.getId().toString(),
+                TOKEN_EXPIRATION);
     }
 
-    private String createToken(Map<String, Object> claims, String id){
+    // JWT usado exclusivamente para confirmar o e-mail
+    public String generateEmailVerificationToken(Usuario usuario) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("purpose", EMAIL_VERIFICATION);
+
+        return createToken(
+                claims,
+                usuario.getId().toString(),
+                EMAIL_TOKEN_EXPIRATION);
+    }
+
+    private String createToken(
+            Map<String, Object> claims,
+            String id,
+            Duration expiration) {
+
         Instant now = Instant.now();
+
         return Jwts.builder()
                 .claims(claims)
                 .subject(id)
                 .issuedAt(Date.from(now))
-                .expiration(Date.from(now.plus(TOKEN_EXPIRATION)))
+                .expiration(Date.from(now.plus(expiration)))
                 .signWith(getSignKey())
                 .compact();
-
     }
 
-    private SecretKey getSignKey(){
-        return Keys.hmacShaKeyFor(Decoders.BASE64.decode(SECRET));
+    private SecretKey getSignKey() {
+        return Keys.hmacShaKeyFor(
+                Decoders.BASE64.decode(SECRET));
     }
 
-    public String extractSubject(String token){
+    public String extractSubject(String token) {
         return extractClaim(token, Claims::getSubject);
     }
 
-    public Date extractExpiration(String token){
+    public Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
     }
 
-    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver){
-        final Claims claims = extractAllClaims(token);
+    public String extractPurpose(String token) {
+        return extractClaim(
+                token,
+                claims -> claims.get("purpose", String.class));
+    }
+
+    public <T> T extractClaim(
+            String token,
+            Function<Claims, T> claimsResolver) {
+
+        Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
     }
 
@@ -79,12 +119,28 @@ public class JwtService {
                 .getPayload();
     }
 
-    private boolean isTokenExpired(String token){
+    private boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
     }
 
+    // Valida exclusivamente JWTs de acesso
     public Boolean validateToken(String token, Usuario usuario) {
-        final String username = extractSubject(token);
-        return (username.equals(usuario.getId().toString()) && !isTokenExpired(token));
+        String username = extractSubject(token);
+
+        return ACCESS.equals(extractPurpose(token))
+                && username.equals(usuario.getId().toString())
+                && !isTokenExpired(token);
+    }
+
+    // Valida exclusivamente JWTs de confirmação de e-mail
+    public Boolean validateEmailVerificationToken(
+            String token,
+            Usuario usuario) {
+
+        String username = extractSubject(token);
+
+        return EMAIL_VERIFICATION.equals(extractPurpose(token))
+                && username.equals(usuario.getId().toString())
+                && !isTokenExpired(token);
     }
 }

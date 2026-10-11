@@ -17,6 +17,7 @@ public class EmailService {
         this.mailSender = mailSender;
     }
 
+    // Envio utilizado pelo formulário de contato
     public void enviarEmail(
             String nome,
             String email,
@@ -25,27 +26,45 @@ public class EmailService {
 
         SimpleMailMessage emailMensagem = new SimpleMailMessage();
 
-        // Quem vai receber
         emailMensagem.setTo(emailDestino);
+        emailMensagem.setSubject("Contato Porto Ajuda - " + assunto);
 
-        // Assunto
-        emailMensagem.setSubject(
-                "Contato Porto Ajuda - " + assunto
-        );
-
-        // Conteúdo
         emailMensagem.setText(
                 "Nova mensagem recebida pelo site Porto Ajuda.\n\n" +
+                        "Nome: " + nome + "\n" +
+                        "E-mail: " + email + "\n" +
+                        "Assunto: " + assunto + "\n\n" +
+                        "Mensagem:\n" + mensagem);
 
-                "Nome: " + nome + "\n" +
-                "E-mail: " + email + "\n" +
-                "Assunto: " + assunto + "\n\n" +
+        mailSender.send(emailMensagem);
+    }
 
-                "Mensagem:\n" +
-                mensagem
-        );
+    // Envio utilizado na confirmação de e-mail
+    public void enviarConfirmacaoEmail(
+            String nome,
+            String emailUsuario,
+            String token,
+            String appBaseUrl) {
 
-        // Envia
+        String linkConfirmacao = appBaseUrl
+                + "/usuario/confirmar-email?token="
+                + token;
+
+        SimpleMailMessage emailMensagem = new SimpleMailMessage();
+
+        emailMensagem.setTo(emailUsuario);
+        emailMensagem.setSubject(
+                "Confirme seu e-mail - Porto Ajuda");
+
+        emailMensagem.setText(
+                "Olá, " + nome + "!\n\n" +
+                        "Recebemos seu cadastro no Porto Ajuda.\n\n" +
+                        "Para confirmar seu endereço de e-mail, acesse o link:\n\n" +
+                        linkConfirmacao + "\n\n" +
+                        "Este link expira em 2 horas.\n\n" +
+                        "Se você não realizou esse cadastro, ignore esta mensagem.\n\n" +
+                        "Equipe Porto Ajuda");
+
         mailSender.send(emailMensagem);
     }
 }

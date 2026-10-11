@@ -36,11 +36,7 @@ public class Usuario implements UserDetails {
     private Set<Post> posts;
 
     @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(name = "usuario_roles",
-            joinColumns = @JoinColumn(
-                    name = "id_usuario", nullable = false),
-            inverseJoinColumns = @JoinColumn(
-                    name = "id_role", nullable = false))
+    @JoinTable(name = "usuario_roles", joinColumns = @JoinColumn(name = "id_usuario", nullable = false), inverseJoinColumns = @JoinColumn(name = "id_role", nullable = false))
     private Set<Role> roles = new HashSet<>();
 
     @Column(name = "cpf", nullable = false, length = 11, unique = true)
@@ -73,6 +69,9 @@ public class Usuario implements UserDetails {
 
     @Column(name = "ativo", nullable = false)
     private boolean ativo = true;
+
+    @Column(name = "email_verificado", nullable = false)
+    private boolean emailVerificado = false;
 
     @Setter(AccessLevel.NONE)
     @CreationTimestamp
