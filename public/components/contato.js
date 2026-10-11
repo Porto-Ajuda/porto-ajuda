@@ -176,13 +176,24 @@ if (formulario) {
         try {
             const API_URL = getAPI_URL();
 
-            const response = await fetch(`${API_URL}/contato`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(contato)
-            });
+            // const response = await fetch(`${API_URL}/contato`, {
+            //     method: "POST",
+            //     headers: {
+            //         "Content-Type": "application/json"
+            //     },
+            //     body: JSON.stringify(contato)
+            // });
+
+            const response = await fetch(
+                "https://porto-ajuda.up.railway.app//contato",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(contato)
+                }
+            );
 
             const data = await response.json().catch(() => ({}));
 
