@@ -19,13 +19,13 @@ public class DatabaseConfig {
 
     private volatile DatabaseStatus status;
 
-    @Value("${DB_REMOTE_URL}")
+    @Value("${DB_REMOTE_URL:}")
     private String remoteUrl;
 
-    @Value("${DB_REMOTE_USER}")
+    @Value("${DB_REMOTE_USER:}")
     private String remoteUser;
 
-    @Value("${DB_REMOTE_PASSWORD}")
+    @Value("${DB_REMOTE_PASSWORD:}")
     private String remotePassword;
 
     @Bean
