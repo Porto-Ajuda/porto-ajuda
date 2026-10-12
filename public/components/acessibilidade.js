@@ -18,7 +18,9 @@ fechar.addEventListener("click", () => {
 // PREFERÊNCIAS
 // ==========================
 
-const API_URL = "https://porto-ajuda.up.railway.app";
+import { getAPI_URL } from "./modoBack.js";
+
+const API_URL = await getAPI_URL();
 
 const CHAVE_PREFERENCIAS = "portoAjudaPreferencias";
 

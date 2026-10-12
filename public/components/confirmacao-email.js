@@ -36,7 +36,7 @@ async function autenticarAutomaticamente() {
             "Seu e-mail foi confirmado, mas não foi possível iniciar o login automático. Entre na sua conta.";
 
         // botao.href = "/login";
-        botao.href = "login.html";
+        botao.href = "/login";
         botao.textContent = "Entrar na minha conta →";
         autenticando = false;
         return;
