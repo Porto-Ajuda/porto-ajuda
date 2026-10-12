@@ -446,19 +446,19 @@
     };
 
     const SEQUENCIA_TOUR_COMPLETO = [
-        // { pagina: "home", url: "/" },
-        // { pagina: "sobre", url: "/sobre" },
-        // { pagina: "iniciativas", url: "/iniciativas" },
-        // { pagina: "apoie", url: "/apoie" },
-        // { pagina: "mapa", url: "/proximidade" },
-        // { pagina: "ongs", url: "/oscs" }
+        { pagina: "home", url: "/" },
+        { pagina: "sobre", url: "/sobre" },
+        { pagina: "iniciativas", url: "/iniciativas" },
+        { pagina: "apoie", url: "/apoie" },
+        { pagina: "mapa", url: "/proximidade" },
+        { pagina: "ongs", url: "/oscs" }
 
-        { pagina: "home", url: "Porto-Ajuda.html" },
-        { pagina: "sobre", url: "sobre.html" },
-        { pagina: "iniciativas", url: "iniciativas.html" },
-        { pagina: "apoie", url: "apoie.html" },
-        { pagina: "mapa", url: "proximity.html" },
-        { pagina: "ongs", url: "oscs-page.html" }
+        // { pagina: "home", url: "Porto-Ajuda.html" },
+        // { pagina: "sobre", url: "sobre.html" },
+        // { pagina: "iniciativas", url: "iniciativas.html" },
+        // { pagina: "apoie", url: "apoie.html" },
+        // { pagina: "mapa", url: "proximity.html" },
+        // { pagina: "ongs", url: "oscs-page.html" }
     ];
 
     const CHAVE_TOUR_COMPLETO =

@@ -1,3 +1,4 @@
+
 package com.portoajuda.aplicacao_osc.config;
 
 import com.zaxxer.hikari.HikariDataSource;
@@ -16,99 +17,94 @@ public class DatabaseConfig {
         LOCAL
     }
 
-    private DatabaseStatus status;
+    private volatile DatabaseStatus status;
 
-    @Value("${DB_REMOTE_URL}")
+    @Value("${DB_REMOTE_URL:}")
     private String remoteUrl;
 
-    @Value("${DB_REMOTE_USER}")
+    @Value("${DB_REMOTE_USER:}")
     private String remoteUser;
 
-    @Value("${DB_REMOTE_PASSWORD}")
+    @Value("${DB_REMOTE_PASSWORD:}")
     private String remotePassword;
 
-    @Value("${DB_LOCAL_URL}")
+    @Value("${DB_LOCAL_URL:}")
     private String localUrl;
 
-    @Value("${DB_LOCAL_USER}")
+    @Value("${DB_LOCAL_USER:}")
     private String localUser;
 
-    @Value("${DB_LOCAL_PASSWORD}")
+    @Value("${DB_LOCAL_PASSWORD:}")
     private String localPassword;
 
     @Bean
     public DataSource dataSource() {
 
-        System.out.println("========================================");
-        System.out.println("Tentando conectar ao banco remoto...");
-        System.out.println("========================================");
+        // Tenta o banco remoto somente se estiver configurado.
+        if (configurado(remoteUrl, remoteUser, remotePassword)) {
+            HikariDataSource remoto = criarDataSource(
+                    remoteUrl, remoteUser, remotePassword);
 
-        HikariDataSource remoteDataSource = criarDataSource(
-                remoteUrl,
-                remoteUser,
-                remotePassword);
+            try {
+                testarConexao(remoto);
+                status = DatabaseStatus.REMOTO;
+                System.out.println("Banco remoto conectado.");
+                return remoto;
+            } catch (Exception e) {
+                remoto.close();
+                System.err.println(
+                        "Falha na conexão remota: " + e.getMessage());
+            }
+        }
 
-        try (Connection connection = remoteDataSource.getConnection()) {
+        // Tenta o banco local somente se estiver configurado.
+        if (configurado(localUrl, localUser, localPassword)) {
+            HikariDataSource local = criarDataSource(
+                    localUrl, localUser, localPassword);
 
-            // DEFINE O STATUS
-            status = DatabaseStatus.REMOTO;
-
-            System.out.println("========================================");
-            System.out.println("BANCO REMOTO CONECTADO COM SUCESSO!");
-            System.out.println("========================================");
-
-            return remoteDataSource;
-
-        } catch (Exception e) {
-
-            System.out.println("========================================");
-            System.out.println("NAO FOI POSSIVEL CONECTAR AO BANCO REMOTO.");
-            System.out.println("Usando banco local...");
-            System.out.println("========================================");
-
-            remoteDataSource.close();
-
-            HikariDataSource localDataSource = criarDataSource(
-                    localUrl,
-                    localUser,
-                    localPassword);
-
-            try (Connection connection = localDataSource.getConnection()) {
-
-                // DEFINE O STATUS
+            try {
+                testarConexao(local);
                 status = DatabaseStatus.LOCAL;
+                System.out.println("Banco local conectado.");
+                return local;
+            } catch (Exception e) {
+                local.close();
+                throw new IllegalStateException(
+                        "Não foi possível conectar ao banco local.", e);
+            }
+        }
 
-                System.out.println("========================================");
-                System.out.println("BANCO LOCAL CONECTADO COM SUCESSO!");
-                System.out.println("========================================");
+        throw new IllegalStateException(
+                "Nenhum banco de dados configurado ou disponível. "
+                        + "Configure DB_REMOTE_* ou DB_LOCAL_*.");
+    }
 
-                return localDataSource;
+    private boolean configurado(
+            String url, String usuario, String senha) {
+        return url != null && !url.isBlank()
+                && usuario != null && !usuario.isBlank()
+                && senha != null && !senha.isBlank();
+    }
 
-            } catch (Exception localException) {
-
-                localDataSource.close();
-
-                throw new RuntimeException(
-                        "Nao foi possivel conectar nem ao banco remoto nem ao banco local.",
-                        localException);
+    private void testarConexao(HikariDataSource ds) throws Exception {
+        try (Connection connection = ds.getConnection()) {
+            if (!connection.isValid(5)) {
+                throw new IllegalStateException(
+                        "Conexão com o banco inválida.");
             }
         }
     }
 
     private HikariDataSource criarDataSource(
-            String url,
-            String username,
-            String password) {
+            String url, String username, String password) {
 
-        HikariDataSource dataSource = new HikariDataSource();
-
-        dataSource.setJdbcUrl(url);
-        dataSource.setUsername(username);
-        dataSource.setPassword(password);
-
-        dataSource.setMaximumPoolSize(10);
-
-        return dataSource;
+        HikariDataSource ds = new HikariDataSource();
+        ds.setJdbcUrl(url);
+        ds.setUsername(username);
+        ds.setPassword(password);
+        ds.setMaximumPoolSize(10);
+        ds.setConnectionTimeout(5000);
+        return ds;
     }
 
     public DatabaseStatus getStatus() {
