@@ -10,7 +10,7 @@ public class EmailService {
 
     private final JavaMailSender mailSender;
 
-    @Value("${MAIL_TO}")
+    @Value("${MAIL_TO:}")
     private String emailDestino;
 
     public EmailService(JavaMailSender mailSender) {
