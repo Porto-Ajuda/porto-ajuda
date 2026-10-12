@@ -185,7 +185,7 @@ if (formulario) {
             // });
 
             const response = await fetch(
-                "https://porto-ajuda.up.railway.app//contato",
+                "https://porto-ajuda.up.railway.app/contato",
                 {
                     method: "POST",
                     headers: {
