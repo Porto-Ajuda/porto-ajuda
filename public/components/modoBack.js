@@ -12,8 +12,6 @@
  * https://porto-ajuda.up.railway.app
  * ===================================================== */
 
-"use strict";
-
 /* =====================================================
  * modoBack.js
  * Define a URL da API utilizada pelo frontend.
