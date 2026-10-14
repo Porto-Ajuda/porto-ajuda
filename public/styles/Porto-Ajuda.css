@@ -202,11 +202,13 @@ background:
     transition: all 0.3s ease;
 }
 
-.search-button:hover i {
+.search-button:hover i,
+.search-button:focus-within i {
     transform: translateX(0);
 }
 
-.search-button:hover {
+.search-button:hover,
+.search-button:focus-within {
   width: 190px;
   height: 70px;
   border-radius:37px;
@@ -245,7 +247,8 @@ gap: 15px;
     1px solid rgba(255, 255, 255, .06);
 }
 
-.search-button:hover input {
+.search-button:hover input,
+.search-button:focus-within input {
     width: 120px;
     opacity: 1;
 }
@@ -1740,7 +1743,8 @@ Lista escondida
     gap: 12px;
   }
 
-  .search-button:hover {
+  .search-button:hover,
+  .search-button:focus-within {
 
     width: 100%;
 
@@ -1760,7 +1764,8 @@ Lista escondida
     font-size: 14px;
   }
 
-  .search-button:hover input {
+  .search-button:hover input,
+  .search-button:focus-within input {
 
     width: 100%;
   }
