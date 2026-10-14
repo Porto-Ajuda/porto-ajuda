@@ -1327,7 +1327,8 @@ body.modo-claro .search-button input::placeholder {
 }
 
 
-body.modo-claro .search-button:hover {
+body.modo-claro .search-button:hover,
+body.modo-claro .search-button:focus-within {
 
     background: #FFBB35;
 
