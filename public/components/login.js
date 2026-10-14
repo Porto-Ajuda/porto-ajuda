@@ -94,17 +94,6 @@ import { getAPI_URL } from "./modoBack.js";
                     body: JSON.stringify(usuarioLogin)
                 });
 
-            // const response = await fetch(
-            //     "https://porto-ajuda.up.railway.app/usuario/login",
-            //     {
-            //         method: "POST",
-            //         headers: {
-            //             "Content-Type": "application/json"
-            //         },
-            //         body: JSON.stringify(usuarioLogin)
-            //     }
-            // );
-
             const texto = await response.text();
             let data = {};
 
@@ -118,10 +107,10 @@ import { getAPI_URL } from "./modoBack.js";
 
             if (response.ok) {
                 localStorage.setItem("dadosUsuario", JSON.stringify(data));
-                // window.location.href = "/";
-                // devemos tirar do comentario e apagar o que esta a baixo quando o site estiver pronto para produção
+                const ROTAS = API_URL === "http://localhost:8080"
+                ? window.location.href = "/"
+                : window.location.href = "../pages/Porto-Ajuda.html";
 
-                window.location.href = "../pages/Porto-Ajuda.html";
                 return;
             }
 

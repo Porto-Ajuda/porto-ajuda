@@ -8,22 +8,22 @@
 
     <link rel="stylesheet" href="../styles/cadastro-osc.css">
     <link rel="stylesheet" href="../styles/geral.css">
-    <link rel="stylesheet" href="../styles/acessibilidade.css">
 
     <script src="../components/cadastro-osc.js" defer></script>
     <script type="module" src="../components/header_footer.js" defer></script>
-    <script src="../components/acessibilidade.js" defer></script>
 </head>
 
 <body>
 
-    <div id="alerta-cadastro" class="alerta-cadastro" role="dialog" aria-modal="true" aria-labelledby="titulo-alerta-cadastro" hidden>
+    <div id="alerta-cadastro" class="alerta-cadastro" role="dialog" aria-modal="true"
+        aria-labelledby="titulo-alerta-cadastro" hidden>
         <div class="caixa-cadastro">
             <div class="icone-cadastro"><i class="fa-solid fa-check"></i></div>
             <div class="conteudo-cadastro">
                 <span class="badge-cadastro">Cadastro concluído</span>
                 <h2 id="titulo-alerta-cadastro">Bem-vindo ao<br><span>Porto Ajuda!</span></h2>
-                <p>Sua conta foi criada com sucesso. Agora você já pode entrar com seu CNPJ e senha e começar a fazer parte da nossa comunidade.</p>
+                <p>Sua conta foi criada com sucesso. Agora você já pode entrar com seu CNPJ e senha e começar a fazer
+                    parte da nossa comunidade.</p>
             </div>
             <button type="button" id="btn-ir-login" class="btn-ir-login">
                 Continuar para o login <i class="fa-solid fa-arrow-right"></i>
@@ -51,7 +51,9 @@
                 <!-- PROGRESSO -->
                 <div class="progresso" aria-live="polite">
                     <div class="progresso-texto" id="progresso-texto">Etapa 1 de 8</div>
-                    <div class="progresso-trilho"><div class="progresso-barra" id="progresso-barra"></div></div>
+                    <div class="progresso-trilho">
+                        <div class="progresso-barra" id="progresso-barra"></div>
+                    </div>
                 </div>
 
                 <!-- ETAPA 1 - IDENTIFICAÇÃO -->
@@ -61,12 +63,14 @@
 
                     <div class="campo">
                         <label for="nome-ong">Nome da ONG</label>
-                        <input type="text" id="nome-ong" name="nome_ong" placeholder="Nome da organização" autocomplete="organization" required>
+                        <input type="text" id="nome-ong" name="nome_ong" placeholder="Nome da organização"
+                            autocomplete="organization" required>
                     </div>
 
                     <div class="campo">
                         <label for="cnpj">CNPJ</label>
-                        <input type="text" id="cnpj" name="cnpj" placeholder="00.000.000/0000-00" maxlength="18" inputmode="numeric" required>
+                        <input type="text" id="cnpj" name="cnpj" placeholder="00.000.000/0000-00" maxlength="18"
+                            inputmode="numeric" required>
                     </div>
 
                     <div class="campo">
@@ -82,17 +86,20 @@
 
                     <div class="campo">
                         <label for="descricao-curta">Descrição curta</label>
-                        <input type="text" id="descricao-curta" name="descricao_curta" maxlength="200" placeholder="Uma breve apresentação da organização" required>
+                        <input type="text" id="descricao-curta" name="descricao_curta" maxlength="200"
+                            placeholder="Uma breve apresentação da organização" required>
                     </div>
 
                     <div class="campo">
                         <label for="descricao-completa">Descrição completa</label>
-                        <textarea id="descricao-completa" name="descricao_completa" rows="5" placeholder="Conte sobre a organização, seus objetivos e atividades..." required></textarea>
+                        <textarea id="descricao-completa" name="descricao_completa" rows="5"
+                            placeholder="Conte sobre a organização, seus objetivos e atividades..." required></textarea>
                     </div>
 
                     <div class="campo">
                         <label for="ano-fundacao">Ano de fundação</label>
-                        <input type="number" id="ano-fundacao" name="ano_fundacao" min="1800" max="2100" placeholder="Ex.: 2015" required>
+                        <input type="number" id="ano-fundacao" name="ano_fundacao" min="1800" max="2100"
+                            placeholder="Ex.: 2015" required>
                     </div>
                 </div>
 
@@ -103,7 +110,8 @@
 
                     <div class="campo">
                         <label for="email-institucional">E-mail institucional</label>
-                        <input type="email" id="email-institucional" name="email_institucional" placeholder="contato@organizacao.org.br" autocomplete="email" required>
+                        <input type="email" id="email-institucional" name="email_institucional"
+                            placeholder="contato@organizacao.org.br" autocomplete="email" required>
                     </div>
 
                     <div class="campo metade">
@@ -121,12 +129,14 @@
                     </div>
                     <div class="campo metade">
                         <label for="linkedin">LinkedIn</label>
-                        <input type="url" id="linkedin" name="linkedin" placeholder="https://linkedin.com/company/organizacao">
+                        <input type="url" id="linkedin" name="linkedin"
+                            placeholder="https://linkedin.com/company/organizacao">
                     </div>
 
                     <div class="campo metade">
                         <label for="instagram">Instagram</label>
-                        <input type="url" id="instagram" name="instagram" placeholder="https://instagram.com/organizacao">
+                        <input type="url" id="instagram" name="instagram"
+                            placeholder="https://instagram.com/organizacao">
                     </div>
                     <div class="campo metade">
                         <label for="youtube">YouTube</label>
@@ -209,23 +219,40 @@
 
                         <div class="dropdown-ods" id="dropdown-ods">
                             <div class="dropdown-opcoes" id="opcoes-ods">
-                                <button type="button" data-valor="1"><span class="ods-numero">ODS 1</span> Erradicação da Pobreza</button>
-                                <button type="button" data-valor="2"><span class="ods-numero">ODS 2</span> Fome Zero e Agricultura Sustentável</button>
-                                <button type="button" data-valor="3"><span class="ods-numero">ODS 3</span> Saúde e Bem-Estar</button>
-                                <button type="button" data-valor="4"><span class="ods-numero">ODS 4</span> Educação de Qualidade</button>
-                                <button type="button" data-valor="5"><span class="ods-numero">ODS 5</span> Igualdade de Gênero</button>
-                                <button type="button" data-valor="6"><span class="ods-numero">ODS 6</span> Água Potável e Saneamento</button>
-                                <button type="button" data-valor="7"><span class="ods-numero">ODS 7</span> Energia Limpa e Acessível</button>
-                                <button type="button" data-valor="8"><span class="ods-numero">ODS 8</span> Trabalho Decente e Crescimento Econômico</button>
-                                <button type="button" data-valor="9"><span class="ods-numero">ODS 9</span> Indústria, Inovação e Infraestrutura</button>
-                                <button type="button" data-valor="10"><span class="ods-numero">ODS 10</span> Redução das Desigualdades</button>
-                                <button type="button" data-valor="11"><span class="ods-numero">ODS 11</span> Cidades e Comunidades Sustentáveis</button>
-                                <button type="button" data-valor="12"><span class="ods-numero">ODS 12</span> Consumo e Produção Responsáveis</button>
-                                <button type="button" data-valor="13"><span class="ods-numero">ODS 13</span> Ação Contra a Mudança Global do Clima</button>
-                                <button type="button" data-valor="14"><span class="ods-numero">ODS 14</span> Vida na Água</button>
-                                <button type="button" data-valor="15"><span class="ods-numero">ODS 15</span> Vida Terrestre</button>
-                                <button type="button" data-valor="16"><span class="ods-numero">ODS 16</span> Paz, Justiça e Instituições Eficazes</button>
-                                <button type="button" data-valor="17"><span class="ods-numero">ODS 17</span> Parcerias e Meios de Implementação</button>
+                                <button type="button" data-valor="1"><span class="ods-numero">ODS 1</span> Erradicação
+                                    da Pobreza</button>
+                                <button type="button" data-valor="2"><span class="ods-numero">ODS 2</span> Fome Zero e
+                                    Agricultura Sustentável</button>
+                                <button type="button" data-valor="3"><span class="ods-numero">ODS 3</span> Saúde e
+                                    Bem-Estar</button>
+                                <button type="button" data-valor="4"><span class="ods-numero">ODS 4</span> Educação de
+                                    Qualidade</button>
+                                <button type="button" data-valor="5"><span class="ods-numero">ODS 5</span> Igualdade de
+                                    Gênero</button>
+                                <button type="button" data-valor="6"><span class="ods-numero">ODS 6</span> Água Potável
+                                    e Saneamento</button>
+                                <button type="button" data-valor="7"><span class="ods-numero">ODS 7</span> Energia Limpa
+                                    e Acessível</button>
+                                <button type="button" data-valor="8"><span class="ods-numero">ODS 8</span> Trabalho
+                                    Decente e Crescimento Econômico</button>
+                                <button type="button" data-valor="9"><span class="ods-numero">ODS 9</span> Indústria,
+                                    Inovação e Infraestrutura</button>
+                                <button type="button" data-valor="10"><span class="ods-numero">ODS 10</span> Redução das
+                                    Desigualdades</button>
+                                <button type="button" data-valor="11"><span class="ods-numero">ODS 11</span> Cidades e
+                                    Comunidades Sustentáveis</button>
+                                <button type="button" data-valor="12"><span class="ods-numero">ODS 12</span> Consumo e
+                                    Produção Responsáveis</button>
+                                <button type="button" data-valor="13"><span class="ods-numero">ODS 13</span> Ação Contra
+                                    a Mudança Global do Clima</button>
+                                <button type="button" data-valor="14"><span class="ods-numero">ODS 14</span> Vida na
+                                    Água</button>
+                                <button type="button" data-valor="15"><span class="ods-numero">ODS 15</span> Vida
+                                    Terrestre</button>
+                                <button type="button" data-valor="16"><span class="ods-numero">ODS 16</span> Paz,
+                                    Justiça e Instituições Eficazes</button>
+                                <button type="button" data-valor="17"><span class="ods-numero">ODS 17</span> Parcerias e
+                                    Meios de Implementação</button>
                             </div>
                         </div>
                     </div>
@@ -238,7 +265,8 @@
 
                     <div class="campo metade">
                         <label for="cep">CEP</label>
-                        <input type="text" id="cep" name="cep" placeholder="00000-000" maxlength="9" inputmode="numeric" autocomplete="postal-code" required>
+                        <input type="text" id="cep" name="cep" placeholder="00000-000" maxlength="9" inputmode="numeric"
+                            autocomplete="postal-code" required>
                     </div>
                     <div class="campo metade">
                         <label for="pais">País</label>
@@ -302,7 +330,8 @@
 
                     <div class="campo metade">
                         <label>Forma de atendimento</label>
-                        <label><input type="checkbox" name="atendimento_presencial" value="1"> Atendimento presencial</label>
+                        <label><input type="checkbox" name="atendimento_presencial" value="1"> Atendimento
+                            presencial</label>
                         <label><input type="checkbox" name="atendimento_online" value="1"> Atendimento online</label>
                     </div>
 
@@ -320,8 +349,10 @@
 
                     <div class="campo">
                         <label>Aceita voluntários?</label>
-                        <label><input type="radio" name="aceita_voluntarios" value="sim" id="voluntarios-sim" required> Sim</label>
-                        <label><input type="radio" name="aceita_voluntarios" value="nao" id="voluntarios-nao"> Não</label>
+                        <label><input type="radio" name="aceita_voluntarios" value="sim" id="voluntarios-sim" required>
+                            Sim</label>
+                        <label><input type="radio" name="aceita_voluntarios" value="nao" id="voluntarios-nao">
+                            Não</label>
                     </div>
 
                     <div class="campo metade" data-voluntariado>
@@ -338,7 +369,8 @@
 
                     <div class="campo metade" data-voluntariado>
                         <label for="idade-minima-voluntario">Idade mínima</label>
-                        <input type="number" id="idade-minima-voluntario" name="idade_minima_voluntario" min="0" max="99" placeholder="Ex.: 18">
+                        <input type="number" id="idade-minima-voluntario" name="idade_minima_voluntario" min="0"
+                            max="99" placeholder="Ex.: 18">
                     </div>
 
                     <div class="campo metade" data-voluntariado>
@@ -355,7 +387,8 @@
 
                     <div class="campo" data-voluntariado>
                         <label for="atividades-voluntariado">Atividades realizadas pelos voluntários</label>
-                        <textarea id="atividades-voluntariado" name="atividades_voluntariado" rows="4" placeholder="Ex.: apoio em oficinas, distribuição de alimentos, reforço escolar..."></textarea>
+                        <textarea id="atividades-voluntariado" name="atividades_voluntariado" rows="4"
+                            placeholder="Ex.: apoio em oficinas, distribuição de alimentos, reforço escolar..."></textarea>
                     </div>
                 </div>
 
@@ -367,7 +400,8 @@
                     <div class="campo">
                         <label for="senha-osc">Senha</label>
                         <div class="campo-senha">
-                            <input type="password" id="senha-osc" name="senha" placeholder="Crie uma senha" autocomplete="new-password" minlength="8" required>
+                            <input type="password" id="senha-osc" name="senha" placeholder="Crie uma senha"
+                                autocomplete="new-password" minlength="8" required>
                             <button type="button" class="btn-olho" data-alvo="senha-osc" aria-label="Mostrar senha">
                                 <i class="fa-solid fa-eye"></i>
                             </button>
@@ -377,8 +411,10 @@
                     <div class="campo">
                         <label for="confirmar-senha-osc">Confirmar senha</label>
                         <div class="campo-senha">
-                            <input type="password" id="confirmar-senha-osc" name="confirmar_senha" placeholder="Repita a senha" autocomplete="new-password" required>
-                            <button type="button" class="btn-olho" data-alvo="confirmar-senha-osc" aria-label="Mostrar confirmação de senha">
+                            <input type="password" id="confirmar-senha-osc" name="confirmar_senha"
+                                placeholder="Repita a senha" autocomplete="new-password" required>
+                            <button type="button" class="btn-olho" data-alvo="confirmar-senha-osc"
+                                aria-label="Mostrar confirmação de senha">
                                 <i class="fa-solid fa-eye"></i>
                             </button>
                         </div>
@@ -406,4 +442,5 @@
     </div>
 
 </body>
+
 </html>

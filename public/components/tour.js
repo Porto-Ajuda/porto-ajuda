@@ -1,3 +1,7 @@
+import { getAPI_URL } from "./modoBack.js";
+
+const API_URL = await getAPI_URL();
+
 /* =========================================================
    PORTO AJUDA
    TOUR INTERATIVO DO SITE
@@ -445,21 +449,34 @@
 
     };
 
-    const SEQUENCIA_TOUR_COMPLETO = [
-        { pagina: "home", url: "/" },
-        { pagina: "sobre", url: "/sobre" },
-        { pagina: "iniciativas", url: "/iniciativas" },
-        { pagina: "apoie", url: "/apoie" },
-        { pagina: "mapa", url: "/proximidade" },
-        { pagina: "ongs", url: "/oscs" }
+    const s = [
 
-        // { pagina: "home", url: "Porto-Ajuda.html" },
-        // { pagina: "sobre", url: "sobre.html" },
-        // { pagina: "iniciativas", url: "iniciativas.html" },
-        // { pagina: "apoie", url: "apoie.html" },
-        // { pagina: "mapa", url: "proximity.html" },
-        // { pagina: "ongs", url: "oscs-page.html" }
+
+        { pagina: "home", url: "Porto-Ajuda.html" },
+        { pagina: "sobre", url: "sobre.html" },
+        { pagina: "iniciativas", url: "iniciativas.html" },
+        { pagina: "apoie", url: "apoie.html" },
+        { pagina: "mapa", url: "proximity.html" },
+        { pagina: "ongs", url: "oscs-page.html" }
     ];
+
+    const SEQUENCIA_TOUR_COMPLETO = API_URL === "http://localhost:8080"
+        ? [
+            { pagina: "home", url: "/" },
+            { pagina: "sobre", url: "/sobre" },
+            { pagina: "iniciativas", url: "/iniciativas" },
+            { pagina: "apoie", url: "/apoie" },
+            { pagina: "mapa", url: "/proximidade" },
+            { pagina: "ongs", url: "/oscs" }
+        ]
+        : [
+            { pagina: "home", url: "Porto-Ajuda.html" },
+            { pagina: "sobre", url: "sobre.html" },
+            { pagina: "iniciativas", url: "iniciativas.html" },
+            { pagina: "apoie", url: "apoie.html" },
+            { pagina: "mapa", url: "proximity.html" },
+            { pagina: "ongs", url: "oscs-page.html" }
+        ];
 
     const CHAVE_TOUR_COMPLETO =
         "portoAjudaTourCompleto";

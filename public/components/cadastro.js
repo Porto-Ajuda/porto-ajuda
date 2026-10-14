@@ -560,17 +560,6 @@ import { getAPI_URL } from "./modoBack.js";
                     body: JSON.stringify(usuario)
                 });
 
-            // const response = await fetch(
-            //     "https://porto-ajuda.up.railway.app/usuario/register",
-            //     {
-            //         method: "POST",
-            //         headers: {
-            //             "Content-Type": "application/json"
-            //         },
-            //         body: JSON.stringify(usuario)
-            //     }
-            // );
-
             // Lê o corpo como texto e tenta converter em JSON
             const texto = await response.text();
             let data = {};

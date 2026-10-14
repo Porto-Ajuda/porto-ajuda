@@ -27,7 +27,7 @@ public class JwtService {
     private static final Duration TOKEN_EXPIRATION = Duration.ofMinutes(30);
 
     // TESTE: considera cadastros com mais de 2 minutos.
-    private static final Duration EMAIL_TOKEN_EXPIRATION = Duration.ofMinutes(2);
+    private static final Duration EMAIL_TOKEN_EXPIRATION = Duration.ofMinutes(30);
 
     // PRODUÇÃO: altere para Duration.ofMinutes(30).
     // private static final Duration EMAIL_TOKEN_EXPIRATION = Duration.ofMinutes(30);
