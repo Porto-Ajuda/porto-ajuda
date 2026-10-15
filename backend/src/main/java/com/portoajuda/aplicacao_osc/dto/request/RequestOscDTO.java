@@ -1,7 +1,7 @@
 package com.portoajuda.aplicacao_osc.dto.request;
 
 import com.portoajuda.aplicacao_osc.enums.CausaSocial;
-import jakarta.persistence.Column;
+// import jakarta.persistence.Column;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;

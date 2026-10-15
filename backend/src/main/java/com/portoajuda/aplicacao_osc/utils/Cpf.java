@@ -1,7 +1,7 @@
 package com.portoajuda.aplicacao_osc.utils;
 
-import jakarta.persistence.Embeddable;
-import lombok.Getter;
+// import jakarta.persistence.Embeddable;
+// import lombok.Getter;
 
 public record Cpf(String valor) {
 

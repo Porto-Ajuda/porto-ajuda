@@ -2,8 +2,8 @@ package com.portoajuda.aplicacao_osc.repository;
 
 import com.portoajuda.aplicacao_osc.entity.Osc;
 import com.portoajuda.aplicacao_osc.utils.Cnpj;
-import com.portoajuda.aplicacao_osc.utils.Email;
-import org.springframework.data.domain.Example;
+// import com.portoajuda.aplicacao_osc.utils.Email;
+// import org.springframework.data.domain.Example;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

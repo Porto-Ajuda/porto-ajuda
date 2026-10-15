@@ -10,11 +10,11 @@ import com.portoajuda.aplicacao_osc.repository.OscMembrosRepository;
 import com.portoajuda.aplicacao_osc.repository.OscRepository;
 import com.portoajuda.aplicacao_osc.repository.RoleRepository;
 import com.portoajuda.aplicacao_osc.repository.UsuarioRepository;
-import com.portoajuda.aplicacao_osc.segurity.JwtService;
+// import com.portoajuda.aplicacao_osc.segurity.JwtService;
 import com.portoajuda.aplicacao_osc.utils.Cnpj;
-import com.portoajuda.aplicacao_osc.utils.Cpf;
+// import com.portoajuda.aplicacao_osc.utils.Cpf;
 import com.portoajuda.aplicacao_osc.utils.Email;
-import io.jsonwebtoken.Jwts;
+// import io.jsonwebtoken.Jwts;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -24,8 +24,8 @@ import org.springframework.stereotype.Service;
 
 import java.nio.file.AccessDeniedException;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Set;
+// import java.util.List;
+// import java.util.Set;
 
 @Service
 @RequiredArgsConstructor

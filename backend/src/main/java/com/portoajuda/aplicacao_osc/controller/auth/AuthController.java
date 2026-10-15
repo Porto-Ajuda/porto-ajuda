@@ -3,7 +3,7 @@ package com.portoajuda.aplicacao_osc.controller.auth;
 import com.portoajuda.aplicacao_osc.dto.request.RequestLoginDTO;
 import com.portoajuda.aplicacao_osc.dto.request.RequestUsuarioDTO;
 import com.portoajuda.aplicacao_osc.dto.response.ResponseLoginDTO;
-import com.portoajuda.aplicacao_osc.dto.response.ResponseUsuarioDTO;
+// import com.portoajuda.aplicacao_osc.dto.response.ResponseUsuarioDTO;
 import com.portoajuda.aplicacao_osc.entity.Usuario;
 import com.portoajuda.aplicacao_osc.service.UsuarioService;
 import jakarta.validation.Valid;

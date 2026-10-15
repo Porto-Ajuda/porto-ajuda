@@ -1,8 +1,7 @@
 package com.portoajuda.aplicacao_osc.dto.response;
 
-import com.portoajuda.aplicacao_osc.utils.Cpf;
-
-import java.time.LocalDateTime;
+// import com.portoajuda.aplicacao_osc.utils.Cpf;
+// import java.time.LocalDateTime;
 
 public record ResponseUsuarioDTO(
         String cpf,
