@@ -58,8 +58,10 @@ public class EmailService {
                         String appBaseUrl) {
 
                 String linkConfirmacao = appBaseUrl
-                                + "/usuario/confirmacao-email?token="
-                                + token;
+                                + "/usuario/confirmar-email?token="
+                                + java.net.URLEncoder.encode(
+                                                token,
+                                                java.nio.charset.StandardCharsets.UTF_8);
 
                 String texto = "Olá, " + nome + "!\n\n" +
                                 "Recebemos seu cadastro no Porto Ajuda.\n\n" +
