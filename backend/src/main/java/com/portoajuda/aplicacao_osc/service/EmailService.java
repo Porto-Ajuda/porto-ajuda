@@ -58,14 +58,14 @@ public class EmailService {
                         String appBaseUrl) {
 
                 String linkConfirmacao = appBaseUrl
-                                + "/usuario/confirmar-email?token="
+                                + "/usuario/confirmacao-email?token="
                                 + token;
 
                 String texto = "Olá, " + nome + "!\n\n" +
                                 "Recebemos seu cadastro no Porto Ajuda.\n\n" +
                                 "Para confirmar seu endereço de e-mail, acesse:\n\n" +
                                 linkConfirmacao + "\n\n" +
-                                "Este link expira em 30 minutos.\n\n" +
+                                "Este link expira em 15 minutos.\n\n" +
                                 "Se você não realizou esse cadastro, ignore esta mensagem.\n\n" +
                                 "Equipe Porto Ajuda";
 
