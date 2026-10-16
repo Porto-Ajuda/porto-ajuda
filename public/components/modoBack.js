@@ -22,7 +22,7 @@
 export function getAPI_URL() {
     const API_URL = window.location.hostname === "localhost"
         ? "http://localhost:8080"
-        : "https://porto-ajuda-production.up.railway.app";
+        : "https://api.portoajuda.com.br";
 
     console.log("========================================");
     console.log("VERIFICAÇÃO DO BACKEND");

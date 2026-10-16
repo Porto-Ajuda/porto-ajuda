@@ -5,16 +5,22 @@ import com.portoajuda.aplicacao_osc.entity.Usuario;
 import com.portoajuda.aplicacao_osc.repository.UsuarioRepository;
 import com.portoajuda.aplicacao_osc.segurity.JwtService;
 import com.portoajuda.aplicacao_osc.service.CodigoAutenticacaoService;
+import com.portoajuda.aplicacao_osc.service.UsuarioService;
+
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
-import com.portoajuda.aplicacao_osc.service.UsuarioService;
 
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
+
+import org.springframework.web.util.UriUtils;
 
 @RestController
 @RequestMapping("/usuario")
@@ -25,6 +31,9 @@ public class UsuarioController {
     private final JwtService jwtService;
     private final CodigoAutenticacaoService codigoAutenticacaoService;
     private final UsuarioService usuarioService;
+
+    @Value("${app.frontend-url}")
+    private String frontendUrl;
 
     @PostMapping("/reenviar-confirmacao")
     public ResponseEntity<Map<String, String>> reenviarConfirmacao(
@@ -42,14 +51,14 @@ public class UsuarioController {
         try {
             usuarioService.reenviarConfirmacaoEmail(email.trim());
 
-            return ResponseEntity.ok(Map.of(
-                    "mensagem",
-                    "Se houver uma conta pendente de confirmação, as instruções serão enviadas."));
         } catch (IllegalArgumentException | IllegalStateException e) {
-            return ResponseEntity.ok(Map.of(
-                    "mensagem",
-                    "Se houver uma conta pendente de confirmação, as instruções serão enviadas."));
+            // Mantém a mesma resposta para não revelar
+            // se determinado endereço está cadastrado.
         }
+
+        return ResponseEntity.ok(Map.of(
+                "mensagem",
+                "Se houver uma conta pendente de confirmação, as instruções serão enviadas."));
     }
 
     @GetMapping("/confirmar-email")
@@ -80,6 +89,7 @@ public class UsuarioController {
             return redirecionar("sucesso", codigo);
 
         } catch (Exception e) {
+            // Em produção, registre a exceção com um logger.
             return redirecionar("erro", null);
         }
     }
@@ -107,12 +117,15 @@ public class UsuarioController {
             String status,
             String codigo) {
 
-        String destino = "/pages/confirmacao-email.html?status=" + status;
+        String baseUrl = frontendUrl.replaceAll("/+$", "");
 
-        // O código temporário fica no fragmento da URL.
-        // O navegador não o envia automaticamente na requisição HTTP.
+        String destino = baseUrl
+                + "/public/pages/confirmacao-email.html?status="
+                + UriUtils.encodeQueryParam(status, StandardCharsets.UTF_8);
+
         if (codigo != null) {
-            destino += "#codigo=" + codigo;
+            destino += "#codigo="
+                    + UriUtils.encodeFragment(codigo, StandardCharsets.UTF_8);
         }
 
         return ResponseEntity.status(HttpStatus.FOUND)
