@@ -1,0 +1,31 @@
+
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/pages/Porto-Ajuda.html"
+    },
+    {
+      "source": "/sobre",
+      "destination": "/pages/sobre.html"
+    },
+    {
+      "source": "/iniciativas",
+      "destination": "/pages/iniciativas.html"
+    },
+    {
+      "source": "/apoie",
+      "destination": "/pages/apoie.html"
+    },
+    {
+      "source": "/proximidade",
+      "destination": "/pages/proximity.html"
+    },
+    {
+      "source": "/oscs",
+      "destination": "/pages/oscs-page.html"
+    }
+  ]
+}
