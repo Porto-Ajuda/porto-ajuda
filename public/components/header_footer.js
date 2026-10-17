@@ -7,6 +7,7 @@ console.log("API ESCOLHIDA:", API_URL);
 console.log("================================");
 
 const ROTAS = API_URL === "http://localhost:8080"
+    || API_URL === "https://api.portoajuda.com.br"
     ? {
         home: "/",
         sobre: "/sobre",

@@ -1,26 +1,24 @@
+
 /* =====================================================
  * modoBack.js
  * Define a URL da API utilizada pelo frontend.
- *
- * A API será sempre o mesmo servidor que está
- * entregando o frontend.
  *
  * Local:
  * http://localhost:8080
  *
  * Produção:
- * https://porto-ajuda.up.railway.app
- * ===================================================== */
-
-/* =====================================================
- * modoBack.js
- * Define a URL da API utilizada pelo frontend.
+ * https://api.portoajuda.com.br
  * ===================================================== */
 
 "use strict";
 
 export function getAPI_URL() {
-    const API_URL = window.location.hostname === "localhost"
+    const hostname = window.location.hostname;
+
+    const API_URL = (
+        hostname === "localhost" ||
+        hostname === "127.0.0.1"
+    )
         ? "http://localhost:8080"
         : "https://api.portoajuda.com.br";
 
