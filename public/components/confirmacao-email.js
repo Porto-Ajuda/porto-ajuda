@@ -1,11 +1,17 @@
 "use strict";
 
+const API_BASE_URL = (
+    window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1"
+)
+    ? "http://localhost:8080"
+    : "https://api.portoajuda.com.br";
+
+// Configuração do favicon.
 (function configurarFavicon() {
     const faviconUrl = "/assets/favicon.png";
 
-    let favicon = document.querySelector(
-        'link[rel="icon"]'
-    );
+    let favicon = document.querySelector('link[rel="icon"]');
 
     if (!favicon) {
         favicon = document.createElement("link");
@@ -17,6 +23,7 @@
     favicon.href = faviconUrl;
 })();
 
+// Parâmetros da URL.
 const parametros = new URLSearchParams(window.location.search);
 const status = parametros.get("status");
 
@@ -32,8 +39,27 @@ const mensagemReenvio = document.getElementById("mensagem-reenvio");
 
 let autenticando = false;
 
+// Lê a resposta da API e trata respostas que não sejam JSON.
+async function lerRespostaJSON(resposta) {
+    const texto = await resposta.text();
+
+    if (!texto) {
+        return {};
+    }
+
+    try {
+        return JSON.parse(texto);
+    } catch {
+        throw new Error(
+            `A API retornou uma resposta inválida. HTTP ${resposta.status}.`
+        );
+    }
+}
+
+// Login automático após a confirmação do e-mail.
 async function autenticarAutomaticamente() {
     if (autenticando) return;
+
     autenticando = true;
 
     const fragmento = new URLSearchParams(
@@ -42,6 +68,7 @@ async function autenticarAutomaticamente() {
 
     const codigo = fragmento.get("codigo");
 
+    // Remove o código da barra de endereço após recuperá-lo.
     history.replaceState(
         null,
         "",
@@ -52,9 +79,9 @@ async function autenticarAutomaticamente() {
         mensagem.textContent =
             "Seu e-mail foi confirmado, mas não foi possível iniciar o login automático. Entre na sua conta.";
 
-        // botao.href = "/login";
         botao.href = "/login";
         botao.textContent = "Entrar na minha conta →";
+
         autenticando = false;
         return;
     }
@@ -64,19 +91,23 @@ async function autenticarAutomaticamente() {
     botao.setAttribute("aria-disabled", "true");
 
     try {
-        const resposta = await fetch("/usuario/trocar-codigo", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ codigo })
-        });
+        const resposta = await fetch(
+            `${API_BASE_URL}/usuario/trocar-codigo`,
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ codigo })
+            }
+        );
 
-        const dados = await resposta.json();
+        const dados = await lerRespostaJSON(resposta);
 
         if (!resposta.ok) {
             throw new Error(
-                dados.mensagem || "Não foi possível autenticar."
+                dados.mensagem ||
+                `Não foi possível autenticar. HTTP ${resposta.status}.`
             );
         }
 
@@ -93,6 +124,7 @@ async function autenticarAutomaticamente() {
         botao.href = "/";
 
         window.location.replace("/");
+
     } catch (erro) {
         console.error("Erro no login automático:", erro);
 
@@ -102,10 +134,12 @@ async function autenticarAutomaticamente() {
         botao.textContent = "Voltar ao login →";
         botao.href = "/login";
         botao.removeAttribute("aria-disabled");
+
         autenticando = false;
     }
 }
 
+// Exibição do estado da confirmação.
 if (status === "erro") {
     document.title = "Confirmação não concluída | Porto Ajuda";
 
@@ -159,7 +193,7 @@ formReenvio.addEventListener("submit", async (evento) => {
 
     try {
         const resposta = await fetch(
-            "/usuario/reenviar-confirmacao",
+            `${API_BASE_URL}/usuario/reenviar-confirmacao`,
             {
                 method: "POST",
                 headers: {
@@ -169,11 +203,12 @@ formReenvio.addEventListener("submit", async (evento) => {
             }
         );
 
-        const dados = await resposta.json().catch(() => ({}));
+        const dados = await lerRespostaJSON(resposta);
 
         if (!resposta.ok) {
             throw new Error(
-                dados.mensagem || "Não foi possível processar a solicitação."
+                dados.mensagem ||
+                `Não foi possível processar a solicitação. HTTP ${resposta.status}.`
             );
         }
 
@@ -186,6 +221,7 @@ formReenvio.addEventListener("submit", async (evento) => {
 
         mensagemReenvio.textContent =
             "Não foi possível processar a solicitação. Tente novamente mais tarde.";
+
     } finally {
         botaoReenvio.disabled = false;
         botaoReenvio.textContent =
