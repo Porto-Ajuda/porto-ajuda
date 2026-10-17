@@ -108,8 +108,9 @@ import { getAPI_URL } from "./modoBack.js";
             if (response.ok) {
                 localStorage.setItem("dadosUsuario", JSON.stringify(data));
                 const ROTAS = API_URL === "http://localhost:8080"
-                ? window.location.href = "/"
-                : window.location.href = "../pages/Porto-Ajuda.html";
+                    || API_URL === "https://api.portoajuda.com.br"
+                    ? window.location.href = "/"
+                    : window.location.href = "../pages/Porto-Ajuda.html";
 
                 return;
             }

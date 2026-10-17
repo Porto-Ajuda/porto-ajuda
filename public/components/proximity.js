@@ -230,8 +230,6 @@ async function carregarOngs() {
 
     </div>
 
-    
-    Quando estiver pronto, devemos tirar o comentário do código e trocar com o de cima para que ele seja compilado e funcione corretamente.
     <a href="/ong-profile?id=${ong.id}" class="botao-ong">
         Ver ONG
     </a>

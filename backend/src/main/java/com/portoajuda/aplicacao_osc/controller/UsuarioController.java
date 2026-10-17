@@ -120,16 +120,22 @@ public class UsuarioController {
         String baseUrl = frontendUrl.replaceAll("/+$", "");
 
         String destino = baseUrl
-                + "/public/pages/confirmacao-email.html?status="
-                + UriUtils.encodeQueryParam(status, StandardCharsets.UTF_8);
+                + "/pages/confirmacao-email.html?status="
+                + UriUtils.encodeQueryParam(
+                        status,
+                        StandardCharsets.UTF_8);
 
         if (codigo != null) {
             destino += "#codigo="
-                    + UriUtils.encodeFragment(codigo, StandardCharsets.UTF_8);
+                    + UriUtils.encodeFragment(
+                            codigo,
+                            StandardCharsets.UTF_8);
         }
 
         return ResponseEntity.status(HttpStatus.FOUND)
-                .header(HttpHeaders.LOCATION, URI.create(destino).toString())
+                .header(
+                        HttpHeaders.LOCATION,
+                        URI.create(destino).toString())
                 .build();
     }
 }
