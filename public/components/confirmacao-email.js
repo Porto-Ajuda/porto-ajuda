@@ -1,5 +1,22 @@
 "use strict";
 
+(function configurarFavicon() {
+    const faviconUrl = "/assets/favicon.png";
+
+    let favicon = document.querySelector(
+        'link[rel="icon"]'
+    );
+
+    if (!favicon) {
+        favicon = document.createElement("link");
+        favicon.rel = "icon";
+        document.head.appendChild(favicon);
+    }
+
+    favicon.type = "image/png";
+    favicon.href = faviconUrl;
+})();
+
 const parametros = new URLSearchParams(window.location.search);
 const status = parametros.get("status");
 
