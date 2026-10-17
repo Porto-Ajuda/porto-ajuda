@@ -1,8 +1,14 @@
-
 {
   "cleanUrls": true,
   "trailingSlash": false,
   "outputDirectory": "public",
+  "redirects": [
+    {
+      "source": "/public/pages/confirmacao-email",
+      "destination": "/pages/confirmacao-email",
+      "permanent": false
+    }
+  ],
   "rewrites": [
     {
       "source": "/",
