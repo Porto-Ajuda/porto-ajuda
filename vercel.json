@@ -1,3 +1,4 @@
+
 {
   "cleanUrls": true,
   "trailingSlash": false,
@@ -5,59 +6,59 @@
   "rewrites": [
     {
       "source": "/",
-      "destination": "/pages/Porto-Ajuda.html"
-    },
-    {
-      "source": "/apoie",
-      "destination": "/pages/apoie.html"
-    },
-    {
-      "source": "/contato",
-      "destination": "/pages/contato.html"
-    },
-    {
-      "source": "/login",
-      "destination": "/pages/login.html"
+      "destination": "/pages/Porto-Ajuda"
     },
     {
       "source": "/sobre",
-      "destination": "/pages/sobre.html"
+      "destination": "/pages/sobre"
     },
     {
       "source": "/iniciativas",
-      "destination": "/pages/iniciativas.html"
+      "destination": "/pages/iniciativas"
+    },
+    {
+      "source": "/apoie",
+      "destination": "/pages/apoie"
+    },
+    {
+      "source": "/contato",
+      "destination": "/pages/contato"
+    },
+    {
+      "source": "/login",
+      "destination": "/pages/login"
     },
     {
       "source": "/contribuicao",
-      "destination": "/pages/contribuicao.html"
+      "destination": "/pages/contribuicao"
     },
     {
       "source": "/doacao-ong",
-      "destination": "/pages/doacao-ong.html"
+      "destination": "/pages/doacao-ong"
     },
     {
       "source": "/perfil",
-      "destination": "/pages/perfil.html"
+      "destination": "/pages/perfil"
     },
     {
       "source": "/oscs",
-      "destination": "/pages/oscs-page.html"
+      "destination": "/pages/oscs-page"
     },
     {
       "source": "/proximidade",
-      "destination": "/pages/proximity.html"
+      "destination": "/pages/proximity"
     },
     {
       "source": "/apoio",
-      "destination": "/pages/apoie.html"
+      "destination": "/pages/apoie"
     },
     {
       "source": "/ong-profile",
-      "destination": "/pages/ong-profile.html"
+      "destination": "/pages/ong-profile"
     },
     {
       "source": "/cadastro-ong",
-      "destination": "/pages/cadastro-ong.html"
+      "destination": "/pages/cadastro-ong"
     }
   ]
 }
