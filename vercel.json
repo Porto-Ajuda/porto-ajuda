@@ -8,6 +8,18 @@
       "destination": "/pages/Porto-Ajuda.html"
     },
     {
+      "source": "/apoie",
+      "destination": "/pages/apoie.html"
+    },
+    {
+      "source": "/contato",
+      "destination": "/pages/contato.html"
+    },
+    {
+      "source": "/login",
+      "destination": "/pages/login.html"
+    },
+    {
       "source": "/sobre",
       "destination": "/pages/sobre.html"
     },
@@ -16,16 +28,36 @@
       "destination": "/pages/iniciativas.html"
     },
     {
-      "source": "/apoie",
-      "destination": "/pages/apoie.html"
+      "source": "/contribuicao",
+      "destination": "/pages/contribuicao.html"
+    },
+    {
+      "source": "/doacao-ong",
+      "destination": "/pages/doacao-ong.html"
+    },
+    {
+      "source": "/perfil",
+      "destination": "/pages/perfil.html"
+    },
+    {
+      "source": "/oscs",
+      "destination": "/pages/oscs-page.html"
     },
     {
       "source": "/proximidade",
       "destination": "/pages/proximity.html"
     },
     {
-      "source": "/oscs",
-      "destination": "/pages/oscs-page.html"
+      "source": "/apoio",
+      "destination": "/pages/apoie.html"
+    },
+    {
+      "source": "/ong-profile",
+      "destination": "/pages/ong-profile.html"
+    },
+    {
+      "source": "/cadastro-ong",
+      "destination": "/pages/cadastro-ong.html"
     }
   ]
 }
