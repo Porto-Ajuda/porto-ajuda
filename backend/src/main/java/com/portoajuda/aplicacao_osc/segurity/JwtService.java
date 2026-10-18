@@ -2,15 +2,18 @@
 package com.portoajuda.aplicacao_osc.segurity;
 
 import com.portoajuda.aplicacao_osc.entity.Usuario;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
@@ -24,23 +27,70 @@ public class JwtService {
 
     private final String SECRET;
 
-    private static final Duration TOKEN_EXPIRATION = Duration.ofMinutes(30);
+    // Token de acesso: 15 minutos.
+    private static final Duration TOKEN_EXPIRATION =
+            Duration.ofMinutes(15);
 
-    // TESTE: considera cadastros com mais de 2 minutos.
-    // private static final Duration EMAIL_TOKEN_EXPIRATION = Duration.ofMinutes(2);
-
-    // PRODUÇÃO: altere para Duration.ofMinutes(15).
-    private static final Duration EMAIL_TOKEN_EXPIRATION = Duration.ofMinutes(15);
+    // Token de confirmação de e-mail: 15 minutos.
+    private static final Duration EMAIL_TOKEN_EXPIRATION =
+            Duration.ofMinutes(15);
 
     private static final String ACCESS = "ACCESS";
-    private static final String EMAIL_VERIFICATION = "EMAIL_VERIFICATION";
+    private static final String EMAIL_VERIFICATION =
+            "EMAIL_VERIFICATION";
 
     public JwtService(
-            @Value("${JWT_SECRET_KEY}") String secret) {
+            @Value("${JWT_SECRET_KEY}") String secret
+    ) {
         this.SECRET = secret;
     }
 
-    // JWT usado no login
+    /**
+     * Gera um JWT de acesso vinculado a uma sessão específica.
+     *
+     * O sid será validado pelo filtro de autenticação
+     * consultando a sessão no banco de dados.
+     */
+    public String generateToken(
+            Usuario usuario,
+            Long sessaoId
+    ) {
+        if (usuario == null || usuario.getId() == null) {
+            throw new IllegalArgumentException(
+                    "O usuário precisa estar persistido."
+            );
+        }
+
+        if (sessaoId == null) {
+            throw new IllegalArgumentException(
+                    "O ID da sessão é obrigatório."
+            );
+        }
+
+        List<String> authorities = usuario.getAuthorities()
+                .stream()
+                .map(GrantedAuthority::getAuthority)
+                .toList();
+
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("authorities", authorities);
+        claims.put("purpose", ACCESS);
+        claims.put("sid", sessaoId);
+
+        return createToken(
+                claims,
+                usuario.getId().toString(),
+                TOKEN_EXPIRATION
+        );
+    }
+
+    /**
+     * Compatibilidade temporária com chamadas antigas.
+     *
+     * Migrar todos os chamadores para generateToken(usuario, sessaoId)
+     * antes de exigir o sid no filtro JWT.
+     */
+    @Deprecated
     public String generateToken(Usuario usuario) {
         List<String> authorities = usuario.getAuthorities()
                 .stream()
@@ -54,25 +104,31 @@ public class JwtService {
         return createToken(
                 claims,
                 usuario.getId().toString(),
-                TOKEN_EXPIRATION);
+                TOKEN_EXPIRATION
+        );
     }
 
-    // JWT usado exclusivamente para confirmar o e-mail
-    public String generateEmailVerificationToken(Usuario usuario) {
+    /**
+     * Gera um JWT usado exclusivamente para confirmar e-mail.
+     */
+    public String generateEmailVerificationToken(
+            Usuario usuario
+    ) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("purpose", EMAIL_VERIFICATION);
 
         return createToken(
                 claims,
                 usuario.getId().toString(),
-                EMAIL_TOKEN_EXPIRATION);
+                EMAIL_TOKEN_EXPIRATION
+        );
     }
 
     private String createToken(
             Map<String, Object> claims,
             String id,
-            Duration expiration) {
-
+            Duration expiration
+    ) {
         Instant now = Instant.now();
 
         return Jwts.builder()
@@ -86,7 +142,8 @@ public class JwtService {
 
     private SecretKey getSignKey() {
         return Keys.hmacShaKeyFor(
-                Decoders.BASE64.decode(SECRET));
+                Decoders.BASE64.decode(SECRET)
+        );
     }
 
     public String extractSubject(String token) {
@@ -100,13 +157,37 @@ public class JwtService {
     public String extractPurpose(String token) {
         return extractClaim(
                 token,
-                claims -> claims.get("purpose", String.class));
+                claims -> claims.get("purpose", String.class)
+        );
+    }
+
+    /**
+     * Extrai o ID da sessão (sid) do JWT de acesso.
+     */
+    public Long extractSessionId(String token) {
+        return extractClaim(token, claims -> {
+            Object sid = claims.get("sid");
+
+            if (sid instanceof Number numero) {
+                return numero.longValue();
+            }
+
+            if (sid instanceof String texto) {
+                try {
+                    return Long.valueOf(texto);
+                } catch (NumberFormatException e) {
+                    return null;
+                }
+            }
+
+            return null;
+        });
     }
 
     public <T> T extractClaim(
             String token,
-            Function<Claims, T> claimsResolver) {
-
+            Function<Claims, T> claimsResolver
+    ) {
         Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
     }
@@ -123,8 +204,14 @@ public class JwtService {
         return extractExpiration(token).before(new Date());
     }
 
-    // Valida exclusivamente JWTs de acesso
-    public Boolean validateToken(String token, Usuario usuario) {
+    /**
+     * Validação básica do JWT de acesso.
+     * A verificação da sessão no banco será integrada ao filtro.
+     */
+    public Boolean validateToken(
+            String token,
+            Usuario usuario
+    ) {
         String username = extractSubject(token);
 
         return ACCESS.equals(extractPurpose(token))
@@ -132,11 +219,13 @@ public class JwtService {
                 && !isTokenExpired(token);
     }
 
-    // Valida exclusivamente JWTs de confirmação de e-mail
+    /**
+     * Valida exclusivamente JWTs de confirmação de e-mail.
+     */
     public Boolean validateEmailVerificationToken(
             String token,
-            Usuario usuario) {
-
+            Usuario usuario
+    ) {
         String username = extractSubject(token);
 
         return EMAIL_VERIFICATION.equals(extractPurpose(token))

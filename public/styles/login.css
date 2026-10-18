@@ -1650,3 +1650,253 @@ a:hover {
   }
 
 }
+
+
+/* =========================================
+   CORREÇÕES DO LOGIN — PORTO AJUDA
+   ========================================= */
+
+.frame {
+  box-sizing: border-box;
+  max-width: calc(100vw - 32px);
+}
+
+.panel-login,
+.panel-login .form-sec {
+  min-width: 0;
+}
+
+.panel-login .form-sec {
+  width: 100%;
+}
+
+.panel-login .formulario {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.panel-login .formulario>.inp,
+.panel-login .campo-senha {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/* Campo de senha e botão */
+.campo-senha {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.campo-senha .inp {
+  width: 100%;
+  min-width: 0;
+  padding-right: 52px;
+  box-sizing: border-box;
+}
+
+.campo-senha .mostrar-senha {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 36px;
+  height: 36px;
+  padding: 0;
+
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-soft);
+
+  font-family: inherit;
+  font-size: 17px;
+  line-height: 1;
+
+  cursor: pointer;
+  z-index: 2;
+
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.campo-senha .mostrar-senha:hover {
+  color: var(--gold-light);
+  background: rgba(242, 170, 26, 0.10);
+}
+
+.campo-senha .mostrar-senha:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+.campo-senha .mostrar-senha i {
+  pointer-events: none;
+}
+
+/* Botão de login */
+.panel-login .formulario>.btn {
+  width: 100%;
+  margin-top: 4px;
+  box-sizing: border-box;
+}
+
+/* Alerta de cadastro: respeita o atributo hidden */
+#alerta-cadastro[hidden] {
+  display: none !important;
+}
+
+#alerta-cadastro:not([hidden]) {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+  overflow-y: auto;
+
+  background: rgba(7, 11, 41, 0.82);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+#alerta-cadastro .caixa-cadastro {
+  width: min(100%, 440px);
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+}
+
+/* Acessibilidade */
+.panel-login .inp:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* Telas menores */
+@media (max-width: 600px) {
+  .frame {
+    position: relative;
+    left: auto;
+    margin: 100px auto 28px;
+    width: calc(100% - 28px);
+    max-width: 440px;
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+  }
+
+  .frame .panel-login {
+    position: relative;
+    width: 100%;
+    padding: 24px 18px;
+  }
+
+  .panel-login .form-sec {
+    padding: 18px 0;
+  }
+
+  .panel-login .title {
+    font-size: 2.7rem;
+    line-height: 1;
+  }
+
+  .panel-login .subtitulo {
+    margin-bottom: 22px;
+  }
+
+  .panel-login .formulario {
+    gap: 12px;
+  }
+
+  .panel-login .inp {
+    min-height: 46px;
+  }
+
+  .panel-login .formulario>.btn {
+    min-height: 48px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .campo-senha .mostrar-senha,
+  .panel-login .btn {
+    transition: none;
+  }
+}
+
+/* Lembrar de mim */
+.lembrar-login {
+  display: flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: 9px;
+
+  width: fit-content;
+  margin: 0;
+  padding: 2px 0;
+
+  color: var(--text-soft);
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.85rem;
+
+  cursor: pointer;
+  user-select: none;
+}
+
+.lembrar-login input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+
+  margin: 0;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 5px;
+
+  background: rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+
+  display: grid;
+  place-content: center;
+
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.lembrar-login input[type="checkbox"]::before {
+  content: "✓";
+  color: var(--bg-main);
+  font-size: 12px;
+  font-weight: 700;
+  transform: scale(0);
+  transition: transform 0.15s ease;
+}
+
+.lembrar-login input[type="checkbox"]:checked {
+  background: var(--gold);
+  border-color: var(--gold);
+}
+
+.lembrar-login input[type="checkbox"]:checked::before {
+  transform: scale(1);
+}
+
+.lembrar-login input[type="checkbox"]:focus-visible {
+  outline: 2px solid var(--gold-light);
+  outline-offset: 3px;
+}

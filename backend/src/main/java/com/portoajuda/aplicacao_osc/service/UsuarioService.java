@@ -3,9 +3,9 @@ package com.portoajuda.aplicacao_osc.service;
 
 import com.portoajuda.aplicacao_osc.dto.request.RequestLoginDTO;
 import com.portoajuda.aplicacao_osc.dto.request.RequestUsuarioDTO;
-import com.portoajuda.aplicacao_osc.dto.response.ResponseLoginDTO;
 import com.portoajuda.aplicacao_osc.dto.response.ResponseUsuarioDTO;
 import com.portoajuda.aplicacao_osc.entity.Role;
+import com.portoajuda.aplicacao_osc.entity.SessaoUsuario;
 import com.portoajuda.aplicacao_osc.entity.Usuario;
 import com.portoajuda.aplicacao_osc.enums.Genero;
 import com.portoajuda.aplicacao_osc.repository.RoleRepository;
@@ -20,6 +20,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.Set;
@@ -33,14 +34,13 @@ public class UsuarioService {
         private final JwtService jwtService;
         private final RoleRepository roleRepository;
         private final EmailService emailService;
+        private final SessaoUsuarioService sessaoUsuarioService;
 
         @Transactional
         public void signup(RequestUsuarioDTO usuarioDTO) {
 
-                if (usuarioRepository.existsByEmail(
-                                new Email(usuarioDTO.email()))) {
-                        throw new BadCredentialsException(
-                                        "Email já está cadastrado");
+                if (usuarioRepository.existsByEmail(new Email(usuarioDTO.email()))) {
+                        throw new BadCredentialsException("Email já está cadastrado");
                 }
 
                 int idade = Period.between(
@@ -48,8 +48,7 @@ public class UsuarioService {
                                 LocalDate.now()).getYears();
 
                 if (idade < 16) {
-                        throw new BadCredentialsException(
-                                        "A idade mínima é de 16 anos");
+                        throw new BadCredentialsException("A idade mínima é de 16 anos");
                 }
 
                 Usuario usuario = new Usuario();
@@ -62,19 +61,16 @@ public class UsuarioService {
                 usuario.setEmail(new Email(usuarioDTO.email()));
                 usuario.setGenero(Genero.valueOf(usuarioDTO.genero()));
                 usuario.setTelefone(usuarioDTO.telefone());
-                usuario.setSenha(
-                                passwordEncoder.encode(usuarioDTO.senha()));
+                usuario.setSenha(passwordEncoder.encode(usuarioDTO.senha()));
 
                 Role role = roleRepository.findByNome("USUARIO")
-                                .orElseThrow(() -> new IllegalArgumentException(
-                                                "Role não encontrada"));
+                                .orElseThrow(() -> new IllegalArgumentException("Role não encontrada"));
 
                 usuario.setRoles(Set.of(role));
 
                 Usuario usuarioSalvo = usuarioRepository.save(usuario);
 
-                String token = jwtService.generateEmailVerificationToken(
-                                usuarioSalvo);
+                String token = jwtService.generateEmailVerificationToken(usuarioSalvo);
 
                 String appBaseUrl = ServletUriComponentsBuilder
                                 .fromCurrentContextPath()
@@ -91,14 +87,12 @@ public class UsuarioService {
         @Transactional
         public void reenviarConfirmacaoEmail(String emailInformado) {
 
-                Usuario usuario = usuarioRepository.findByEmail(
-                                new Email(emailInformado))
+                Usuario usuario = usuarioRepository.findByEmail(new Email(emailInformado))
                                 .orElseThrow(() -> new IllegalArgumentException(
                                                 "Não foi possível reenviar o e-mail de confirmação."));
 
                 if (usuario.isEmailVerificado()) {
-                        throw new IllegalStateException(
-                                        "Este e-mail já foi confirmado.");
+                        throw new IllegalStateException("Este e-mail já foi confirmado.");
                 }
 
                 String token = jwtService.generateEmailVerificationToken(usuario);
@@ -116,19 +110,14 @@ public class UsuarioService {
         }
 
         @Transactional
-        public ResponseLoginDTO login(
-                        RequestLoginDTO loginDTO) {
+        public LoginResultado login(RequestLoginDTO loginDTO) {
 
                 Usuario usuario = usuarioRepository.findByEmail(
                                 new Email(loginDTO.email()))
-                                .orElseThrow(() -> new BadCredentialsException(
-                                                "Email ou senha incorretos"));
+                                .orElseThrow(() -> new BadCredentialsException("Email ou senha incorretos"));
 
-                if (!passwordEncoder.matches(
-                                loginDTO.senha(),
-                                usuario.getSenha())) {
-                        throw new BadCredentialsException(
-                                        "Email ou senha incorretos");
+                if (!passwordEncoder.matches(loginDTO.senha(), usuario.getSenha())) {
+                        throw new BadCredentialsException("Email ou senha incorretos");
                 }
 
                 if (!usuario.isEmailVerificado()) {
@@ -136,24 +125,43 @@ public class UsuarioService {
                                         "Confirme seu e-mail antes de entrar na conta");
                 }
 
-                return new ResponseLoginDTO(
-                                jwtService.generateToken(usuario),
-                                new ResponseUsuarioDTO(
-                                                usuario.getCpf().valor(),
-                                                usuario.getNome(),
-                                                usuario.getNomeSocial(),
-                                                usuario.getDataNascimento().toString(),
-                                                usuario.getEmail().valor(),
-                                                usuario.getTelefone()));
+                if (!usuario.isEnabled()) {
+                        throw new BadCredentialsException("Esta conta está desativada.");
+                }
+
+                // Cria uma sessão e guarda somente o hash do refresh token no banco.
+                SessaoUsuarioService.SessaoCriada sessaoCriada = sessaoUsuarioService.criarSessao(
+                                usuario,
+                                loginDTO.lembrarDeMim());
+
+                SessaoUsuario sessao = sessaoCriada.sessao();
+
+                // O JWT fica vinculado à sessão pelo claim "sid".
+                String accessToken = jwtService.generateToken(
+                                usuario,
+                                sessao.getId());
+
+                ResponseUsuarioDTO dadosUsuario = new ResponseUsuarioDTO(
+                                usuario.getCpf().valor(),
+                                usuario.getNome(),
+                                usuario.getNomeSocial(),
+                                usuario.getDataNascimento().toString(),
+                                usuario.getEmail().valor(),
+                                usuario.getTelefone());
+
+                return new LoginResultado(
+                                accessToken,
+                                sessaoCriada.refreshToken(),
+                                loginDTO.lembrarDeMim(),
+                                dadosUsuario,
+                                sessao.getExpiraEm());
         }
 
         @Transactional
         public void delete(Usuario usuario) {
 
-                if (!usuarioRepository.existsById(
-                                usuario.getId())) {
-                        throw new IllegalArgumentException(
-                                        "Usuário não existe");
+                if (!usuarioRepository.existsById(usuario.getId())) {
+                        throw new IllegalArgumentException("Usuário não existe");
                 }
 
                 usuarioRepository.deleteById(usuario.getId());
@@ -164,44 +172,32 @@ public class UsuarioService {
                         RequestUsuarioDTO usuarioDTO,
                         Usuario usuario) {
 
-                Usuario usuarioAlterado = usuarioRepository.findById(
-                                usuario.getId())
-                                .orElseThrow(() -> new IllegalArgumentException(
-                                                "Usuário não existe"));
+                Usuario usuarioAlterado = usuarioRepository.findById(usuario.getId())
+                                .orElseThrow(() -> new IllegalArgumentException("Usuário não existe"));
 
-                usuarioAlterado.setEmail(
-                                new Email(usuarioDTO.email()));
-
-                usuarioAlterado.setTelefone(
-                                usuarioDTO.telefone());
+                usuarioAlterado.setEmail(new Email(usuarioDTO.email()));
+                usuarioAlterado.setTelefone(usuarioDTO.telefone());
 
                 usuarioRepository.save(usuarioAlterado);
         }
 
         @Transactional
-        public void changePassword(
-                        String senha,
-                        Integer id) {
+        public void changePassword(String senha, Integer id) {
 
                 Usuario usuario = usuarioRepository.findById(id)
-                                .orElseThrow(() -> new IllegalArgumentException(
-                                                "Usuário não existe"));
+                                .orElseThrow(() -> new IllegalArgumentException("Usuário não existe"));
 
                 if (senha == null || senha.isBlank()) {
-                        throw new BadCredentialsException(
-                                        "Senha não pode ser vazia");
+                        throw new BadCredentialsException("Senha não pode ser vazia");
                 }
 
-                usuario.setSenha(
-                                passwordEncoder.encode(senha));
+                usuario.setSenha(passwordEncoder.encode(senha));
         }
 
         public ResponseUsuarioDTO view(Usuario usuario) {
 
-                Usuario viewUsuario = usuarioRepository.findById(
-                                usuario.getId())
-                                .orElseThrow(() -> new IllegalArgumentException(
-                                                "Usuário não existe"));
+                Usuario viewUsuario = usuarioRepository.findById(usuario.getId())
+                                .orElseThrow(() -> new IllegalArgumentException("Usuário não existe"));
 
                 return new ResponseUsuarioDTO(
                                 viewUsuario.getCpf().valor(),
@@ -210,5 +206,13 @@ public class UsuarioService {
                                 viewUsuario.getDataNascimento().toString(),
                                 viewUsuario.getEmail().valor(),
                                 viewUsuario.getTelefone());
+        }
+
+        public record LoginResultado(
+                        String accessToken,
+                        String refreshToken,
+                        boolean lembrarDeMim,
+                        ResponseUsuarioDTO usuario,
+                        Instant expiraEm) {
         }
 }

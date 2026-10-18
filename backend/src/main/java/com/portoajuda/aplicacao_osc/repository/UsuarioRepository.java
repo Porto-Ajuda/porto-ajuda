@@ -14,25 +14,25 @@ import java.util.Optional;
 
 public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
 
-    Optional<Usuario> findByEmail(Email email);
+        Optional<Usuario> findByEmail(Email email);
 
-    boolean existsByEmail(Email email);
+        boolean existsByEmail(Email email);
 
-    List<Usuario> findByEmailVerificadoFalseAndDataCriacaoBefore(
-            LocalDateTime limite);
+        List<Usuario> findByEmailVerificadoFalseAndDataCriacaoBefore(
+                        LocalDateTime limite);
 
-    @Modifying
-    @Query(value = """
-            DELETE FROM usuario_roles
-            WHERE id_usuario = :usuarioId
-            """, nativeQuery = true)
-    int removerAssociacoesRoles(
-            @Param("usuarioId") Integer usuarioId);
+        @Modifying
+        @Query(value = """
+                        DELETE FROM usuario_roles
+                        WHERE id_usuario = :usuarioId
+                        """, nativeQuery = true)
+        int removerAssociacoesRoles(
+                        @Param("usuarioId") Integer usuarioId);
 
-    @Query("""
-            SELECT COUNT(m) > 0
-            FROM OscMembros m
-            WHERE m.usuario.id = :usuarioId
-            """)
-    boolean usuarioIsMember(Integer usuarioId);
+        @Query("""
+                        SELECT COUNT(m) > 0
+                        FROM OscMembros m
+                        WHERE m.usuario.id = :usuarioId
+                        """)
+        boolean usuarioIsMember(Integer usuarioId);
 }
