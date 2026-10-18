@@ -232,16 +232,13 @@ const cabecalho = `
     <!-- PERFIL -->
 
     <a
+        id="link-acesso-usuario"
         href="${ROTAS.login}"
         aria-label="Entrar ou acessar perfil"
     >
-
         <div class="profile-icon">
-
             <i class="fa-regular fa-user"></i>
-
         </div>
-
     </a>
 
 </div>
@@ -255,6 +252,48 @@ document
         "beforeend",
         cabecalho
     );
+
+
+/* =========================================================
+   LINK INTELIGENTE: LOGIN OU PERFIL
+   ========================================================= */
+
+async function configurarLinkAcessoUsuario() {
+    const link = document.getElementById("link-acesso-usuario");
+
+    if (!link) return;
+
+    // Padrão seguro: direciona para o login.
+    link.href = ROTAS.login;
+    link.setAttribute("aria-label", "Entrar ou acessar perfil");
+
+    try {
+        const resposta = await fetch(
+            `${API_URL}/usuario/sessao-atual`,
+            {
+                method: "GET",
+                credentials: "include"
+            }
+        );
+
+        if (!resposta.ok) return;
+
+        const dados = await resposta.json();
+
+        if (dados.autenticado === true) {
+            link.href = "/perfil";
+            link.setAttribute("aria-label", "Acessar meu perfil");
+        }
+    } catch (erro) {
+        console.error(
+            "Não foi possível verificar a sessão do usuário:",
+            erro
+        );
+    }
+}
+
+configurarLinkAcessoUsuario();
+
 
 /* =========================================================
    MENU ATIVO + BARRA DESLIZANTE

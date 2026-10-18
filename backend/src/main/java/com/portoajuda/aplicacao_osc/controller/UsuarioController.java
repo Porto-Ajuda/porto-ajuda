@@ -33,177 +33,177 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class UsuarioController {
 
-    private static final String ACCESS_COOKIE = "PA_ACCESS";
-    private static final String REFRESH_COOKIE = "PA_REFRESH";
+        private static final String ACCESS_COOKIE = "PA_ACCESS";
+        private static final String REFRESH_COOKIE = "PA_REFRESH";
 
-    private final UsuarioRepository usuarioRepository;
-    private final JwtService jwtService;
-    private final CodigoAutenticacaoService codigoAutenticacaoService;
-    private final UsuarioService usuarioService;
+        private final UsuarioRepository usuarioRepository;
+        private final JwtService jwtService;
+        private final CodigoAutenticacaoService codigoAutenticacaoService;
+        private final UsuarioService usuarioService;
 
-    @Value("${app.frontend-url}")
-    private String frontendUrl;
+        @Value("${app.frontend-url}")
+        private String frontendUrl;
 
-    @Value("${app.cookies.secure:true}")
-    private boolean secureCookies;
+        @Value("${app.cookies.secure:true}")
+        private boolean secureCookies;
 
-    @PostMapping("/reenviar-confirmacao")
-    public ResponseEntity<Map<String, String>> reenviarConfirmacao(
-            @RequestBody Map<String, String> requisicao) {
+        @PostMapping("/reenviar-confirmacao")
+        public ResponseEntity<Map<String, String>> reenviarConfirmacao(
+                        @RequestBody Map<String, String> requisicao) {
 
-        String email = requisicao.get("email");
+                String email = requisicao.get("email");
 
-        if (email == null || email.isBlank()) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of(
-                            "mensagem",
-                            "Informe um endereço de e-mail válido."));
+                if (email == null || email.isBlank()) {
+                        return ResponseEntity.badRequest()
+                                        .body(Map.of(
+                                                        "mensagem",
+                                                        "Informe um endereço de e-mail válido."));
+                }
+
+                try {
+                        usuarioService.reenviarConfirmacaoEmail(email.trim());
+                } catch (IllegalArgumentException | IllegalStateException e) {
+                        // Não revelar se o endereço está cadastrado.
+                }
+
+                return ResponseEntity.ok()
+                                .cacheControl(org.springframework.http.CacheControl.noStore())
+                                .body(Map.of(
+                                                "mensagem",
+                                                "Se houver uma conta pendente de confirmação, as instruções serão enviadas."));
         }
 
-        try {
-            usuarioService.reenviarConfirmacaoEmail(email.trim());
-        } catch (IllegalArgumentException | IllegalStateException e) {
-            // Não revelar se o endereço está cadastrado.
+        @GetMapping("/confirmar-email")
+        @Transactional
+        public ResponseEntity<Void> confirmarEmail(
+                        @RequestParam("token") String token) {
+
+                try {
+                        String subject = jwtService.extractSubject(token);
+                        Integer usuarioId = Integer.valueOf(subject);
+
+                        Usuario usuario = usuarioRepository.findById(usuarioId)
+                                        .orElse(null);
+
+                        if (usuario == null
+                                        || !jwtService.validateEmailVerificationToken(token, usuario)) {
+                                return redirecionar("erro", null);
+                        }
+
+                        usuario.setEmailVerificado(true);
+                        usuarioRepository.save(usuario);
+
+                        String codigo = codigoAutenticacaoService.criarCodigo(usuario);
+
+                        return redirecionar("sucesso", codigo);
+
+                } catch (Exception e) {
+                        // Em produção, registre a exceção com um logger.
+                        return redirecionar("erro", null);
+                }
         }
 
-        return ResponseEntity.ok()
-                .cacheControl(org.springframework.http.CacheControl.noStore())
-                .body(Map.of(
-                        "mensagem",
-                        "Se houver uma conta pendente de confirmação, as instruções serão enviadas."));
-    }
+        @PostMapping("/trocar-codigo")
+        public ResponseEntity<?> trocarCodigo(
+                        @RequestBody Map<String, String> requisicao,
+                        HttpServletRequest request) {
 
-    @GetMapping("/confirmar-email")
-    @Transactional
-    public ResponseEntity<Void> confirmarEmail(
-            @RequestParam("token") String token) {
+                try {
+                        String codigo = requisicao.get("codigo");
 
-        try {
-            String subject = jwtService.extractSubject(token);
-            Integer usuarioId = Integer.valueOf(subject);
+                        LoginPorCodigo resultado = codigoAutenticacaoService.trocarPorLogin(codigo);
 
-            Usuario usuario = usuarioRepository.findById(usuarioId)
-                    .orElse(null);
+                        ResponseCookie accessCookie = criarCookie(
+                                        ACCESS_COOKIE,
+                                        resultado.accessToken(),
+                                        Duration.ofMinutes(15),
+                                        true);
 
-            if (usuario == null
-                    || !jwtService.validateEmailVerificationToken(token, usuario)) {
-                return redirecionar("erro", null);
-            }
+                        // Cookie de sessão: sem Max-Age/Expires.
+                        ResponseCookie refreshCookie = criarCookie(
+                                        REFRESH_COOKIE,
+                                        resultado.refreshToken(),
+                                        null,
+                                        true);
 
-            usuario.setEmailVerificado(true);
-            usuarioRepository.save(usuario);
+                        return ResponseEntity.ok()
+                                        .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
+                                        .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+                                        .cacheControl(org.springframework.http.CacheControl.noStore())
+                                        .body(resultado.usuario());
 
-            String codigo = codigoAutenticacaoService.criarCodigo(usuario);
-
-            return redirecionar("sucesso", codigo);
-
-        } catch (Exception e) {
-            // Em produção, registre a exceção com um logger.
-            return redirecionar("erro", null);
-        }
-    }
-
-    @PostMapping("/trocar-codigo")
-    public ResponseEntity<?> trocarCodigo(
-            @RequestBody Map<String, String> requisicao,
-            HttpServletRequest request) {
-
-        try {
-            String codigo = requisicao.get("codigo");
-
-            LoginPorCodigo resultado = codigoAutenticacaoService.trocarPorLogin(codigo);
-
-            ResponseCookie accessCookie = criarCookie(
-                    ACCESS_COOKIE,
-                    resultado.accessToken(),
-                    Duration.ofMinutes(15),
-                    true);
-
-            // Cookie de sessão: sem Max-Age/Expires.
-            ResponseCookie refreshCookie = criarCookie(
-                    REFRESH_COOKIE,
-                    resultado.refreshToken(),
-                    null,
-                    true);
-
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
-                    .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
-                    .cacheControl(org.springframework.http.CacheControl.noStore())
-                    .body(resultado.usuario());
-
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .cacheControl(org.springframework.http.CacheControl.noStore())
-                    .body(Map.of(
-                            "mensagem",
-                            "Código inválido, expirado ou já utilizado."));
-        }
-    }
-
-    private ResponseCookie criarCookie(
-            String nome,
-            String valor,
-            Duration duracao,
-            boolean httpOnly) {
-
-        ResponseCookie.ResponseCookieBuilder builder = ResponseCookie.from(nome, valor)
-                .httpOnly(httpOnly)
-                .secure(secureCookies)
-                .sameSite("Lax")
-                .path("/");
-
-        if (duracao != null) {
-            builder.maxAge(duracao);
+                } catch (Exception e) {
+                        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                        .cacheControl(org.springframework.http.CacheControl.noStore())
+                                        .body(Map.of(
+                                                        "mensagem",
+                                                        "Código inválido, expirado ou já utilizado."));
+                }
         }
 
-        return builder.build();
-    }
+        private ResponseCookie criarCookie(
+                        String nome,
+                        String valor,
+                        Duration duracao,
+                        boolean httpOnly) {
 
-    private ResponseEntity<Void> redirecionar(
-            String status,
-            String codigo) {
+                ResponseCookie.ResponseCookieBuilder builder = ResponseCookie.from(nome, valor)
+                                .httpOnly(httpOnly)
+                                .secure(secureCookies)
+                                .sameSite("Lax")
+                                .path("/");
 
-        String baseUrl = frontendUrl.replaceAll("/+$", "");
+                if (duracao != null) {
+                        builder.maxAge(duracao);
+                }
 
-        String destino = baseUrl
-                + "/pages/confirmacao-email.html?status="
-                + UriUtils.encodeQueryParam(
-                        status,
-                        StandardCharsets.UTF_8);
-
-        if (codigo != null) {
-            destino += "#codigo="
-                    + UriUtils.encodeFragment(
-                            codigo,
-                            StandardCharsets.UTF_8);
+                return builder.build();
         }
 
-        return ResponseEntity.status(HttpStatus.FOUND)
-                .header(
-                        HttpHeaders.LOCATION,
-                        URI.create(destino).toString())
-                .build();
-    }
+        private ResponseEntity<Void> redirecionar(
+                        String status,
+                        String codigo) {
 
-    @GetMapping("/sessao-atual")
-    public ResponseEntity<Map<String, Object>> verificarSessaoAtual(
-            Authentication authentication) {
+                String baseUrl = frontendUrl.replaceAll("/+$", "");
 
-        if (authentication == null
-                || !authentication.isAuthenticated()) {
+                String destino = baseUrl
+                                + "/pages/confirmacao-email.html?status="
+                                + UriUtils.encodeQueryParam(
+                                                status,
+                                                StandardCharsets.UTF_8);
 
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("autenticado", false));
+                if (codigo != null) {
+                        destino += "#codigo="
+                                        + UriUtils.encodeFragment(
+                                                        codigo,
+                                                        StandardCharsets.UTF_8);
+                }
+
+                return ResponseEntity.status(HttpStatus.FOUND)
+                                .header(
+                                                HttpHeaders.LOCATION,
+                                                URI.create(destino).toString())
+                                .build();
         }
 
-        return ResponseEntity.ok(Map.of(
-                "autenticado", true,
-                "usuario", authentication.getName(),
-                "autoridades", authentication.getAuthorities()
-                        .stream()
-                        .map(GrantedAuthority::getAuthority)
-                        .toList()));
-    }
+        @GetMapping("/sessao-atual")
+        public ResponseEntity<Map<String, Object>> verificarSessaoAtual(
+                        Authentication authentication) {
+
+                if (authentication == null
+                                || !authentication.isAuthenticated()) {
+
+                        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                        .body(Map.of("autenticado", false));
+                }
+
+                return ResponseEntity.ok(Map.of(
+                                "autenticado", true,
+                                "usuario", authentication.getName(),
+                                "autoridades", authentication.getAuthorities()
+                                                .stream()
+                                                .map(GrantedAuthority::getAuthority)
+                                                .toList()));
+        }
 
 }

@@ -58,7 +58,6 @@ public class SecurityConfiguration {
                     "/iniciativas",
                     "/contribuicao",
                     "/doacao-ong",
-                    "/perfil",
                     "/oscs",
                     "/proximidade",
                     "/apoio",
