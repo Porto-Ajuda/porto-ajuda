@@ -22,6 +22,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriUtils;
+import com.portoajuda.aplicacao_osc.dto.response.ResponsePerfilUsuarioDTO;
 
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -206,4 +207,46 @@ public class UsuarioController {
                                                 .toList()));
         }
 
+        @GetMapping("/perfil")
+        @Transactional(readOnly = true)
+        public ResponseEntity<?> obterPerfil(Authentication authentication) {
+
+                if (authentication == null
+                                || !authentication.isAuthenticated()) {
+                        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                        .body(Map.of("mensagem", "Autenticação necessária."));
+                }
+
+                try {
+                        Integer usuarioId = Integer.valueOf(authentication.getName());
+
+                        Usuario usuario = usuarioRepository.findById(usuarioId)
+                                        .orElse(null);
+
+                        if (usuario == null || !usuario.isEnabled()) {
+                                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                                .body(Map.of("mensagem", "Usuário não encontrado ou inativo."));
+                        }
+
+                        var perfil = new com.portoajuda.aplicacao_osc.dto.response.ResponsePerfilUsuarioDTO(
+                                        usuario.getId(),
+                                        usuario.getNome(),
+                                        usuario.getNomeSocial(),
+                                        usuario.getEmail() == null
+                                                        ? null
+                                                        : usuario.getEmail().valor(),
+                                        usuario.getTelefone(),
+                                        usuario.getCep(),
+                                        usuario.getDataNascimento(),
+                                        usuario.getDataCriacao());
+
+                        return ResponseEntity.ok()
+                                        .cacheControl(org.springframework.http.CacheControl.noStore())
+                                        .body(perfil);
+
+                } catch (NumberFormatException e) {
+                        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                        .body(Map.of("mensagem", "Sessão inválida."));
+                }
+        }
 }

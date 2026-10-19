@@ -14,36 +14,36 @@ import java.util.List;
 @Configuration
 public class CorsConfig {
 
-    @Value("${ALLOWED_ORIGINS}")
-    private String allowedOrigins;
+        @Value("${ALLOWED_ORIGINS}")
+        private String allowedOrigins;
 
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration config = new CorsConfiguration();
+        @Bean
+        public CorsConfigurationSource corsConfigurationSource() {
+                CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowedOrigins(
-                Arrays.stream(allowedOrigins.split(","))
-                        .map(String::trim)
-                        .filter(origin -> !origin.isEmpty())
-                        .toList());
+                config.setAllowedOrigins(
+                                Arrays.stream(allowedOrigins.split(","))
+                                                .map(String::trim)
+                                                .filter(origin -> !origin.isEmpty())
+                                                .toList());
 
-        config.setAllowedMethods(List.of(
-                "GET", "POST", "PUT", "PATCH",
-                "DELETE", "OPTIONS"));
+                config.setAllowedMethods(List.of(
+                                "GET", "POST", "PUT", "PATCH",
+                                "DELETE", "OPTIONS"));
 
-        config.setAllowedHeaders(List.of(
-                "Content-Type",
-                "Authorization",
-                "X-XSRF-TOKEN",
-                "X-CSRF-TOKEN"));
+                config.setAllowedHeaders(List.of(
+                                "Content-Type",
+                                "Authorization",
+                                "X-XSRF-TOKEN",
+                                "X-CSRF-TOKEN"));
 
-        config.setAllowCredentials(true);
-        config.setMaxAge(3600L);
+                config.setAllowCredentials(true);
+                config.setMaxAge(3600L);
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+                UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 
-        source.registerCorsConfiguration("/**", config);
+                source.registerCorsConfiguration("/**", config);
 
-        return source;
-    }
+                return source;
+        }
 }

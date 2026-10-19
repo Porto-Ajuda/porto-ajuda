@@ -37,268 +37,252 @@ import java.util.Optional;
 @RequestMapping("/usuario")
 public class AuthController {
 
-    private static final String ACCESS_COOKIE = "PA_ACCESS";
-    private static final String REFRESH_COOKIE = "PA_REFRESH";
+        private static final String ACCESS_COOKIE = "PA_ACCESS";
+        private static final String REFRESH_COOKIE = "PA_REFRESH";
 
-    private final UsuarioService usuarioService;
-    private final SessaoUsuarioService sessaoUsuarioService;
-    private final JwtService jwtService;
+        private final UsuarioService usuarioService;
+        private final SessaoUsuarioService sessaoUsuarioService;
+        private final JwtService jwtService;
 
-    @Value("${app.cookies.secure:true}")
-    private boolean secureCookies;
+        @Value("${app.cookies.secure:true}")
+        private boolean secureCookies;
 
-    /**
-     * Disponibiliza o token CSRF para o frontend.
-     */
-    @GetMapping(value = "/csrf", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<CsrfResposta> csrf(CsrfToken csrfToken) {
-        return ResponseEntity.ok()
-                .cacheControl(CacheControl.noStore())
-                .body(new CsrfResposta(
-                        csrfToken.getHeaderName(),
-                        csrfToken.getToken()));
-    }
-
-    @PostMapping(
-            value = "/register",
-            consumes = MediaType.APPLICATION_JSON_VALUE,
-            produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Void> register(
-            @Valid @RequestBody RequestUsuarioDTO usuarioDTO) {
-
-        usuarioService.signup(usuarioDTO);
-
-        return ResponseEntity.status(HttpStatus.CREATED).build();
-    }
-
-    /**
-     * Autentica o usuário e cria os cookies conforme lembrarDeMim.
-     */
-    @PostMapping(
-            value = "/login",
-            consumes = MediaType.APPLICATION_JSON_VALUE,
-            produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ResponseUsuarioDTO> login(
-            @Valid @RequestBody RequestLoginDTO loginDTO) {
-
-        LoginResultado resultado = usuarioService.login(loginDTO);
-
-        ResponseCookie accessCookie = criarCookie(
-                ACCESS_COOKIE,
-                resultado.accessToken(),
-                resultado.lembrarDeMim()
-                        ? Duration.ofMinutes(15)
-                        : null);
-
-        Duration duracaoRefresh = resultado.lembrarDeMim()
-                ? duracaoRestante(resultado.expiraEm())
-                : null;
-
-        ResponseCookie refreshCookie = criarCookie(
-                REFRESH_COOKIE,
-                resultado.refreshToken(),
-                duracaoRefresh);
-
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
-                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
-                .cacheControl(CacheControl.noStore())
-                .body(resultado.usuario());
-    }
-
-    /**
-     * Renova o access token e rotaciona o refresh token.
-     */
-    @PostMapping("/refresh")
-    public ResponseEntity<Void> refresh(HttpServletRequest request) {
-
-        String refreshToken = obterCookie(request, REFRESH_COOKIE);
-
-        Optional<SessaoCriada> resultado =
-                sessaoUsuarioService.renovarSessao(refreshToken);
-
-        if (resultado.isEmpty()) {
-            return limparCookies();
+        /**
+         * Disponibiliza o token CSRF para o frontend.
+         */
+        @GetMapping(value = "/csrf", produces = MediaType.APPLICATION_JSON_VALUE)
+        public ResponseEntity<CsrfResposta> csrf(CsrfToken csrfToken) {
+                return ResponseEntity.ok()
+                                .cacheControl(CacheControl.noStore())
+                                .body(new CsrfResposta(
+                                                csrfToken.getHeaderName(),
+                                                csrfToken.getToken()));
         }
 
-        SessaoCriada criada = resultado.get();
-        SessaoUsuario sessao = criada.sessao();
+        @PostMapping(value = "/register", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+        public ResponseEntity<Void> register(
+                        @Valid @RequestBody RequestUsuarioDTO usuarioDTO) {
 
-        String novoAccessToken = jwtService.generateToken(
-                sessao.getUsuario(),
-                sessao.getId());
+                usuarioService.signup(usuarioDTO);
 
-        ResponseCookie accessCookie = criarCookie(
-                ACCESS_COOKIE,
-                novoAccessToken,
-                sessao.isLembrarDeMim()
-                        ? Duration.ofMinutes(15)
-                        : null);
+                return ResponseEntity.status(HttpStatus.CREATED).build();
+        }
 
-        Duration duracaoRefresh = sessao.isLembrarDeMim()
-                ? duracaoRestante(sessao.getExpiraEm())
-                : null;
+        /**
+         * Autentica o usuário e cria os cookies conforme lembrarDeMim.
+         */
+        @PostMapping(value = "/login", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+        public ResponseEntity<ResponseUsuarioDTO> login(
+                        @Valid @RequestBody RequestLoginDTO loginDTO) {
 
-        ResponseCookie refreshCookie = criarCookie(
-                REFRESH_COOKIE,
-                criada.refreshToken(),
-                duracaoRefresh);
+                LoginResultado resultado = usuarioService.login(loginDTO);
 
-        return ResponseEntity.noContent()
-                .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
-                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
-                .cacheControl(CacheControl.noStore())
-                .build();
-    }
+                ResponseCookie accessCookie = criarCookie(
+                                ACCESS_COOKIE,
+                                resultado.accessToken(),
+                                resultado.lembrarDeMim()
+                                                ? Duration.ofMinutes(15)
+                                                : null);
 
-    /**
-     * Revoga a sessão autenticada e limpa os cookies.
-     */
-    @PreAuthorize("hasRole('USUARIO')")
-    @PostMapping("/logout")
-    public ResponseEntity<Void> logout(
-            @AuthenticationPrincipal Usuario usuario,
-            HttpServletRequest request) {
+                Duration duracaoRefresh = resultado.lembrarDeMim()
+                                ? duracaoRestante(resultado.expiraEm())
+                                : null;
 
-        String accessToken = obterCookie(request, ACCESS_COOKIE);
+                ResponseCookie refreshCookie = criarCookie(
+                                REFRESH_COOKIE,
+                                resultado.refreshToken(),
+                                duracaoRefresh);
 
-        if (usuario != null
-                && accessToken != null
-                && !accessToken.isBlank()) {
+                return ResponseEntity.ok()
+                                .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
+                                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+                                .cacheControl(CacheControl.noStore())
+                                .body(resultado.usuario());
+        }
 
-            Long sessaoId = jwtService.extractSessionId(accessToken);
+        /**
+         * Renova o access token e rotaciona o refresh token.
+         */
+        @PostMapping("/refresh")
+        public ResponseEntity<Void> refresh(HttpServletRequest request) {
 
-            if (sessaoId != null) {
-                Optional<SessaoUsuario> sessao =
-                        sessaoUsuarioService.buscarSessaoValida(sessaoId);
+                String refreshToken = obterCookie(request, REFRESH_COOKIE);
 
-                if (sessao.isPresent()
-                        && sessao.get().getUsuario().getId()
-                                .equals(usuario.getId())) {
+                Optional<SessaoCriada> resultado = sessaoUsuarioService.renovarSessao(refreshToken);
 
-                    sessaoUsuarioService.revogarSessao(sessaoId);
+                if (resultado.isEmpty()) {
+                        return limparCookies();
                 }
-            }
+
+                SessaoCriada criada = resultado.get();
+                SessaoUsuario sessao = criada.sessao();
+
+                String novoAccessToken = jwtService.generateToken(
+                                sessao.getUsuario(),
+                                sessao.getId());
+
+                ResponseCookie accessCookie = criarCookie(
+                                ACCESS_COOKIE,
+                                novoAccessToken,
+                                sessao.isLembrarDeMim()
+                                                ? Duration.ofMinutes(15)
+                                                : null);
+
+                Duration duracaoRefresh = sessao.isLembrarDeMim()
+                                ? duracaoRestante(sessao.getExpiraEm())
+                                : null;
+
+                ResponseCookie refreshCookie = criarCookie(
+                                REFRESH_COOKIE,
+                                criada.refreshToken(),
+                                duracaoRefresh);
+
+                return ResponseEntity.noContent()
+                                .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
+                                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+                                .cacheControl(CacheControl.noStore())
+                                .build();
         }
 
-        return limparCookies();
-    }
+        /**
+         * Revoga a sessão autenticada e limpa os cookies.
+         */
+        @PreAuthorize("hasRole('USUARIO')")
+        @PostMapping("/logout")
+        public ResponseEntity<Void> logout(
+                        @AuthenticationPrincipal Usuario usuario,
+                        HttpServletRequest request) {
 
-    @PreAuthorize("hasRole('USUARIO')")
-    @DeleteMapping(
-            value = "/delete",
-            produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Void> delete(
-            @AuthenticationPrincipal Usuario usuario) {
+                String accessToken = obterCookie(request, ACCESS_COOKIE);
 
-        usuarioService.delete(usuario);
+                if (usuario != null
+                                && accessToken != null
+                                && !accessToken.isBlank()) {
 
-        return ResponseEntity.status(HttpStatus.ACCEPTED).build();
-    }
+                        Long sessaoId = jwtService.extractSessionId(accessToken);
 
-    @PreAuthorize("hasRole('USUARIO')")
-    @PutMapping(
-            value = "/put",
-            consumes = MediaType.APPLICATION_JSON_VALUE,
-            produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Void> put(
-            @Valid @RequestBody RequestUsuarioDTO requestUsuarioDTO,
-            @AuthenticationPrincipal Usuario usuario) {
+                        if (sessaoId != null) {
+                                Optional<SessaoUsuario> sessao = sessaoUsuarioService.buscarSessaoValida(sessaoId);
 
-        usuarioService.update(requestUsuarioDTO, usuario);
+                                if (sessao.isPresent()
+                                                && sessao.get().getUsuario().getId()
+                                                                .equals(usuario.getId())) {
 
-        return ResponseEntity.status(HttpStatus.ACCEPTED).build();
-    }
-
-    @PreAuthorize("hasRole('USUARIO')")
-    @GetMapping(
-            value = "/get",
-            produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ResponseUsuarioDTO> get(
-            @AuthenticationPrincipal Usuario usuario) {
-
-        return ResponseEntity.ok(usuarioService.view(usuario));
-    }
-
-    /**
-     * Cria um cookie.
-     * duracao == null: cookie de sessão do navegador.
-     * duracao > 0: cookie persistente pelo período informado.
-     * duracao == 0: remove o cookie.
-     */
-    private ResponseCookie criarCookie(
-            String nome,
-            String valor,
-            Duration duracao) {
-
-        ResponseCookie.ResponseCookieBuilder builder =
-                ResponseCookie.from(nome, valor)
-                        .httpOnly(true)
-                        .secure(secureCookies)
-                        .sameSite("Lax")
-                        .path("/");
-
-        if (duracao != null) {
-            builder.maxAge(duracao.isNegative()
-                    ? Duration.ZERO
-                    : duracao);
-        }
-
-        return builder.build();
-    }
-
-    /**
-     * Calcula o tempo restante da sessão persistente.
-     */
-    private Duration duracaoRestante(Instant expiraEm) {
-        Duration restante = Duration.between(Instant.now(), expiraEm);
-
-        return restante.isNegative() || restante.isZero()
-                ? Duration.ZERO
-                : restante;
-    }
-
-    private String obterCookie(
-            HttpServletRequest request,
-            String nome) {
-
-        Cookie[] cookies = request.getCookies();
-
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if (nome.equals(cookie.getName())) {
-                    return cookie.getValue();
+                                        sessaoUsuarioService.revogarSessao(sessaoId);
+                                }
+                        }
                 }
-            }
+
+                return limparCookies();
         }
 
-        return null;
-    }
+        @PreAuthorize("hasRole('USUARIO')")
+        @DeleteMapping(value = "/delete", produces = MediaType.APPLICATION_JSON_VALUE)
+        public ResponseEntity<Void> delete(
+                        @AuthenticationPrincipal Usuario usuario) {
 
-    /**
-     * Limpa os cookies no navegador.
-     */
-    private ResponseEntity<Void> limparCookies() {
+                usuarioService.delete(usuario);
 
-        ResponseCookie accessCookie = criarCookie(
-                ACCESS_COOKIE,
-                "",
-                Duration.ZERO);
+                return ResponseEntity.status(HttpStatus.ACCEPTED).build();
+        }
 
-        ResponseCookie refreshCookie = criarCookie(
-                REFRESH_COOKIE,
-                "",
-                Duration.ZERO);
+        @PreAuthorize("hasRole('USUARIO')")
+        @PutMapping(value = "/put", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+        public ResponseEntity<Void> put(
+                        @Valid @RequestBody RequestUsuarioDTO requestUsuarioDTO,
+                        @AuthenticationPrincipal Usuario usuario) {
 
-        return ResponseEntity.noContent()
-                .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
-                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
-                .cacheControl(CacheControl.noStore())
-                .build();
-    }
+                usuarioService.update(requestUsuarioDTO, usuario);
 
-    public record CsrfResposta(
-            String headerName,
-            String token) {
-    }
+                return ResponseEntity.status(HttpStatus.ACCEPTED).build();
+        }
+
+        @PreAuthorize("hasRole('USUARIO')")
+        @GetMapping(value = "/get", produces = MediaType.APPLICATION_JSON_VALUE)
+        public ResponseEntity<ResponseUsuarioDTO> get(
+                        @AuthenticationPrincipal Usuario usuario) {
+
+                return ResponseEntity.ok(usuarioService.view(usuario));
+        }
+
+        /**
+         * Cria um cookie.
+         * duracao == null: cookie de sessão do navegador.
+         * duracao > 0: cookie persistente pelo período informado.
+         * duracao == 0: remove o cookie.
+         */
+        private ResponseCookie criarCookie(
+                        String nome,
+                        String valor,
+                        Duration duracao) {
+
+                ResponseCookie.ResponseCookieBuilder builder = ResponseCookie.from(nome, valor)
+                                .httpOnly(true)
+                                .secure(secureCookies)
+                                .sameSite("Lax")
+                                .path("/");
+
+                if (duracao != null) {
+                        builder.maxAge(duracao.isNegative()
+                                        ? Duration.ZERO
+                                        : duracao);
+                }
+
+                return builder.build();
+        }
+
+        /**
+         * Calcula o tempo restante da sessão persistente.
+         */
+        private Duration duracaoRestante(Instant expiraEm) {
+                Duration restante = Duration.between(Instant.now(), expiraEm);
+
+                return restante.isNegative() || restante.isZero()
+                                ? Duration.ZERO
+                                : restante;
+        }
+
+        private String obterCookie(
+                        HttpServletRequest request,
+                        String nome) {
+
+                Cookie[] cookies = request.getCookies();
+
+                if (cookies != null) {
+                        for (Cookie cookie : cookies) {
+                                if (nome.equals(cookie.getName())) {
+                                        return cookie.getValue();
+                                }
+                        }
+                }
+
+                return null;
+        }
+
+        /**
+         * Limpa os cookies no navegador.
+         */
+        private ResponseEntity<Void> limparCookies() {
+
+                ResponseCookie accessCookie = criarCookie(
+                                ACCESS_COOKIE,
+                                "",
+                                Duration.ZERO);
+
+                ResponseCookie refreshCookie = criarCookie(
+                                REFRESH_COOKIE,
+                                "",
+                                Duration.ZERO);
+
+                return ResponseEntity.noContent()
+                                .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
+                                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+                                .cacheControl(CacheControl.noStore())
+                                .build();
+        }
+
+        public record CsrfResposta(
+                        String headerName,
+                        String token) {
+        }
 }

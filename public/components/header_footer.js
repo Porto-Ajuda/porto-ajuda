@@ -1,6 +1,7 @@
 import { getAPI_URL } from "./modoBack.js";
+import { fetchAutenticado } from "./api.js";
 
-const API_URL = await getAPI_URL();
+const API_URL = getAPI_URL();
 
 console.log("================================");
 console.log("API ESCOLHIDA:", API_URL);
@@ -253,7 +254,6 @@ document
         cabecalho
     );
 
-
 /* =========================================================
    LINK INTELIGENTE: LOGIN OU PERFIL
    ========================================================= */
@@ -263,26 +263,31 @@ async function configurarLinkAcessoUsuario() {
 
     if (!link) return;
 
-    // Padrão seguro: direciona para o login.
+    // Estado inicial: usuário pode entrar.
     link.href = ROTAS.login;
     link.setAttribute("aria-label", "Entrar ou acessar perfil");
 
     try {
-        const resposta = await fetch(
-            `${API_URL}/usuario/sessao-atual`,
+        const resposta = await fetchAutenticado(
+            "/usuario/sessao-atual",
             {
-                method: "GET",
-                credentials: "include"
+                method: "GET"
             }
         );
 
-        if (!resposta.ok) return;
+        if (!resposta.ok) {
+            // Mantém o link para login se a sessão não for válida.
+            return;
+        }
 
         const dados = await resposta.json();
 
         if (dados.autenticado === true) {
             link.href = "/perfil";
-            link.setAttribute("aria-label", "Acessar meu perfil");
+            link.setAttribute(
+                "aria-label",
+                "Acessar meu perfil"
+            );
         }
     } catch (erro) {
         console.error(
@@ -293,7 +298,6 @@ async function configurarLinkAcessoUsuario() {
 }
 
 configurarLinkAcessoUsuario();
-
 
 /* =========================================================
    MENU ATIVO + BARRA DESLIZANTE

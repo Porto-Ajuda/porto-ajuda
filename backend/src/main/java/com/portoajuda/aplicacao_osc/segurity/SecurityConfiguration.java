@@ -13,6 +13,8 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 
 @Configuration
 @RequiredArgsConstructor
@@ -27,95 +29,93 @@ public class SecurityConfiguration {
             throws Exception {
 
         http
-            .csrf(csrf -> csrf
-                .csrfTokenRepository(
-                    CookieCsrfTokenRepository.withHttpOnlyFalse()
-                )
-                .csrfTokenRequestHandler(
-                    new CsrfTokenRequestAttributeHandler()
-                )
-            )
+                .csrf(csrf -> csrf
+                        .csrfTokenRepository(
+                                CookieCsrfTokenRepository.withHttpOnlyFalse())
+                        .csrfTokenRequestHandler(
+                                new CsrfTokenRequestAttributeHandler()))
 
-            .cors(cors -> {})
+                .cors(cors -> {
+                })
 
-            .headers(headers -> headers
-                .frameOptions(frame -> frame.sameOrigin())
-            )
+                .headers(headers -> headers
+                        .frameOptions(frame -> frame.sameOrigin()))
 
-            .sessionManagement(session -> session
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            )
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-            .authorizeHttpRequests(auth -> auth
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(
+                                new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
 
-                // Arquivos e páginas públicas
-                .requestMatchers(
-                    "/",
-                    "/apoie",
-                    "/contato",
-                    "/login",
-                    "/sobre",
-                    "/iniciativas",
-                    "/contribuicao",
-                    "/doacao-ong",
-                    "/oscs",
-                    "/proximidade",
-                    "/apoio",
-                    "/ong-profile",
-                    "/cadastro-ong",
-                    "/pages/**",
-                    "/assets/**",
-                    "/styles/**",
-                    "/components/**",
-                    "/doom/**"
-                ).permitAll()
+                .authorizeHttpRequests(auth -> auth
 
-                // Rotas públicas de autenticação
-                .requestMatchers(
-                    HttpMethod.GET,
-                    "/usuario/csrf"
-                ).permitAll()
+                        // Arquivos e páginas públicas
+                        .requestMatchers(
+                                "/",
+                                "/apoie",
+                                "/contato",
+                                "/login",
+                                "/sobre",
+                                "/iniciativas",
+                                "/contribuicao",
+                                "/doacao-ong",
+                                "/oscs",
+                                "/proximidade",
+                                "/apoio",
+                                "/ong-profile",
+                                "/cadastro-ong",
+                                "/pages/**",
+                                "/assets/**",
+                                "/styles/**",
+                                "/components/**",
+                                "/doom/**")
+                        .permitAll()
 
-                .requestMatchers(
-                    HttpMethod.POST,
-                    "/usuario/register",
-                    "/usuario/login",
-                    "/usuario/confirmar-email",
-                    "/usuario/trocar-codigo",
-                    "/usuario/reenviar-confirmacao",
-                    "/usuario/refresh"
-                ).permitAll()
+                        // Rotas públicas de autenticação
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/usuario/csrf")
+                        .permitAll()
 
-                // Documentação
-                .requestMatchers(
-                    "/swagger-ui.html",
-                    "/swagger-ui/**",
-                    "/v3/api-docs/**",
-                    "/v3/api-docs",
-                    "/swagger-resources/**",
-                    "/webjars/**"
-                ).permitAll()
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/usuario/register",
+                                "/usuario/login",
+                                "/usuario/confirmar-email",
+                                "/usuario/trocar-codigo",
+                                "/usuario/reenviar-confirmacao",
+                                "/usuario/refresh")
+                        .permitAll()
 
-                // Outras rotas públicas
-                .requestMatchers(
-                    "/error",
-                    "/api/config/**",
-                    "/osc/list"
-                ).permitAll()
+                        // Documentação
+                        .requestMatchers(
+                                "/swagger-ui.html",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/v3/api-docs",
+                                "/swagger-resources/**",
+                                "/webjars/**")
+                        .permitAll()
 
-                // Preflight CORS
-                .requestMatchers(
-                    HttpMethod.OPTIONS, "/**"
-                ).permitAll()
+                        // Outras rotas públicas
+                        .requestMatchers(
+                                "/error",
+                                "/api/config/**",
+                                "/osc/list")
+                        .permitAll()
 
-                // Demais rotas exigem autenticação
-                .anyRequest().authenticated()
-            )
+                        // Preflight CORS
+                        .requestMatchers(
+                                HttpMethod.OPTIONS, "/**")
+                        .permitAll()
 
-            .addFilterBefore(
-                jwtAuthFilter,
-                UsernamePasswordAuthenticationFilter.class
-            );
+                        // Demais rotas exigem autenticação
+                        .anyRequest().authenticated())
+
+                .addFilterBefore(
+                        jwtAuthFilter,
+                        UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

@@ -16,7 +16,8 @@
     <link rel="stylesheet" href="../styles/perfil.css">
 
     <script type="module" src="../components/header_footer.js" defer></script>
-    <script src="../components/perfil.js" defer></script>
+    <script type="module" src="../components/perfil.js" defer></script>
+    <script type="module" src="../components/logout.js" defer></script>
 
 </head>
 
@@ -30,8 +31,12 @@
 
     <header class="navbar"></header>
 
+    <!-- <div id="estado-autenticacao" role="status" aria-live="polite">
+        Verificando sua sessão...
+    </div> -->
 
     <section class="surgir">
+        <!-- <section class="surgir" id="conteudo-protegido" hidden> -->
 
         <section class="hero">
 
@@ -44,7 +49,8 @@
                     </div>
 
                     <h1>
-                        SUA <br>
+                        SUA
+                        <br>
                         <span>CONTA</span>
                     </h1>
 
@@ -68,16 +74,16 @@
 
                     <section class="painel-perfil" aria-labelledby="titulo-perfil">
 
-                        <div class="foto-perfil" aria-hidden="true">
-                            FL
+                        <div class="foto-perfil" id="foto-perfil" aria-hidden="true">
+                            --
                         </div>
 
-                        <h2 id="titulo-perfil">
-                            Fulano de Tal
-                        </h2>
+                        <h2 id="perfil-nome">Carregando...</h2>
 
-                        <p class="data-cadastro">
-                            33 de Fevereiro de 1800
+                        <p id="perfil-nome-civil" hidden></p>
+
+                        <p class="data-cadastro" id="perfil-data-cadastro">
+                            Carregando data de cadastro...
                         </p>
 
 
@@ -85,68 +91,18 @@
 
                         <div class="campo-perfil">
 
-                            <label for="nome">
-                                Nome
-                            </label>
+                            <label for="email">E-mail</label>
+                            <input id="email" name="email" type="email" autocomplete="email" disabled>
 
-                            <input
-                                id="nome"
-                                type="text"
-                                disabled
-                            >
+                            <label for="telefone">Telefone</label>
+                            <input id="telefone" name="telefone" type="tel" autocomplete="tel" disabled>
 
+                            <label for="cep">CEP</label>
+                            <input id="cep" name="cep" type="text" inputmode="numeric" autocomplete="postal-code"
+                                maxlength="9" placeholder="00000-000" disabled>
 
-                            <label for="nome-social">
-                                Nome Social
-                            </label>
-
-                            <input
-                                id="nome-social"
-                                type="text"
-                                disabled
-                            >
-
-
-                            <label for="email">
-                                E-mail
-                            </label>
-
-                            <input
-                                id="email"
-                                type="text"
-                            >
-
-
-                            <label for="telefone">
-                                Telefone
-                            </label>
-
-                            <input
-                                id="telefone"
-                                type="tel"
-                                disabled
-                            >
-
-
-                            <label for="senha">
-                                Senha
-                            </label>
-
-                            <input
-                                id="senha"
-                                type="text"
-                                disabled
-                            >
-
-
-                            <!-- AÇÃO PRINCIPAL -->
-
-                            <button
-                                class="btn"
-                                type="button"
-                            >
-                                Alterar Dados
-                            </button>
+                            <label for="data-nascimento">Data de nascimento</label>
+                            <input id="data-nascimento" name="dataNascimento" type="text" disabled>
 
                         </div>
 
@@ -164,38 +120,20 @@
                         <!-- ABAS -->
                         <!-- ========================= -->
 
-                        <button
-                            class="aba"
-                            role="tab"
-                            id="aba-registro"
-                            aria-controls="painel-registro"
-                            aria-selected="true"
-                            type="button"
-                        >
+                        <button class="aba" role="tab" id="aba-registro" aria-controls="painel-registro"
+                            aria-selected="true" type="button">
                             Registro
                         </button>
 
 
-                        <button
-                            class="aba"
-                            role="tab"
-                            id="aba-acss"
-                            aria-controls="painel-acss"
-                            aria-selected="false"
-                            type="button"
-                        >
+                        <button class="aba" role="tab" id="aba-acss" aria-controls="painel-acss" aria-selected="false"
+                            type="button">
                             Acessibilidade
                         </button>
 
 
-                        <button
-                            class="aba"
-                            role="tab"
-                            id="aba-configuracoes"
-                            aria-controls="painel-configuracoes"
-                            aria-selected="false"
-                            type="button"
-                        >
+                        <button class="aba" role="tab" id="aba-configuracoes" aria-controls="painel-configuracoes"
+                            aria-selected="false" type="button">
                             Configurações
                         </button>
 
@@ -204,13 +142,8 @@
                         <!-- PAINEL 1 — REGISTRO -->
                         <!-- ====================================================== -->
 
-                        <div
-                            class="painel painel-aba"
-                            role="tabpanel"
-                            id="painel-registro"
-                            aria-labelledby="aba-registro"
-                            tabindex="0"
-                        >
+                        <div class="painel painel-aba" role="tabpanel" id="painel-registro"
+                            aria-labelledby="aba-registro" tabindex="0">
 
 
                             <!-- RESUMO DO REGISTRO -->
@@ -262,11 +195,7 @@
 
                                 <!-- BAIXAR DECLARAÇÃO -->
 
-                                <button
-                                    class="botao botao-secundario"
-                                    type="button"
-                                    id="baixar-registro"
-                                >
+                                <button class="botao botao-secundario" type="button" id="baixar-registro">
                                     Baixar Registro
                                 </button>
 
@@ -275,48 +204,26 @@
 
                             <div class="divider">
 
-                                <img
-                                    class="lua"
-                                    src="../assets/moon.png"
-                                >
+                                <img class="lua" src="../assets/moon.png">
 
                             </div>
 
 
                             <!-- FILTROS DO REGISTRO -->
 
-                            <div
-                                class="filtros-registro"
-                                role="group"
-                                aria-label="Filtrar registro"
-                            >
+                            <div class="filtros-registro" role="group" aria-label="Filtrar registro">
 
-                                <button
-                                    class="filtro"
-                                    type="button"
-                                    aria-pressed="true"
-                                    data-filtro="tudo"
-                                >
+                                <button class="filtro" type="button" aria-pressed="true" data-filtro="tudo">
                                     Tudo
                                 </button>
 
 
-                                <button
-                                    class="filtro"
-                                    type="button"
-                                    aria-pressed="false"
-                                    data-filtro="doacao"
-                                >
+                                <button class="filtro" type="button" aria-pressed="false" data-filtro="doacao">
                                     Doações
                                 </button>
 
 
-                                <button
-                                    class="filtro"
-                                    type="button"
-                                    aria-pressed="false"
-                                    data-filtro="voluntariado"
-                                >
+                                <button class="filtro" type="button" aria-pressed="false" data-filtro="voluntariado">
                                     Voluntariado
                                 </button>
 
@@ -337,10 +244,7 @@
 
                                 <!-- Registro de doação -->
 
-                                <li
-                                    class="registro"
-                                    data-tipo="doacao"
-                                >
+                                <li class="registro" data-tipo="doacao">
 
                                     <div class="data-registro">
                                         15 SET
@@ -370,10 +274,7 @@
 
                                 <!-- Registro de voluntariado -->
 
-                                <li
-                                    class="registro"
-                                    data-tipo="voluntariado"
-                                >
+                                <li class="registro" data-tipo="voluntariado">
 
                                     <div class="data-registro">
                                         07 SET
@@ -397,10 +298,7 @@
 
                                 <!-- Registro de doação -->
 
-                                <li
-                                    class="registro"
-                                    data-tipo="doacao"
-                                >
+                                <li class="registro" data-tipo="doacao">
 
                                     <div class="data-registro">
                                         28 AGO
@@ -430,10 +328,7 @@
 
                                 <!-- Registro de voluntariado -->
 
-                                <li
-                                    class="registro"
-                                    data-tipo="voluntariado"
-                                >
+                                <li class="registro" data-tipo="voluntariado">
 
                                     <div class="data-registro">
                                         16 AGO
@@ -457,10 +352,7 @@
 
                                 <!-- Registro de doação -->
 
-                                <li
-                                    class="registro"
-                                    data-tipo="doacao"
-                                >
+                                <li class="registro" data-tipo="doacao">
 
                                     <div class="data-registro">
                                         02 AGO
@@ -490,10 +382,7 @@
 
                                 <!-- Registro de voluntariado -->
 
-                                <li
-                                    class="registro"
-                                    data-tipo="voluntariado"
-                                >
+                                <li class="registro" data-tipo="voluntariado">
 
                                     <div class="data-registro">
                                         19 JUL
@@ -517,10 +406,7 @@
 
                                 <!-- Registro de doação -->
 
-                                <li
-                                    class="registro"
-                                    data-tipo="doacao"
-                                >
+                                <li class="registro" data-tipo="doacao">
 
                                     <div class="data-registro">
                                         05 JUL
@@ -550,10 +436,7 @@
 
                                 <!-- Registro de voluntariado -->
 
-                                <li
-                                    class="registro"
-                                    data-tipo="voluntariado"
-                                >
+                                <li class="registro" data-tipo="voluntariado">
 
                                     <div class="data-registro">
                                         21 JUN
@@ -579,20 +462,13 @@
 
                             <!-- ESTADO VAZIO -->
 
-                            <div
-                                class="estado-vazio"
-                                id="registro-vazio"
-                                hidden
-                            >
+                            <div class="estado-vazio" id="registro-vazio" hidden>
 
                                 <h3></h3>
 
                                 <p></p>
 
-                                <button
-                                    class="botao botao-secundario"
-                                    type="button"
-                                >
+                                <button class="botao botao-secundario" type="button">
                                 </button>
 
                             </div>
@@ -604,14 +480,8 @@
                         <!-- PAINEL 2 — ACSS -->
                         <!-- ====================================================== -->
 
-                        <div
-                            class="painel painel-aba"
-                            role="tabpanel"
-                            id="painel-acss"
-                            aria-labelledby="aba-acss"
-                            tabindex="0"
-                            hidden
-                        >
+                        <div class="painel painel-aba" role="tabpanel" id="painel-acss" aria-labelledby="aba-acss"
+                            tabindex="0" hidden>
 
 
                             <!-- LEITURA DE TELA -->
@@ -634,10 +504,7 @@
 
                                 <label class="acss-interruptor">
 
-                                    <input
-                                        type="checkbox"
-                                        id="acss-leitura-tela"
-                                    >
+                                    <input type="checkbox" id="acss-leitura-tela">
 
                                     <span></span>
 
@@ -665,10 +532,7 @@
 
                                 <label class="acss-interruptor">
 
-                                    <input
-                                        type="checkbox"
-                                        id="acss-libras"
-                                    >
+                                    <input type="checkbox" id="acss-libras">
 
                                     <span></span>
 
@@ -679,10 +543,7 @@
 
                             <div class="divider">
 
-                                <img
-                                    class="lua"
-                                    src="../assets/moon.png"
-                                >
+                                <img class="lua" src="../assets/moon.png">
 
                             </div>
 
@@ -714,10 +575,7 @@
                                             Pequeno
                                         </option>
 
-                                        <option
-                                            value="medio"
-                                            selected
-                                        >
+                                        <option value="medio" selected>
                                             Médio
                                         </option>
 
@@ -759,10 +617,7 @@
 
                                     <select id="acss-modo-exibicao">
 
-                                        <option
-                                            value="escuro"
-                                            selected
-                                        >
+                                        <option value="escuro" selected>
                                             Escuro
                                         </option>
 
@@ -804,10 +659,7 @@
 
                                     <select id="acss-idioma">
 
-                                        <option
-                                            value="pt-BR"
-                                            selected
-                                        >
+                                        <option value="pt-BR" selected>
                                             Português (BR)
                                         </option>
 
@@ -832,14 +684,8 @@
                         <!-- PAINEL 3 — CONFIGURAÇÕES -->
                         <!-- ====================================================== -->
 
-                        <div
-                            class="painel painel-aba"
-                            role="tabpanel"
-                            id="painel-configuracoes"
-                            aria-labelledby="aba-configuracoes"
-                            tabindex="0"
-                            hidden
-                        >
+                        <div class="painel painel-aba" role="tabpanel" id="painel-configuracoes"
+                            aria-labelledby="aba-configuracoes" tabindex="0" hidden>
 
 
                             <!-- ================================================== -->
@@ -866,12 +712,8 @@
 
                                 <div class="grupo-botoes">
 
-                                    <button
-                                        class="botao botao-secundario"
-                                        type="button"
-                                        id="criar-osc"
-                                    >
-                                       <a href="#cadastro-osc.html">Criar conta</a>
+                                    <button class="botao botao-secundario" type="button" id="criar-osc">
+                                        <a href="#cadastro-osc.html">Criar conta</a>
                                     </button>
 
                                 </div>
@@ -903,11 +745,7 @@
 
                                 <div class="grupo-botoes">
 
-                                    <button
-                                        class="botao botao-secundario"
-                                        type="button"
-                                        id="trocar-osc"
-                                    >
+                                    <button class="botao botao-secundario" type="button" id="trocar-osc">
                                         Trocar conta
                                     </button>
 
@@ -916,45 +754,30 @@
                             </div>
 
                             <!-- ================================================== -->
-                            <!-- ENCERRAR SESSÕES -->
+                            <!-- ENCERRAR SESSÃO -->
                             <!-- ================================================== -->
 
                             <div class="configuracao">
-
                                 <div>
-
-                                    <h3>
-                                        Encerrar outras sessões
-                                    </h3>
-
-                                    <p>
-                                        Desconecte sua conta de outros dispositivos
-                                        onde ela esteja aberta.
-                                    </p>
-
+                                    <h3>Sair da conta</h3>
+                                    <p>Encerre sua sessão neste dispositivo.</p>
                                 </div>
-
 
                                 <div class="grupo-botoes">
-
-                                    <button
-                                        class="botao botao-secundario"
-                                        id="encerrar-sessoes"
-                                        type="button"
-                                    >
-                                        Encerrar sessões
+                                    <button class="botao botao-secundario" type="button" id="botao-logout">
+                                        Sair da conta
                                     </button>
-
                                 </div>
-
                             </div>
+
+                            <p id="estado-logout" role="status" aria-live="polite" hidden></p>
 
                             <!-- ================================================== -->
                             <!-- ENDEREÇO -->
                             <!-- ================================================== -->
                             <div class="divider">
-                        <img class="lua" src="../assets/moon.png">
-                    </div>
+                                <img class="lua" src="../assets/moon.png">
+                            </div>
                             <div class="configuracao">
 
                                 <div>
@@ -973,11 +796,7 @@
 
                                 <div class="grupo-botoes">
 
-                                    <button
-                                        class="botao botao-secundario"
-                                        type="button"
-                                        id="alterar-endereco"
-                                    >
+                                    <button class="botao botao-secundario" type="button" id="alterar-endereco">
                                         Alterar endereço
                                     </button>
 
@@ -991,7 +810,7 @@
                             <!-- ================================================== -->
                             <!-- NOTIFICAÇÕES POR E-MAIL -->
                             <!-- ================================================== -->
-                    
+
                             <div class="configuracao">
 
                                 <div>
@@ -1009,10 +828,7 @@
 
                                 <label class="interruptor">
 
-                                    <input
-                                        type="checkbox"
-                                        id="notificacao-email"
-                                    >
+                                    <input type="checkbox" id="notificacao-email">
 
                                     <span></span>
 
@@ -1042,10 +858,7 @@
 
                                 <label class="interruptor">
 
-                                    <input
-                                        type="checkbox"
-                                        id="notificacao-atividade"
-                                    >
+                                    <input type="checkbox" id="notificacao-atividade">
 
                                     <span></span>
 
@@ -1058,8 +871,8 @@
                             <!-- EXCLUSÃO DA CONTA -->
                             <!-- ================================================== -->
                             <div class="divider">
-                        <img class="lua" src="../assets/moon.png">
-                    </div>
+                                <img class="lua" src="../assets/moon.png">
+                            </div>
                             <div class="configuracao">
 
                                 <div>
@@ -1078,11 +891,7 @@
 
                                 <div class="grupo-botoes">
 
-                                    <button
-                                        class="botao botao-secundario perigo"
-                                        type="button"
-                                        id="excluir-conta"
-                                    >
+                                    <button class="botao botao-secundario perigo" type="button" id="excluir-conta">
                                         Excluir conta
                                     </button>
 
