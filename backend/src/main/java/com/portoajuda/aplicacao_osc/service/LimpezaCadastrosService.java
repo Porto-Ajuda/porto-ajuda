@@ -3,6 +3,7 @@ package com.portoajuda.aplicacao_osc.service;
 
 import com.portoajuda.aplicacao_osc.entity.Usuario;
 import com.portoajuda.aplicacao_osc.repository.CodigoAutenticacaoRepository;
+import com.portoajuda.aplicacao_osc.repository.SessaoUsuarioRepository;
 import com.portoajuda.aplicacao_osc.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -11,6 +12,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -18,38 +20,27 @@ import java.util.List;
 @RequiredArgsConstructor
 public class LimpezaCadastrosService {
 
-    private static final Logger log = LoggerFactory.getLogger(LimpezaCadastrosService.class);
+    private static final Logger log =
+            LoggerFactory.getLogger(LimpezaCadastrosService.class);
 
     private final UsuarioRepository usuarioRepository;
     private final CodigoAutenticacaoRepository codigoAutenticacaoRepository;
+    private final SessaoUsuarioRepository sessaoUsuarioRepository;
 
-    /**
-     * Exclui usuários que ainda não confirmaram o e-mail
-     * e ultrapassaram o limite de tempo.
-     */
     @Transactional
     public int excluirCadastrosPendentes() {
-
-        // TESTE: considera cadastros com mais de 5 minutos.
-        // LocalDateTime limite = LocalDateTime.now().minusMinutes(5);
-
-        // PRODUÇÃO: altere para LocalDateTime.now().minusHours(24).
         LocalDateTime limite = LocalDateTime.now().minusHours(24);
 
-        List<Usuario> pendentes = usuarioRepository.findByEmailVerificadoFalseAndDataCriacaoBefore(limite);
+        List<Usuario> pendentes =
+                usuarioRepository.findByEmailVerificadoFalseAndDataCriacaoBefore(limite);
 
         int excluidos = 0;
 
         for (Usuario usuario : pendentes) {
             Integer usuarioId = usuario.getId();
 
-            // Remove os códigos de confirmação associados.
             codigoAutenticacaoRepository.deleteByUsuarioId(usuarioId);
-
-            // Remove a associação entre usuário e funções.
             usuarioRepository.removerAssociacoesRoles(usuarioId);
-
-            // Exclui o usuário pendente.
             usuarioRepository.delete(usuario);
 
             excluidos++;
@@ -59,24 +50,40 @@ public class LimpezaCadastrosService {
     }
 
     @Transactional
-    // Executa automaticamente a limpeza a cada minuto durante os testes.
-    // @Scheduled(cron = "0 * * * * *", zone = "America/Sao_Paulo")
+    public int excluirSessoesInvalidas() {
+        Instant agora = Instant.now();
+        Instant limiteInatividade =
+                agora.minusSeconds(30L * 24 * 60 * 60);
 
-    // Executa automaticamente a limpeza a cada hora durante a produção.
-    @Scheduled(cron = "0 0 * * * *", zone = "America/Sao_Paulo")
+        return sessaoUsuarioRepository.excluirSessoesInvalidas(
+                agora,
+                limiteInatividade
+        );
+    }
+
+    // TESTES: executa a cada minuto.
+    @Scheduled(cron = "0 * * * * *", zone = "America/Sao_Paulo")
+
+    // PRODUÇÃO: substitua a anotação acima pela seguinte:
+    // @Scheduled(cron = "0 0 * * * *", zone = "America/Sao_Paulo")
+    @Transactional
     public void executarLimpezaAutomatica() {
+        log.info("Iniciando limpeza automática.");
 
         try {
-            int excluidos = excluirCadastrosPendentes();
+            int sessoesExcluidas = excluirSessoesInvalidas();
+
+            int cadastrosExcluidos = excluirCadastrosPendentes();
 
             log.info(
-                    "Limpeza automática concluída. Cadastros excluídos: {}",
-                    excluidos);
+                    "Limpeza automática concluída. Sessões excluídas: {}; "
+                            + "cadastros pendentes excluídos: {}",
+                    sessoesExcluidas,
+                    cadastrosExcluidos
+            );
 
         } catch (Exception e) {
-            log.error(
-                    "Falha na limpeza automática de cadastros pendentes.",
-                    e);
+            log.error("Falha na limpeza automática.", e);
         }
     }
 }
