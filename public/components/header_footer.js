@@ -1,5 +1,15 @@
 import { getAPI_URL } from "./modoBack.js";
-import { fetchAutenticado } from "./api.js";
+import {
+    fetchAutenticado,
+    sessaoInvalidaConfirmada
+} from "./api.js";
+import {
+    CHAVE_ESTADO_SESSAO,
+    iniciarRenovacaoPeriodica,
+    marcarSessaoAnonima,
+    obterEstadoSessao
+} from "./auth.js";
+
 
 const API_URL = getAPI_URL();
 
@@ -258,14 +268,50 @@ document
    LINK INTELIGENTE: LOGIN OU PERFIL
    ========================================================= */
 
+function estaNaPaginaPerfil() {
+    const caminho = window.location.pathname.replace(/\/+$/, "");
+
+    return caminho === "/perfil"
+        || caminho === "/perfil.html"
+        || caminho.endsWith("/pages/perfil.html");
+}
+
 async function configurarLinkAcessoUsuario() {
     const link = document.getElementById("link-acesso-usuario");
 
     if (!link) return;
 
-    // Estado inicial: usuário pode entrar.
-    link.href = ROTAS.login;
-    link.setAttribute("aria-label", "Entrar ou acessar perfil");
+    const estadoSessao = obterEstadoSessao();
+
+    // O estado persistido só serve de indicação para armar o timer. A validade
+    // da sessão continua sendo confirmada pelas chamadas protegidas ao backend.
+    if (estadoSessao === "authenticated") {
+        iniciarRenovacaoPeriodica();
+    }
+
+    // A própria página de perfil já confirma a sessão ao buscar os dados.
+    // Evita disparar /sessao-atual em paralelo com /perfil.
+    if (estaNaPaginaPerfil()) {
+        link.href = "/perfil";
+        link.setAttribute("aria-label", "Verificando acesso ao perfil");
+        return;
+    }
+
+    link.href = estadoSessao === "authenticated"
+        ? "/perfil"
+        : ROTAS.login;
+    link.setAttribute(
+        "aria-label",
+        estadoSessao === "authenticated"
+            ? "Verificando acesso ao perfil"
+            : "Entrar ou acessar perfil"
+    );
+
+    // Visitantes já confirmados como anônimos não precisam consultar a API
+    // em cada navegação. O login e o refresh reativam esta verificação.
+    if (estadoSessao === "anonymous") {
+        return;
+    }
 
     try {
         const resposta = await fetchAutenticado(
@@ -276,7 +322,21 @@ async function configurarLinkAcessoUsuario() {
         );
 
         if (!resposta.ok) {
-            // Mantém o link para login se a sessão não for válida.
+            if (sessaoInvalidaConfirmada(resposta)) {
+                link.href = ROTAS.login;
+                link.setAttribute("aria-label", "Entrar ou acessar perfil");
+                return;
+            }
+
+            console.warn(
+                `Não foi possível confirmar a sessão (HTTP ${resposta.status}).`
+            );
+
+            if (estadoSessao !== "authenticated") {
+                link.href = "/perfil";
+                link.setAttribute("aria-label", "Tentar verificar o acesso");
+            }
+
             return;
         }
 
@@ -288,16 +348,50 @@ async function configurarLinkAcessoUsuario() {
                 "aria-label",
                 "Acessar meu perfil"
             );
+        } else {
+            marcarSessaoAnonima();
+            link.href = ROTAS.login;
+            link.setAttribute("aria-label", "Entrar ou acessar perfil");
         }
     } catch (erro) {
         console.error(
             "Não foi possível verificar a sessão do usuário:",
             erro
         );
+
+        if (estadoSessao !== "authenticated") {
+            link.href = "/perfil";
+            link.setAttribute("aria-label", "Tentar verificar o acesso");
+        }
     }
 }
 
 configurarLinkAcessoUsuario();
+
+window.addEventListener("storage", (evento) => {
+    if (evento.key !== CHAVE_ESTADO_SESSAO) {
+        return;
+    }
+
+    const link = document.getElementById("link-acesso-usuario");
+
+    if (!link) {
+        return;
+    }
+
+    if (evento.newValue === "anonymous") {
+        link.href = ROTAS.login;
+        link.setAttribute("aria-label", "Entrar ou acessar perfil");
+        return;
+    }
+
+    if (
+        evento.newValue === "authenticated" &&
+        evento.oldValue !== "authenticated"
+    ) {
+        void configurarLinkAcessoUsuario();
+    }
+});
 
 /* =========================================================
    MENU ATIVO + BARRA DESLIZANTE

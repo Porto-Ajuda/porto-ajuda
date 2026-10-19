@@ -181,7 +181,7 @@ public class SessaoUsuarioService {
             return;
         }
 
-        sessaoRepository.findById(sessaoId).ifPresent(sessao -> {
+        sessaoRepository.findByIdForUpdate(sessaoId).ifPresent(sessao -> {
             if (!sessao.isRevogada()) {
                 sessao.setRevogadaEm(Instant.now());
                 sessaoRepository.save(sessao);

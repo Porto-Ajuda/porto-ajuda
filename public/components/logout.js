@@ -1,5 +1,6 @@
 
 import { getAPI_URL } from "./modoBack.js";
+import { marcarSessaoAnonima } from "./auth.js";
 
 const API_URL = await getAPI_URL();
 
@@ -56,6 +57,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 );
             }
 
+            marcarSessaoAnonima();
             mostrarEstado("Sessão encerrada com sucesso.");
 
             // Redireciona para a página inicial após o logout.

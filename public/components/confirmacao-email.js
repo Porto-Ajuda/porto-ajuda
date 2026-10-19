@@ -1,4 +1,4 @@
-"use strict";
+import { marcarSessaoAutenticada } from "./auth.js";
 
 const API_BASE_URL = (
     window.location.hostname === "localhost" ||
@@ -91,14 +91,41 @@ async function autenticarAutomaticamente() {
     botao.setAttribute("aria-disabled", "true");
 
     try {
+        const respostaCSRF = await fetch(
+            `${API_BASE_URL}/usuario/csrf`,
+            {
+                method: "GET",
+                credentials: "include",
+                headers: {
+                    "Accept": "application/json"
+                },
+                cache: "no-store"
+            }
+        );
+
+        if (!respostaCSRF.ok) {
+            throw new Error(
+                `Não foi possível obter o token CSRF. HTTP ${respostaCSRF.status}.`
+            );
+        }
+
+        const csrf = await respostaCSRF.json();
+
+        if (!csrf.headerName || !csrf.token) {
+            throw new Error("O servidor não retornou um token CSRF válido.");
+        }
+
         const resposta = await fetch(
             `${API_BASE_URL}/usuario/trocar-codigo`,
             {
                 method: "POST",
+                credentials: "include",
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    [csrf.headerName]: csrf.token
                 },
-                body: JSON.stringify({ codigo })
+                body: JSON.stringify({ codigo }),
+                cache: "no-store"
             }
         );
 
@@ -115,6 +142,7 @@ async function autenticarAutomaticamente() {
             "dadosUsuario",
             JSON.stringify(dados)
         );
+        marcarSessaoAutenticada({ novaSessao: true });
 
         titulo.textContent = "Login realizado!";
         mensagem.textContent =

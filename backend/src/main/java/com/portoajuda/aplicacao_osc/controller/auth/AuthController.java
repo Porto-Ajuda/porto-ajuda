@@ -104,14 +104,15 @@ public class AuthController {
          * Renova o access token e rotaciona o refresh token.
          */
         @PostMapping("/refresh")
-        public ResponseEntity<Void> refresh(HttpServletRequest request) {
+        public ResponseEntity<?> refresh(HttpServletRequest request) {
 
                 String refreshToken = obterCookie(request, REFRESH_COOKIE);
 
                 Optional<SessaoCriada> resultado = sessaoUsuarioService.renovarSessao(refreshToken);
 
                 if (resultado.isEmpty()) {
-                        return limparCookies();
+                        return limparCookies(HttpStatus.UNAUTHORIZED)
+                                        .body(new RefreshErro("SESSAO_INVALIDA"));
                 }
 
                 SessaoCriada criada = resultado.get();
@@ -173,7 +174,7 @@ public class AuthController {
                         }
                 }
 
-                return limparCookies();
+                return limparCookies(HttpStatus.NO_CONTENT).build();
         }
 
         @PreAuthorize("hasRole('USUARIO')")
@@ -262,7 +263,7 @@ public class AuthController {
         /**
          * Limpa os cookies no navegador.
          */
-        private ResponseEntity<Void> limparCookies() {
+        private ResponseEntity.BodyBuilder limparCookies(HttpStatus status) {
 
                 ResponseCookie accessCookie = criarCookie(
                                 ACCESS_COOKIE,
@@ -274,15 +275,17 @@ public class AuthController {
                                 "",
                                 Duration.ZERO);
 
-                return ResponseEntity.noContent()
+                return ResponseEntity.status(status)
                                 .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
                                 .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
-                                .cacheControl(CacheControl.noStore())
-                                .build();
+                                .cacheControl(CacheControl.noStore());
         }
 
         public record CsrfResposta(
                         String headerName,
                         String token) {
+        }
+
+        public record RefreshErro(String codigo) {
         }
 }

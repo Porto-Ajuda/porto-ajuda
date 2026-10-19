@@ -1,4 +1,7 @@
-import { fetchAutenticado } from "./api.js";
+import {
+    fetchAutenticado,
+    sessaoInvalidaConfirmada
+} from "./api.js";
 
 /* =========================================================
    PREENCHER DADOS DO PERFIL
@@ -104,39 +107,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     try {
         /* =============================================
-           1. CONFIRMAR SESSÃO
-           ============================================= */
-
-        const respostaSessao = await fetchAutenticado(
-            "/usuario/sessao-atual",
-            {
-                method: "GET"
-            }
-        );
-
-        if (
-            respostaSessao.status === 401 ||
-            respostaSessao.status === 403
-        ) {
-            redirecionarParaLogin();
-            return;
-        }
-
-        if (!respostaSessao.ok) {
-            throw new Error(
-                `Falha ao verificar sessão: HTTP ${respostaSessao.status}`
-            );
-        }
-
-        const sessao = await respostaSessao.json();
-
-        if (sessao.autenticado !== true) {
-            redirecionarParaLogin();
-            return;
-        }
-
-        /* =============================================
-           2. BUSCAR DADOS DO PERFIL
+           BUSCAR PERFIL E VALIDAR A SESSÃO
            ============================================= */
 
         const respostaPerfil = await fetchAutenticado(
@@ -146,10 +117,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
         );
 
-        if (
-            respostaPerfil.status === 401 ||
-            respostaPerfil.status === 403
-        ) {
+        if (sessaoInvalidaConfirmada(respostaPerfil)) {
             redirecionarParaLogin();
             return;
         }
@@ -398,8 +366,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             estado.replaceChildren();
 
             const mensagem = document.createElement("p");
-            mensagem.textContent =
-                "Não foi possível carregar os dados do perfil. Tente novamente.";
+            mensagem.textContent = erro?.message
+                ? `Não foi possível confirmar sua sessão (${erro.message}). Tente novamente.`
+                : "Não foi possível confirmar sua sessão. Tente novamente.";
 
             const tentarNovamente = document.createElement("button");
             tentarNovamente.type = "button";

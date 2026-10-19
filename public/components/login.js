@@ -8,6 +8,7 @@
  * ===================================================== */
 
 import { getAPI_URL } from "./modoBack.js";
+import { marcarSessaoAutenticada } from "./auth.js";
 
 (function () {
     "use strict";
@@ -136,11 +137,11 @@ import { getAPI_URL } from "./modoBack.js";
 
         const dados = await response.json();
 
-        if (!dados.token) {
+        if (!dados.headerName || !dados.token) {
             throw new Error("O servidor não retornou o token CSRF.");
         }
 
-        return dados.token;
+        return dados;
     }
 
     // ---------- ENVIO DO LOGIN ----------
@@ -155,7 +156,7 @@ import { getAPI_URL } from "./modoBack.js";
             console.log("================================");
 
             // Primeiro, obtém o token CSRF.
-            const tokenCSRF = await obterTokenCSRF(API_URL);
+            const csrf = await obterTokenCSRF(API_URL);
 
             // Depois, envia as credenciais e o token CSRF.
             const response = await fetch(
@@ -166,7 +167,7 @@ import { getAPI_URL } from "./modoBack.js";
                     headers: {
                         "Content-Type": "application/json",
                         "Accept": "application/json",
-                        "X-XSRF-TOKEN": tokenCSRF
+                        [csrf.headerName]: csrf.token
                     },
                     body: JSON.stringify(usuarioLogin),
                     cache: "no-store"
@@ -189,6 +190,7 @@ import { getAPI_URL } from "./modoBack.js";
                 // Os tokens ficam nos cookies HttpOnly.
                 // Não armazenamos JWTs ou dados da sessão no localStorage.
                 // O redirecionamento é para o frontend, não para a API.
+                marcarSessaoAutenticada({ novaSessao: true });
                 window.location.href = "/";
                 return;
             }
