@@ -87,6 +87,11 @@ public class SecurityConfiguration {
                                                 .permitAll()
 
                                                 .requestMatchers(
+                                                                HttpMethod.GET,
+                                                                "/usuario/confirmar-email")
+                                                .permitAll()
+
+                                                .requestMatchers(
                                                                 HttpMethod.POST,
                                                                 "/usuario/register",
                                                                 "/usuario/login",

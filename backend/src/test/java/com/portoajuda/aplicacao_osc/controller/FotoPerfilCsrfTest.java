@@ -5,15 +5,19 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.portoajuda.aplicacao_osc.controller.auth.AuthController;
+import com.portoajuda.aplicacao_osc.entity.Usuario;
 import com.portoajuda.aplicacao_osc.repository.UsuarioRepository;
 import com.portoajuda.aplicacao_osc.segurity.CorsConfig;
 import com.portoajuda.aplicacao_osc.segurity.JwtAuthFilter;
@@ -24,6 +28,8 @@ import com.portoajuda.aplicacao_osc.service.SessaoUsuarioService;
 import com.portoajuda.aplicacao_osc.service.UsuarioService;
 
 import jakarta.servlet.http.Cookie;
+
+import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -115,6 +121,66 @@ class FotoPerfilCsrfTest {
                         .file(arquivoPng())
                         .cookie(csrf.cookie())
                         .header(csrf.headerName(), csrf.token()))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void confirmacaoValidaChegaAoControllerSemSessaoEAtualizaUsuario() throws Exception {
+        Usuario usuario = mock(Usuario.class);
+        when(jwtService.extractSubject("jwt-confirmacao-valido")).thenReturn("123");
+        when(usuarioRepository.findById(123)).thenReturn(Optional.of(usuario));
+        when(jwtService.validateEmailVerificationToken(
+                "jwt-confirmacao-valido", usuario)).thenReturn(true);
+        when(codigoAutenticacaoService.criarCodigo(usuario)).thenReturn("codigo-de-login");
+
+        mockMvc.perform(get("/usuario/confirmar-email")
+                        .param("token", "jwt-confirmacao-valido"))
+                .andExpect(status().isFound())
+                .andExpect(redirectedUrl(
+                        "http://localhost:5500/pages/confirmacao-email.html"
+                                + "?status=sucesso#codigo=codigo-de-login"));
+
+        verify(usuario).setEmailVerificado(true);
+        verify(usuarioRepository).save(usuario);
+    }
+
+    @Test
+    void tokenDeConfirmacaoInvalidoNaoVerificaEmail() throws Exception {
+        when(jwtService.extractSubject("jwt-invalido"))
+                .thenThrow(new IllegalArgumentException("token inválido"));
+
+        mockMvc.perform(get("/usuario/confirmar-email")
+                        .param("token", "jwt-invalido"))
+                .andExpect(status().isFound())
+                .andExpect(redirectedUrl(
+                        "http://localhost:5500/pages/confirmacao-email.html?status=erro"));
+
+        verify(usuarioRepository, never()).save(any(Usuario.class));
+        verify(codigoAutenticacaoService, never()).criarCodigo(any(Usuario.class));
+    }
+
+    @Test
+    void tokenDeConfirmacaoExpiradoNaoVerificaEmail() throws Exception {
+        Usuario usuario = mock(Usuario.class);
+        when(jwtService.extractSubject("jwt-expirado")).thenReturn("123");
+        when(usuarioRepository.findById(123)).thenReturn(Optional.of(usuario));
+        when(jwtService.validateEmailVerificationToken("jwt-expirado", usuario))
+                .thenReturn(false);
+
+        mockMvc.perform(get("/usuario/confirmar-email")
+                        .param("token", "jwt-expirado"))
+                .andExpect(status().isFound())
+                .andExpect(redirectedUrl(
+                        "http://localhost:5500/pages/confirmacao-email.html?status=erro"));
+
+        verify(usuario, never()).setEmailVerificado(true);
+        verify(usuarioRepository, never()).save(any(Usuario.class));
+        verify(codigoAutenticacaoService, never()).criarCodigo(any(Usuario.class));
+    }
+
+    @Test
+    void rotasPrivadasContinuamExigindoAutenticacao() throws Exception {
+        mockMvc.perform(get("/usuario/perfil"))
                 .andExpect(status().isUnauthorized());
     }
 

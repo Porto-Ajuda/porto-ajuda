@@ -60,13 +60,17 @@ class JwtAuthFilterTest {
                                 mock(SessaoUsuarioService.class));
 
                 MockHttpServletRequest csrf = new MockHttpServletRequest("GET", "/usuario/csrf");
+                MockHttpServletRequest confirmarEmail = new MockHttpServletRequest(
+                                "GET", "/usuario/confirmar-email");
                 MockHttpServletRequest refresh = new MockHttpServletRequest("POST", "/usuario/refresh");
                 MockHttpServletRequest perfil = new MockHttpServletRequest("GET", "/usuario/perfil");
                 csrf.setServletPath("/usuario/csrf");
+                confirmarEmail.setServletPath("/usuario/confirmar-email");
                 refresh.setServletPath("/usuario/refresh");
                 perfil.setServletPath("/usuario/perfil");
 
                 assertTrue(filter.shouldNotFilter(csrf));
+                assertTrue(filter.shouldNotFilter(confirmarEmail));
                 assertTrue(filter.shouldNotFilter(refresh));
                 assertFalse(filter.shouldNotFilter(perfil));
         }

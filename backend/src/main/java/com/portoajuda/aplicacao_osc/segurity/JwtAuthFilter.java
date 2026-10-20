@@ -50,7 +50,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         String metodo = request.getMethod();
 
         return ("GET".equalsIgnoreCase(metodo)
-                && "/usuario/csrf".equals(caminho))
+                && ("/usuario/csrf".equals(caminho)
+                        || "/usuario/confirmar-email".equals(caminho)))
                 || ("POST".equalsIgnoreCase(metodo)
                         && ROTAS_PUBLICAS_DE_AUTENTICACAO.contains(caminho));
     }

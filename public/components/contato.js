@@ -1,4 +1,3 @@
-
 /* =====================================================
  * contato.js
  * Formulário de contato — Porto Ajuda
@@ -13,13 +12,12 @@ const formulario = document.querySelector("#form-contato");
 if (formulario) {
     const botao = formulario.querySelector("button[type='submit']");
 
-    // Notificação flutuante já existente no HTML.
+    // Elementos da notificação.
     const notificacao = document.querySelector("#notificacao-contato");
     const tituloNotificacao = document.querySelector("#notificacao-titulo");
     const textoNotificacao = document.querySelector("#notificacao-texto");
     const iconeNotificacao = notificacao?.querySelector(".notificacao-icone i");
     const botaoFechar = notificacao?.querySelector(".notificacao-fechar");
-
 
     let temporizador;
     let tempoRestante = 6000;
@@ -28,10 +26,9 @@ if (formulario) {
     function iniciarContagem() {
         clearTimeout(temporizador);
 
-        if (notificacao.hidden) return;
+        if (!notificacao || notificacao.hidden) return;
 
         notificacao.classList.remove("pausada");
-
         inicioContagem = Date.now();
 
         temporizador = setTimeout(() => {
@@ -40,11 +37,11 @@ if (formulario) {
     }
 
     function ocultarNotificacao() {
-        clearTimeout(temporizador);
+        if (!notificacao) return;
 
+        clearTimeout(temporizador);
         notificacao.classList.remove("visivel", "pausada");
 
-        // Aguarda a animação de saída antes de ocultar o elemento.
         setTimeout(() => {
             if (!notificacao.classList.contains("visivel")) {
                 notificacao.hidden = true;
@@ -53,8 +50,12 @@ if (formulario) {
     }
 
     function exibirNotificacao(tipo, titulo, mensagem) {
-        clearTimeout(temporizador);
+        if (!notificacao || !tituloNotificacao || !textoNotificacao) {
+            console.error(titulo, mensagem);
+            return;
+        }
 
+        clearTimeout(temporizador);
         tempoRestante = 6000;
 
         tituloNotificacao.textContent = titulo;
@@ -64,17 +65,25 @@ if (formulario) {
 
         if (tipo === "sucesso") {
             notificacao.classList.add("sucesso");
-            iconeNotificacao.className = "fa-solid fa-check";
+
+            if (iconeNotificacao) {
+                iconeNotificacao.className = "fa-solid fa-check";
+            }
         } else {
             notificacao.classList.add("erro");
-            iconeNotificacao.className = "fa-solid fa-circle-exclamation";
+
+            if (iconeNotificacao) {
+                iconeNotificacao.className =
+                    "fa-solid fa-circle-exclamation";
+            }
         }
 
         notificacao.hidden = false;
         notificacao.classList.remove("visivel");
 
-        // Reinicia a barra de progresso.
-        const progresso = notificacao.querySelector(".notificacao-progresso");
+        const progresso = notificacao.querySelector(
+            ".notificacao-progresso"
+        );
 
         if (progresso) {
             progresso.style.animation = "none";
@@ -82,7 +91,6 @@ if (formulario) {
             progresso.style.animation = "";
         }
 
-        // Ativa a transição de entrada.
         void notificacao.offsetWidth;
         notificacao.classList.add("visivel");
 
@@ -93,9 +101,12 @@ if (formulario) {
         }
     }
 
-    // Pausa a contagem e a barra enquanto o mouse estiver sobre a notificação.
+    // Pausa a notificação enquanto o mouse estiver sobre ela.
     notificacao?.addEventListener("mouseenter", () => {
-        if (notificacao.hidden || !notificacao.classList.contains("visivel")) {
+        if (
+            notificacao.hidden ||
+            !notificacao.classList.contains("visivel")
+        ) {
             return;
         }
 
@@ -107,9 +118,12 @@ if (formulario) {
         notificacao.classList.add("pausada");
     });
 
-    // Continua de onde parou quando o mouse sair.
+    // Retoma a contagem quando o mouse sair.
     notificacao?.addEventListener("mouseleave", () => {
-        if (notificacao.hidden || !notificacao.classList.contains("visivel")) {
+        if (
+            notificacao.hidden ||
+            !notificacao.classList.contains("visivel")
+        ) {
             return;
         }
 
@@ -121,7 +135,7 @@ if (formulario) {
         iniciarContagem();
     });
 
-    // Fechamento manual pelo botão X.
+    // Fechamento manual.
     botaoFechar?.addEventListener("click", ocultarNotificacao);
 
     formulario.addEventListener("submit", async (event) => {
@@ -136,7 +150,7 @@ if (formulario) {
             mensagem: formulario.querySelector("#mensagem").value.trim()
         };
 
-        // Validação dos campos.
+        // Validação dos campos obrigatórios.
         if (
             !contato.nome ||
             !contato.email ||
@@ -169,66 +183,98 @@ if (formulario) {
         botao.disabled = true;
         botao.classList.add("enviando");
         botao.innerHTML = `
-            <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i>
+            <i class="fa-solid fa-spinner fa-spin"
+               aria-hidden="true"></i>
             Enviando...
         `;
 
         try {
-            const API_URL = getAPI_URL();
+            const API_URL = (await getAPI_URL()).replace(/\/+$/, "");
 
-            const response = await fetch(
-                `${API_URL}/contato`,
+            // 1. Obtém o token CSRF.
+            const csrfResponse = await fetch(
+                `${API_URL}/usuario/csrf`,
                 {
-                    method: "POST",
+                    method: "GET",
+                    credentials: "include",
                     headers: {
-                        "Content-Type": "application/json"
+                        Accept: "application/json"
                     },
-                    body: JSON.stringify(contato)
-                });
+                    cache: "no-store"
+                }
+            );
 
-            // const response = await fetch(
-            //     "https://porto-ajuda.up.railway.app/contato",
-            //     {
-            //         method: "POST",
-            //         headers: {
-            //             "Content-Type": "application/json"
-            //         },
-            //         body: JSON.stringify(contato)
-            //     }
-            // );
+            if (!csrfResponse.ok) {
+                throw new Error(
+                    `Não foi possível obter o token CSRF: HTTP ${csrfResponse.status}`
+                );
+            }
 
-            const data = await response.json().catch(() => ({}));
+            const csrf = await csrfResponse.json();
+
+            if (!csrf.headerName || !csrf.token) {
+                throw new Error(
+                    "O servidor não retornou um token CSRF válido."
+                );
+            }
+
+            // 2. Envia o formulário com o token CSRF.
+            const response = await fetch(`${API_URL}/contato`, {
+                method: "POST",
+                credentials: "include",
+                headers: {
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                    [csrf.headerName]: csrf.token
+                },
+                body: JSON.stringify(contato),
+                cache: "no-store"
+            });
+
+            // Aceita respostas JSON e respostas sem corpo.
+            const texto = await response.text();
+            let data = {};
+
+            try {
+                data = texto ? JSON.parse(texto) : {};
+            } catch {
+                data = { message: texto };
+            }
 
             if (!response.ok) {
                 throw new Error(
                     data.mensagem ||
                     data.message ||
-                    "Não foi possível enviar sua mensagem."
+                    `Falha no envio do contato: HTTP ${response.status}`
                 );
             }
 
-            formulario.reset();
-
+            // 3. Informa o sucesso.
             exibirNotificacao(
                 "sucesso",
-                "Mensagem enviada!",
-                "Recebemos seu contato. Obrigado por falar com o Porto Ajuda."
+                "Mensagem enviada",
+                data.mensagem ||
+                data.message ||
+                "Sua mensagem foi enviada com sucesso."
             );
+
+            formulario.reset();
 
         } catch (error) {
             console.error("Erro ao enviar contato:", error);
 
-            const mensagemErro =
-                error instanceof TypeError ||
-                    error.message === "Failed to fetch"
-                    ? "Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente."
-                    : error.message ||
-                    "Ocorreu um erro inesperado. Tente novamente.";
+            let mensagem = error.message ||
+                "Ocorreu um erro ao enviar sua mensagem.";
+
+            if (error instanceof TypeError) {
+                mensagem =
+                    "Não foi possível conectar à API. Verifique sua conexão e tente novamente.";
+            }
 
             exibirNotificacao(
                 "erro",
                 "Não foi possível enviar",
-                mensagemErro
+                mensagem
             );
 
         } finally {

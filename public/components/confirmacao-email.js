@@ -1,4 +1,4 @@
-import { marcarSessaoAutenticada } from "./auth.js";
+import { marcarSessaoAutenticada, obterTokenCSRF } from "./auth.js";
 
 const API_BASE_URL = (
     window.location.hostname === "localhost" ||
@@ -220,12 +220,17 @@ formReenvio.addEventListener("submit", async (evento) => {
     mensagemReenvio.textContent = "";
 
     try {
+        const csrf = await obterTokenCSRF();
         const resposta = await fetch(
             `${API_BASE_URL}/usuario/reenviar-confirmacao`,
             {
                 method: "POST",
+                credentials: "include",
+                cache: "no-store",
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    "Accept": "application/json",
+                    [csrf.headerName]: csrf.token
                 },
                 body: JSON.stringify({ email })
             }

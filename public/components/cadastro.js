@@ -544,43 +544,80 @@ import { getAPI_URL } from "./modoBack.js";
         }
     });
 
+
     async function postCadastro(usuario) {
-
         try {
+            const API_URL = (await getAPI_URL()).replace(/\/+$/, "");
 
-            const API_URL = await getAPI_URL();
+            // 1. Obtém o token CSRF antes do cadastro.
+            const csrfResponse = await fetch(
+                `${API_URL}/usuario/csrf`,
+                {
+                    method: "GET",
+                    credentials: "include",
+                    headers: {
+                        Accept: "application/json"
+                    },
+                    cache: "no-store"
+                }
+            );
 
+            if (!csrfResponse.ok) {
+                throw new Error(
+                    `Não foi possível obter o token CSRF: HTTP ${csrfResponse.status}`
+                );
+            }
+
+            const csrf = await csrfResponse.json();
+
+            if (!csrf.headerName || !csrf.token) {
+                throw new Error(
+                    "O servidor não retornou os dados necessários do token CSRF."
+                );
+            }
+
+            // 2. Envia o cadastro com cookies e token CSRF.
             const response = await fetch(
                 `${API_URL}/usuario/register`,
                 {
                     method: "POST",
+                    credentials: "include",
                     headers: {
-                        "Content-Type": "application/json"
+                        "Content-Type": "application/json",
+                        Accept: "application/json",
+                        [csrf.headerName]: csrf.token
                     },
-                    body: JSON.stringify(usuario)
-                });
+                    body: JSON.stringify(usuario),
+                    cache: "no-store"
+                }
+            );
 
-            // Lê o corpo como texto e tenta converter em JSON
             const texto = await response.text();
             let data = {};
 
             try {
                 data = texto ? JSON.parse(texto) : {};
-            } catch (e) {
-                data = texto; // resposta que não é JSON
+            } catch {
+                data = { message: texto };
             }
 
-            console.log("Resposta do cadastro:", response.status, data);
+            console.log("Resposta do cadastro:", response.status);
 
             const mensagem = extrairMensagem(data);
 
             if (response.ok) {
-                mostrarAlertaCadastro(mensagem || "Sua conta foi criada com sucesso.");
+                mostrarAlertaCadastro(
+                    mensagem || "Sua conta foi criada com sucesso."
+                );
                 return;
             }
 
             if (response.status === 400) {
-                mostrarAlerta("erro", "Dados inválidos", mensagem || "Verifique os dados informados.");
+                mostrarAlerta(
+                    "erro",
+                    "Dados inválidos",
+                    mensagem || "Verifique os dados informados."
+                );
                 return;
             }
 
@@ -588,38 +625,45 @@ import { getAPI_URL } from "./modoBack.js";
                 mostrarAlerta(
                     "erro",
                     "Acesso negado",
-                    mensagem || "O servidor recusou a requisição (verifique CORS e permissões)."
+                    mensagem || "O servidor recusou a requisição."
                 );
                 return;
             }
 
             if (response.status === 409) {
-                mostrarAlerta("aviso", "Usuário já cadastrado", mensagem || "Já existe um usuário cadastrado com esses dados.");
+                mostrarAlerta(
+                    "aviso",
+                    "Usuário já cadastrado",
+                    mensagem || "Já existe um usuário com esses dados."
+                );
                 return;
             }
 
             if (response.status >= 500) {
-                mostrarAlerta("erro", "Erro no servidor", "Ocorreu um problema no servidor. Tente novamente mais tarde.");
+                mostrarAlerta(
+                    "erro",
+                    "Erro no servidor",
+                    "Ocorreu um problema no servidor. Tente novamente mais tarde."
+                );
                 return;
             }
 
             mostrarAlerta(
                 "erro",
                 "Não foi possível cadastrar",
-                mensagem || `O servidor retornou o código ${response.status}.`
+                mensagem || `O servidor retornou HTTP ${response.status}.`
             );
-
         } catch (error) {
-
             console.error("Erro ao realizar cadastro:", error);
 
             mostrarAlerta(
                 "erro",
-                "Erro de conexão",
-                "Não foi possível conectar ao servidor."
+                "Erro de conexão ou segurança",
+                error.message || "Não foi possível concluir o cadastro."
             );
         }
     }
+
 
     // ---------- ALERTA DE SUCESSO ----------
     function mostrarAlertaCadastro(mensagem) {
