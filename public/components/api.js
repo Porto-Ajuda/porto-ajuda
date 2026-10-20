@@ -2,11 +2,30 @@ import { getAPI_URL } from "./modoBack.js";
 import {
     iniciarRenovacaoPeriodica,
     marcarSessaoAutenticada,
+    obterTokenCSRF,
     renovarAccessToken
 } from "./auth.js";
 
 const API_URL = getAPI_URL();
 const respostasComSessaoInvalida = new WeakSet();
+const METODOS_SEGUROS = new Set(["GET", "HEAD", "OPTIONS", "TRACE"]);
+
+function obterCabecalhos(opcoes = {}, csrf = null) {
+    const headers = new Headers(opcoes.headers);
+    headers.set("Accept", "application/json");
+
+    const metodo = (opcoes.method || "GET").toUpperCase();
+
+    if (!METODOS_SEGUROS.has(metodo)) {
+        if (!csrf?.headerName || !csrf?.token) {
+            throw new Error("Não foi possível preparar o token CSRF da requisição.");
+        }
+
+        headers.set(csrf.headerName, csrf.token);
+    }
+
+    return headers;
+}
 
 export function sessaoInvalidaConfirmada(resposta) {
     return respostasComSessaoInvalida.has(resposta);
@@ -30,15 +49,21 @@ function respostaDeFalhaRenovacao(resultado) {
 }
 
 export async function fetchAutenticado(caminho, opcoes = {}) {
-    const fazerRequisicao = () => fetch(`${API_URL}${caminho}`, {
-        ...opcoes,
-        credentials: "include",
-        cache: "no-store",
-        headers: {
-            Accept: "application/json",
-            ...opcoes.headers
-        }
-    });
+    const metodo = (opcoes.method || "GET").toUpperCase();
+    const metodoSeguro = METODOS_SEGUROS.has(metodo);
+
+    const fazerRequisicao = async (csrf = null) => {
+        const tokenCsrf = !metodoSeguro && !csrf
+            ? await obterTokenCSRF()
+            : csrf;
+
+        return fetch(`${API_URL}${caminho}`, {
+            ...opcoes,
+            credentials: "include",
+            cache: "no-store",
+            headers: obterCabecalhos(opcoes, tokenCsrf)
+        });
+    };
 
     let resposta = await fazerRequisicao();
     let refreshValidouSessao = false;
@@ -55,7 +80,9 @@ export async function fetchAutenticado(caminho, opcoes = {}) {
         }
 
         refreshValidouSessao = true;
-        resposta = await fazerRequisicao();
+        // Reutiliza o token obtido pelo refresh. Se a renovação foi
+        // compartilhada por outra aba, busca o valor atual antes do retry.
+        resposta = await fazerRequisicao(renovacao.csrf);
 
         // Se reaproveitamos um refresh recente e o retry ainda foi negado,
         // valide o refresh token uma vez sem repetir a requisição protegida.

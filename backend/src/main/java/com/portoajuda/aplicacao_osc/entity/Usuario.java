@@ -54,6 +54,9 @@ public class Usuario implements UserDetails {
     @Column(name = "nome", nullable = false, length = 255)
     private String nome;
 
+    @Column(name = "foto_perfil_url", length = 1024)
+    private String fotoPerfilUrl;
+
     @Column(name = "genero", nullable = false)
     @Enumerated(EnumType.STRING)
     private Genero genero;

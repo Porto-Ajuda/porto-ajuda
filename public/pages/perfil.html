@@ -31,7 +31,9 @@
 
     <header class="navbar"></header>
 
-    <div id="estado-autenticacao" role="status" aria-live="polite" hidden></div>
+    <!-- <div id="estado-autenticacao" role="status" aria-live="polite">
+        Verificando sua sessão...
+    </div> -->
 
     <section class="surgir">
         <!-- <section class="surgir" id="conteudo-protegido" hidden> -->
@@ -72,9 +74,21 @@
 
                     <section class="painel-perfil" aria-labelledby="titulo-perfil">
 
-                        <div class="foto-perfil" id="foto-perfil" aria-hidden="true">
-                            --
+
+                        <div class="foto-perfil-container">
+                            <div class="foto-perfil" id="foto-perfil">
+                                --
+                            </div>
+
+                            <label for="input-foto-perfil" class="botao botao-secundario">
+                                Alterar foto
+                            </label>
+
+                            <input type="file" id="input-foto-perfil" accept="image/jpeg,image/png,image/webp" hidden>
+
+                            <p id="estado-foto-perfil" role="status" aria-live="polite"></p>
                         </div>
+
 
                         <h2 id="perfil-nome">Carregando...</h2>
 

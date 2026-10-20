@@ -8,6 +8,7 @@ export const CHAVE_ESTADO_SESSAO = "porto-ajuda-estado-sessao";
 
 let temporizadorRenovacao = null;
 let renovacaoEmAndamento = null;
+let tokenCsrfEmAndamento = null;
 let renovacaoPeriodicaAtiva = false;
 let ultimaTentativaRenovacao = null;
 
@@ -62,7 +63,7 @@ function renovacaoRecente(marcador) {
     return horario !== null && Date.now() - horario < INTERVALO_RENOVACAO;
 }
 
-async function solicitarRenovacao() {
+async function carregarTokenCSRF() {
     const csrfResponse = await fetch(`${API_URL}/usuario/csrf`, {
         method: "GET",
         credentials: "include",
@@ -70,20 +71,49 @@ async function solicitarRenovacao() {
     });
 
     if (!csrfResponse.ok) {
-        return {
-            ok: false,
-            response: csrfResponse
-        };
+        throw new Error(
+            `Não foi possível obter o token CSRF (HTTP ${csrfResponse.status}).`
+        );
     }
 
     const csrf = await csrfResponse.json();
 
     if (!csrf.headerName || !csrf.token) {
-        return {
-            ok: false,
-            error: new Error("A API não retornou um token CSRF válido.")
-        };
+        throw new Error("A API não retornou um token CSRF válido.");
     }
+
+    return csrf;
+}
+
+export function obterTokenCSRF() {
+    if (tokenCsrfEmAndamento !== null) {
+        return tokenCsrfEmAndamento;
+    }
+
+    const carregarComCoordenacao = () => {
+        if (
+            typeof navigator !== "undefined" &&
+            typeof navigator.locks?.request === "function"
+        ) {
+            return navigator.locks.request(
+                "porto-ajuda-token-csrf",
+                carregarTokenCSRF
+            );
+        }
+
+        return carregarTokenCSRF();
+    };
+
+    tokenCsrfEmAndamento = carregarComCoordenacao()
+        .finally(() => {
+            tokenCsrfEmAndamento = null;
+        });
+
+    return tokenCsrfEmAndamento;
+}
+
+async function solicitarRenovacao() {
+    const csrf = await obterTokenCSRF();
 
     const refreshResponse = await fetch(`${API_URL}/usuario/refresh`, {
         method: "POST",
@@ -122,7 +152,8 @@ async function solicitarRenovacao() {
 
     return {
         ok: refreshResponse.ok,
-        response: refreshResponse
+        response: refreshResponse,
+        csrf: refreshResponse.ok ? csrf : null
     };
 }
 

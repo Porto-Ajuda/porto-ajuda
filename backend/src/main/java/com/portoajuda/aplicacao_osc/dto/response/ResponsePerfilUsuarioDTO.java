@@ -4,12 +4,14 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public record ResponsePerfilUsuarioDTO(
-                Integer id,
-                String nome,
-                String nomeSocial,
-                String email,
-                String telefone,
-                String cep,
-                LocalDate dataNascimento,
-                LocalDateTime dataCriacao) {
+        Integer id,
+        String nome,
+        String nomeSocial,
+        String email,
+        String telefone,
+        String cep,
+        LocalDate dataNascimento,
+        LocalDateTime dataCriacao,
+        String fotoPerfilUrl,
+        String genero) {
 }

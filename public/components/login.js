@@ -21,33 +21,22 @@ import { marcarSessaoAutenticada } from "./auth.js";
 
     // ---------- ANIMAÇÃO LOGIN <-> CADASTRO ----------
 
-    function moveFrame(side) {
-        if (!frame) return;
-
-        if (side === "left") {
-            frame.style.left = "15%";
-            frame.style.right = "auto";
-        } else {
-            frame.style.right = "50%";
-            frame.style.left = "auto";
-        }
+    function sincronizarPainelComHash() {
+        frame?.classList.toggle("flipped", window.location.hash === "#cadastro");
     }
+
+    sincronizarPainelComHash();
+    window.addEventListener("hashchange", sincronizarPainelComHash);
 
     if (goCad) {
         goCad.addEventListener("click", () => {
-            if (frame) {
-                frame.classList.add("flipped");
-                moveFrame("right");
-            }
+            frame?.classList.add("flipped");
         });
     }
 
     if (goLogin) {
         goLogin.addEventListener("click", () => {
-            if (frame) {
-                frame.classList.remove("flipped");
-                moveFrame("left");
-            }
+            frame?.classList.remove("flipped");
         });
     }
 

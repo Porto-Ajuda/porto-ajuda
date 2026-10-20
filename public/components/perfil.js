@@ -1,7 +1,20 @@
+
 import {
     fetchAutenticado,
     sessaoInvalidaConfirmada
 } from "./api.js";
+
+/* =========================================================
+   CONSTANTES
+   ========================================================= */
+
+const TAMANHO_MAXIMO_FOTO = 10 * 1024 * 1024;
+
+const TIPOS_IMAGEM_PERMITIDOS = new Set([
+    "image/jpeg",
+    "image/png",
+    "image/webp"
+]);
 
 /* =========================================================
    PREENCHER DADOS DO PERFIL
@@ -72,11 +85,7 @@ function preencherPerfil(usuario) {
         .map(parte => parte[0].toLocaleUpperCase("pt-BR"))
         .join("");
 
-    const foto = document.getElementById("foto-perfil");
-
-    if (foto) {
-        foto.textContent = iniciais || "?";
-    }
+    atualizarExibicaoFoto(usuario.fotoPerfilUrl, iniciais);
 
     const dataCadastro =
         document.getElementById("perfil-data-cadastro");
@@ -94,6 +103,146 @@ function preencherPerfil(usuario) {
 }
 
 /* =========================================================
+   EXIBIR FOTO OU INICIAIS
+   ========================================================= */
+
+function atualizarExibicaoFoto(url, iniciais = "?") {
+    const foto = document.getElementById("foto-perfil");
+
+    if (!foto) {
+        return;
+    }
+
+    foto.replaceChildren();
+
+    if (!url) {
+        foto.textContent = iniciais || "?";
+        return;
+    }
+
+    const imagem = document.createElement("img");
+
+    imagem.src = url;
+    imagem.alt = "Foto de perfil";
+    imagem.className = "imagem-foto-perfil";
+
+    imagem.addEventListener("error", () => {
+        foto.replaceChildren();
+        foto.textContent = iniciais || "?";
+    }, { once: true });
+
+    foto.appendChild(imagem);
+}
+
+/* =========================================================
+   UPLOAD DA FOTO DE PERFIL
+   ========================================================= */
+
+function configurarUploadFoto() {
+    const inputFoto = document.getElementById("input-foto-perfil");
+    const estadoFoto = document.getElementById("estado-foto-perfil");
+
+    if (!inputFoto) {
+        return;
+    }
+
+    inputFoto.addEventListener("change", async () => {
+        const arquivo = inputFoto.files?.[0];
+
+        if (!arquivo) {
+            return;
+        }
+
+        if (!TIPOS_IMAGEM_PERMITIDOS.has(arquivo.type)) {
+            if (estadoFoto) {
+                estadoFoto.textContent =
+                    "Formato inválido. Selecione JPEG, PNG ou WebP.";
+            }
+
+            inputFoto.value = "";
+            return;
+        }
+
+        if (arquivo.size > TAMANHO_MAXIMO_FOTO) {
+            if (estadoFoto) {
+                estadoFoto.textContent =
+                    "A imagem não pode ultrapassar 10 MB.";
+            }
+
+            inputFoto.value = "";
+            return;
+        }
+
+        if (estadoFoto) {
+            estadoFoto.textContent = "Enviando foto...";
+        }
+
+        inputFoto.disabled = true;
+
+        try {
+            const formulario = new FormData();
+            formulario.append("foto", arquivo);
+
+            const resposta = await fetchAutenticado(
+                "/usuario/foto-perfil",
+                {
+                    method: "POST",
+                    body: formulario
+                }
+            );
+
+            if (sessaoInvalidaConfirmada(resposta)) {
+                window.location.replace("/login");
+                return;
+            }
+
+            const resultado = await resposta.json().catch(() => ({}));
+
+            if (!resposta.ok) {
+                throw new Error(
+                    resultado.mensagem ||
+                    `Falha no upload (HTTP ${resposta.status}).`
+                );
+            }
+
+            if (!resultado.fotoPerfilUrl) {
+                throw new Error(
+                    "O servidor não retornou a URL da foto."
+                );
+            }
+
+            const titulo = document.getElementById("perfil-nome");
+            const nome = titulo?.textContent?.trim() || "Usuário";
+
+            const iniciais = nome
+                .split(/\s+/)
+                .filter(Boolean)
+                .slice(0, 2)
+                .map(parte => parte[0].toLocaleUpperCase("pt-BR"))
+                .join("");
+
+            atualizarExibicaoFoto(resultado.fotoPerfilUrl, iniciais);
+
+            if (estadoFoto) {
+                estadoFoto.textContent =
+                    "Foto de perfil atualizada com sucesso.";
+            }
+        } catch (erro) {
+            console.error("Erro ao enviar foto de perfil:", erro);
+
+            if (estadoFoto) {
+                estadoFoto.textContent =
+                    erro.message ||
+                    "Não foi possível enviar a foto. Tente novamente.";
+            }
+        } finally {
+            inputFoto.disabled = false;
+            inputFoto.value = "";
+        }
+    });
+}
+
+/* =========================================================
    INICIALIZAÇÃO DA PÁGINA
    ========================================================= */
 
@@ -107,7 +256,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     try {
         /* =============================================
-           BUSCAR PERFIL E VALIDAR A SESSÃO
+           1. BUSCAR PERFIL E VALIDAR SESSÃO
            ============================================= */
 
         const respostaPerfil = await fetchAutenticado(
@@ -131,9 +280,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         const usuario = await respostaPerfil.json();
 
         preencherPerfil(usuario);
+        configurarUploadFoto();
 
         /* =============================================
-           3. MOSTRAR CONTEÚDO
+           2. MOSTRAR CONTEÚDO
            ============================================= */
 
         if (estado) {
@@ -145,13 +295,17 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         /* =============================================
-           4. EDITAR CAMPOS DO PERFIL
+           3. EDITAR CAMPOS DO PERFIL
            ============================================= */
 
-        const btn = document.querySelector(".painel-perfil .btn");
+        const btn = document.querySelector(
+            ".painel-perfil .btn, .painel-perfil .botao-editar"
+        );
+
         const inputs = document.querySelectorAll(
             ".campo-perfil input"
         );
+
         const campoPerfil = document.querySelector(".campo-perfil");
 
         let editando = false;
@@ -178,14 +332,14 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                 if (!editando) {
                     console.info(
-                        "A edição foi encerrada, mas o salvamento na API ainda não foi implementado."
+                        "O salvamento dos dados do perfil ainda não está implementado."
                     );
                 }
             });
         }
 
         /* =============================================
-           5. ABAS
+           4. ABAS
            ============================================= */
 
         const abas = document.querySelectorAll(".aba");
@@ -214,7 +368,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
 
         /* =============================================
-           6. FILTROS DO REGISTRO
+           5. FILTROS DO REGISTRO
            ============================================= */
 
         const filtros = document.querySelectorAll(".filtro");
@@ -252,106 +406,96 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
 
         /* =============================================
-           7. ACESSIBILIDADE — TAMANHO DA LETRA
+           6. ACESSIBILIDADE — TAMANHO DA LETRA
            ============================================= */
 
         const tamanhoLetra = document.getElementById(
             "acss-tamanho-letra"
         );
 
-        if (tamanhoLetra) {
-            tamanhoLetra.addEventListener("change", () => {
-                document.body.classList.remove(
-                    "texto-pequeno",
-                    "texto-medio",
-                    "texto-grande",
-                    "texto-extra-grande"
-                );
+        tamanhoLetra?.addEventListener("change", () => {
+            document.body.classList.remove(
+                "texto-pequeno",
+                "texto-medio",
+                "texto-grande",
+                "texto-extra-grande"
+            );
 
-                document.body.classList.add(
-                    `texto-${tamanhoLetra.value}`
-                );
-            });
-        }
+            document.body.classList.add(
+                `texto-${tamanhoLetra.value}`
+            );
+        });
 
         /* =============================================
-           8. ACESSIBILIDADE — MODO DE EXIBIÇÃO
+           7. ACESSIBILIDADE — MODO DE EXIBIÇÃO
            ============================================= */
 
         const modoExibicao = document.getElementById(
             "acss-modo-exibicao"
         );
 
-        if (modoExibicao) {
-            modoExibicao.addEventListener("change", () => {
-                document.body.classList.remove(
-                    "modo-escuro",
-                    "modo-claro",
-                    "alto-contraste"
-                );
+        modoExibicao?.addEventListener("change", () => {
+            document.body.classList.remove(
+                "modo-escuro",
+                "modo-claro",
+                "alto-contraste"
+            );
 
-                if (modoExibicao.value === "alto-contraste") {
-                    document.body.classList.add("alto-contraste");
-                } else {
-                    document.body.classList.add(
-                        `modo-${modoExibicao.value}`
-                    );
-                }
-            });
-        }
+            if (modoExibicao.value === "alto-contraste") {
+                document.body.classList.add("alto-contraste");
+            } else {
+                document.body.classList.add(
+                    `modo-${modoExibicao.value}`
+                );
+            }
+        });
 
         /* =============================================
-           9. ACESSIBILIDADE — IDIOMA
+           8. ACESSIBILIDADE — IDIOMA
            ============================================= */
 
         const idioma = document.getElementById("acss-idioma");
 
-        if (idioma) {
-            idioma.addEventListener("change", () => {
-                document.documentElement.lang = idioma.value;
-            });
-        }
+        idioma?.addEventListener("change", () => {
+            document.documentElement.lang = idioma.value;
+        });
 
         /* =============================================
-           10. ACESSIBILIDADE — LEITURA DE TELA
+           9. ACESSIBILIDADE — LEITURA DE TELA
            ============================================= */
 
         const leituraTela = document.getElementById(
             "acss-leitura-tela"
         );
 
-        if (leituraTela) {
-            leituraTela.addEventListener("change", () => {
-                document.body.classList.toggle(
-                    "leitura-ativa",
-                    leituraTela.checked
-                );
-            });
-        }
+        leituraTela?.addEventListener("change", () => {
+            document.body.classList.toggle(
+                "leitura-ativa",
+                leituraTela.checked
+            );
+        });
 
         /* =============================================
-           11. ACESSIBILIDADE — LIBRAS
+           10. ACESSIBILIDADE — LIBRAS
            ============================================= */
 
         const libras = document.getElementById("acss-libras");
 
-        if (libras) {
-            libras.addEventListener("change", () => {
-                document.body.classList.toggle(
-                    "libras-ativo",
-                    libras.checked
-                );
-            });
-        }
+        libras?.addEventListener("change", () => {
+            document.body.classList.toggle(
+                "libras-ativo",
+                libras.checked
+            );
+        });
 
         /* =============================================
-           12. CRIAR CONTA DE OSC
+           11. CRIAR CONTA DE OSC
            ============================================= */
 
         const accOsc = document.getElementById("criar-osc");
 
         accOsc?.addEventListener("click", () => {
-            window.location.href = "cadastro/cadastro-osc.html";
+            window.location.href = "/cadastro/cadastro-osc.html";
         });
 
     } catch (erro) {
@@ -366,9 +510,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             estado.replaceChildren();
 
             const mensagem = document.createElement("p");
-            mensagem.textContent = erro?.message
-                ? `Não foi possível confirmar sua sessão (${erro.message}). Tente novamente.`
-                : "Não foi possível confirmar sua sessão. Tente novamente.";
+
+            mensagem.textContent =
+                "Não foi possível carregar seu perfil. Tente novamente.";
 
             const tentarNovamente = document.createElement("button");
             tentarNovamente.type = "button";

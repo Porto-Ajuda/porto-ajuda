@@ -22,12 +22,18 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriUtils;
-import com.portoajuda.aplicacao_osc.dto.response.ResponsePerfilUsuarioDTO;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+// import com.portoajuda.aplicacao_osc.dto.response.ResponsePerfilUsuarioDTO;
 
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Map;
+
+import org.springframework.http.MediaType;
+import org.springframework.web.multipart.MultipartFile;
+import java.io.IOException;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/usuario")
@@ -212,7 +218,8 @@ public class UsuarioController {
         public ResponseEntity<?> obterPerfil(Authentication authentication) {
 
                 if (authentication == null
-                                || !authentication.isAuthenticated()) {
+                                || !authentication.isAuthenticated()
+                                || authentication instanceof AnonymousAuthenticationToken) {
                         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                                         .body(Map.of("mensagem", "Autenticação necessária."));
                 }
@@ -238,7 +245,11 @@ public class UsuarioController {
                                         usuario.getTelefone(),
                                         usuario.getCep(),
                                         usuario.getDataNascimento(),
-                                        usuario.getDataCriacao());
+                                        usuario.getDataCriacao(),
+                                        usuario.getFotoPerfilUrl(),
+                                        usuario.getGenero() == null
+                                                        ? null
+                                                        : usuario.getGenero().name());
 
                         return ResponseEntity.ok()
                                         .cacheControl(org.springframework.http.CacheControl.noStore())
@@ -248,5 +259,114 @@ public class UsuarioController {
                         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                                         .body(Map.of("mensagem", "Sessão inválida."));
                 }
+        }
+
+        @PostMapping(value = "/foto-perfil", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+        public ResponseEntity<?> atualizarFotoPerfil(
+                        @RequestParam("foto") MultipartFile foto,
+                        Authentication authentication) {
+
+                if (authentication == null
+                                || !authentication.isAuthenticated()
+                                || authentication instanceof AnonymousAuthenticationToken) {
+                        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                        .body(Map.of("mensagem", "Autenticação necessária."));
+                }
+
+                if (foto == null || foto.isEmpty()) {
+                        return ResponseEntity.badRequest()
+                                        .body(Map.of("mensagem", "Selecione uma imagem."));
+                }
+
+                if (foto.getSize() > 10L * 1024 * 1024) {
+                        return ResponseEntity.badRequest()
+                                        .body(Map.of("mensagem", "A imagem não pode ultrapassar 10 MB."));
+                }
+
+                String contentType = foto.getContentType();
+
+                if (contentType == null
+                                || !Set.of("image/jpeg", "image/png", "image/webp")
+                                                .contains(contentType.toLowerCase(java.util.Locale.ROOT))) {
+                        return ResponseEntity.badRequest()
+                                        .body(Map.of("mensagem", "Formato permitido: JPEG, PNG ou WebP."));
+                }
+
+                try {
+                        byte[] arquivo = foto.getBytes();
+
+                        if (!assinaturaImagemValida(arquivo, contentType)) {
+                                return ResponseEntity.badRequest()
+                                                .body(Map.of("mensagem",
+                                                                "O conteúdo não corresponde a uma imagem válida."));
+                        }
+
+                        Integer usuarioId = Integer.valueOf(authentication.getName());
+
+                        String url = usuarioService.atualizarFotoPerfil(
+                                        usuarioId,
+                                        arquivo,
+                                        contentType.toLowerCase(java.util.Locale.ROOT));
+
+                        return ResponseEntity.ok()
+                                        .cacheControl(org.springframework.http.CacheControl.noStore())
+                                        .body(Map.of(
+                                                        "mensagem", "Foto de perfil atualizada.",
+                                                        "fotoPerfilUrl", url));
+
+                } catch (NumberFormatException e) {
+                        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                        .body(Map.of("mensagem", "Sessão inválida."));
+
+                } catch (IOException e) {
+                        return ResponseEntity.badRequest()
+                                        .body(Map.of("mensagem", "Não foi possível ler a imagem."));
+
+                } catch (IllegalArgumentException | IllegalStateException e) {
+                        return ResponseEntity.badRequest()
+                                        .body(Map.of("mensagem", e.getMessage()));
+
+                } catch (org.springframework.web.client.RestClientException e) {
+                        return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                                        .body(Map.of("mensagem", "Não foi possível enviar a imagem ao armazenamento."));
+                }
+        }
+
+        private boolean assinaturaImagemValida(byte[] dados, String contentType) {
+                if (dados == null) {
+                        return false;
+                }
+
+                return switch (contentType.toLowerCase(java.util.Locale.ROOT)) {
+                        case "image/jpeg" ->
+                                dados.length >= 3
+                                                && (dados[0] & 0xFF) == 0xFF
+                                                && (dados[1] & 0xFF) == 0xD8
+                                                && (dados[2] & 0xFF) == 0xFF;
+
+                        case "image/png" ->
+                                dados.length >= 8
+                                                && (dados[0] & 0xFF) == 0x89
+                                                && dados[1] == 0x50
+                                                && dados[2] == 0x4E
+                                                && dados[3] == 0x47
+                                                && dados[4] == 0x0D
+                                                && dados[5] == 0x0A
+                                                && dados[6] == 0x1A
+                                                && dados[7] == 0x0A;
+
+                        case "image/webp" ->
+                                dados.length >= 12
+                                                && dados[0] == 'R'
+                                                && dados[1] == 'I'
+                                                && dados[2] == 'F'
+                                                && dados[3] == 'F'
+                                                && dados[8] == 'W'
+                                                && dados[9] == 'E'
+                                                && dados[10] == 'B'
+                                                && dados[11] == 'P';
+
+                        default -> false;
+                };
         }
 }

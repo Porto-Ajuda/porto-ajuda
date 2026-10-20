@@ -163,6 +163,17 @@ body {
 
 }
 
+.frame > .panel {
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.frame > .panel-cadastro {
+  overflow-y: auto;
+}
+
 .frame.flipped .panel-login {
   opacity: 0;
   pointer-events: none;
@@ -1429,6 +1440,14 @@ a:hover {
     flex-direction: column;
 
     transform: none !important;
+  }
+
+  .frame > .panel {
+    height: auto;
+  }
+
+  .frame > .panel-cadastro {
+    overflow-y: visible;
   }
 
 

@@ -1682,3 +1682,33 @@ body {
 #perfil-nome-civil[hidden] {
     display: none;
 }
+
+
+.foto-perfil-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.foto-perfil {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.imagem-foto-perfil {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+}
+
+#estado-foto-perfil {
+    text-align: center;
+    overflow-wrap: anywhere;
+}

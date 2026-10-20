@@ -35,6 +35,7 @@ public class UsuarioService {
         private final RoleRepository roleRepository;
         private final EmailService emailService;
         private final SessaoUsuarioService sessaoUsuarioService;
+        private final SupabaseStorageService supabaseStorageService;
 
         @Transactional
         public void signup(RequestUsuarioDTO usuarioDTO) {
@@ -214,5 +215,29 @@ public class UsuarioService {
                         boolean lembrarDeMim,
                         ResponseUsuarioDTO usuario,
                         Instant expiraEm) {
+        }
+
+        @Transactional
+        public String atualizarFotoPerfil(
+                        Integer usuarioId,
+                        byte[] arquivo,
+                        String contentType) {
+
+                Usuario usuario = usuarioRepository.findById(usuarioId)
+                                .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado."));
+
+                if (!usuario.isEnabled()) {
+                        throw new IllegalStateException("Usuário inativo.");
+                }
+
+                String fotoPerfilUrl = supabaseStorageService.enviarFotoPerfil(
+                                usuarioId,
+                                arquivo,
+                                contentType);
+
+                usuario.setFotoPerfilUrl(fotoPerfilUrl);
+                usuarioRepository.save(usuario);
+
+                return fotoPerfilUrl;
         }
 }
