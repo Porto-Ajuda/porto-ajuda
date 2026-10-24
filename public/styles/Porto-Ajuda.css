@@ -2139,3 +2139,26 @@ Lista escondida
     }
 
 }
+
+
+@media (min-width: 769px) {
+
+  .regioes {
+    pointer-events: auto;
+
+    transition:
+      opacity .2s ease 0.5s,
+      visibility .2s linear 0.5s;
+  }
+
+  .dropdown-regiao:hover .regioes,
+  .dropdown-regiao.aberto .regioes {
+    transition-delay: 0s;
+  }
+
+  .search-box:has(.dropdown-regiao:hover) .dropdown-regiao:not(:hover) .regioes {
+    opacity: 0;
+    visibility: hidden;
+    transition-delay: 0s;
+  }
+}
