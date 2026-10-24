@@ -94,7 +94,7 @@ public class OscService {
         boolean isDono = oscRepository.existsByIdAndUsuarioId(osc.getId(), usuario.getId());
         boolean isMembro = oscRepository.userBelongsOsc(osc.getId(), usuario.getId());
         if(!isDono && !isMembro){
-            throw new AccessDeniedException("Você não pode alterar os dados dessa OSC");
+            throw new AccessDeniedException("Você não pode alterar os dados dessa ONG");
         }
         osc.setChavePix(updateOscDTO.pix());
         osc.setTipoChavePix(TipoChavePix.valueOf(updateOscDTO.tipoPix()));
@@ -111,7 +111,7 @@ public class OscService {
                 .orElseThrow(() -> new IllegalArgumentException("Osc não encontrada"));
         boolean isDono = oscRepository.existsByIdAndUsuarioId(osc.getId(), usuario.getId());
         if(!isDono){
-            throw new AccessDeniedException("Você não pode deletar essa OSC");
+            throw new AccessDeniedException("Você não pode deletar essa ONG");
         }
         oscRepository.delete(osc);
     }
@@ -123,13 +123,13 @@ public class OscService {
         boolean isDono = oscRepository.existsByIdAndUsuarioId(osc.getId(), usuario.getId());
         boolean isMembro = oscRepository.userBelongsOsc(osc.getId(), usuario.getId());
         if(!isDono && !isMembro){
-            throw new AccessDeniedException("Você não pode adicionar membros nessa OSC");
+            throw new AccessDeniedException("Você não pode adicionar membros nessa ONG");
         }
 
         Usuario novoMembro = usuarioRepository.findByEmail(new Email(newMembroDTO.email()))
                 .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado"));
         if(!usuarioRepository.usuarioIsMember(novoMembro.getId())){
-            throw new AccessDeniedException("Esse usuário já pertence a uma OSC");
+            throw new AccessDeniedException("Esse usuário já pertence a uma ONG");
         }
         Role role = roleRepository.findByNome("OSC")
                 .orElseThrow(() -> new IllegalArgumentException("Role não encontrada"));
@@ -149,12 +149,12 @@ public class OscService {
         boolean isDono = oscRepository.existsByIdAndUsuarioId(osc.getId(), usuario.getId());
         boolean isMembro = oscRepository.userBelongsOsc(osc.getId(), usuario.getId());
         if(!isDono && !isMembro){
-            throw new AccessDeniedException("Você não pertence à essa OSC");
+            throw new AccessDeniedException("Você não pertence à essa ONG");
         }
         OscMembros membroOsc = membrosRepository.findByUsuarioEmail(email)
                         .orElseThrow(() -> new IllegalArgumentException("Usuário Membro não encontrado"));
         if(!membroOsc.getOsc().getId().equals(osc.getId())){
-            throw new AccessDeniedException("Erro ao buscar membro nessa OSC");
+            throw new AccessDeniedException("Erro ao buscar membro nessa ONG");
         }
 
         membrosRepository.delete(membroOsc);

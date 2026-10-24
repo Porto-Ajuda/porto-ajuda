@@ -58,7 +58,7 @@ function obterNomeStore(tipo) {
 
 function obterLabelTipo(tipo) {
     const mapa = {
-        osc: "OSC's",
+        osc: "ONG's",
         voluntariacao: "Voluntariações",
         doacao: "Doações"
     };

@@ -97,7 +97,7 @@ const URL_HOME = "./Porto-Ajuda.html";
         limparErro();
 
         if (!campoCnpj.value.trim()) {
-            mostrarErro("Informe o CNPJ da OSC.", campoCnpj);
+            mostrarErro("Informe o CNPJ da ONG.", campoCnpj);
             return;
         }
 

@@ -17,7 +17,7 @@ public record RequestOscDTO(
 
     Set<CausaSocial> causas,
 
-    @NotBlank(message = "Nome da OSC inválido")
+    @NotBlank(message = "Nome da ONG inválido")
     String nome,
 
     String logo,

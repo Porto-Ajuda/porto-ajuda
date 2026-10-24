@@ -231,6 +231,48 @@ a {
     color: rgb(70, 0, 167);
 }
 
+/* =========================================================
+   AVATAR NO ÍCONE DE PERFIL (FOTO OU INICIAIS)
+   ========================================================= */
+
+.profile-icon.tem-avatar {
+    overflow: hidden;
+
+    background:
+        linear-gradient(160deg, #F2AA1A, #DDAA41);
+}
+
+.profile-icon .avatar-nav-img {
+    display: block;
+
+    width: 100%;
+    height: 100%;
+
+    border-radius: 50%;
+
+    object-fit: cover;
+}
+
+.profile-icon .avatar-nav-iniciais {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.15rem;
+    font-weight: 600;
+    line-height: 1;
+
+    color: #161928;
+
+    user-select: none;
+}
+
+body.alto-contraste .profile-icon.tem-avatar {
+    background: #000000;
+    border: 2px solid #FFFF00;
+}
+
+body.alto-contraste .profile-icon .avatar-nav-iniciais {
+    color: #FFFF00;
+}
+
 
 /* =========================================================
    ÁREA DOS BOTÕES DIREITOS DO HEADER
