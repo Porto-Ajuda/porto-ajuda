@@ -2159,6 +2159,13 @@ Lista escondida
   .search-box:has(.dropdown-regiao:hover) .dropdown-regiao:not(:hover) .regioes {
     opacity: 0;
     visibility: hidden;
-    transition-delay: 0s;
+    transition: none;
+  }
+
+
+  .search-box:has(.dropdown-regiao.aberto) .dropdown-regiao:not(.aberto):not(:hover) .regioes {
+    opacity: 0;
+    visibility: hidden;
+    transition: none;
   }
 }
