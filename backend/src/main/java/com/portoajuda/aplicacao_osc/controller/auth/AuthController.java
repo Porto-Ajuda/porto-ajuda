@@ -1,6 +1,7 @@
 package com.portoajuda.aplicacao_osc.controller.auth;
 
 import com.portoajuda.aplicacao_osc.dto.request.RequestLoginDTO;
+import com.portoajuda.aplicacao_osc.dto.request.RequestCancelarExclusaoDTO;
 import com.portoajuda.aplicacao_osc.dto.request.RequestUsuarioDTO;
 import com.portoajuda.aplicacao_osc.dto.response.ResponseUsuarioDTO;
 import com.portoajuda.aplicacao_osc.entity.SessaoUsuario;
@@ -179,12 +180,39 @@ public class AuthController {
 
         @PreAuthorize("hasRole('USUARIO')")
         @DeleteMapping(value = "/delete", produces = MediaType.APPLICATION_JSON_VALUE)
-        public ResponseEntity<Void> delete(
+        public ResponseEntity<?> delete(
                         @AuthenticationPrincipal Usuario usuario) {
 
-                usuarioService.delete(usuario);
+                java.time.LocalDateTime exclusaoAgendada;
+                try {
+                        exclusaoAgendada = usuarioService.solicitarExclusao(usuario.getId());
+                } catch (IllegalStateException e) {
+                        return ResponseEntity.status(HttpStatus.CONFLICT)
+                                        .cacheControl(CacheControl.noStore())
+                                        .body(java.util.Map.of("mensagem", e.getMessage()));
+                }
 
-                return ResponseEntity.status(HttpStatus.ACCEPTED).build();
+                return limparCookies(HttpStatus.ACCEPTED)
+                                .body(java.util.Map.of(
+                                                "dataExclusaoAgendada",
+                                                exclusaoAgendada.toString()));
+        }
+
+        @PostMapping(value = "/cancelar-exclusao", consumes = MediaType.APPLICATION_JSON_VALUE)
+        public ResponseEntity<Void> cancelarExclusao(
+                        @Valid @RequestBody RequestCancelarExclusaoDTO requisicao) {
+
+                if (!usuarioService.cancelarExclusao(
+                                requisicao.email().trim(),
+                                requisicao.senha())) {
+                        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                        .cacheControl(CacheControl.noStore())
+                                        .build();
+                }
+
+                return ResponseEntity.noContent()
+                                .cacheControl(CacheControl.noStore())
+                                .build();
         }
 
         @PreAuthorize("hasRole('USUARIO')")

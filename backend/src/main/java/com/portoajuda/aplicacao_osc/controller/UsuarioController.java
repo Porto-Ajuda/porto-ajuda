@@ -25,6 +25,9 @@ import org.springframework.web.util.UriUtils;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 // import com.portoajuda.aplicacao_osc.dto.response.ResponsePerfilUsuarioDTO;
 
+import com.portoajuda.aplicacao_osc.dto.request.RequestAtualizarPerfilDTO;
+import jakarta.validation.Valid;
+
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -34,6 +37,11 @@ import org.springframework.http.MediaType;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.Set;
+
+import com.portoajuda.aplicacao_osc.dto.request.RequestPreferenciasAcessibilidadeDTO;
+import com.portoajuda.aplicacao_osc.dto.response.ResponsePreferenciasAcessibilidadeDTO;
+import com.portoajuda.aplicacao_osc.entity.PreferenciasAcessibilidade;
+import com.portoajuda.aplicacao_osc.repository.PreferenciasAcessibilidadeRepository;
 
 @RestController
 @RequestMapping("/usuario")
@@ -47,6 +55,7 @@ public class UsuarioController {
         private final JwtService jwtService;
         private final CodigoAutenticacaoService codigoAutenticacaoService;
         private final UsuarioService usuarioService;
+        private final PreferenciasAcessibilidadeRepository preferenciasAcessibilidadeRepository;
 
         @Value("${app.frontend-url}")
         private String frontendUrl;
@@ -261,6 +270,58 @@ public class UsuarioController {
                 }
         }
 
+        @PatchMapping("/perfil")
+        @Transactional
+        public ResponseEntity<?> atualizarPerfil(
+                        @Valid @RequestBody RequestAtualizarPerfilDTO dados,
+                        Authentication authentication) {
+
+                if (authentication == null
+                                || !authentication.isAuthenticated()
+                                || authentication instanceof AnonymousAuthenticationToken) {
+
+                        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                        .body(Map.of("mensagem", "Autenticação necessária."));
+                }
+
+                try {
+                        Integer usuarioId = Integer.valueOf(authentication.getName());
+
+                        Usuario usuario = usuarioService.atualizarPerfil(
+                                        usuarioId,
+                                        dados);
+
+                        var perfil = new com.portoajuda.aplicacao_osc.dto.response.ResponsePerfilUsuarioDTO(
+                                        usuario.getId(),
+                                        usuario.getNome(),
+                                        usuario.getNomeSocial(),
+                                        usuario.getEmail() == null
+                                                        ? null
+                                                        : usuario.getEmail().valor(),
+                                        usuario.getTelefone(),
+                                        usuario.getCep(),
+                                        usuario.getDataNascimento(),
+                                        usuario.getDataCriacao(),
+                                        usuario.getFotoPerfilUrl(),
+                                        usuario.getGenero() == null
+                                                        ? null
+                                                        : usuario.getGenero().name());
+
+                        return ResponseEntity.ok()
+                                        .cacheControl(
+                                                        org.springframework.http.CacheControl.noStore())
+                                        .body(perfil);
+
+                } catch (NumberFormatException e) {
+                        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                        .body(Map.of("mensagem", "Sessão inválida."));
+
+                } catch (IllegalArgumentException | IllegalStateException e) {
+                        return ResponseEntity.badRequest()
+                                        .body(Map.of("mensagem", e.getMessage()));
+                }
+        }
+
         @PostMapping(value = "/foto-perfil", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
         public ResponseEntity<?> atualizarFotoPerfil(
                         @RequestParam("foto") MultipartFile foto,
@@ -369,4 +430,108 @@ public class UsuarioController {
                         default -> false;
                 };
         }
+
+        /*
+         * =========================================================
+         * PREFERÊNCIAS DE ACESSIBILIDADE
+         * =========================================================
+         */
+
+        @GetMapping("/preferencias")
+        @Transactional(readOnly = true)
+        public ResponseEntity<?> obterPreferenciasAcessibilidade(
+                        Authentication authentication) {
+
+                if (authentication == null
+                                || !authentication.isAuthenticated()
+                                || authentication instanceof AnonymousAuthenticationToken) {
+
+                        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                        .body(Map.of("mensagem", "Autenticação necessária."));
+                }
+
+                try {
+                        Integer usuarioId = Integer.valueOf(authentication.getName());
+
+                        Usuario usuario = usuarioRepository.findById(usuarioId)
+                                        .orElse(null);
+
+                        if (usuario == null || !usuario.isEnabled()) {
+                                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                                .body(Map.of("mensagem", "Usuário não encontrado ou inativo."));
+                        }
+
+                        return preferenciasAcessibilidadeRepository
+                                        .findByUsuario_Id(usuarioId)
+                                        .map(preferencias -> ResponseEntity.ok()
+                                                        .cacheControl(
+                                                                        org.springframework.http.CacheControl.noStore())
+                                                        .body((Object) ResponsePreferenciasAcessibilidadeDTO
+                                                                        .de(preferencias)))
+                                        .orElseGet(() -> ResponseEntity.ok()
+                                                        .cacheControl(
+                                                                        org.springframework.http.CacheControl.noStore())
+                                                        .body((Object) new ResponsePreferenciasAcessibilidadeDTO(
+                                                                        100,
+                                                                        "escuro",
+                                                                        false,
+                                                                        false)));
+
+                } catch (NumberFormatException e) {
+                        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                        .body(Map.of("mensagem", "Sessão inválida."));
+                }
+        }
+
+        @PutMapping("/preferencias")
+        @Transactional
+        public ResponseEntity<?> salvarPreferenciasAcessibilidade(
+                        @Valid @RequestBody RequestPreferenciasAcessibilidadeDTO dados,
+                        Authentication authentication) {
+
+                if (authentication == null
+                                || !authentication.isAuthenticated()
+                                || authentication instanceof AnonymousAuthenticationToken) {
+
+                        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                        .body(Map.of("mensagem", "Autenticação necessária."));
+                }
+
+                try {
+                        Integer usuarioId = Integer.valueOf(authentication.getName());
+
+                        Usuario usuario = usuarioRepository.findById(usuarioId)
+                                        .orElse(null);
+
+                        if (usuario == null || !usuario.isEnabled()) {
+                                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                                .body(Map.of("mensagem", "Usuário não encontrado ou inativo."));
+                        }
+
+                        PreferenciasAcessibilidade preferencias = preferenciasAcessibilidadeRepository
+                                        .findByUsuario_Id(usuarioId)
+                                        .orElseGet(() -> {
+                                                PreferenciasAcessibilidade nova = new PreferenciasAcessibilidade();
+                                                nova.setUsuario(usuario);
+                                                return nova;
+                                        });
+
+                        preferencias.setTamanhoFonte(dados.tamanhoFonte());
+                        preferencias.setTema(dados.tema());
+                        preferencias.setAltoContraste(dados.altoContraste());
+                        preferencias.setLibras(dados.libras());
+
+                        PreferenciasAcessibilidade salvas = preferenciasAcessibilidadeRepository.save(preferencias);
+
+                        return ResponseEntity.ok()
+                                        .cacheControl(
+                                                        org.springframework.http.CacheControl.noStore())
+                                        .body(ResponsePreferenciasAcessibilidadeDTO.de(salvas));
+
+                } catch (NumberFormatException e) {
+                        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                        .body(Map.of("mensagem", "Sessão inválida."));
+                }
+        }
+
 }

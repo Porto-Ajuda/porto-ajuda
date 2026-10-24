@@ -34,15 +34,24 @@
         <div class="conteudo-cadastro">
 
             <span class="badge-cadastro">
-                Cadastro concluído
+                Verifique seu e-mail
             </span>
 
-            <h2>Bem-vindo ao<br><span>Porto Ajuda!</span></h2>
+            <h2>Quase <span>lá!</span></h2>
 
             <p>
-                Sua conta foi criada com sucesso.
-                Agora você já pode entrar e começar
-                a fazer parte da nossa comunidade.
+                Seu cadastro foi realizado com sucesso!
+                Enviamos um e-mail de confirmação para o endereço informado.
+            </p>
+
+            <p>
+                Acesse sua caixa de entrada e clique no link de confirmação
+                para ativar sua conta e começar a utilizar o Porto Ajuda.
+            </p>
+
+            <p class="aviso-email">
+                <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+                Se não encontrar o e-mail, verifique também a pasta de spam.
             </p>
 
         </div>
@@ -73,17 +82,14 @@
 
         <section class="panel panel-login" aria-labelledby="titulo-login">
             <div class="form-sec">
-                <a class="marca" href="/" aria-label="Porto Ajuda — página inicial">
-                    <span>Porto</span> Ajuda
-                </a>
+                <div class="login-intro" id="login-intro">
+                    <a class="marca" href="/" aria-label="Porto Ajuda — página inicial">
+                        <span>Porto</span> Ajuda
+                    </a>
 
-                <h1 class="title" id="titulo-login">
-                    Bem-<span>vindo</span>
-                </h1>
-
-                <p class="subtitulo">
-                    Entre na sua conta para continuar.
-                </p>
+                    <h1 class="title" id="titulo-login">Bem-<span>vindo</span></h1>
+                    <p class="subtitulo">Entre na sua conta para continuar.</p>
+                </div>
 
                 <div id="alerta-login" class="mensagem" role="alert" hidden></div>
 
@@ -105,7 +111,7 @@
                         </button>
                     </div>
 
-                    <label class="lembrar-login" for="lembrarDeMim">
+                    <label class="check-escolha" for="lembrarDeMim">
                         <input type="checkbox" id="lembrarDeMim" name="lembrarDeMim">
                         <span>Lembrar de mim</span>
                     </label>
@@ -116,158 +122,208 @@
                     </button>
                 </form>
 
-                <p class="sw">
-                    Ainda não tem uma conta?
+                <p class="sw" id="link-cancelar-exclusao">
+                    <a href="#cancelar-exclusao" id="mostrar-cancelamento-exclusao">
+                        Deseja recuperar sua conta? (cancelar exclusão)
+                    </a>
+                </p>
+
+                <form class="formulario" id="form-cancelar-exclusao" autocomplete="off" hidden>
+                    <h2 class="title" id="titulo-recuperacao">Recuperar <span>conta</span></h2>
+                    <p class="subtitulo">
+                        Informe o e-mail e a senha da conta para cancelar a exclusão dentro do prazo de seis meses.
+                    </p>
+
+                    <label class="campo-label" for="email-cancelar-exclusao">E-mail</label>
+                    <input class="inp" type="email" id="email-cancelar-exclusao" autocomplete="username" required>
+
+                    <label class="campo-label" for="senha-cancelar-exclusao">Senha</label>
+                    <input class="inp" type="password" id="senha-cancelar-exclusao" autocomplete="current-password"
+                        required>
+
+                    <p id="estado-cancelar-exclusao" role="status" aria-live="polite" hidden></p>
+
+                    <button class="btn" type="submit" id="confirmar-cancelamento-exclusao">
+                        Cancelar exclusão
+                    </button>
+                    <p class="sw"><a href="#login" id="voltar-login-cancelamento">Voltar ao login</a></p>
+                </form>
+
+                <p class="sw" id="link-cadastro">
+                    Ainda n?o possui uma conta?
                     <a href="#cadastro" id="goCad">Criar conta</a>
                 </p>
             </div>
         </section>
 
-        <div class="panel panel-cadastro">
+        <section class="panel panel-cadastro" aria-labelledby="titulo-cadastro">
 
-        <div class="form-sec">
+            <div class="form-sec">
 
-            <h1 class="title">
-                Criar <span>Conta</span>
-            </h1>
+                <h1 class="title" id="titulo-cadastro">
+                    Criar <span>Conta</span>
+                </h1>
 
-            <p class="subtitulo">
-                Junte-se à comunidade Porto Ajuda<br>
-                e faça parte dessa transformação.
-            </p>
+                <p class="subtitulo">
+                    Junte-se à comunidade Porto Ajuda<br>
+                    e faça parte dessa transformação.
+                </p>
 
-            <form class="formulario" id="form-cadastro" autocomplete="off">
+                <form class="formulario" id="form-cadastro" autocomplete="off">
 
-                <!-- ETAPA 1 -->
-                <div class="row2">
+                    <!-- ETAPA 1 -->
+                    <div class="row2">
 
-                    <input class="inp" type="text" placeholder="Nome" required>
+                        <div class="campo-nome-cadastro">
+                            <label class="campo-label" for="nome-cadastro">Nome</label>
+                            <input class="inp" type="text" id="nome-cadastro" name="nome" placeholder="Nome"
+                                autocomplete="name" required>
+                            <label class="opcao-nome-social check-escolha" for="usar-nome-social">
+                                <input type="checkbox" id="usar-nome-social" aria-controls="campo-nome-social"
+                                    aria-expanded="false">
+                                <span>Desejo utilizar nome social</span>
+                            </label>
+                            <div class="campo-nome-social" id="campo-nome-social" hidden>
+                                <label class="campo-label" for="nome-social-cadastro">Nome social</label>
+                                <input class="inp" type="text" id="nome-social-cadastro" name="nomeSocial"
+                                    autocomplete="nickname" disabled>
+                            </div>
+                        </div>
 
-                    <input class="inp" id="cpf" type="text" placeholder="CPF" maxlength="14" autocomplete="off"
-                        required>
+                        <input class="inp" id="cpf" type="text" placeholder="CPF" maxlength="14" autocomplete="off"
+                            required>
 
-                    <input class="inp" type="email" placeholder="E-mail" required>
+                        <input class="inp" type="email" placeholder="E-mail" required>
 
-                </div>
+                    </div>
 
-                <!-- ETAPA 2 -->
-                <div class="row3">
+                    <!-- ETAPA 2 -->
+                    <div class="row3">
 
-                    <div class="dropdown-genero" id="dropdown-genero">
+                        <div class="dropdown-genero" id="dropdown-genero">
 
-                        <input type="hidden" id="genero" value="">
+                            <input type="hidden" id="genero" value="">
 
-                        <button type="button" class="dropdown-botao" id="botao-genero">
-                            <span id="genero-selecionado">Gênero</span>
-                            <span class="seta">⌄</span>
+                            <button type="button" class="dropdown-botao" id="botao-genero">
+                                <span id="genero-selecionado">Gênero</span>
+                                <span class="seta">⌄</span>
+                            </button>
+
+
+                            <div class="dropdown-opcoes" id="opcoes-genero">
+
+                                <button type="button" data-valor="masculino">
+                                    Masculino
+                                </button>
+
+                                <button type="button" data-valor="feminino">
+                                    Feminino
+                                </button>
+
+                                <button type="button" data-valor="nao-binario">
+                                    Não-Binário
+                                </button>
+
+                                <button type="button" data-valor="outro">
+                                    Outro
+                                </button>
+
+                                <button type="button" data-valor="prefiro-nao-informar">
+                                    Prefiro não informar
+                                </button>
+
+                            </div>
+
+                            <p id="erro-genero" class="erro-genero">
+                                Selecione uma opção.
+                            </p>
+
+                        </div>
+
+                        <input class="inp" type="tel" id="telefone" placeholder="Telefone" autocomplete="off" required>
+
+                        <input class="inp" type="text" id="nascimento" placeholder="Data de nascimento"
+                            onfocus="this.type='date'" onblur="if(!this.value) this.type='text'" required>
+
+                        <input class="inp" type="text" id="cep" placeholder="CEP" maxlength="9" autocomplete="off"
+                            required>
+
+                    </div>
+
+                    <!-- ETAPA 3 -->
+                    <div class="row4">
+                        <div class="campo-senha">
+                            <input class="inp senha" type="password" id="senha-texto" placeholder="Senha" required>
+                            <button type="button" class="mostrar-senha" aria-label="Mostrar senha"
+                                aria-controls="senha-texto" aria-pressed="false"><i class="fa-regular fa-eye"
+                                    aria-hidden="true"></i></button>
+                        </div>
+
+                        <div class="seguranca-senha">
+
+                            <div class="barra-seguranca">
+                                <div id="nivel-senha"></div>
+                            </div>
+
+                            <p id="texto-seguranca">Digite uma senha</p>
+
+                        </div>
+
+                        <div class="campo-senha">
+                            <input class="inp senha" id="confirmar-senha" type="password" placeholder="Confirmar Senha"
+                                required>
+                            <button type="button" class="mostrar-senha" aria-label="Mostrar senha"
+                                aria-controls="confirmar-senha" aria-pressed="false"><i class="fa-regular fa-eye"
+                                    aria-hidden="true"></i></button>
+                        </div>
+
+                        <div class="opcoes">
+
+                            <h2>Ao se cadastrar neste site, você afirma que</h2>
+
+                            <label class="check-escolha" for="check-termos">
+                                <input id="check-termos" type="checkbox" name="termos" value="aceito"
+                                    aria-required="true">
+                                <div>
+                                    Concorda com nossos
+                                    <button class="open-modal style-open-modal" data-modal="modal-termos"
+                                        type="button">Termos
+                                        de Uso</button>
+                                    e nossas políticas de
+                                    <button class="open-modal style-open-modal" data-modal="modal-lgpd"
+                                        type="button">Privacidade &amp; Uso de Dados</button>
+                                </div>
+                            </label>
+
+                        </div>
+
+                    </div>
+
+                    <div class="botoes-navegacao">
+
+                        <button class="btn" type="button" id="backBtn">
+                            Voltar
                         </button>
 
+                        <button class="btn" type="button" id="nextBtn">
+                            Próximo
+                        </button>
 
-                        <div class="dropdown-opcoes" id="opcoes-genero">
-
-                            <button type="button" data-valor="masculino">
-                                Masculino
-                            </button>
-
-                            <button type="button" data-valor="feminino">
-                                Feminino
-                            </button>
-
-                            <button type="button" data-valor="nao-binario">
-                                Não-Binário
-                            </button>
-
-                            <button type="button" data-valor="outro">
-                                Outro
-                            </button>
-
-                            <button type="button" data-valor="prefiro-nao-informar">
-                                Prefiro não informar
-                            </button>
-
-                        </div>
-
-                        <p id="erro-genero" class="erro-genero">
-                            Selecione uma opção.
-                        </p>
+                        <button class="btn" type="submit" id="cad">
+                            Cadastrar
+                        </button>
 
                     </div>
 
-                    <input class="inp" type="tel" id="telefone" placeholder="Telefone" autocomplete="off" required>
+                </form>
 
-                    <input class="inp" type="text" id="nascimento" placeholder="Data de nascimento"
-                        onfocus="this.type='date'" onblur="if(!this.value) this.type='text'" required>
+                <p class="sw">
+                    Já possui uma conta?
+                    <a href="#login" id="goLogin">Entrar</a>
+                </p>
 
-                    <input class="inp" type="text" id="cep" placeholder="CEP" maxlength="9" autocomplete="off" required>
-
-                </div>
-
-                <!-- ETAPA 3 -->
-                <div class="row4">
-                    <div class="campo-senha">
-                        <input class="inp senha" type="password" id="senha-texto" placeholder="Senha" required>
-                        <button type="button" class="mostrar-senha">👁️</button>
-                    </div>
-
-                    <div class="seguranca-senha">
-
-                        <div class="barra-seguranca">
-                            <div id="nivel-senha"></div>
-                        </div>
-
-                        <p id="texto-seguranca">Digite uma senha</p>
-
-                    </div>
-
-                    <div class="campo-senha">
-                        <input class="inp senha" id="confirmar-senha" type="password" placeholder="Confirmar Senha"
-                            required>
-                        <button type="button" class="mostrar-senha">👁️</button>
-                    </div>
-
-                    <div class="opcoes">
-
-                        <h2>Ao se cadastrar neste site, você afirma que</h2>
-
-                        <label>
-                            <input id="check-termos" type="checkbox" name="termos" value="aceito" required>
-                            Concorda com nossos
-                            <button class="open-modal style-open-modal" data-modal="modal-termos" type="button">Termos
-                                de Uso</button>
-                            e nossas políticas de
-                            <button class="open-modal style-open-modal" data-modal="modal-lgpd"
-                                type="button">Privacidade &amp; Uso de Dados</button>
-                        </label>
-
-                    </div>
-
-                </div>
-
-                <div class="botoes-navegacao">
-
-                    <button class="btn" type="button" id="backBtn">
-                        Voltar
-                    </button>
-
-                    <button class="btn" type="button" id="nextBtn">
-                        Próximo
-                    </button>
-
-                    <button class="btn" type="submit" id="cad">
-                        Cadastrar
-                    </button>
-
-                </div>
-
-            </form>
-
-            <p class="sw">
-                Já possui uma conta?
-                <a href="#login" id="goLogin">Entrar</a>
-            </p>
-
-        </div>
-    </div>
+            </div>
+        </section>
     </div>
 
     <div class="requisitos-senha">

@@ -13,6 +13,7 @@ import com.portoajuda.aplicacao_osc.repository.UsuarioRepository;
 import com.portoajuda.aplicacao_osc.segurity.JwtService;
 import com.portoajuda.aplicacao_osc.utils.Cpf;
 import com.portoajuda.aplicacao_osc.utils.Email;
+import com.portoajuda.aplicacao_osc.dto.request.RequestAtualizarPerfilDTO;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -22,12 +23,16 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.Period;
+import java.time.ZoneId;
 import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
 public class UsuarioService {
+
+        private static final ZoneId ZONA_APLICACAO = ZoneId.of("America/Sao_Paulo");
 
         private final PasswordEncoder passwordEncoder;
         private final UsuarioRepository usuarioRepository;
@@ -159,13 +164,80 @@ public class UsuarioService {
         }
 
         @Transactional
-        public void delete(Usuario usuario) {
+        public LocalDateTime solicitarExclusao(Integer usuarioId) {
+                Usuario usuario = usuarioRepository.findByIdForUpdate(usuarioId)
+                                .orElseThrow(() -> new IllegalArgumentException("Usuário não existe"));
 
-                if (!usuarioRepository.existsById(usuario.getId())) {
-                        throw new IllegalArgumentException("Usuário não existe");
+                LocalDateTime solicitacaoExistente = usuario.getDataSolicitacaoExclusao();
+                LocalDateTime exclusaoExistente = usuario.getDataExclusaoAgendada();
+
+                if (solicitacaoExistente != null || exclusaoExistente != null) {
+                        if (usuario.isEnabled()
+                                        || solicitacaoExistente == null
+                                        || exclusaoExistente == null
+                                        || solicitacaoExistente.isAfter(
+                                                        LocalDateTime.now(ZONA_APLICACAO))
+                                        || !exclusaoExistente.equals(
+                                                        calcularDataExclusao(solicitacaoExistente))) {
+                                throw new IllegalStateException(
+                                                "A solicitação de exclusão está em um estado inconsistente.");
+                        }
+
+                        return exclusaoExistente;
                 }
 
-                usuarioRepository.deleteById(usuario.getId());
+                if (!usuario.isEnabled()) {
+                        throw new IllegalStateException("Esta conta está desativada.");
+                }
+
+                if (!usuario.isEmailVerificado()) {
+                        throw new IllegalStateException(
+                                        "Confirme o e-mail antes de solicitar a exclusão da conta.");
+                }
+
+                LocalDateTime solicitadaEm = LocalDateTime.now(ZONA_APLICACAO);
+                LocalDateTime agendadaPara = calcularDataExclusao(solicitadaEm);
+
+                usuario.setDataSolicitacaoExclusao(solicitadaEm);
+                usuario.setDataExclusaoAgendada(agendadaPara);
+                usuario.setAtivo(false);
+
+                sessaoUsuarioService.revogarSessoesDoUsuario(usuarioId);
+
+                return agendadaPara;
+        }
+
+        static LocalDateTime calcularDataExclusao(LocalDateTime solicitadaEm) {
+                return solicitadaEm.plusMonths(6);
+        }
+
+        @Transactional
+        public boolean cancelarExclusao(String email, String senha) {
+                Usuario usuario = usuarioRepository.findByEmailForUpdate(new Email(email))
+                                .orElse(null);
+                LocalDateTime agora = LocalDateTime.now(ZONA_APLICACAO);
+
+                if (usuario == null
+                                || senha == null
+                                || !passwordEncoder.matches(senha, usuario.getSenha())
+                                || usuario.isEnabled()
+                                || !usuario.isEmailVerificado()
+                                || usuario.getDataSolicitacaoExclusao() == null
+                                || usuario.getDataExclusaoAgendada() == null
+                                || usuario.getDataSolicitacaoExclusao().isAfter(
+                                                agora)
+                                || !usuario.getDataExclusaoAgendada().equals(
+                                                calcularDataExclusao(usuario.getDataSolicitacaoExclusao()))
+                                || !agora.isBefore(usuario.getDataExclusaoAgendada())) {
+                        return false;
+                }
+
+                usuario.setAtivo(true);
+                usuario.setDataSolicitacaoExclusao(null);
+                usuario.setDataExclusaoAgendada(null);
+                sessaoUsuarioService.revogarSessoesDoUsuario(usuario.getId());
+
+                return true;
         }
 
         @Transactional
@@ -239,5 +311,51 @@ public class UsuarioService {
                 usuarioRepository.save(usuario);
 
                 return fotoPerfilUrl;
+        }
+
+        @Transactional
+        public Usuario atualizarPerfil(
+                        Integer usuarioId,
+                        RequestAtualizarPerfilDTO dados) {
+
+                Usuario usuario = usuarioRepository.findById(usuarioId)
+                                .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado."));
+
+                if (!usuario.isEnabled()) {
+                        throw new IllegalStateException("Usuário inativo.");
+                }
+
+                String nomeSocial = dados.nomeSocial() == null
+                                ? null
+                                : dados.nomeSocial().trim();
+
+                String telefone = dados.telefone() == null
+                                ? null
+                                : dados.telefone().trim();
+
+                String cep = dados.cep() == null
+                                ? null
+                                : dados.cep().replaceAll("\\D", "");
+
+                usuario.setNomeSocial(
+                                nomeSocial == null || nomeSocial.isBlank()
+                                                ? null
+                                                : nomeSocial);
+
+                usuario.setTelefone(
+                                telefone == null || telefone.isBlank()
+                                                ? null
+                                                : telefone);
+
+                if (cep != null && !cep.isBlank() && !cep.matches("\\d{8}")) {
+                        throw new IllegalArgumentException("Informe um CEP válido.");
+                }
+
+                usuario.setCep(
+                                cep == null || cep.isBlank()
+                                                ? null
+                                                : cep);
+
+                return usuarioRepository.save(usuario);
         }
 }

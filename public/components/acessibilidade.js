@@ -12,6 +12,20 @@ const CHAVE_PREFERENCIAS = "portoAjudaPreferencias";
 // ELEMENTOS DO DOM
 // ==========================
 
+// CONTROLES DO PAINEL DE CONFIGURAÇÕES
+
+const configLeituraTela =
+    document.querySelector("#acss-leitura-tela");
+
+const configLibras =
+    document.querySelector("#acss-libras");
+
+const configTamanhoLetra =
+    document.querySelector("#acss-tamanho-letra");
+
+const configModoExibicao =
+    document.querySelector("#acss-modo-exibicao");
+
 const botao = document.querySelector("#botao-acessibilidade");
 const painel = document.querySelector("#painel-acessibilidade");
 const fechar = document.querySelector("#fechar-acessibilidade");
@@ -78,6 +92,38 @@ function normalizarPreferencias(dados = {}) {
         libras: dados.libras === true
     };
 }
+
+
+function sincronizarControlesConfiguracao() {
+    // Tamanho da letra
+    if (configTamanhoLetra) {
+        const tamanho = preferencias.tamanhoFonte;
+
+        if (tamanho <= 95) {
+            configTamanhoLetra.value = "pequeno";
+        } else if (tamanho <= 110) {
+            configTamanhoLetra.value = "medio";
+        } else if (tamanho <= 130) {
+            configTamanhoLetra.value = "grande";
+        } else {
+            configTamanhoLetra.value = "extra-grande";
+        }
+    }
+
+    // Modo de exibição
+    if (configModoExibicao) {
+        configModoExibicao.value =
+            preferencias.altoContraste
+                ? "alto-contraste"
+                : preferencias.tema;
+    }
+
+    // VLibras
+    if (configLibras) {
+        configLibras.checked = preferencias.libras;
+    }
+}
+
 
 // ==========================
 // PREFERÊNCIAS LOCAIS
@@ -147,6 +193,25 @@ function atualizarFonte() {
     salvarPreferenciasLocais();
 }
 
+const tamanhosFonte = {
+    "pequeno": 90,
+    "medio": 100,
+    "grande": 120,
+    "extra-grande": 140
+};
+
+configTamanhoLetra?.addEventListener("change", () => {
+    const novoTamanho = tamanhosFonte[configTamanhoLetra.value];
+
+    if (novoTamanho === undefined) {
+        return;
+    }
+
+    tamanhoFonte = novoTamanho;
+    atualizarFonte();
+});
+
+
 aumentarFonte?.addEventListener("click", () => {
     if (tamanhoFonte < 150) {
         tamanhoFonte = Math.min(150, tamanhoFonte + 10);
@@ -204,6 +269,36 @@ altoContraste?.addEventListener("click", () => {
     salvarPreferenciasLocais();
 });
 
+configModoExibicao?.addEventListener("change", () => {
+    const modo = configModoExibicao.value;
+
+    if (!["escuro", "claro", "alto-contraste"].includes(modo)) {
+        return;
+    }
+
+    if (modo === "alto-contraste") {
+        preferencias.altoContraste = true;
+    } else {
+        preferencias.tema = modo;
+        preferencias.altoContraste = false;
+    }
+
+    document.body.classList.toggle(
+        "modo-claro",
+        preferencias.tema === "claro"
+    );
+
+    document.body.classList.toggle(
+        "alto-contraste",
+        preferencias.altoContraste
+    );
+
+    atualizarTextoBotaoTema();
+    salvarPreferenciasLocais();
+    sincronizarControlesConfiguracao();
+});
+
+
 // ==========================
 // VLIBRAS
 // ==========================
@@ -235,6 +330,75 @@ botaoLibras?.addEventListener("click", async () => {
 
     } catch (erro) {
         console.error("Erro ao ativar o VLibras:", erro);
+    }
+});
+
+
+function obterEstadoAtualVLibras() {
+    try {
+        const dados = JSON.parse(
+            localStorage.getItem("@vlibras-widget") || "null"
+        );
+
+        return typeof dados?.state?.isOpen === "boolean"
+            ? dados.state.isOpen
+            : null;
+    } catch {
+        return null;
+    }
+}
+
+async function definirVLibras(ativar) {
+    if (ativar === preferencias.libras) {
+        return;
+    }
+
+    if (ativar) {
+        if (typeof window.carregarVLibras !== "function") {
+            throw new Error("VLibras não está disponível.");
+        }
+
+        const botaoVLibras = await window.carregarVLibras();
+
+        if (!botaoVLibras) {
+            throw new Error("Não foi possível carregar o VLibras.");
+        }
+
+        if (obterEstadoAtualVLibras() !== true) {
+            botaoVLibras.click();
+        }
+    } else {
+        const estadoAtual = obterEstadoAtualVLibras();
+
+        if (estadoAtual === true) {
+            const botaoVLibras = await window.carregarVLibras();
+
+            if (!botaoVLibras) {
+                throw new Error("Não foi possível acessar o VLibras.");
+            }
+
+            botaoVLibras.click();
+        }
+    }
+
+    preferencias.libras = ativar;
+    vlibrasInicializado = true;
+
+    salvarPreferenciasLocais();
+    sincronizarControlesConfiguracao();
+}
+
+configLibras?.addEventListener("change", async () => {
+    configLibras.disabled = true;
+
+    try {
+        await definirVLibras(configLibras.checked);
+    } catch (erro) {
+        console.error("Erro ao alterar o VLibras:", erro);
+
+        configLibras.checked = preferencias.libras;
+    } finally {
+        configLibras.disabled = false;
     }
 });
 
@@ -299,6 +463,8 @@ async function aplicarPreferencias() {
             );
         }
     }
+
+    sincronizarControlesConfiguracao();
 }
 
 // ==========================
@@ -435,3 +601,33 @@ async function inicializarPreferencias() {
 }
 
 inicializarPreferencias();
+
+
+export async function salvarPreferenciasNoBackend() {
+    const dados = {
+        tamanhoFonte: preferencias.tamanhoFonte,
+        tema: preferencias.tema,
+        altoContraste: preferencias.altoContraste,
+        libras: preferencias.libras
+    };
+
+    const resposta = await fetch(
+        `${API_URL}/usuario/preferencias`,
+        {
+            method: "PUT",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(dados)
+        }
+    );
+
+    if (!resposta.ok) {
+        throw new Error(
+            `Não foi possível salvar as preferências (HTTP ${resposta.status}).`
+        );
+    }
+
+    return await resposta.json();
+}

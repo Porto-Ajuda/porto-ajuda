@@ -19,6 +19,10 @@ import { getAPI_URL } from "./modoBack.js";
     const cep = document.getElementById("cep");
     const nascimento = document.getElementById("nascimento");
     const termos = document.getElementById("check-termos");
+    const usarNomeSocial = document.getElementById("usar-nome-social");
+    const campoNomeSocial = document.getElementById("campo-nome-social");
+    const nomeSocial = document.getElementById("nome-social-cadastro");
+    const nomeCivil = document.getElementById("nome-cadastro");
 
     const dropdownGenero = document.getElementById("dropdown-genero");
     const botaoGenero = document.getElementById("botao-genero");
@@ -49,6 +53,17 @@ import { getAPI_URL } from "./modoBack.js";
     const reqEspecial = document.getElementById("req-especial");
 
     let etapa = 0;
+
+    usarNomeSocial?.addEventListener("change", () => {
+        const habilitado = usarNomeSocial.checked;
+        if (campoNomeSocial) campoNomeSocial.hidden = !habilitado;
+        if (nomeSocial) {
+            nomeSocial.disabled = !habilitado;
+            nomeSocial.required = habilitado;
+            if (habilitado) nomeSocial.focus();
+        }
+        usarNomeSocial.setAttribute("aria-expanded", String(habilitado));
+    });
 
     // ---------- FUNÇÕES AUXILIARES ----------
     const somenteNumeros = (valor) => valor.replace(/\D/g, "");
@@ -236,6 +251,14 @@ import { getAPI_URL } from "./modoBack.js";
     }
 
     function validarEtapa(n) {
+
+        if (n === 0 && usarNomeSocial?.checked && nomeSocial && !nomeSocial.value.trim()) {
+            nomeSocial.setCustomValidity("Informe o nome social ou desmarque a opção.");
+            nomeSocial.reportValidity();
+            nomeSocial.focus();
+            return false;
+        }
+        nomeSocial?.setCustomValidity("");
 
         // Campos nativos (required, type=email etc.)
         const campos = rows[n].querySelectorAll("input");
@@ -475,7 +498,14 @@ import { getAPI_URL } from "./modoBack.js";
 
         // Termos
         if (!termos.checked) {
-            termos.reportValidity();
+            termos.focus();
+            if (!document.querySelector(".alerta-personalizado")) {
+                window.mostrarAlerta?.(
+                    "aviso",
+                    "Atenção",
+                    "Para continuar seu cadastro, você precisa aceitar os Termos de Uso e a Política de Privacidade."
+                );
+            }
             return;
         }
 
@@ -512,11 +542,9 @@ import { getAPI_URL } from "./modoBack.js";
 
             cep: somenteNumeros(cep.value),
 
-            nome: document
-                .querySelector("#form-cadastro input[placeholder='Nome']")
-                .value.trim(),
+            nome: nomeCivil.value.trim(),
 
-            nomeSocial: "",
+            nomeSocial: usarNomeSocial?.checked ? nomeSocial.value.trim() : "",
 
             dataNascimento: normalizarData(nascimento.value),
 

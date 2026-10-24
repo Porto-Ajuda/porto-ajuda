@@ -80,19 +80,20 @@
                                 --
                             </div>
 
-                            <label for="input-foto-perfil" class="botao botao-secundario">
-                                Alterar foto
-                            </label>
+                            <div class="grupo-botoes acoes-edicao-perfil" hidden>
+                                <label for="input-foto-perfil" class="botao botao-secundario">
+                                    Alterar foto
+                                </label>
 
-                            <input type="file" id="input-foto-perfil" accept="image/jpeg,image/png,image/webp" hidden>
+                                <input type="file" id="input-foto-perfil" accept="image/jpeg,image/png,image/webp"
+                                    hidden>
 
-                            <p id="estado-foto-perfil" role="status" aria-live="polite"></p>
+                                <p id="estado-foto-perfil" role="status" aria-live="polite"></p>
+                            </div>
                         </div>
 
 
                         <h2 id="perfil-nome">Carregando...</h2>
-
-                        <p id="perfil-nome-civil" hidden></p>
 
                         <p class="data-cadastro" id="perfil-data-cadastro">
                             Carregando data de cadastro...
@@ -103,6 +104,13 @@
 
                         <div class="campo-perfil">
 
+                            <label for="perfil-nome-civil" id="label-nome-civil">Nome</label>
+                            <input id="perfil-nome-civil" name="nomeSocial" type="text" autocomplete="nickname"
+                                disabled>
+
+                            <label for="data-nascimento">Data de nascimento</label>
+                            <input id="data-nascimento" name="dataNascimento" type="text" disabled>
+
                             <label for="email">E-mail</label>
                             <input id="email" name="email" type="email" autocomplete="email" disabled>
 
@@ -112,9 +120,6 @@
                             <label for="cep">CEP</label>
                             <input id="cep" name="cep" type="text" inputmode="numeric" autocomplete="postal-code"
                                 maxlength="9" placeholder="00000-000" disabled>
-
-                            <label for="data-nascimento">Data de nascimento</label>
-                            <input id="data-nascimento" name="dataNascimento" type="text" disabled>
 
                         </div>
 
@@ -495,36 +500,6 @@
                         <div class="painel painel-aba" role="tabpanel" id="painel-acss" aria-labelledby="aba-acss"
                             tabindex="0" hidden>
 
-
-                            <!-- LEITURA DE TELA -->
-
-                            <div class="acss-configuracao">
-
-                                <div>
-
-                                    <h3 class="LT">
-                                        Leitura de tela
-                                    </h3>
-
-                                    <p>
-                                        Ativa recursos compatíveis com leitores de tela
-                                        para facilitar a navegação pelo site.
-                                    </p>
-
-                                </div>
-
-
-                                <label class="acss-interruptor">
-
-                                    <input type="checkbox" id="acss-leitura-tela">
-
-                                    <span></span>
-
-                                </label>
-
-                            </div>
-
-
                             <!-- LIBRAS -->
 
                             <div class="acss-configuracao">
@@ -647,47 +622,14 @@
 
                             </div>
 
-
-                            <!-- IDIOMA -->
-
-                            <div class="acss-configuracao">
-
-                                <div>
-
-                                    <h3>
-                                        Idioma de preferência
-                                    </h3>
-
-                                    <p>
-                                        Escolha o idioma preferencial para a interface.
-                                    </p>
-
-                                </div>
-
-
-                                <div class="acss-campo-configuracao">
-
-                                    <label for="acss-idioma"></label>
-
-                                    <select id="acss-idioma">
-
-                                        <option value="pt-BR" selected>
-                                            Português (BR)
-                                        </option>
-
-                                        <option value="en">
-                                            English
-                                        </option>
-
-                                        <option value="es">
-                                            Español
-                                        </option>
-
-                                    </select>
-
-                                </div>
-
+                            <div class="grupo-botoes">
+                                <button class="botao botao-secundario" type="button" id="salvar-preferencias-acss">
+                                    Salvar preferências
+                                </button>
                             </div>
+
+                            <p id="estado-preferencias-acss" role="status" aria-live="polite" hidden>
+                            </p>
 
                         </div>
 
@@ -766,25 +708,6 @@
                             </div>
 
                             <!-- ================================================== -->
-                            <!-- ENCERRAR SESSÃO -->
-                            <!-- ================================================== -->
-
-                            <div class="configuracao">
-                                <div>
-                                    <h3>Sair da conta</h3>
-                                    <p>Encerre sua sessão neste dispositivo.</p>
-                                </div>
-
-                                <div class="grupo-botoes">
-                                    <button class="botao botao-secundario" type="button" id="botao-logout">
-                                        Sair da conta
-                                    </button>
-                                </div>
-                            </div>
-
-                            <p id="estado-logout" role="status" aria-live="polite" hidden></p>
-
-                            <!-- ================================================== -->
                             <!-- ENDEREÇO -->
                             <!-- ================================================== -->
                             <div class="divider">
@@ -795,11 +718,11 @@
                                 <div>
 
                                     <h3>
-                                        Informações de endereço
+                                        Informações pessoais
                                     </h3>
 
                                     <p>
-                                        Altere ou atualize o endereço associado
+                                        Altere ou atualize os dados associados
                                         à sua conta.
                                     </p>
 
@@ -808,11 +731,23 @@
 
                                 <div class="grupo-botoes">
 
-                                    <button class="botao botao-secundario" type="button" id="alterar-endereco">
-                                        Alterar endereço
+                                    <button class="botao botao-secundario" type="button" id="alterar-dados-perfil">
+                                        Alterar dados
                                     </button>
 
                                 </div>
+
+                                <div class="grupo-botoes acoes-edicao-perfil" hidden>
+                                    <button class="botao botao-secundario" type="button" id="salvar-dados-perfil">
+                                        Salvar alterações
+                                    </button>
+
+                                    <button class="botao botao-secundario" type="button" id="cancelar-edicao-perfil">
+                                        Cancelar
+                                    </button>
+                                </div>
+
+                                <p id="estado-edicao-perfil" role="status" aria-live="polite" hidden></p>
 
                             </div>
 
@@ -878,13 +813,31 @@
 
                             </div>
 
+                            <div class="divider">
+                                <img class="lua" src="../assets/moon.png">
+                            </div>
+                            <!-- ================================================== -->
+                            <!-- ENCERRAR SESSÃO -->
+                            <!-- ================================================== -->
+
+                            <div class="configuracao">
+                                <div>
+                                    <h3 class="perigo">Sair da conta</h3>
+                                    <p>Encerre sua sessão neste dispositivo.</p>
+                                </div>
+
+                                <div class="grupo-botoes">
+                                    <button class="botao botao-secundario perigo" type="button" id="botao-logout">
+                                        Sair da conta
+                                    </button>
+                                </div>
+                            </div>
+
+                            <p id="estado-logout" role="status" aria-live="polite" hidden></p>
 
                             <!-- ================================================== -->
                             <!-- EXCLUSÃO DA CONTA -->
                             <!-- ================================================== -->
-                            <div class="divider">
-                                <img class="lua" src="../assets/moon.png">
-                            </div>
                             <div class="configuracao">
 
                                 <div>
@@ -894,8 +847,9 @@
                                     </h3>
 
                                     <p>
-                                        A exclusão da conta removerá seus dados
-                                        e não poderá ser desfeita.
+                                        A conta será desativada imediatamente e os dados serão preservados por seis
+                                        meses.
+                                        Você poderá cancelar a solicitação durante esse prazo.
                                     </p>
 
                                 </div>
@@ -904,12 +858,14 @@
                                 <div class="grupo-botoes">
 
                                     <button class="botao botao-secundario perigo" type="button" id="excluir-conta">
-                                        Excluir conta
+                                        Solicitar exclusão
                                     </button>
 
                                 </div>
 
                             </div>
+
+                            <p id="estado-exclusao-conta" role="status" aria-live="polite" hidden></p>
 
                         </div>
 
@@ -922,6 +878,53 @@
         </section>
 
     </section>
+
+
+    <!-- Modal de confirmação de exclusão da conta -->
+    <div id="modal-exclusao-conta" class="modal-confirmacao" role="dialog" aria-modal="true"
+        aria-labelledby="titulo-modal-exclusao" aria-describedby="descricao-modal-exclusao" hidden>
+        <div class="modal-confirmacao__conteudo">
+            <button type="button" id="fechar-modal-exclusao" class="modal-confirmacao__fechar"
+                aria-label="Fechar confirmação">
+                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+            </button>
+
+            <div class="modal-confirmacao__icone" aria-hidden="true">
+                <i class="fa-solid fa-user-slash"></i>
+            </div>
+
+            <span class="modal-confirmacao__etiqueta">
+                Segurança da conta
+            </span>
+
+            <h2 id="titulo-modal-exclusao">
+                Solicitar exclusão
+            </h2>
+
+            <p id="descricao-modal-exclusao">
+                Sua conta será desativada imediatamente e a exclusão definitiva
+                ocorrerá após seis meses. Durante esse período, você poderá
+                cancelar a solicitação e recuperar sua conta.
+            </p>
+
+            <p class="modal-confirmacao__aviso">
+                <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+                Deseja realmente continuar?
+            </p>
+
+            <div class="modal-confirmacao__acoes">
+                <button type="button" id="cancelar-modal-exclusao"
+                    class="modal-confirmacao__botao modal-confirmacao__botao--secundario">
+                    Cancelar
+                </button>
+
+                <button type="button" id="confirmar-modal-exclusao"
+                    class="modal-confirmacao__botao modal-confirmacao__botao--perigo">
+                    Solicitar exclusão
+                </button>
+            </div>
+        </div>
+    </div>
 
 
     <footer id="footer"></footer>

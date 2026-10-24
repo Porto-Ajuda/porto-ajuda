@@ -73,6 +73,12 @@ public class Usuario implements UserDetails {
     @Column(name = "ativo", nullable = false)
     private boolean ativo = true;
 
+    @Column(name = "data_solicitacao_exclusao")
+    private LocalDateTime dataSolicitacaoExclusao;
+
+    @Column(name = "data_exclusao_agendada")
+    private LocalDateTime dataExclusaoAgendada;
+
     @Column(name = "email_verificado", nullable = false)
     private boolean emailVerificado = false;
 

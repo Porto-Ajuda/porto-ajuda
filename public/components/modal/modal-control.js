@@ -67,7 +67,9 @@ document.addEventListener("click", (event) => {
         checkbox.checked = false;
 
         mostrarAlerta(
-            "Você precisa ler e confirmar os Termos de Uso e a Política de Privacidade antes de continuar."
+            "aviso",
+            "Atenção",
+            "Para continuar seu cadastro, você precisa aceitar os Termos de Uso e a Política de Privacidade."
         );
 
     }
@@ -75,6 +77,9 @@ document.addEventListener("click", (event) => {
 });
 
 function mostrarAlerta(tipo, titulo, mensagem) {
+
+    const alertaAnterior = document.querySelector(".alerta-personalizado");
+    if (alertaAnterior) return;
 
     const icones = {
         erro: "fa-circle-xmark",
@@ -85,13 +90,15 @@ function mostrarAlerta(tipo, titulo, mensagem) {
     const alerta = document.createElement("div");
     alerta.className = `alerta-personalizado alerta-${tipo}`;
 
+    alerta.setAttribute("role", "alertdialog");
+    alerta.setAttribute("aria-modal", "true");
     alerta.innerHTML = `
-        <div class="caixa-alerta">
+        <div class="caixa-alerta" aria-labelledby="titulo-alerta-personalizado" aria-describedby="mensagem-alerta-personalizado">
             <div class="icone-alerta">
                 <i class="fa-solid ${icones[tipo] || icones.aviso}"></i>
             </div>
-            <h2></h2>
-            <p></p>
+            <h2 id="titulo-alerta-personalizado"></h2>
+            <p id="mensagem-alerta-personalizado"></p>
             <button type="button" class="btn-alerta">Entendi</button>
         </div>
     `;
@@ -102,7 +109,15 @@ function mostrarAlerta(tipo, titulo, mensagem) {
 
     document.body.appendChild(alerta);
 
-    alerta.querySelector(".btn-alerta").addEventListener("click", () => {
+    const botaoConfirmacao = alerta.querySelector(".btn-alerta");
+    const elementoAnterior = document.activeElement;
+    const fechar = () => {
         alerta.remove();
+        elementoAnterior?.focus?.();
+    };
+    botaoConfirmacao.addEventListener("click", fechar, { once: true });
+    alerta.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") fechar();
     });
+    botaoConfirmacao.focus();
 }

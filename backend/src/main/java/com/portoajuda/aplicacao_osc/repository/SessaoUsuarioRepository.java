@@ -36,4 +36,19 @@ public interface SessaoUsuarioRepository
     int excluirSessoesInvalidas(
             @Param("agora") Instant agora,
             @Param("limiteInatividade") Instant limiteInatividade);
+
+    @Modifying
+    @Query("""
+            UPDATE SessaoUsuario s
+            SET s.revogadaEm = :agora
+            WHERE s.usuario.id = :usuarioId
+                AND s.revogadaEm IS NULL
+            """)
+    int revogarSessoesPorUsuarioId(
+            @Param("usuarioId") Integer usuarioId,
+            @Param("agora") Instant agora);
+
+    @Modifying
+    @Query("DELETE FROM SessaoUsuario s WHERE s.usuario.id = :usuarioId")
+    int excluirPorUsuarioId(@Param("usuarioId") Integer usuarioId);
 }

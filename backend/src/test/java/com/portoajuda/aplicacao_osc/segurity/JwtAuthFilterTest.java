@@ -1,10 +1,11 @@
 package com.portoajuda.aplicacao_osc.segurity;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.doThrow;
+// import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -142,5 +143,34 @@ class JwtAuthFilterTest {
                 verify(chain, never()).doFilter(
                                 org.mockito.ArgumentMatchers.any(HttpServletRequest.class),
                                 org.mockito.ArgumentMatchers.any(HttpServletResponse.class));
+        }
+
+        @Test
+        void accessTokenDeUsuarioDesativadoNaoAutenticaNemConsultaSessao() throws Exception {
+                UsuarioRepository usuarioRepository = mock(UsuarioRepository.class);
+                JwtService jwtService = mock(JwtService.class);
+                SessaoUsuarioService sessaoUsuarioService = mock(SessaoUsuarioService.class);
+                JwtAuthFilter filter = new JwtAuthFilter(
+                                usuarioRepository,
+                                jwtService,
+                                sessaoUsuarioService);
+
+                MockHttpServletRequest request = new MockHttpServletRequest();
+                request.setCookies(new Cookie("PA_ACCESS", "token-conta-desativada"));
+                MockHttpServletResponse response = new MockHttpServletResponse();
+                Usuario usuario = mock(Usuario.class);
+                FilterChain chain = mock(FilterChain.class);
+
+                when(jwtService.extractSubject("token-conta-desativada")).thenReturn("123");
+                when(jwtService.extractSessionId("token-conta-desativada")).thenReturn(456L);
+                when(usuarioRepository.findById(123)).thenReturn(Optional.of(usuario));
+                when(usuario.isEnabled()).thenReturn(false);
+
+                filter.doFilter(request, response, chain);
+
+                assertNull(SecurityContextHolder.getContext().getAuthentication());
+                verify(jwtService, never()).validateToken("token-conta-desativada", usuario);
+                verify(sessaoUsuarioService, never()).buscarSessaoValida(456L);
+                verify(chain).doFilter(request, response);
         }
 }

@@ -189,6 +189,13 @@ public class SessaoUsuarioService {
         });
     }
 
+    @Transactional
+    public int revogarSessoesDoUsuario(Integer usuarioId) {
+        return sessaoRepository.revogarSessoesPorUsuarioId(
+                usuarioId,
+                Instant.now());
+    }
+
     private String gerarTokenAleatorio() {
         byte[] bytes = new byte[32];
         secureRandom.nextBytes(bytes);

@@ -1,0 +1,3 @@
+com\portoajuda\aplicacao_osc\AplicacaoOscApplicationTests.class
+com\portoajuda\aplicacao_osc\controller\auth\AuthControllerTest.class
+com\portoajuda\aplicacao_osc\segurity\JwtAuthFilterTest.class

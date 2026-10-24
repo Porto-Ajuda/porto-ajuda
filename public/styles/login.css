@@ -148,7 +148,7 @@ body {
 .frame .panel-login {
   opacity: 1;
   pointer-events: all;
-  padding: 50px;
+  padding: 10px 50px 50px 50px;
   transform: translateX(0);
   transition: all 1.5s cubic-bezier(.22, 1, .36, 1);
 }
@@ -1334,7 +1334,6 @@ a:hover {
 
 }
 
-
 /* -----------------------------------------------------
    TABLETS / TELAS MÉDIAS
    ----------------------------------------------------- */
@@ -1696,6 +1695,47 @@ a:hover {
   gap: 14px;
 }
 
+.panel-login .formulario[hidden] {
+  display: none;
+}
+
+/* Recuperação pode ultrapassar a altura fixa do cartão em telas baixas. */
+.panel-login.recuperacao-ativa {
+  flex-direction: column;
+  align-items: stretch;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.panel-login.recuperacao-ativa .form-sec {
+  flex: 1 0 auto;
+}
+
+.panel-login #form-cancelar-exclusao .title {
+  margin: 0 0 8px;
+  font-size: clamp(2rem, 6vw, 2.55rem);
+  line-height: 1.08;
+}
+
+.panel-login #form-cancelar-exclusao .subtitulo {
+  margin: 0 0 12px;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.panel-login #form-cancelar-exclusao {
+  gap: 8px;
+}
+
+.panel-login #form-cancelar-exclusao .inp {
+  min-height: 42px;
+}
+
+.panel-login #form-cancelar-exclusao > .btn {
+  min-height: 44px;
+  margin-top: 0;
+}
+
 .panel-login .formulario>.inp,
 .panel-login .campo-senha {
   width: 100%;
@@ -1857,8 +1897,165 @@ a:hover {
   }
 }
 
+/* Ajustes dos formulários de autenticação */
+#login-intro[hidden],
+#campo-nome-social[hidden],
+#link-cadastro[hidden],
+#link-cancelar-exclusao[hidden] {
+  display: none !important;
+}
+
+.login-intro .subtitulo {
+  margin-bottom: 22px;
+}
+
+.login-intro:not([hidden]),
+.panel-login #form-cancelar-exclusao:not([hidden]) {
+  animation: conteudoLoginEntrada .24s ease-out;
+}
+
+.campo-nome-cadastro,
+.campo-nome-social {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  width: 100%;
+  text-align: left;
+}
+
+.opcao-nome-social {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 2px 0;
+  color: var(--text-soft);
+  font-size: .85rem;
+  cursor: pointer;
+}
+
+.opcao-nome-social input,
+#check-termos {
+  accent-color: var(--gold);
+  flex: 0 0 auto;
+}
+
+@media (min-width: 1025px) {
+  .frame {
+    top: 100px;
+    height: min(760px, calc(100vh - 125px));
+    margin-top: 0;
+  }
+
+  .frame > .panel-login,
+  .frame > .panel-cadastro {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+
+  .frame .panel-login {
+    padding: 14px 42px 24px;
+  }
+
+  .frame .panel-cadastro {
+    padding: 12px 24px 22px;
+  }
+
+  .panel-cadastro .form-sec {
+    padding: 10px 18px;
+  }
+
+  .panel-cadastro .title {
+    font-size: 2.8rem;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .panel-cadastro .subtitulo {
+    font-size: .88rem;
+    line-height: 1.35;
+    margin-bottom: 12px;
+  }
+
+  .panel-cadastro .formulario {
+    gap: 9px;
+  }
+
+  .panel-cadastro .row2,
+  .panel-cadastro .row3 {
+    gap: 9px;
+    padding: 0 28px;
+  }
+
+  .panel-cadastro .inp {
+    min-height: 42px;
+    padding: 8px 12px;
+  }
+
+  .panel-cadastro .botoes-navegacao .btn,
+  .panel-cadastro .btn {
+    min-height: 42px;
+    padding: 10px 14px;
+    margin-top: 4px;
+    margin-bottom: 0;
+  }
+
+  .panel-cadastro .opcoes {
+    font-size: .82rem;
+    line-height: 1.45;
+  }
+
+  .panel-cadastro .opcoes h2 {
+    font-size: .9rem;
+    margin-bottom: 5px;
+  }
+}
+
+@media (min-width: 769px) and (max-height: 700px) {
+  body {
+    display: block;
+    min-height: 100vh;
+    height: auto;
+    overflow-y: auto;
+  }
+
+  .frame {
+    position: relative;
+    top: auto;
+    left: auto;
+    margin: 100px auto 28px;
+    width: min(90vw, 620px);
+    height: min(760px, calc(100vh - 125px));
+    min-height: 500px;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .campo-nome-social:not([hidden]) {
+    animation: campoNomeSocialEntrada .18s ease-out;
+  }
+}
+
+@keyframes campoNomeSocialEntrada {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes conteudoLoginEntrada {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-intro:not([hidden]),
+  .panel-login #form-cancelar-exclusao:not([hidden]),
+  .campo-nome-social:not([hidden]) {
+    animation: none;
+  }
+}
+
 /* Lembrar de mim */
-.lembrar-login {
+.check-escolha {
   display: flex;
   align-items: center;
   align-self: flex-start;
@@ -1876,7 +2073,7 @@ a:hover {
   user-select: none;
 }
 
-.lembrar-login input[type="checkbox"] {
+.check-escolha input[type="checkbox"] {
   appearance: none;
   -webkit-appearance: none;
 
@@ -1897,7 +2094,7 @@ a:hover {
   transition: background 0.2s ease, border-color 0.2s ease;
 }
 
-.lembrar-login input[type="checkbox"]::before {
+.check-escolha input[type="checkbox"]::before {
   content: "✓";
   color: var(--bg-main);
   font-size: 12px;
@@ -1906,16 +2103,77 @@ a:hover {
   transition: transform 0.15s ease;
 }
 
-.lembrar-login input[type="checkbox"]:checked {
+.check-escolha input[type="checkbox"]:checked {
   background: var(--gold);
   border-color: var(--gold);
 }
 
-.lembrar-login input[type="checkbox"]:checked::before {
+.check-escolha input[type="checkbox"]:checked::before {
   transform: scale(1);
 }
 
-.lembrar-login input[type="checkbox"]:focus-visible {
+.check-escolha input[type="checkbox"]:focus-visible {
   outline: 2px solid var(--gold-light);
   outline-offset: 3px;
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .frame {
+    height: min(760px, calc(100vh - 165px));
+    min-height: 600px;
+  }
+}
+
+/* O bloco de conteúdo ocupa o espaço do painel, repartindo as margens livres. */
+@media (min-width: 769px) {
+  .panel-login .form-sec,
+  .panel-cadastro .form-sec {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .panel-login .form-sec {
+    gap: 16px;
+  }
+
+  .panel-cadastro .form-sec {
+    gap: 12px;
+  }
+
+  .panel-login .formulario,
+  .panel-cadastro .formulario {
+    flex: 0 0 auto;
+  }
+
+  .panel-login .formulario {
+    gap: 16px;
+  }
+
+  .panel-login #form-cancelar-exclusao {
+    gap: 12px;
+  }
+
+  .panel-cadastro .formulario {
+    gap: 14px;
+  }
+
+  .panel-cadastro .row2,
+  .panel-cadastro .row3 {
+    gap: 13px;
+  }
+
+  .panel-cadastro .row4 {
+    gap: 15px;
+  }
+
+  .panel-cadastro .campo-nome-cadastro,
+  .panel-cadastro .campo-nome-social {
+    gap: 9px;
+  }
+
+  .panel-cadastro .seguranca-senha {
+    padding-top: 2px;
+    padding-bottom: 2px;
+  }
 }

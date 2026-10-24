@@ -34,6 +34,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             "/usuario/confirmar-email",
             "/usuario/trocar-codigo",
             "/usuario/reenviar-confirmacao",
+            "/usuario/cancelar-exclusao",
             "/usuario/refresh");
 
     private final UsuarioRepository usuarioRepository;

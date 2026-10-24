@@ -1669,6 +1669,16 @@ body {
     .acss-configuracao {
         align-items: flex-start;
     }
+
+    .configuracao {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 12px;
+    }
+
+    .configuracao .botao {
+        justify-self: start;
+        width: min(100%, 240px);
+    }
 }
 
 #perfil-nome-civil {
@@ -1711,4 +1721,279 @@ body {
 #estado-foto-perfil {
     text-align: center;
     overflow-wrap: anywhere;
+}
+
+
+/* ==========================================================
+   MODAL DE CONFIRMAÇÃO — EXCLUSÃO DA CONTA
+   ========================================================== */
+
+.modal-confirmacao[hidden] {
+    display: none !important;
+}
+
+.modal-confirmacao {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+
+    background: rgba(5, 8, 30, 0.78);
+
+    backdrop-filter: blur(9px);
+    -webkit-backdrop-filter: blur(9px);
+
+    animation: aparecer-modal-exclusao 0.2s ease;
+}
+
+.modal-confirmacao__conteudo {
+    position: relative;
+
+    width: min(100%, 480px);
+    padding: 35px;
+
+    color: var(--text);
+
+    background:
+        linear-gradient(145deg,
+            rgba(32, 38, 95, 0.98),
+            rgba(21, 27, 79, 0.98));
+
+    border: 1px solid var(--border-light);
+    border-top: 2px solid var(--gold);
+    border-radius: 24px;
+
+    box-shadow:
+        0 25px 80px rgba(0, 0, 0, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.06);
+
+    animation: subir-modal-exclusao 0.25s ease;
+}
+
+.modal-confirmacao__fechar {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+
+    width: 36px;
+    height: 36px;
+
+    display: grid;
+    place-items: center;
+
+    color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.05);
+
+    border: 1px solid var(--border);
+    border-radius: 50%;
+
+    font-size: 1rem;
+    cursor: pointer;
+
+    transition: 0.2s ease;
+}
+
+.modal-confirmacao__fechar:hover {
+    color: var(--gold);
+    border-color: var(--gold);
+    background: rgba(245, 181, 46, 0.08);
+}
+
+.modal-confirmacao__icone {
+    width: 58px;
+    height: 58px;
+
+    display: grid;
+    place-items: center;
+
+    margin-bottom: 20px;
+
+    color: var(--gold);
+    background: rgba(245, 181, 46, 0.10);
+
+    border: 1px solid rgba(245, 181, 46, 0.28);
+    border-radius: 18px;
+
+    font-size: 1.45rem;
+}
+
+.modal-confirmacao__etiqueta {
+    display: block;
+    margin-bottom: 8px;
+
+    color: var(--gold);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+.modal-confirmacao__conteudo h2 {
+    margin: 0 35px 14px 0;
+
+    color: var(--text);
+    font-family: "Cormorant Garamond", serif;
+    font-size: 2.2rem;
+    font-weight: 600;
+    line-height: 1.1;
+}
+
+.modal-confirmacao__conteudo>p {
+    margin: 0;
+
+    color: var(--text-soft);
+    font-size: 0.88rem;
+    line-height: 1.8;
+}
+
+.modal-confirmacao__conteudo .modal-confirmacao__aviso {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+
+    margin-top: 20px;
+    padding: 12px 14px;
+
+    color: var(--gold-light);
+    background: rgba(245, 181, 46, 0.07);
+
+    border: 1px solid rgba(245, 181, 46, 0.17);
+    border-radius: 12px;
+
+    font-size: 0.8rem;
+    line-height: 1.5;
+}
+
+.modal-confirmacao__aviso i {
+    margin-top: 3px;
+}
+
+.modal-confirmacao__acoes {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+
+    margin-top: 28px;
+    padding-top: 22px;
+
+    border-top: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+.modal-confirmacao__botao {
+    min-height: 44px;
+    padding: 11px 17px;
+
+    border: 1px solid transparent;
+    border-radius: 12px;
+
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 600;
+
+    cursor: pointer;
+    transition:
+        transform 0.2s ease,
+        background 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.modal-confirmacao__botao:hover {
+    transform: translateY(-2px);
+}
+
+.modal-confirmacao__botao:focus-visible,
+.modal-confirmacao__fechar:focus-visible {
+    outline: 2px solid var(--gold-light);
+    outline-offset: 3px;
+}
+
+.modal-confirmacao__botao--secundario {
+    color: var(--text);
+    background: rgba(255, 255, 255, 0.04);
+    border-color: var(--border-light);
+}
+
+.modal-confirmacao__botao--secundario:hover {
+    background: rgba(255, 255, 255, 0.09);
+    border-color: var(--gold);
+}
+
+.modal-confirmacao__botao--perigo {
+    color: #fff;
+    background: rgba(240, 107, 122, 0.13);
+    border-color: rgba(240, 107, 122, 0.45);
+}
+
+.modal-confirmacao__botao--perigo:hover {
+    background: #B83D50;
+    border-color: #F06B7A;
+}
+
+.modal-confirmacao__botao:disabled {
+    opacity: 0.6;
+    cursor: wait;
+    transform: none;
+}
+
+@keyframes aparecer-modal-exclusao {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes subir-modal-exclusao {
+    from {
+        opacity: 0;
+        transform: translateY(12px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@media (max-width: 550px) {
+    .modal-confirmacao {
+        padding: 15px;
+    }
+
+    .modal-confirmacao__conteudo {
+        padding: 27px 22px;
+        border-radius: 20px;
+    }
+
+    .modal-confirmacao__conteudo h2 {
+        font-size: 1.9rem;
+    }
+
+    .modal-confirmacao__acoes {
+        flex-direction: column-reverse;
+    }
+
+    .modal-confirmacao__botao {
+        width: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .modal-confirmacao,
+    .modal-confirmacao__conteudo {
+        animation: none;
+    }
+
+    .modal-confirmacao__botao,
+    .modal-confirmacao__fechar {
+        transition: none;
+    }
 }

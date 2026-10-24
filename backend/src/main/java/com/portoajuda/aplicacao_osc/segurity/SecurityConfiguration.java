@@ -98,6 +98,7 @@ public class SecurityConfiguration {
                                                                 "/usuario/confirmar-email",
                                                                 "/usuario/trocar-codigo",
                                                                 "/usuario/reenviar-confirmacao",
+                                                                "/usuario/cancelar-exclusao",
                                                                 "/usuario/refresh")
                                                 .permitAll()
 

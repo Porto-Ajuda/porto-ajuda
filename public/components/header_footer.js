@@ -1199,7 +1199,7 @@ window.carregarVLibras =
                                 );
 
 
-                                resolver(
+                                resolve(
                                     botaoVLibras
                                 );
 

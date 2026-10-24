@@ -1,8 +1,8 @@
-
 import {
     fetchAutenticado,
     sessaoInvalidaConfirmada
 } from "./api.js";
+import { marcarSessaoAnonima } from "./auth.js";
 
 /* =========================================================
    CONSTANTES
@@ -60,7 +60,44 @@ function preencherPerfil(usuario) {
 
     const nomeCivil = usuario.nome?.trim() || "Usuário";
     const nomeSocial = usuario.nomeSocial?.trim() || "";
-    const nomeExibido = nomeSocial || nomeCivil;
+
+    function abreviarNome(nome, estilo = "primeiro-ultimo") {
+        const conectores = new Set([
+            "de", "da", "do", "das", "dos", "e"
+        ]);
+
+        const partes = nome
+            .trim()
+            .split(/\s+/)
+            .filter(Boolean)
+            .filter((parte, indice, todas) =>
+                indice === 0 ||
+                indice === todas.length - 1 ||
+                !conectores.has(parte.toLocaleLowerCase("pt-BR"))
+            );
+
+        if (partes.length <= 2) {
+            return partes.join(" ");
+        }
+
+        if (estilo === "iniciais") {
+            return partes
+                .slice(0, -1)
+                .map(parte => `${parte[0].toLocaleUpperCase("pt-BR")}.`)
+                .concat(partes.at(-1))
+                .join(" ");
+        }
+
+        return [
+            partes[0],
+            ...partes.slice(1, -1).map(parte =>
+                `${parte[0].toLocaleUpperCase("pt-BR")}.`
+            ),
+            partes.at(-1)
+        ].join(" ");
+    }
+
+    const nomeExibido = abreviarNome(nomeSocial || nomeCivil);
 
     const titulo = document.getElementById("perfil-nome");
 
@@ -68,15 +105,31 @@ function preencherPerfil(usuario) {
         titulo.textContent = nomeExibido;
     }
 
-    const elementoNomeCivil =
+
+
+    const campoNomeSocial =
         document.getElementById("perfil-nome-civil");
 
-    if (elementoNomeCivil) {
-        elementoNomeCivil.hidden = !nomeSocial;
-        elementoNomeCivil.textContent = nomeSocial
-            ? `Nome: ${nomeCivil}`
-            : "";
+    const labelNomeSocial =
+        document.getElementById("label-nome-civil");
+
+    if (campoNomeSocial) {
+        // Exibe o nome civil por padrão.
+        campoNomeSocial.value = nomeCivil;
+
+        // O nome civil não pode ser alterado.
+        campoNomeSocial.disabled = true;
+
+        // Só exibe o campo quando existir nome social cadastrado.
+        campoNomeSocial.hidden = !nomeSocial;
     }
+
+    if (labelNomeSocial) {
+        labelNomeSocial.hidden = !nomeSocial;
+        labelNomeSocial.textContent = "Nome";
+    }
+
+
 
     const iniciais = nomeExibido
         .split(/\s+/)
@@ -103,7 +156,7 @@ function preencherPerfil(usuario) {
 }
 
 /* =========================================================
-   EXIBIR FOTO OU INICIAIS
+EXIBIR FOTO OU INICIAIS
    ========================================================= */
 
 function atualizarExibicaoFoto(url, iniciais = "?") {
@@ -282,6 +335,134 @@ document.addEventListener("DOMContentLoaded", async () => {
         preencherPerfil(usuario);
         configurarUploadFoto();
 
+        // excluir conta
+
+
+        const botaoExcluirConta = document.getElementById("excluir-conta");
+        const estadoExclusaoConta = document.getElementById("estado-exclusao-conta");
+
+        const modalExclusao = document.getElementById("modal-exclusao-conta");
+        const botaoFecharModal = document.getElementById("fechar-modal-exclusao");
+        const botaoCancelarModal = document.getElementById("cancelar-modal-exclusao");
+        const botaoConfirmarModal = document.getElementById("confirmar-modal-exclusao");
+
+        let focoAnteriorExclusao = null;
+
+        function abrirModalExclusao() {
+            if (!modalExclusao) return;
+
+            focoAnteriorExclusao = document.activeElement;
+            modalExclusao.hidden = false;
+            document.body.style.overflow = "hidden";
+
+            botaoCancelarModal?.focus();
+        }
+
+        function fecharModalExclusao() {
+            if (!modalExclusao || modalExclusao.hidden) return;
+
+            modalExclusao.hidden = true;
+            document.body.style.overflow = "";
+
+            if (focoAnteriorExclusao instanceof HTMLElement) {
+                focoAnteriorExclusao.focus();
+            }
+        }
+
+        botaoExcluirConta?.addEventListener("click", () => {
+            abrirModalExclusao();
+        });
+
+        botaoFecharModal?.addEventListener("click", fecharModalExclusao);
+        botaoCancelarModal?.addEventListener("click", fecharModalExclusao);
+
+        // Fecha ao clicar no fundo, sem confirmar a solicitação.
+        modalExclusao?.addEventListener("click", (evento) => {
+            if (evento.target === modalExclusao) {
+                fecharModalExclusao();
+            }
+        });
+
+        // Escape fecha o modal, mas nunca confirma a exclusão.
+        document.addEventListener("keydown", (evento) => {
+            if (evento.key === "Escape" && modalExclusao && !modalExclusao.hidden) {
+                fecharModalExclusao();
+            }
+        });
+
+        botaoConfirmarModal?.addEventListener("click", async () => {
+            if (!botaoExcluirConta || botaoConfirmarModal.disabled) return;
+
+            botaoConfirmarModal.disabled = true;
+            botaoCancelarModal.disabled = true;
+            botaoFecharModal.disabled = true;
+
+            botaoConfirmarModal.textContent = "Processando...";
+
+            if (estadoExclusaoConta) {
+                estadoExclusaoConta.hidden = false;
+                estadoExclusaoConta.textContent = "Registrando solicitação...";
+            }
+
+            try {
+                const resposta = await fetchAutenticado("/usuario/delete", {
+                    method: "DELETE"
+                });
+
+                if (sessaoInvalidaConfirmada(resposta)) {
+                    fecharModalExclusao();
+                    redirecionarParaLogin();
+                    return;
+                }
+
+                const resultado = await resposta.json().catch(() => ({}));
+
+                if (!resposta.ok) {
+                    throw new Error(
+                        resultado.mensagem ||
+                        `Não foi possível solicitar a exclusão (HTTP ${resposta.status}).`
+                    );
+                }
+
+                const dataLocalAgendada =
+                    resultado.dataExclusaoAgendada?.split("T")[0];
+
+                const partesData = dataLocalAgendada?.split("-");
+
+                const dataFormatada = partesData?.length === 3
+                    ? `${partesData[2]}/${partesData[1]}/${partesData[0]}`
+                    : "daqui a seis meses";
+
+                fecharModalExclusao();
+                marcarSessaoAnonima();
+
+                if (estadoExclusaoConta) {
+                    estadoExclusaoConta.textContent =
+                        `Conta desativada. A exclusão está agendada para ${dataFormatada}. ` +
+                        "Você pode cancelar pelo acesso de recuperação na página de login.";
+                }
+
+                window.setTimeout(() => {
+                    window.location.replace("/login?exclusao=solicitada");
+                }, 2500);
+
+            } catch (erro) {
+                console.error("Erro ao solicitar exclusão da conta:", erro);
+
+                if (estadoExclusaoConta) {
+                    estadoExclusaoConta.hidden = false;
+                    estadoExclusaoConta.textContent =
+                        erro.message || "Não foi possível solicitar a exclusão da conta.";
+                }
+            } finally {
+                botaoConfirmarModal.disabled = false;
+                botaoCancelarModal.disabled = false;
+                botaoFecharModal.disabled = false;
+                botaoConfirmarModal.textContent = "Solicitar exclusão";
+            }
+        });
+
+
         /* =============================================
            2. MOSTRAR CONTEÚDO
            ============================================= */
@@ -294,48 +475,213 @@ document.addEventListener("DOMContentLoaded", async () => {
             conteudo.hidden = false;
         }
 
+
         /* =============================================
            3. EDITAR CAMPOS DO PERFIL
            ============================================= */
 
-        const btn = document.querySelector(
-            ".painel-perfil .btn, .painel-perfil .botao-editar"
-        );
+        const campoNomeSocial = document.getElementById("perfil-nome-civil");
+        const labelNomeSocial = document.getElementById("label-nome-civil");
 
-        const inputs = document.querySelectorAll(
-            ".campo-perfil input"
-        );
+        const campoTelefone = document.getElementById("telefone");
+        const campoCep = document.getElementById("cep");
 
         const campoPerfil = document.querySelector(".campo-perfil");
+        const acoesEdicao = document.querySelectorAll(".acoes-edicao-perfil");
+        const estadoEdicao = document.getElementById("estado-edicao-perfil");
 
-        let editando = false;
+        const botaoEditar = document.getElementById("alterar-dados-perfil");
+        const botaoSalvar = document.getElementById("salvar-dados-perfil");
+        const botaoCancelar = document.getElementById("cancelar-edicao-perfil");
 
-        inputs.forEach(input => {
-            input.disabled = true;
-        });
+        let editandoPerfil = false;
+        let valoresOriginais = {};
 
-        if (btn && campoPerfil) {
-            campoPerfil.classList.remove("editando");
+        function mostrarEstadoEdicao(mensagem) {
+            if (!estadoEdicao) return;
 
-            btn.addEventListener("click", () => {
-                editando = !editando;
+            estadoEdicao.textContent = mensagem;
+            estadoEdicao.hidden = !mensagem;
+        }
 
-                inputs.forEach(input => {
-                    input.disabled = !editando;
+        function iniciarEdicaoPerfil() {
+            if (editandoPerfil) return;
+
+            // Guardar os valores atuais para permitir cancelar.
+            valoresOriginais = {
+                nomeSocial: campoNomeSocial?.value ?? "",
+                telefone: campoTelefone?.value ?? "",
+                cep: campoCep?.value ?? ""
+            };
+
+            // Trocar o nome civil pelo nome social no campo de edição.
+            if (campoNomeSocial) {
+                campoNomeSocial.value = usuario.nomeSocial ?? "";
+                campoNomeSocial.hidden = false;
+                campoNomeSocial.disabled = false;
+                campoNomeSocial.placeholder = "Digite seu nome social";
+            }
+
+            if (labelNomeSocial) {
+                labelNomeSocial.hidden = false;
+                labelNomeSocial.textContent = "Nome social";
+            }
+
+            // Habilitar apenas os campos que podem ser editados.
+            if (campoTelefone) campoTelefone.disabled = false;
+            if (campoCep) campoCep.disabled = false;
+
+            // Permanecem bloqueados.
+            const campoEmail = document.getElementById("email");
+            const campoDataNascimento = document.getElementById("data-nascimento");
+
+            if (campoEmail) campoEmail.disabled = true;
+            if (campoDataNascimento) campoDataNascimento.disabled = true;
+
+            editandoPerfil = true;
+
+            if (campoPerfil) {
+                campoPerfil.classList.add("editando");
+            }
+
+            acoesEdicao.forEach(grupo => {
+                grupo.hidden = false;
+            });
+
+            if (botaoEditar) {
+                botaoEditar.hidden = true;
+            }
+
+            mostrarEstadoEdicao("");
+        }
+
+        function cancelarEdicaoPerfil() {
+            if (!editandoPerfil) return;
+
+            // Restaurar os valores anteriores.
+            if (campoNomeSocial) {
+                campoNomeSocial.value = valoresOriginais.nomeSocial;
+            }
+
+            if (campoTelefone) {
+                campoTelefone.value = valoresOriginais.telefone;
+            }
+
+            if (campoCep) {
+                campoCep.value = valoresOriginais.cep;
+            }
+
+            // Restaurar a apresentação normal do perfil.
+            if (campoNomeSocial) {
+                campoNomeSocial.disabled = true;
+                campoNomeSocial.hidden = !(usuario.nomeSocial?.trim());
+                campoNomeSocial.placeholder = "";
+            }
+
+            if (labelNomeSocial) {
+                labelNomeSocial.hidden = !(usuario.nomeSocial?.trim());
+                labelNomeSocial.textContent = "Nome";
+            }
+
+            if (campoTelefone) campoTelefone.disabled = true;
+            if (campoCep) campoCep.disabled = true;
+
+            if (campoPerfil) {
+                campoPerfil.classList.remove("editando");
+            }
+
+            acoesEdicao.forEach(grupo => {
+                grupo.hidden = true;
+            });
+
+            if (botaoEditar) {
+                botaoEditar.hidden = false;
+            }
+
+            editandoPerfil = false;
+        }
+
+
+        async function salvarEdicaoPerfil() {
+            if (!editandoPerfil) return;
+
+            const campoNomeSocial = document.getElementById("perfil-nome-civil");
+            const campoTelefone = document.getElementById("telefone");
+            const campoCep = document.getElementById("cep");
+
+            const dados = {
+                nomeSocial: campoNomeSocial.value.trim(),
+                telefone: campoTelefone.value.trim(),
+                cep: campoCep.value.trim()
+            };
+
+            if (botaoSalvar) {
+                botaoSalvar.disabled = true;
+            }
+
+            mostrarEstadoEdicao("Salvando alterações...");
+
+            try {
+                const resposta = await fetchAutenticado("/usuario/perfil", {
+                    method: "PATCH",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(dados)
                 });
 
-                campoPerfil.classList.toggle("editando", editando);
+                if (await sessaoInvalidaConfirmada(resposta)) {
+                    return;
+                }
 
-                btn.textContent = editando
-                    ? "Salvar Dados"
-                    : "Alterar Dados";
+                const resultado = await resposta.json().catch(() => null);
 
-                if (!editando) {
-                    console.info(
-                        "O salvamento dos dados do perfil ainda não está implementado."
+                if (!resposta.ok) {
+                    throw new Error(
+                        resultado?.mensagem ||
+                        resultado?.message ||
+                        "Não foi possível salvar as alterações."
                     );
                 }
-            });
+
+                // Atualiza os dados locais com a resposta do backend.
+                usuario.nomeSocial = resultado.nomeSocial ?? null;
+                usuario.telefone = resultado.telefone ?? null;
+                usuario.cep = resultado.cep ?? null;
+
+                // Atualiza os campos e o nome exibido no perfil.
+                campoNomeSocial.value = usuario.nomeSocial ?? "";
+                campoTelefone.value = usuario.telefone ?? "";
+                campoCep.value = usuario.cep ?? "";
+
+                preencherPerfil(usuario);
+
+                cancelarEdicaoPerfil();
+                mostrarEstadoEdicao("Alterações salvas com sucesso.");
+
+            } catch (erro) {
+                console.error("Erro ao salvar perfil:", erro);
+                mostrarEstadoEdicao(
+                    erro.message || "Erro ao salvar as alterações."
+                );
+            } finally {
+                if (botaoSalvar) {
+                    botaoSalvar.disabled = false;
+                }
+            }
+        }
+
+        if (botaoSalvar) {
+            botaoSalvar.addEventListener("click", salvarEdicaoPerfil);
+        }
+
+
+        if (botaoEditar) {
+            botaoEditar.addEventListener("click", iniciarEdicaoPerfil);
+        }
+
+        if (botaoCancelar) {
+            botaoCancelar.addEventListener("click", cancelarEdicaoPerfil);
         }
 
         /* =============================================
@@ -451,31 +797,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
 
         /* =============================================
-           8. ACESSIBILIDADE — IDIOMA
-           ============================================= */
-
-        const idioma = document.getElementById("acss-idioma");
-
-        idioma?.addEventListener("change", () => {
-            document.documentElement.lang = idioma.value;
-        });
-
-        /* =============================================
-           9. ACESSIBILIDADE — LEITURA DE TELA
-           ============================================= */
-
-        const leituraTela = document.getElementById(
-            "acss-leitura-tela"
-        );
-
-        leituraTela?.addEventListener("change", () => {
-            document.body.classList.toggle(
-                "leitura-ativa",
-                leituraTela.checked
-            );
-        });
-
-        /* =============================================
            10. ACESSIBILIDADE — LIBRAS
            ============================================= */
 
@@ -486,6 +807,107 @@ document.addEventListener("DOMContentLoaded", async () => {
                 "libras-ativo",
                 libras.checked
             );
+        });
+
+        /* =============================================
+   SALVAR PREFERÊNCIAS DE ACESSIBILIDADE
+   ============================================= */
+
+        const botaoSalvarAcss = document.getElementById(
+            "salvar-preferencias-acss"
+        );
+
+        const estadoPreferenciasAcss = document.getElementById(
+            "estado-preferencias-acss"
+        );
+
+        botaoSalvarAcss?.addEventListener("click", async () => {
+            const tamanhoLetra = document.getElementById(
+                "acss-tamanho-letra"
+            );
+
+            const modoExibicao = document.getElementById(
+                "acss-modo-exibicao"
+            );
+
+            const libras = document.getElementById(
+                "acss-libras"
+            );
+
+            const tamanhos = {
+                pequeno: 90,
+                medio: 100,
+                grande: 120,
+                "extra-grande": 140
+            };
+
+            const tamanhoFonte = tamanhos[tamanhoLetra?.value];
+            const modo = modoExibicao?.value;
+
+            if (
+                tamanhoFonte === undefined ||
+                !["escuro", "claro", "alto-contraste"].includes(modo)
+            ) {
+                estadoPreferenciasAcss.textContent =
+                    "Verifique as opções de acessibilidade.";
+                estadoPreferenciasAcss.hidden = false;
+                return;
+            }
+
+            const dados = {
+                tamanhoFonte,
+                tema: modo === "alto-contraste" ? "escuro" : modo,
+                altoContraste: modo === "alto-contraste",
+                libras: libras?.checked ?? false
+            };
+
+            botaoSalvarAcss.disabled = true;
+            estadoPreferenciasAcss.textContent = "Salvando preferências...";
+            estadoPreferenciasAcss.hidden = false;
+
+            try {
+                const resposta = await fetchAutenticado(
+                    "/usuario/preferencias",
+                    {
+                        method: "PUT",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify(dados)
+                    }
+                );
+
+                if (await sessaoInvalidaConfirmada(resposta)) {
+                    return;
+                }
+
+                const resultado = await resposta.json().catch(() => null);
+
+                if (!resposta.ok) {
+                    throw new Error(
+                        resultado?.mensagem ||
+                        resultado?.message ||
+                        `Não foi possível salvar as preferências (HTTP ${resposta.status}).`
+                    );
+                }
+
+                // Atualiza o cache local utilizado pelo site.
+                localStorage.setItem(
+                    "portoAjudaPreferencias",
+                    JSON.stringify(dados)
+                );
+
+                estadoPreferenciasAcss.textContent =
+                    "Preferências de acessibilidade salvas com sucesso.";
+
+            } catch (erro) {
+                console.error("Erro ao salvar preferências:", erro);
+
+                estadoPreferenciasAcss.textContent =
+                    erro.message || "Não foi possível salvar as preferências.";
+            } finally {
+                botaoSalvarAcss.disabled = false;
+            }
         });
 
         /* =============================================
