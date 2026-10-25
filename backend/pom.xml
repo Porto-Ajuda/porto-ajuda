@@ -202,7 +202,7 @@
 				<configuration>
 					<!--suppress
 					UnresolvedMavenProperty -->
-					<argLine>@{argLine} -javaagent:${org.mockito:mockito-core:jar}</argLine>
+					<argLine>-javaagent:${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar</argLine>
 				</configuration>
 			</plugin>
 		</plugins>

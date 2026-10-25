@@ -63,8 +63,8 @@
       "destination": "/pages/ong-profile"
     },
     {
-      "source": "/cadastro-ong",
-      "destination": "/pages/cadastro-ong"
+      "source": "/cadastro-osc",
+      "destination": "/pages/cadastro-osc"
     }
   ]
 }
