@@ -165,6 +165,10 @@ function preencherPerfil(usuario) {
                 ? `Membro desde ${data.toLocaleDateString("pt-BR")}`
                 : "Data de cadastro indisponível";
     }
+
+    window.dispatchEvent(
+        new CustomEvent("perfil:atualizado", { detail: usuario })
+    );
 }
 
 /* =========================================================
@@ -287,6 +291,12 @@ function configurarUploadFoto() {
                 .join("");
 
             atualizarExibicaoFoto(resultado.fotoPerfilUrl, iniciais);
+
+            window.dispatchEvent(
+                new CustomEvent("perfil:atualizado", {
+                    detail: { fotoPerfilUrl: resultado.fotoPerfilUrl }
+                })
+            );
 
             if (estadoFoto) {
                 estadoFoto.textContent =

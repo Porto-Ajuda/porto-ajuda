@@ -11,11 +11,11 @@
 
     /* FUNDOS */
 
-    --bg-main: #0B123D;
-    --bg-section: #151B4F;
-    --bg-card: #20265F;
-    --bg-card-hover: #292F72;
-    --dark-contrast: #070b29cf;
+    --bg-main: #161928;
+    --bg-section: #2E1C50;
+    --bg-card: #3E2871;
+    --bg-card-hover: #453B80;
+    --dark-contrast: #0E0A22cf;
 
 
     /* CORES DE INTERFACE */
@@ -45,15 +45,15 @@
     /* TEXTOS */
 
     --text: #FFFFFF;
-    --text-soft: #D9DCF0;
-    --text-muted: #A8AECA;
-    --text-disabled: #72799C;
+    --text-soft: #D7D7D7;
+    --text-muted: #B5AACF;
+    --text-disabled: #9083AF;
 
 
     /* BORDAS */
 
-    --border: #353C78;
-    --border-light: #454C8C;
+    --border: #533597;
+    --border-light: #6743BC;
     --border-gold: #F5B52E;
 
 
@@ -283,7 +283,7 @@ body {
 
     border-radius: 50%;
 
-    background: #292f72ee;
+     
 
     backdrop-filter: blur(15px);
     -webkit-backdrop-filter: blur(15px);
@@ -406,7 +406,7 @@ body {
    ========================================================== */
 
 .painel-perfil .data-cadastro {
-    color: var(--info);
+    color: var(--purple-light);
 
     font-size: 0.83rem;
 
@@ -454,7 +454,7 @@ body {
     color: var(--text);
 
     border:
-        0.5px solid rgba(233, 235, 248, 0.22);
+        0.5px solid rgba(235, 229, 250, 0.22);
 
     font: inherit;
 
@@ -1743,7 +1743,7 @@ body {
 
     padding: 20px;
 
-    background: rgba(5, 8, 30, 0.78);
+    background: rgba(12, 8, 28, 0.78);
 
     backdrop-filter: blur(9px);
     -webkit-backdrop-filter: blur(9px);
@@ -1761,8 +1761,8 @@ body {
 
     background:
         linear-gradient(145deg,
-            rgba(32, 38, 95, 0.98),
-            rgba(21, 27, 79, 0.98));
+            rgba(62, 40, 113, 0.98),
+            rgba(46, 28, 80, 0.98));
 
     border: 1px solid var(--border-light);
     border-top: 2px solid var(--gold);

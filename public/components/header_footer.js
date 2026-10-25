@@ -9,6 +9,7 @@ import {
     marcarSessaoAnonima,
     obterEstadoSessao
 } from "./auth.js";
+import { montarAvatar, restaurarIconePadrao } from "./avatar.js";
 
 
 const API_URL = getAPI_URL();
@@ -265,6 +266,56 @@ document
     );
 
 /* =========================================================
+   AVATAR NO ÍCONE DE PERFIL (FOTO OU INICIAIS)
+   ========================================================= */
+
+let usuarioDoIcone = null;
+
+function obterIconePerfil() {
+    return document.querySelector("#link-acesso-usuario .profile-icon");
+}
+
+function aplicarAvatarNoIcone(dados) {
+    const icone = obterIconePerfil();
+
+    if (!icone || !dados) return;
+
+    usuarioDoIcone = { ...usuarioDoIcone, ...dados };
+    montarAvatar(icone, usuarioDoIcone);
+}
+
+function limparAvatarDoIcone() {
+    const icone = obterIconePerfil();
+
+    usuarioDoIcone = null;
+
+    if (icone) {
+        restaurarIconePadrao(icone);
+    }
+}
+
+async function carregarAvatarDoIcone() {
+    try {
+        const resposta = await fetchAutenticado(
+            "/usuario/perfil",
+            { method: "GET" }
+        );
+
+        // Se falhar, mantém o ícone padrão.
+        if (!resposta.ok) return;
+
+        aplicarAvatarNoIcone(await resposta.json());
+    } catch (erro) {
+        console.warn("Não foi possível carregar o avatar do usuário:", erro);
+    }
+}
+
+// A página de perfil já busca /usuario/perfil e avisa a navbar por aqui.
+window.addEventListener("perfil:atualizado", (evento) => {
+    aplicarAvatarNoIcone(evento.detail);
+});
+
+/* =========================================================
    LINK INTELIGENTE: LOGIN OU PERFIL
    ========================================================= */
 
@@ -348,6 +399,7 @@ async function configurarLinkAcessoUsuario() {
                 "aria-label",
                 "Acessar meu perfil"
             );
+            void carregarAvatarDoIcone();
         } else {
             marcarSessaoAnonima();
             link.href = ROTAS.login;
@@ -382,6 +434,7 @@ window.addEventListener("storage", (evento) => {
     if (evento.newValue === "anonymous") {
         link.href = ROTAS.login;
         link.setAttribute("aria-label", "Entrar ou acessar perfil");
+        limparAvatarDoIcone();
         return;
     }
 
@@ -467,7 +520,14 @@ if (navegacao) {
 
     function moverIndicador(link) {
 
-        if (!link) return;
+        if (!link) {
+
+            // Página fora do menu: não há link atual para onde voltar,
+            // então a barra encolhe e some.
+            indicador.style.width = "0px";
+
+            return;
+        }
 
         const linkRect =
             link.getBoundingClientRect();
@@ -944,9 +1004,13 @@ const rodape = `
     </button>
 
 
-    <a href="${ROTAS.contato}">
+    <button
+        class="btn-contato"
+        type="button"
+        onclick="window.location.href='${ROTAS.contato}'"
+    >
         Contato
-    </a>
+    </button>
 
     <button id="btn-tour" class="btn-tour" type="button" title="Iniciar tour do site">
     <i class="fa-solid fa-circle-question"></i>
