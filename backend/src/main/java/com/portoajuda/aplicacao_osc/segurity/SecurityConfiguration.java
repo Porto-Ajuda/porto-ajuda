@@ -124,6 +124,11 @@ public class SecurityConfiguration {
                                                                 HttpMethod.OPTIONS, "/**")
                                                 .permitAll()
 
+                                                .requestMatchers(
+                                                                HttpMethod.GET,
+                                                                "/osc/consultar-cnpj/**")
+                                                .permitAll()
+
                                                 // Demais rotas exigem autenticação
                                                 .anyRequest().authenticated())
 

@@ -22,72 +22,66 @@ import org.springframework.web.bind.annotation.*;
 
 import java.nio.file.AccessDeniedException;
 
+import com.portoajuda.aplicacao_osc.dto.response.ConsultaCnpjDTO;
+import com.portoajuda.aplicacao_osc.service.ValidacaoCnpjOscService;
+
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/osc")
 public class OscController {
     private final OscService oscService;
+    private final ValidacaoCnpjOscService validacaoCnpjOscService;
 
     @PreAuthorize("hasRole('USUARIO')")
-    @PostMapping(
-            value = "/create",
-            consumes = MediaType.APPLICATION_JSON_VALUE,
-            produces = MediaType.APPLICATION_JSON_VALUE
-    )
-    public ResponseEntity<Void> create(@Valid @RequestBody RequestOscDTO oscDTO, @AuthenticationPrincipal Usuario usuario){
+    @PostMapping(value = "/create", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Void> create(@Valid @RequestBody RequestOscDTO oscDTO,
+            @AuthenticationPrincipal Usuario usuario) {
         oscService.create(oscDTO, usuario);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @PreAuthorize("hasRole('OSC')")
-    @PutMapping(
-            value = "/put",
-            consumes = MediaType.APPLICATION_JSON_VALUE,
-            produces = MediaType.APPLICATION_JSON_VALUE
-    )
-    public ResponseEntity<Void> put(@Valid @RequestBody UpdateOscDTO updateOscDTO, @AuthenticationPrincipal Usuario usuario) throws AccessDeniedException {
+    @PutMapping(value = "/put", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Void> put(@Valid @RequestBody UpdateOscDTO updateOscDTO,
+            @AuthenticationPrincipal Usuario usuario) throws AccessDeniedException {
         oscService.update(updateOscDTO, usuario);
         return ResponseEntity.status(HttpStatus.ACCEPTED).build();
     }
 
-    @GetMapping(
-            value = "/list",
-            produces = MediaType.APPLICATION_JSON_VALUE
-    )
-    public ResponseEntity<Page<Osc>> viewAll(Pageable pageable){
+    @GetMapping(value = "/list", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Page<Osc>> viewAll(Pageable pageable) {
         Page<Osc> oscs = oscService.viewAll(pageable);
         return ResponseEntity.ok(oscs);
     }
 
+    @GetMapping(value = "/consultar-cnpj/{cnpj}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ConsultaCnpjDTO> consultarCnpj(
+            @PathVariable String cnpj) {
+
+        ConsultaCnpjDTO resultado = validacaoCnpjOscService.validar(cnpj);
+
+        return ResponseEntity.ok(resultado);
+    }
+
     @PreAuthorize("hasRole('OSC')")
-    @DeleteMapping(
-            value = "/delete",
-            consumes = MediaType.APPLICATION_JSON_VALUE,
-            produces = MediaType.APPLICATION_JSON_VALUE
-    )
+    @DeleteMapping(value = "/delete", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> delete(@Valid @AuthenticationPrincipal Usuario usuario) throws AccessDeniedException {
         oscService.delete(usuario);
         return ResponseEntity.status(HttpStatus.ACCEPTED).build();
     }
 
     @PreAuthorize("hasRole('OSC')")
-    @PostMapping(
-            value = "/newMembro",
-            consumes = MediaType.APPLICATION_JSON_VALUE,
-            produces = MediaType.APPLICATION_JSON_VALUE
-    )
-    public ResponseEntity<Void> addMembro(@Valid @RequestBody RequestNewMembroDTO newMembroDTO, @AuthenticationPrincipal Usuario usuario) throws AccessDeniedException {
+    @PostMapping(value = "/newMembro", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Void> addMembro(@Valid @RequestBody RequestNewMembroDTO newMembroDTO,
+            @AuthenticationPrincipal Usuario usuario) throws AccessDeniedException {
         oscService.addMembro(usuario, newMembroDTO);
         return ResponseEntity.status(HttpStatus.ACCEPTED).build();
     }
 
     @PreAuthorize("hasRole('OSC')")
-    @DeleteMapping(
-            value = "/removeMembro",
-            consumes = MediaType.APPLICATION_JSON_VALUE,
-            produces = MediaType.APPLICATION_JSON_VALUE
-    )
-    public ResponseEntity<Void> removeMembro(@AuthenticationPrincipal Usuario usuario, Email email) throws AccessDeniedException {
+    @DeleteMapping(value = "/removeMembro", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Void> removeMembro(@AuthenticationPrincipal Usuario usuario, Email email)
+            throws AccessDeniedException {
         oscService.removeMembro(usuario, email);
         return ResponseEntity.status(HttpStatus.ACCEPTED).build();
     }

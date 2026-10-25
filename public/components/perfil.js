@@ -1,3 +1,4 @@
+import { getAPI_URL } from "./modoBack.js";
 import {
     fetchAutenticado,
     sessaoInvalidaConfirmada
@@ -7,6 +8,17 @@ import { marcarSessaoAnonima } from "./auth.js";
 /* =========================================================
    CONSTANTES
    ========================================================= */
+
+const API_URL = getAPI_URL();
+
+const ROTAS = API_URL === "http://localhost:8080"
+    || API_URL === "https://api.portoajuda.com.br"
+    ? {
+        cadastroOng: "/cadastro-osc",
+    }
+    : {
+        cadastroOng: "cadastro-osc.html",
+    };
 
 const TAMANHO_MAXIMO_FOTO = 10 * 1024 * 1024;
 
@@ -914,10 +926,10 @@ document.addEventListener("DOMContentLoaded", async () => {
            11. CRIAR CONTA DE OSC
            ============================================= */
 
-        const accOsc = document.getElementById("criar-osc");
+        const botaoCriarOng = document.getElementById("criar-osc");
 
-        accOsc?.addEventListener("click", () => {
-            window.location.href = "/cadastro/cadastro-osc.html";
+        botaoCriarOng?.addEventListener("click", () => {
+            window.location.href = ROTAS.cadastroOng;
         });
 
     } catch (erro) {
@@ -948,3 +960,4 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     }
 });
+
