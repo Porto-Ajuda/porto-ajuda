@@ -706,170 +706,146 @@ document.addEventListener("DOMContentLoaded", async () => {
             botaoCancelar.addEventListener("click", cancelarEdicaoPerfil);
         }
 
-        /* =============================================
-           4. ABAS
-           ============================================= */
 
-        const abas = document.querySelectorAll(".aba");
-        const paineis = document.querySelectorAll(".painel-aba");
-
-        abas.forEach(aba => {
-            aba.addEventListener("click", () => {
-                abas.forEach(item => {
-                    item.setAttribute("aria-selected", "false");
-                });
-
-                paineis.forEach(painel => {
-                    painel.hidden = true;
-                });
-
-                aba.setAttribute("aria-selected", "true");
-
-                const idPainel = aba.getAttribute("aria-controls");
-                const painelAtivo = document.getElementById(idPainel);
-
-                if (painelAtivo) {
-                    painelAtivo.hidden = false;
-                    painelAtivo.focus();
-                }
-            });
-        });
 
         /* =============================================
-           5. FILTROS DO REGISTRO
+           6. ACESSIBILIDADE — NÍVEIS, TEMAS, ONGs
            ============================================= */
 
-        const filtros = document.querySelectorAll(".filtro");
-        const registros = document.querySelectorAll(".registro");
-        const registroVazio = document.getElementById("registro-vazio");
+        const TAMANHOS_LETRA = {
+            pequeno: 90,
+            medio: 100,
+            grande: 120,
+            "extra-grande": 140
+        };
 
-        filtros.forEach(filtro => {
-            filtro.addEventListener("click", () => {
-                const tipoFiltro = filtro.dataset.filtro;
+        const MODOS_EXIBICAO = ["escuro", "claro", "alto-contraste"];
 
-                filtros.forEach(item => {
-                    item.setAttribute("aria-pressed", "false");
-                });
+        function lerEscolha(nome) {
+            return document.querySelector(`input[name="${nome}"]:checked`)?.value;
+        }
 
-                filtro.setAttribute("aria-pressed", "true");
-
-                let quantidadeVisivel = 0;
-
-                registros.forEach(registro => {
-                    const mostrar =
-                        tipoFiltro === "tudo" ||
-                        registro.dataset.tipo === tipoFiltro;
-
-                    registro.hidden = !mostrar;
-
-                    if (mostrar) {
-                        quantidadeVisivel++;
-                    }
-                });
-
-                if (registroVazio) {
-                    registroVazio.hidden = quantidadeVisivel !== 0;
-                }
-            });
-        });
-
-        /* =============================================
-           6. ACESSIBILIDADE — TAMANHO DA LETRA
-           ============================================= */
-
-        const tamanhoLetra = document.getElementById(
-            "acss-tamanho-letra"
-        );
-
-        tamanhoLetra?.addEventListener("change", () => {
-            document.body.classList.remove(
-                "texto-pequeno",
-                "texto-medio",
-                "texto-grande",
-                "texto-extra-grande"
+        function marcarEscolha(nome, valor) {
+            const campo = document.querySelector(
+                `input[name="${nome}"][value="${valor}"]`
             );
 
-            document.body.classList.add(
-                `texto-${tamanhoLetra.value}`
-            );
-        });
-
-        /* =============================================
-           7. ACESSIBILIDADE — MODO DE EXIBIÇÃO
-           ============================================= */
-
-        const modoExibicao = document.getElementById(
-            "acss-modo-exibicao"
-        );
-
-        modoExibicao?.addEventListener("change", () => {
-            document.body.classList.remove(
-                "modo-escuro",
-                "modo-claro",
-                "alto-contraste"
-            );
-
-            if (modoExibicao.value === "alto-contraste") {
-                document.body.classList.add("alto-contraste");
-            } else {
-                document.body.classList.add(
-                    `modo-${modoExibicao.value}`
-                );
-            }
-        });
-
-        /* =============================================
-           10. ACESSIBILIDADE — LIBRAS
-           ============================================= */
+            if (campo) campo.checked = true;
+        }
 
         const libras = document.getElementById("acss-libras");
+        const chipsOng = document.querySelectorAll('input[name="acss-tipos-ong"]');
+        const contadorOng = document.getElementById("acss-contador-ong");
+        const botaoLimparOng = document.getElementById("acss-limpar-ong");
 
+        function atualizarContadorOng() {
+            if (!contadorOng) return;
+
+            const total = Array.from(chipsOng).filter(chip => chip.checked).length;
+
+            contadorOng.textContent =
+                total === 0 ? "Nenhum tipo selecionado"
+                    : total === 1 ? "1 tipo selecionado"
+                        : `${total} tipos selecionados`;
+        }
+
+        // Tamanho da letra (prévia ao vivo)
+        document
+            .querySelectorAll('input[name="acss-tamanho-letra"]')
+            .forEach(opcao => {
+                opcao.addEventListener("change", () => {
+                    document.body.classList.remove(
+                        "texto-pequeno",
+                        "texto-medio",
+                        "texto-grande",
+                        "texto-extra-grande"
+                    );
+
+                    document.body.classList.add(`texto-${opcao.value}`);
+                });
+            });
+
+        // Modo de exibição (prévia ao vivo)
+        document
+            .querySelectorAll('input[name="acss-modo-exibicao"]')
+            .forEach(opcao => {
+                opcao.addEventListener("change", () => {
+                    document.body.classList.remove(
+                        "modo-escuro",
+                        "modo-claro",
+                        "alto-contraste"
+                    );
+
+                    document.body.classList.add(
+                        opcao.value === "alto-contraste"
+                            ? "alto-contraste"
+                            : `modo-${opcao.value}`
+                    );
+                });
+            });
+
+        // VLibras
         libras?.addEventListener("change", () => {
-            document.body.classList.toggle(
-                "libras-ativo",
-                libras.checked
-            );
+            document.body.classList.toggle("libras-ativo", libras.checked);
         });
 
+        // Checklist de ONGs
+        chipsOng.forEach(chip => {
+            chip.addEventListener("change", atualizarContadorOng);
+        });
+
+        botaoLimparOng?.addEventListener("click", () => {
+            chipsOng.forEach(chip => {
+                chip.checked = false;
+            });
+
+            atualizarContadorOng();
+        });
+
+        // Restaura as escolhas salvas neste navegador
+        try {
+            const salvas = JSON.parse(
+                localStorage.getItem("portoAjudaPreferencias") ?? "null"
+            );
+
+            if (salvas) {
+                const nomeTamanho = Object.keys(TAMANHOS_LETRA).find(
+                    chave => TAMANHOS_LETRA[chave] === salvas.tamanhoFonte
+                );
+
+                if (nomeTamanho) {
+                    marcarEscolha("acss-tamanho-letra", nomeTamanho);
+                }
+
+                marcarEscolha(
+                    "acss-modo-exibicao",
+                    salvas.altoContraste ? "alto-contraste" : salvas.tema
+                );
+
+                if (libras) libras.checked = Boolean(salvas.libras);
+
+                (salvas.tiposOng ?? []).forEach(tipo => {
+                    marcarEscolha("acss-tipos-ong", tipo);
+                });
+            }
+        } catch {
+            /* preferências locais inválidas: ignora */
+        }
+
+        atualizarContadorOng();
+
         /* =============================================
-   SALVAR PREFERÊNCIAS DE ACESSIBILIDADE
-   ============================================= */
+           SALVAR PREFERÊNCIAS DE ACESSIBILIDADE
+           ============================================= */
 
-        const botaoSalvarAcss = document.getElementById(
-            "salvar-preferencias-acss"
-        );
-
-        const estadoPreferenciasAcss = document.getElementById(
-            "estado-preferencias-acss"
-        );
+        const botaoSalvarAcss = document.getElementById("salvar-preferencias-acss");
+        const estadoPreferenciasAcss = document.getElementById("estado-preferencias-acss");
 
         botaoSalvarAcss?.addEventListener("click", async () => {
-            const tamanhoLetra = document.getElementById(
-                "acss-tamanho-letra"
-            );
+            const tamanhoFonte = TAMANHOS_LETRA[lerEscolha("acss-tamanho-letra")];
+            const modo = lerEscolha("acss-modo-exibicao");
 
-            const modoExibicao = document.getElementById(
-                "acss-modo-exibicao"
-            );
-
-            const libras = document.getElementById(
-                "acss-libras"
-            );
-
-            const tamanhos = {
-                pequeno: 90,
-                medio: 100,
-                grande: 120,
-                "extra-grande": 140
-            };
-
-            const tamanhoFonte = tamanhos[tamanhoLetra?.value];
-            const modo = modoExibicao?.value;
-
-            if (
-                tamanhoFonte === undefined ||
-                !["escuro", "claro", "alto-contraste"].includes(modo)
-            ) {
+            if (tamanhoFonte === undefined || !MODOS_EXIBICAO.includes(modo)) {
                 estadoPreferenciasAcss.textContent =
                     "Verifique as opções de acessibilidade.";
                 estadoPreferenciasAcss.hidden = false;
@@ -880,7 +856,10 @@ document.addEventListener("DOMContentLoaded", async () => {
                 tamanhoFonte,
                 tema: modo === "alto-contraste" ? "escuro" : modo,
                 altoContraste: modo === "alto-contraste",
-                libras: libras?.checked ?? false
+                libras: libras?.checked ?? false,
+                tiposOng: Array.from(chipsOng)
+                    .filter(chip => chip.checked)
+                    .map(chip => chip.value)
             };
 
             botaoSalvarAcss.disabled = true;
@@ -931,7 +910,6 @@ document.addEventListener("DOMContentLoaded", async () => {
                 botaoSalvarAcss.disabled = false;
             }
         });
-
         /* =============================================
            11. CRIAR CONTA DE OSC
            ============================================= */
