@@ -119,13 +119,13 @@ body {
   justify-content: space-between;
 
   padding:
-    150px 90px 80px;
+    150px 90px 10px;
 }
 
 .hero-text {
   width: 100%;
   text-align: center;
-  padding-top: 130px;
+  padding-top: 100px;
 }
 
 .hero h1 {
