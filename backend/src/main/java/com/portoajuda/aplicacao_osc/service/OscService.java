@@ -4,8 +4,10 @@ import com.portoajuda.aplicacao_osc.dto.request.RequestNewMembroDTO;
 import com.portoajuda.aplicacao_osc.dto.request.RequestOscDTO;
 import com.portoajuda.aplicacao_osc.dto.request.UpdateOscDTO;
 import com.portoajuda.aplicacao_osc.dto.response.Coordenadas;
+import com.portoajuda.aplicacao_osc.dto.response.ConsultaCnpjDTO;
+import com.portoajuda.aplicacao_osc.dto.response.ResponseOscDTO;
+import com.portoajuda.aplicacao_osc.dto.response.OscListagemDTO;
 import com.portoajuda.aplicacao_osc.entity.*;
-import com.portoajuda.aplicacao_osc.enums.TipoChavePix;
 import com.portoajuda.aplicacao_osc.repository.OscMembrosRepository;
 import com.portoajuda.aplicacao_osc.repository.OscRepository;
 import com.portoajuda.aplicacao_osc.repository.RoleRepository;
@@ -19,9 +21,14 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
 import java.nio.file.AccessDeniedException;
 import java.time.LocalDateTime;
 // import java.util.List;
@@ -35,56 +42,122 @@ public class OscService {
     private final RoleRepository roleRepository;
     private final OscMembrosRepository membrosRepository;
     private final GeocodingService geocodingService;
+    private final ValidacaoCnpjOscService validacaoCnpjOscService;
+    private final OscPersistenciaService persistenciaService;
+    private final SupabaseStorageService supabaseStorageService;
 
-    @Transactional
-    public void create(RequestOscDTO oscDTO, Usuario usuarioAuth) {
-        if (oscRepository.existsByCnpj(new Cnpj(oscDTO.cnpj()))) {
-            throw new BadCredentialsException("Cnpj já cadastrado");
+    public ResponseOscDTO create(
+            RequestOscDTO oscDTO,
+            Usuario usuarioAuth,
+            MultipartFile logo) {
+        if (usuarioAuth == null || usuarioAuth.getId() == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Entre na sua conta antes de cadastrar uma OSC.");
         }
-        Osc osc = new Osc();
-        osc.setCnpj(new Cnpj(oscDTO.cnpj()));
-        osc.setCausas(oscDTO.causas());
-        osc.setNome(oscDTO.nome());
-        osc.setLogo(oscDTO.logo());
 
-        osc.setChavePix(oscDTO.pix());
-        osc.setTipoChavePix(TipoChavePix.valueOf(oscDTO.tipoPix()));
+        if (oscRepository.existsByCnpj(new Cnpj(oscDTO.cnpj()))) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Já existe uma organização cadastrada com este CNPJ.");
+        }
 
-        osc.setDescricao(oscDTO.descricao());
-        osc.setEmail(new Email(oscDTO.email()));
-        osc.setTelefone(oscDTO.telefone());
-        osc.setInstagram(oscDTO.instagram());
-
-        osc.setCep(oscDTO.cep());
-        osc.setCidade(oscDTO.cidade());
-        osc.setBairro(oscDTO.bairro());
-        osc.setRua(oscDTO.rua());
-        osc.setNumero(oscDTO.numero());
-        osc.setComplemento(oscDTO.complemento());
-
-        osc.setDiasHorariosFuncionamento(oscDTO.diasHorariosFuncionamento());
-        osc.setSite(oscDTO.site());
-
+        validarCnpjNoCadastro(oscDTO.cnpj());
         Coordenadas coordenadas = geocodingService.buscarCoordenadas(
+                oscDTO.pais(),
+                oscDTO.estado(),
                 oscDTO.cep(),
                 oscDTO.cidade(),
                 oscDTO.rua(),
-                oscDTO.numero()
-        );
-        osc.setLatitude(coordenadas.latitude());
-        osc.setLongitude(coordenadas.longitude());
+                oscDTO.numero());
 
+        SupabaseStorageService.ArquivoEnviado arquivoLogo = null;
+        try {
+            if (logo != null && !logo.isEmpty()) {
+                try {
+                    arquivoLogo = supabaseStorageService.enviarLogoOsc(
+                            usuarioAuth.getId(),
+                            obterBytes(logo),
+                            logo.getContentType());
+                } catch (IllegalArgumentException erro) {
+                    throw new ResponseStatusException(
+                            HttpStatus.BAD_REQUEST,
+                            erro.getMessage());
+                } catch (RestClientException erro) {
+                    throw new ResponseStatusException(
+                            HttpStatus.BAD_GATEWAY,
+                            "Não foi possível salvar a logo agora. Tente novamente.",
+                            erro);
+                }
+            }
 
-        Usuario usuario = usuarioRepository.findById(usuarioAuth.getId())
-                .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado"));
+            return persistenciaService.salvar(
+                    oscDTO,
+                    usuarioAuth.getId(),
+                    coordenadas,
+                    arquivoLogo == null ? null : arquivoLogo.url());
+        } catch (DataIntegrityViolationException erro) {
+            removerLogoSeNecessario(arquivoLogo);
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "O CNPJ já está cadastrado ou os dados conflitam com uma restrição existente.",
+                    erro);
+        } catch (RuntimeException erro) {
+            removerLogoSeNecessario(arquivoLogo);
+            throw erro;
+        }
+    }
 
-        Role role = roleRepository.findByNome("OSC")
-                .orElseThrow(() -> new IllegalArgumentException("Role não encontrada"));
+    private void validarCnpjNoCadastro(String cnpj) {
+        ConsultaCnpjDTO consulta;
+        try {
+            consulta = validacaoCnpjOscService.validar(cnpj);
+        } catch (IllegalStateException erro) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_GATEWAY,
+                    "Não foi possível validar o CNPJ agora. Tente novamente mais tarde.",
+                    erro);
+        }
 
-        usuario.getRoles().add(role);
-        osc.setUsuario(usuario);
+        String solicitado = cnpj.replaceAll("\\D", "");
+        String consultado = consulta == null || consulta.cnpj() == null
+                ? ""
+                : consulta.cnpj().replaceAll("\\D", "");
+        if (!solicitado.equals(consultado)) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_GATEWAY,
+                    "A consulta externa não confirmou o CNPJ informado.");
+        }
+        if (!consulta.elegivel()) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNPROCESSABLE_ENTITY,
+                    consulta.motivo() == null
+                            ? "O CNPJ não atende aos critérios de cadastro."
+                            : consulta.motivo());
+        }
+    }
 
-        oscRepository.save(osc);
+    private byte[] obterBytes(MultipartFile arquivo) {
+        try {
+            return arquivo.getBytes();
+        } catch (IOException erro) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Não foi possível ler o arquivo de logo enviado.",
+                    erro);
+        }
+    }
+
+    private void removerLogoSeNecessario(SupabaseStorageService.ArquivoEnviado logo) {
+        if (logo == null) {
+            return;
+        }
+        try {
+            supabaseStorageService.removerLogoOsc(logo.caminho());
+        } catch (RuntimeException erroLimpeza) {
+            org.slf4j.LoggerFactory.getLogger(OscService.class)
+                    .warn("Falha ao limpar logo temporário após erro de persistência.");
+        }
     }
 
     @Transactional
@@ -96,8 +169,6 @@ public class OscService {
         if(!isDono && !isMembro){
             throw new AccessDeniedException("Você não pode alterar os dados dessa ONG");
         }
-        osc.setChavePix(updateOscDTO.pix());
-        osc.setTipoChavePix(TipoChavePix.valueOf(updateOscDTO.tipoPix()));
         osc.setDescricao(updateOscDTO.descricao());
         osc.setEmail(new Email(updateOscDTO.email()));
         osc.setTelefone(updateOscDTO.telefone());
@@ -159,7 +230,8 @@ public class OscService {
 
         membrosRepository.delete(membroOsc);
     }
-    public Page<Osc> viewAll(Pageable pageable){
-        return oscRepository.findAll(pageable);
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public Page<OscListagemDTO> viewAll(Pageable pageable){
+        return oscRepository.findAll(pageable).map(OscListagemDTO::de);
     }
 }

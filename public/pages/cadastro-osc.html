@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="../styles/cadastro-osc.css">
     <link rel="stylesheet" href="../styles/geral.css">
 
-    <script src="../components/cadastro-osc.js" defer></script>
+    <script type="module" src="../components/cadastro-osc.js" defer></script>
     <script type="module" src="../components/header_footer.js" defer></script>
 </head>
 
@@ -21,12 +21,11 @@
             <div class="icone-cadastro"><i class="fa-solid fa-check"></i></div>
             <div class="conteudo-cadastro">
                 <span class="badge-cadastro">Cadastro concluído</span>
-                <h2 id="titulo-alerta-cadastro">Bem-vindo ao<br><span>Porto Ajuda!</span></h2>
-                <p>Sua conta foi criada com sucesso. Agora você já pode entrar com seu CNPJ e senha e começar a fazer
-                    parte da nossa comunidade.</p>
+                <h2 id="titulo-alerta-cadastro">OSC cadastrada<br><span>com sucesso!</span></h2>
+                <p>Os dados da organização foram salvos e vinculados à sua conta autenticada.</p>
             </div>
             <button type="button" id="btn-ir-login" class="btn-ir-login">
-                Continuar para o login <i class="fa-solid fa-arrow-right"></i>
+                Voltar ao Porto Ajuda <i class="fa-solid fa-arrow-right"></i>
             </button>
         </div>
     </div>
@@ -48,6 +47,11 @@
 
             <form id="form-osc" class="form-cadastro-osc" novalidate>
 
+                <p id="status-cadastro-osc" class="status-cadastro-osc" role="alert" hidden></p>
+                <a id="link-login-cadastro" class="link-login-cadastro" href="/login" hidden>
+                    Entrar na minha conta
+                </a>
+
                 <!-- PROGRESSO -->
                 <div class="progresso" aria-live="polite">
                     <div class="progresso-texto" id="progresso-texto">Etapa 1 de 8</div>
@@ -67,11 +71,17 @@
                             autocomplete="organization" required>
                     </div>
 
+                    <p class="descricao-etapa">Entre na sua conta pessoal antes de enviar o cadastro. A OSC será vinculada à conta autenticada.</p>
+
+
                     <div class="campo">
                         <label for="cnpj">CNPJ</label>
                         <input type="text" id="cnpj" name="cnpj" placeholder="00.000.000/0000-00" maxlength="18"
-                            inputmode="numeric" required>
+                            inputmode="numeric" autocomplete="off" required>
+
+                        <p id="status-consulta-cnpj" role="status" aria-live="polite" hidden></p>
                     </div>
+
 
                     <div class="campo">
                         <label for="logo">Logo da organização</label>
@@ -212,6 +222,8 @@
                     <div class="campo metade">
                         <label>ODS relacionadas</label>
                         <div class="ods-selecionadas" id="ods-selecionadas"></div>
+                        <p class="descricao-etapa">Sugestões temáticas baseadas nas áreas escolhidas; você decide quais ODS incluir.</p>
+                        <div class="ods-sugestoes" id="ods-sugestoes" aria-live="polite"></div>
 
                         <button type="button" class="botao-adicionar-ods" id="botao-adicionar-ods">
                             <span>+</span> Adicionar ODS
@@ -392,42 +404,10 @@
                     </div>
                 </div>
 
-                <!-- ETAPA 8 - SENHA -->
+                <!-- ETAPA 8 - REVISÃO -->
                 <div class="row etapa-osc">
-                    <h2>Crie sua senha</h2>
-                    <p class="descricao-etapa">Você vai entrar na conta da ONG usando o CNPJ e esta senha.</p>
-
-                    <div class="campo">
-                        <label for="senha-osc">Senha</label>
-                        <div class="campo-senha">
-                            <input type="password" id="senha-osc" name="senha" placeholder="Crie uma senha"
-                                autocomplete="new-password" minlength="8" required>
-                            <button type="button" class="btn-olho" data-alvo="senha-osc" aria-label="Mostrar senha">
-                                <i class="fa-solid fa-eye"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="campo">
-                        <label for="confirmar-senha-osc">Confirmar senha</label>
-                        <div class="campo-senha">
-                            <input type="password" id="confirmar-senha-osc" name="confirmar_senha"
-                                placeholder="Repita a senha" autocomplete="new-password" required>
-                            <button type="button" class="btn-olho" data-alvo="confirmar-senha-osc"
-                                aria-label="Mostrar confirmação de senha">
-                                <i class="fa-solid fa-eye"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <ul class="requisitos" id="requisitos" aria-live="polite">
-                        <li data-req="tamanho">Mínimo de 8 caracteres</li>
-                        <li data-req="maiuscula">Uma letra maiúscula</li>
-                        <li data-req="minuscula">Uma letra minúscula</li>
-                        <li data-req="numero">Um número</li>
-                        <li data-req="especial">Um caractere especial</li>
-                        <li data-req="igual">As senhas coincidem</li>
-                    </ul>
+                    <h2>Revisão e envio</h2>
+                    <p class="descricao-etapa">O cadastro será associado à conta que está autenticada. Senhas e credenciais não fazem parte dos dados institucionais da OSC.</p>
                 </div>
 
                 <!-- NAVEGAÇÃO (sempre visível no rodapé do card) -->

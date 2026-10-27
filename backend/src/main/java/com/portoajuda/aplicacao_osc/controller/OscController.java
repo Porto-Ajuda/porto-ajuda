@@ -23,7 +23,10 @@ import org.springframework.web.bind.annotation.*;
 import java.nio.file.AccessDeniedException;
 
 import com.portoajuda.aplicacao_osc.dto.response.ConsultaCnpjDTO;
+import com.portoajuda.aplicacao_osc.dto.response.ResponseOscDTO;
+import com.portoajuda.aplicacao_osc.dto.response.OscListagemDTO;
 import com.portoajuda.aplicacao_osc.service.ValidacaoCnpjOscService;
+import org.springframework.web.multipart.MultipartFile;
 
 @RequiredArgsConstructor
 @RestController
@@ -33,11 +36,22 @@ public class OscController {
     private final ValidacaoCnpjOscService validacaoCnpjOscService;
 
     @PreAuthorize("hasRole('USUARIO')")
-    @PostMapping(value = "/create", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Void> create(@Valid @RequestBody RequestOscDTO oscDTO,
+    @PostMapping(value = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ResponseOscDTO> create(
+            @Valid @RequestPart("dados") RequestOscDTO oscDTO,
+            @RequestPart(value = "logo", required = false) MultipartFile logo,
             @AuthenticationPrincipal Usuario usuario) {
-        oscService.create(oscDTO, usuario);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+        ResponseOscDTO criada = oscService.create(oscDTO, usuario, logo);
+        return ResponseEntity.status(HttpStatus.CREATED).body(criada);
+    }
+
+    @PreAuthorize("hasRole('USUARIO')")
+    @PostMapping(value = "/create", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ResponseOscDTO> createJson(
+            @Valid @RequestBody RequestOscDTO oscDTO,
+            @AuthenticationPrincipal Usuario usuario) {
+        ResponseOscDTO criada = oscService.create(oscDTO, usuario, null);
+        return ResponseEntity.status(HttpStatus.CREATED).body(criada);
     }
 
     @PreAuthorize("hasRole('OSC')")
@@ -49,8 +63,8 @@ public class OscController {
     }
 
     @GetMapping(value = "/list", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Page<Osc>> viewAll(Pageable pageable) {
-        Page<Osc> oscs = oscService.viewAll(pageable);
+    public ResponseEntity<Page<OscListagemDTO>> viewAll(Pageable pageable) {
+        Page<OscListagemDTO> oscs = oscService.viewAll(pageable);
         return ResponseEntity.ok(oscs);
     }
 

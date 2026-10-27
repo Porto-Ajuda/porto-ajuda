@@ -86,15 +86,18 @@ public class ValidacaoCnpjOscService {
                 .path("id")
                 .asText("");
 
+        System.out.println("Natureza jurídica retornada: "
+                + dados.path("company").path("nature"));
+
         /*
          * Esta comparação depende do formato de company.nature.id
          * retornado pela API. Os códigos devem ser confirmados
          * antes de liberar cadastros em produção.
          */
-        if (!codigoNatureza.equals("399-9")
-                && !codigoNatureza.equals("306-9")
-                && !codigoNatureza.equals("399")
-                && !codigoNatureza.equals("306")) {
+        if (!codigoNatureza.equals("3999")
+                && !codigoNatureza.equals("3069")
+                && !codigoNatureza.equals("3220")
+                && !codigoNatureza.equals("3301")) {
             return "A natureza jurídica não está entre as categorias aceitas para cadastro automático.";
         }
 

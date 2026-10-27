@@ -9,21 +9,16 @@ public record UpdateOscDTO(
         @CNPJ(message = "CNPJ inválido")
         String cnpj,
 
-        @NotBlank(message = "Pix inválido")
-        String pix,
-
-        @NotBlank(message = "Tipo inválido")
-        String tipoPix,
-
-        @NotBlank(message = "Necessário descrição")
+        @NotBlank(message = "Descrição é obrigatória")
         String descricao,
 
-        @NotBlank(message = "Obrigatório definir email")
+        @NotBlank(message = "E-mail é obrigatório")
         @Email
         String email,
 
         String telefone,
 
-        @URL(message = "Url inválida")
+        @URL(message = "URL inválida")
         String site
-) {}
+) {
+}

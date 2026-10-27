@@ -1,64 +1,122 @@
 package com.portoajuda.aplicacao_osc.dto.request;
 
 import com.portoajuda.aplicacao_osc.enums.CausaSocial;
-// import jakarta.persistence.Column;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import org.hibernate.validator.constraints.URL;
 import org.hibernate.validator.constraints.br.CNPJ;
 
+import java.time.LocalTime;
 import java.util.Set;
 
 public record RequestOscDTO(
-    @NotBlank(message = "CNPJ é obrigatório")
-    @CNPJ(message = "Formato inválido")
-    String cnpj,
+        @NotBlank(message = "CNPJ é obrigatório")
+        @CNPJ(message = "CNPJ inválido")
+        String cnpj,
 
-    Set<CausaSocial> causas,
+        @NotEmpty(message = "Selecione ao menos uma área de atuação")
+        Set<CausaSocial> causas,
 
-    @NotBlank(message = "Nome da ONG inválido")
-    String nome,
+        Set<Integer> ods,
 
-    String logo,
+        @NotBlank(message = "Nome da organização é obrigatório")
+        @Size(max = 255)
+        String nome,
 
-    @NotBlank(message = "Pix inválido")
-    String pix,
+        @NotBlank(message = "Descrição curta é obrigatória")
+        @Size(max = 200)
+        String descricaoCurta,
 
-    @NotBlank(message = "Tipo inválido")
-    String tipoPix,
+        @NotBlank(message = "Descrição completa é obrigatória")
+        @Size(max = 10000)
+        String descricao,
 
-    @NotBlank(message = "Necessário descrição")
-    String descricao,
+        @NotNull(message = "Ano de fundação é obrigatório")
+        @Min(1800)
+        @Max(2100)
+        Integer anoFundacao,
 
-    @NotBlank(message = "Obrigatório definir email")
-    @Email
-    String email,
+        @NotBlank(message = "E-mail institucional é obrigatório")
+        @Email(message = "E-mail institucional inválido")
+        String email,
 
-    String telefone,
+        @Size(max = 15)
+        String telefone,
+        @Size(max = 20)
+        String whatsapp,
 
-    @URL(message = "Url inválida")
-    String instagram,
+        @URL(message = "URL do site inválida")
+        @Size(max = 255)
+        String site,
 
-    @NotBlank(message = "Obrigatório definir bairro")
-    String bairro,
+        @URL(message = "URL do LinkedIn inválida")
+        @Size(max = 500)
+        String linkedin,
 
-    @NotBlank(message = "Obrigatório definir rua")
-    String rua,
+        @URL(message = "URL do Instagram inválida")
+        @Size(max = 500)
+        String instagram,
 
-    String numero,
+        @URL(message = "URL do YouTube inválida")
+        @Size(max = 500)
+        String youtube,
 
-    String complemento,
+        @NotBlank(message = "Selecione a área geográfica")
+        @Size(max = 30)
+        String areaGeografica,
 
-    String diasHorariosFuncionamento,
+        @NotBlank(message = "País é obrigatório")
+        @Size(max = 100)
+        String pais,
 
-    @URL(message = "Url inválida")
-    String site,
+        @NotBlank(message = "Estado é obrigatório")
+        @Size(max = 100)
+        String estado,
 
-    @NotBlank(message = "Obrigatório definir cidade")
-    String cidade,
+        @NotBlank(message = "Cidade é obrigatória")
+        @Size(max = 100)
+        String cidade,
 
-    @NotBlank(message = "Necessário definir cep")
-    @Pattern( regexp = "^\\d{5}-\\d{3}$", message = "CEP deve estar no formato 00000-000" )
-    String cep
-) {}
+        @NotBlank(message = "CEP é obrigatório")
+        @Pattern(regexp = "^\\d{5}-?\\d{3}$", message = "CEP inválido")
+        String cep,
+
+        @NotBlank(message = "Bairro é obrigatório")
+        @Size(max = 100)
+        String bairro,
+
+        @NotBlank(message = "Rua é obrigatória")
+        @Size(max = 100)
+        String rua,
+
+        @NotBlank(message = "Número é obrigatório")
+        @Size(max = 100)
+        String numero,
+
+        @Size(max = 100)
+        String complemento,
+        Set<String> diasFuncionamento,
+        LocalTime horarioAbertura,
+        LocalTime horarioFechamento,
+        @NotNull(message = "Informe se há atendimento presencial")
+        Boolean atendimentoPresencial,
+        @NotNull(message = "Informe se há atendimento online")
+        Boolean atendimentoOnline,
+        Boolean necessitaAgendamento,
+        @NotNull(message = "Informe se aceita voluntários")
+        Boolean aceitaVoluntarios,
+        String frequenciaVoluntariado,
+        @Min(0) @Max(99)
+        Integer idadeMinimaVoluntario,
+        Boolean processoSeletivoVoluntario,
+        Boolean emiteCertificadoVoluntario,
+        @Size(max = 10000)
+        String atividadesVoluntariado
+) {
+}

@@ -1,3 +1,8 @@
+import { getAPI_URL } from "./modoBack.js";
+import { fetchAutenticado } from "./api.js";
+
+const API_URL = getAPI_URL();
+
 document.addEventListener("DOMContentLoaded", () => {
 
     /* =====================================================
@@ -19,13 +24,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const alertaCadastro = document.getElementById("alerta-cadastro");
     const btnIrLogin = document.getElementById("btn-ir-login");
-
-    // página de login da OSC (mesma pasta)
-    const URL_LOGIN = "login-osc.html";
+    const statusCadastro = document.getElementById("status-cadastro-osc");
+    const linkLogin = document.getElementById("link-login-cadastro");
 
     let etapaAtual = 0;
 
-    // elementos da etapa de áreas (declarados aqui no topo para evitar problemas de ordem)
+    /* =====================================================
+       ELEMENTOS DAS ÁREAS E ODS
+    ===================================================== */
+
     const dropdownFoco = document.getElementById("dropdown-foco");
     const botaoFoco = document.getElementById("botao-foco");
     const focoSelecionado = document.getElementById("foco-selecionado");
@@ -42,15 +49,48 @@ document.addEventListener("DOMContentLoaded", () => {
     const dropdownOds = document.getElementById("dropdown-ods");
     const opcoesOds = document.getElementById("opcoes-ods");
     const odsSelecionadas = document.getElementById("ods-selecionadas");
+    const odsSugestoes = document.getElementById("ods-sugestoes");
     const odsEscolhidas = new Set();
 
+    const CAUSA_PARA_ENUM = {
+        "assistencia-social": ["INCLUSAO_SOCIAL", "COMBATE_POBREZA"],
+        "protecao-animal": ["ANIMAIS"],
+        "meio-ambiente": ["MEIO_AMBIENTE"],
+        educacao: ["EDUCACAO"],
+        saude: ["SAUDE"],
+        "direitos-humanos": ["INCLUSAO_SOCIAL"],
+        cultura: ["CULTURA"],
+        esporte: ["ESPORTE"]
+    };
+
+    const SUGESTOES_ODS_POR_AREA = {
+        "assistencia-social": [1, 10, 16],
+        "protecao-animal": [15],
+        "meio-ambiente": [6, 7, 11, 12, 13, 14, 15],
+        educacao: [4],
+        saude: [3],
+        "direitos-humanos": [5, 10, 16],
+        cultura: [4, 11],
+        esporte: [3, 4]
+    };
+
+    /* =====================================================
+       ELEMENTOS DO CNPJ E CEP
+    ===================================================== */
+
+    const cnpj = document.getElementById("cnpj");
+    const cep = document.getElementById("cep");
+    const statusConsultaCnpj = document.getElementById("status-consulta-cnpj");
+
+    let cnpjConsultadoValor = "";
+    let cnpjElegivel = false;
+    let consultaCnpjEmAndamento = null;
 
     /* =====================================================
        ETAPAS
     ===================================================== */
 
     function mostrarEtapa(numero) {
-
         etapas.forEach((etapa, index) => {
             etapa.classList.toggle("ativa", index === numero);
         });
@@ -64,34 +104,37 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function atualizarBotoes() {
-
         const primeira = etapaAtual === 0;
         const ultima = etapaAtual === etapas.length - 1;
 
-        // [hidden] é !important no CSS; os botões ficam no rodapé fixo do card
         btnVoltar.hidden = primeira;
         btnProximo.hidden = ultima;
         btnCadastrar.hidden = !ultima;
     }
 
     function atualizarProgresso() {
-
         const total = etapas.length;
 
-        if (progressoTexto) progressoTexto.textContent = `Etapa ${etapaAtual + 1} de ${total}`;
-        if (progressoBarra) progressoBarra.style.width = `${((etapaAtual + 1) / total) * 100}%`;
-    }
+        if (progressoTexto) {
+            progressoTexto.textContent = `Etapa ${etapaAtual + 1} de ${total}`;
+        }
 
+        if (progressoBarra) {
+            progressoBarra.style.width =
+                `${((etapaAtual + 1) / total) * 100}%`;
+        }
+    }
 
     /* =====================================================
        VALIDAÇÕES AUXILIARES
     ===================================================== */
 
     function cnpjValido(valor) {
-
         const n = valor.replace(/\D/g, "");
 
-        if (n.length !== 14 || /^(\d)\1+$/.test(n)) return false;
+        if (n.length !== 14 || /^(\d)\1+$/.test(n)) {
+            return false;
+        }
 
         const digito = (tamanho) => {
             let soma = 0;
@@ -99,25 +142,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
             for (let i = 0; i < tamanho; i++) {
                 soma += Number(n[i]) * peso--;
-                if (peso < 2) peso = 9;
+
+                if (peso < 2) {
+                    peso = 9;
+                }
             }
 
             const resto = soma % 11;
             return resto < 2 ? 0 : 11 - resto;
         };
 
-        return digito(12) === Number(n[12]) && digito(13) === Number(n[13]);
-    }
-
-    function requisitosSenha(senha, confirmacao) {
-        return {
-            tamanho: senha.length >= 8,
-            maiuscula: /[A-Z]/.test(senha),
-            minuscula: /[a-z]/.test(senha),
-            numero: /\d/.test(senha),
-            especial: /[^A-Za-z0-9]/.test(senha),
-            igual: senha.length > 0 && senha === confirmacao
-        };
+        return digito(12) === Number(n[12])
+            && digito(13) === Number(n[13]);
     }
 
     function limparErro() {
@@ -125,7 +161,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function mostrarErro(elemento, mensagem) {
-
         limparErro();
 
         const erro = document.createElement("p");
@@ -133,30 +168,162 @@ document.addEventListener("DOMContentLoaded", () => {
         erro.setAttribute("role", "alert");
         erro.textContent = mensagem;
 
-        // dentro de .campo, para respeitar a grade
         const alvo = elemento.closest(".campo") || elemento;
         alvo.insertAdjacentElement("beforeend", erro);
         alvo.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
 
-    function validarEtapa() {
+    /* =====================================================
+       CONSULTA DO CNPJ NA API
+    ===================================================== */
 
+    function mostrarStatusCnpj(mensagem, estado = "") {
+        if (!statusConsultaCnpj) return;
+
+        statusConsultaCnpj.textContent = mensagem;
+        statusConsultaCnpj.hidden = !mensagem;
+        statusConsultaCnpj.dataset.estado = estado;
+    }
+
+    async function consultarCnpj() {
+        if (!cnpj) return false;
+
+        const numero = cnpj.value.replace(/\D/g, "");
+
+        if (!cnpjValido(numero)) {
+            cnpjConsultadoValor = "";
+            cnpjElegivel = false;
+
+            mostrarStatusCnpj(
+                numero.length === 0
+                    ? ""
+                    : "Confira os 14 dígitos do CNPJ.",
+                "erro"
+            );
+
+            return false;
+        }
+
+        if (cnpjConsultadoValor === numero) {
+            return cnpjElegivel;
+        }
+
+        if (consultaCnpjEmAndamento?.numero === numero) {
+            return consultaCnpjEmAndamento.promise;
+        }
+
+        cnpjElegivel = false;
+        mostrarStatusCnpj("Consultando o CNPJ...", "carregando");
+
+        const promise = (async () => {
+            try {
+                const resposta = await fetch(
+                    `${API_URL}/osc/consultar-cnpj/${numero}`
+                );
+
+                if (!resposta.ok) {
+                    throw new Error(`Erro HTTP ${resposta.status}`);
+                }
+
+                const resultado = await resposta.json();
+
+                // Não aplica uma resposta antiga a um CNPJ diferente.
+                if (cnpj.value.replace(/\D/g, "") !== numero) {
+                    return false;
+                }
+
+                cnpjConsultadoValor = numero;
+                cnpjElegivel = resultado.elegivel === true;
+
+                mostrarStatusCnpj(
+                    resultado.motivo ||
+                    (cnpjElegivel
+                        ? "CNPJ aprovado na verificação inicial."
+                        : "CNPJ não aprovado na verificação inicial."),
+                    cnpjElegivel ? "sucesso" : "erro"
+                );
+
+                return cnpjElegivel;
+
+            } catch (erro) {
+                console.error("Erro ao consultar CNPJ:", erro);
+
+                if (cnpj.value.replace(/\D/g, "") === numero) {
+                    cnpjConsultadoValor = "";
+                    cnpjElegivel = false;
+
+                    mostrarStatusCnpj(
+                        "Não foi possível consultar o CNPJ. Verifique sua conexão e tente novamente.",
+                        "erro"
+                    );
+                }
+
+                return false;
+
+            } finally {
+                if (consultaCnpjEmAndamento?.numero === numero) {
+                    consultaCnpjEmAndamento = null;
+                }
+            }
+        })();
+
+        consultaCnpjEmAndamento = { numero, promise };
+
+        return promise;
+    }
+
+    if (cnpj) {
+        cnpj.addEventListener("blur", consultarCnpj);
+
+        cnpj.addEventListener("input", () => {
+            cnpjConsultadoValor = "";
+            cnpjElegivel = false;
+            mostrarStatusCnpj("");
+        });
+
+        // Máscara: 00.000.000/0000-00
+        cnpj.addEventListener("input", () => {
+            cnpj.value = cnpj.value
+                .replace(/\D/g, "")
+                .slice(0, 14)
+                .replace(/^(\d{2})(\d)/, "$1.$2")
+                .replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
+                .replace(/\.(\d{3})(\d)/, ".$1/$2")
+                .replace(/(\d{4})(\d)/, "$1-$2");
+        });
+    }
+
+    if (cep) {
+        cep.addEventListener("input", () => {
+            cep.value = cep.value
+                .replace(/\D/g, "")
+                .slice(0, 8)
+                .replace(/^(\d{5})(\d)/, "$1-$2");
+        });
+    }
+
+    /* =====================================================
+       VALIDAÇÃO DA ETAPA ATUAL
+    ===================================================== */
+
+    async function validarEtapa() {
         limparErro();
 
         const etapa = etapas[etapaAtual];
 
-        // 1) Área principal (input hidden não é validado pelo navegador)
+        if (!etapa) return false;
+
+        // 1. Área principal
         if (etapa.contains(focoInput) && !focoInput.value) {
             mostrarErro(botaoFoco, "Selecione a área principal da ONG.");
             botaoFoco.focus();
             return false;
         }
 
-        // 2) Campos nativos (required, type=email, url, min, max...)
+        // 2. Campos nativos
         const campos = etapa.querySelectorAll("input, select, textarea");
 
         for (const campo of campos) {
-
             if (campo.type === "hidden" || campo.disabled) continue;
 
             if (!campo.checkValidity()) {
@@ -166,61 +333,67 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
 
-        // 3) CNPJ
-        const cnpj = form.elements["cnpj"];
+        // 3. CNPJ
+        if (cnpj && etapa.contains(cnpj)) {
+            if (!cnpjValido(cnpj.value)) {
+                mostrarErro(cnpj, "Informe um CNPJ válido.");
+                cnpj.focus();
+                return false;
+            }
 
-        if (etapa.contains(cnpj) && !cnpjValido(cnpj.value)) {
-            mostrarErro(cnpj, "Informe um CNPJ válido.");
-            cnpj.focus();
-            return false;
+            const aprovado = await consultarCnpj();
+
+            if (!aprovado) {
+                mostrarErro(
+                    cnpj,
+                    "É necessário um CNPJ aprovado na verificação inicial para continuar."
+                );
+                cnpj.focus();
+                return false;
+            }
         }
 
-        // 4) Horários
+        // 4. Horários
         const abertura = form.elements["horario_abertura"];
         const fechamento = form.elements["horario_fechamento"];
 
         if (
+            abertura &&
+            fechamento &&
             etapa.contains(abertura) &&
-            abertura.value && fechamento.value &&
+            abertura.value &&
+            fechamento.value &&
             fechamento.value <= abertura.value
         ) {
-            mostrarErro(fechamento, "O horário de fechamento deve ser depois do de abertura.");
+            mostrarErro(
+                fechamento,
+                "O horário de fechamento deve ser depois do de abertura."
+            );
             fechamento.focus();
             return false;
         }
 
-        // 5) Senha
-        const senha = form.elements["senha"];
-        const confirmar = form.elements["confirmar_senha"];
-
-        if (etapa.contains(senha)) {
-
-            const req = requisitosSenha(senha.value, confirmar.value);
-
-            if (!req.tamanho || !req.maiuscula || !req.minuscula || !req.numero || !req.especial) {
-                mostrarErro(senha, "A senha precisa cumprir todos os requisitos abaixo.");
-                senha.focus();
-                return false;
-            }
-
-            if (!req.igual) {
-                mostrarErro(confirmar, "As senhas não coincidem.");
-                confirmar.focus();
-                return false;
-            }
+        if (
+            abertura &&
+            fechamento &&
+            etapa.contains(abertura) &&
+            Boolean(abertura.value) !== Boolean(fechamento.value)
+        ) {
+            const campoIncompleto = abertura.value ? fechamento : abertura;
+            mostrarErro(campoIncompleto, "Informe os dois horários ou deixe ambos vazios.");
+            campoIncompleto.focus();
+            return false;
         }
 
         return true;
     }
 
-
     /* =====================================================
        NAVEGAÇÃO
     ===================================================== */
 
-    btnProximo.addEventListener("click", () => {
-
-        if (!validarEtapa()) return;
+    btnProximo.addEventListener("click", async () => {
+        if (!await validarEtapa()) return;
 
         if (etapaAtual < etapas.length - 1) {
             etapaAtual++;
@@ -229,13 +402,11 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     btnVoltar.addEventListener("click", () => {
-
         if (etapaAtual > 0) {
             etapaAtual--;
             mostrarEtapa(etapaAtual);
         }
     });
-
 
     /* =====================================================
        ÁREA PRINCIPAL
@@ -247,26 +418,26 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     opcoesFoco?.querySelectorAll("button").forEach(opcao => {
-
         opcao.addEventListener("click", () => {
-
             focoInput.value = opcao.dataset.valor;
             focoSelecionado.textContent = opcao.textContent.trim();
             opcoesFoco.classList.remove("aberto");
 
-            // se a nova principal já estava como secundária, remove
             if (areasEscolhidas.has(focoInput.value)) {
                 areasSelecionadas
-                    .querySelector(`.area-selecionada[data-valor="${focoInput.value}"]`)
+                    .querySelector(
+                        `.area-selecionada[data-valor="${focoInput.value}"]`
+                    )
                     ?.remove();
+
                 areasEscolhidas.delete(focoInput.value);
             }
 
             limparErro();
             atualizarAreasSecundarias();
+            atualizarSugestoesOds();
         });
     });
-
 
     /* =====================================================
        ÁREAS SECUNDÁRIAS
@@ -278,13 +449,13 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     opcoesSecundarias?.querySelectorAll("button").forEach(opcao => {
-
         opcao.addEventListener("click", () => {
-
             const valor = opcao.dataset.valor;
             const nome = opcao.textContent.trim();
 
-            if (focoInput.value === valor || areasEscolhidas.has(valor)) return;
+            if (focoInput.value === valor || areasEscolhidas.has(valor)) {
+                return;
+            }
 
             areasEscolhidas.add(valor);
 
@@ -298,31 +469,61 @@ document.addEventListener("DOMContentLoaded", () => {
                 aoRemover: () => {
                     areasEscolhidas.delete(valor);
                     atualizarAreasSecundarias();
+                    atualizarSugestoesOds();
                 }
             });
 
             atualizarAreasSecundarias();
+            atualizarSugestoesOds();
         });
     });
 
     function atualizarAreasSecundarias() {
-
         if (!opcoesSecundarias) return;
 
         opcoesSecundarias.querySelectorAll("button").forEach(opcao => {
-
             const valor = opcao.dataset.valor;
-            const esconder = areasEscolhidas.has(valor) || valor === focoInput.value;
+            const esconder =
+                areasEscolhidas.has(valor) || valor === focoInput.value;
 
             opcao.disabled = esconder;
             opcao.style.display = esconder ? "none" : "";
         });
     }
 
-
     /* =====================================================
        ODS
     ===================================================== */
+
+    function selecionarOds(valor) {
+        const numeroOds = Number(valor);
+        if (!Number.isInteger(numeroOds) || numeroOds < 1 || numeroOds > 17) return;
+
+        const valorNormalizado = String(numeroOds);
+        if (odsEscolhidas.has(valorNormalizado)) return;
+
+        const opcao = opcoesOds?.querySelector(`button[data-valor="${valorNormalizado}"]`);
+        const numero = `ODS ${valorNormalizado}`;
+        const nome = opcao?.textContent.replace(numero, "").trim() || numero;
+        odsEscolhidas.add(valorNormalizado);
+
+        criarChip({
+            container: odsSelecionadas,
+            classe: "ods-selecionada",
+            classeBotao: "remover-ods",
+            valor: valorNormalizado,
+            rotulo: nome,
+            numero,
+            nomeInput: "ods[]",
+            aoRemover: () => {
+                odsEscolhidas.delete(valorNormalizado);
+                atualizarOds();
+                atualizarSugestoesOds();
+            }
+        });
+        atualizarOds();
+        atualizarSugestoesOds();
+    }
 
     botaoAdicionarOds?.addEventListener("click", (event) => {
         event.stopPropagation();
@@ -330,41 +531,13 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     opcoesOds?.querySelectorAll("button").forEach(opcao => {
-
-        opcao.addEventListener("click", () => {
-
-            const valor = opcao.dataset.valor;
-            const numero = `ODS ${valor}`;
-            const nome = opcao.textContent.replace(numero, "").trim();
-
-            if (odsEscolhidas.has(valor)) return;
-
-            odsEscolhidas.add(valor);
-
-            criarChip({
-                container: odsSelecionadas,
-                classe: "ods-selecionada",
-                classeBotao: "remover-ods",
-                valor,
-                rotulo: nome,
-                numero,
-                nomeInput: "ods[]",
-                aoRemover: () => {
-                    odsEscolhidas.delete(valor);
-                    atualizarOds();
-                }
-            });
-
-            atualizarOds();
-        });
+        opcao.addEventListener("click", () => selecionarOds(opcao.dataset.valor));
     });
 
     function atualizarOds() {
-
         if (!opcoesOds) return;
 
         opcoesOds.querySelectorAll("button").forEach(opcao => {
-
             const selecionada = odsEscolhidas.has(opcao.dataset.valor);
 
             opcao.disabled = selecionada;
@@ -372,9 +545,50 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    function atualizarSugestoesOds() {
+        if (!odsSugestoes) return;
 
-    function criarChip({ container, classe, classeBotao, valor, rotulo, numero, nomeInput, aoRemover }) {
+        const areas = [focoInput?.value, ...areasEscolhidas].filter(Boolean);
+        const sugestoes = new Set(
+            areas.flatMap(area => SUGESTOES_ODS_POR_AREA[area] || [])
+        );
+        odsSugestoes.replaceChildren();
 
+        const pendentes = [...sugestoes].filter(
+            numero => !odsEscolhidas.has(String(numero))
+        );
+
+        if (pendentes.length === 0) {
+            odsSugestoes.textContent = areas.length
+                ? "As sugestões já estão selecionadas. Você ainda pode incluir outras ODS no menu."
+                : "Selecione uma área para ver sugestões.";
+            return;
+        }
+
+        pendentes.forEach(numero => {
+            const botao = document.createElement("button");
+            botao.type = "button";
+            botao.className = "ods-sugestao";
+            botao.textContent = `Adicionar ODS ${numero}`;
+            botao.addEventListener("click", () => selecionarOds(numero));
+            odsSugestoes.appendChild(botao);
+        });
+    }
+
+    /* =====================================================
+       CRIAÇÃO DOS CHIPS
+    ===================================================== */
+
+    function criarChip({
+        container,
+        classe,
+        classeBotao,
+        valor,
+        rotulo,
+        numero,
+        nomeInput,
+        aoRemover
+    }) {
         if (!container) return;
 
         const item = document.createElement("div");
@@ -387,6 +601,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const num = document.createElement("span");
             num.className = "ods-numero";
             num.textContent = numero;
+
             texto.appendChild(num);
             texto.appendChild(document.createTextNode(" "));
         }
@@ -416,15 +631,17 @@ document.addEventListener("DOMContentLoaded", () => {
         reposicionarAbertas();
     }
 
+    /* =====================================================
+       POSICIONAMENTO DOS DROPDOWNS
+    ===================================================== */
 
     const listas = [
-        { lista: opcoesFoco,        gatilho: botaoFoco },
+        { lista: opcoesFoco, gatilho: botaoFoco },
         { lista: opcoesSecundarias, gatilho: botaoAdicionarArea },
-        { lista: opcoesOds,         gatilho: botaoAdicionarOds }
+        { lista: opcoesOds, gatilho: botaoAdicionarOds }
     ].filter(item => item.lista && item.gatilho);
 
     function posicionarLista({ lista, gatilho }) {
-
         const r = gatilho.getBoundingClientRect();
 
         const folga = 8;
@@ -433,8 +650,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const espacoAbaixo = window.innerHeight - r.bottom - folga;
         const espacoAcima = r.top - folga;
 
-        // abre para cima só se embaixo estiver apertado e houver mais espaço em cima
-        const paraCima = espacoAbaixo < 160 && espacoAcima > espacoAbaixo;
+        const paraCima =
+            espacoAbaixo < 160 && espacoAcima > espacoAbaixo;
 
         const espaco = Math.max(
             120,
@@ -461,7 +678,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function alternarLista(lista) {
-
         const item = listas.find(i => i.lista === lista);
         const abrir = !lista.classList.contains("aberto");
 
@@ -480,7 +696,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     document.addEventListener("click", (event) => {
-
         if (!dropdownFoco?.contains(event.target)) {
             opcoesFoco?.classList.remove("aberto");
         }
@@ -504,166 +719,201 @@ document.addEventListener("DOMContentLoaded", () => {
         if (event.key === "Escape") fecharTodosDropdowns();
     });
 
-    // ao rolar a etapa, a lista se desprenderia do botão: fecha
     etapas.forEach(etapa => {
-        etapa.addEventListener("scroll", fecharTodosDropdowns, { passive: true });
+        etapa.addEventListener("scroll", fecharTodosDropdowns, {
+            passive: true
+        });
     });
 
     window.addEventListener("resize", reposicionarAbertas);
 
+    /* =====================================================
+       VOLUNTARIADO
+    ===================================================== */
+
     const camposVoluntariado = form.querySelectorAll("[data-voluntariado]");
 
     function atualizarVoluntariado() {
-
-        const aceita = form.querySelector('input[name="aceita_voluntarios"]:checked')?.value === "sim";
+        const aceita = form.querySelector(
+            'input[name="aceita_voluntarios"]:checked'
+        )?.value === "sim";
 
         camposVoluntariado.forEach(campo => {
-
             campo.hidden = !aceita;
 
             campo.querySelectorAll("input, select, textarea").forEach(el => {
                 el.disabled = !aceita;
 
                 if (!aceita) {
-                    if (el.type === "radio" || el.type === "checkbox") el.checked = false;
-                    else el.value = "";
+                    if (el.type === "radio" || el.type === "checkbox") {
+                        el.checked = false;
+                    } else {
+                        el.value = "";
+                    }
                 }
             });
         });
     }
 
     form.querySelectorAll('input[name="aceita_voluntarios"]')
-        .forEach(radio => radio.addEventListener("change", atualizarVoluntariado));
-
-
-
-    const doacoesSim = document.getElementById("doacoes-sim");
-    const doacoesNao = document.getElementById("doacoes-nao");
-    const tipoPix = document.getElementById("tipo-chave-pix");
-    const chavePix = document.getElementById("chave-pix");
-    const linkDoacao = document.getElementById("link-doacao");
-
-    function atualizarCamposDoacao() {
-
-        const aceita = !!doacoesSim?.checked;
-
-        [tipoPix, chavePix, linkDoacao].forEach(campo => {
-
-            if (!campo) return;
-
-            campo.disabled = !aceita;
-
-            if (!aceita) campo.value = "";
+        .forEach(radio => {
+            radio.addEventListener("change", atualizarVoluntariado);
         });
-    }
 
-    doacoesSim?.addEventListener("change", atualizarCamposDoacao);
-    doacoesNao?.addEventListener("change", atualizarCamposDoacao);
-
-    const materiaisAceitos = document.getElementById("materiais-aceitos");
-
-    function atualizarMateriais() {
-
-        const aceita = form.querySelector(
-            'input[name="aceita_doacoes_materiais"]:checked'
-        )?.value === "sim";
-
-        if (materiaisAceitos) {
-            materiaisAceitos.disabled = !aceita;
-            if (!aceita) materiaisAceitos.value = "";
-        }
-    }
-
-    form.querySelectorAll('input[name="aceita_doacoes_materiais"]')
-        .forEach(radio => radio.addEventListener("change", atualizarMateriais));
-
-
-    const senha = document.getElementById("senha-osc");
-    const confirmarSenha = document.getElementById("confirmar-senha-osc");
-    const listaRequisitos = document.getElementById("requisitos");
-
-    form.querySelectorAll(".btn-olho").forEach(botao => {
-
-        botao.addEventListener("click", () => {
-
-            const campo = document.getElementById(botao.dataset.alvo);
-            const icone = botao.querySelector("i");
-            const mostrar = campo.type === "password";
-
-            campo.type = mostrar ? "text" : "password";
-            icone.className = mostrar ? "fa-solid fa-eye-slash" : "fa-solid fa-eye";
-            botao.setAttribute("aria-label", mostrar ? "Ocultar senha" : "Mostrar senha");
-        });
-    });
-
-    function atualizarRequisitos() {
-
-        if (!senha || !listaRequisitos) return;
-
-        const req = requisitosSenha(senha.value, confirmarSenha.value);
-
-        listaRequisitos.querySelectorAll("li").forEach(item => {
-            item.classList.toggle("ok", !!req[item.dataset.req]);
-        });
-    }
-
-    senha?.addEventListener("input", atualizarRequisitos);
-    confirmarSenha?.addEventListener("input", atualizarRequisitos);
-
-
-    const cnpj = document.getElementById("cnpj");
-    const cep = document.getElementById("cep");
-
-    cnpj?.addEventListener("input", () => {
-        cnpj.value = cnpj.value
-            .replace(/\D/g, "")
-            .slice(0, 14)
-            .replace(/^(\d{2})(\d)/, "$1.$2")
-            .replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
-            .replace(/\.(\d{3})(\d)/, ".$1/$2")
-            .replace(/(\d{4})(\d)/, "$1-$2");
-    });
-
-    cep?.addEventListener("input", () => {
-        cep.value = cep.value
-            .replace(/\D/g, "")
-            .slice(0, 8)
-            .replace(/^(\d{5})(\d)/, "$1-$2");
-    });
-
+    /* =====================================================
+       DOAÇÕES FINANCEIRAS
+    ===================================================== */
 
     /* =====================================================
        ENVIO DO FORMULÁRIO
     ===================================================== */
 
-    form.addEventListener("submit", (event) => {
+    function valorTexto(nome) {
+        const valor = form.elements[nome]?.value?.trim();
+        return valor || null;
+    }
 
+    function valorSimNao(nome) {
+        const valor = form.querySelector(`input[name="${nome}"]:checked`)?.value;
+        if (valor === "sim") return true;
+        if (valor === "nao") return false;
+        return null;
+    }
+
+    function mostrarStatusCadastro(mensagem, tipo = "erro") {
+        if (!statusCadastro) return;
+        statusCadastro.textContent = mensagem;
+        statusCadastro.dataset.tipo = tipo;
+        statusCadastro.hidden = !mensagem;
+        if (mensagem) statusCadastro.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+
+    async function mensagemErroResposta(resposta) {
+        try {
+            const corpo = await resposta.clone().json();
+            return corpo.detail || corpo.mensagem || corpo.message
+                || "Não foi possível salvar o cadastro da OSC.";
+        } catch {
+            return "Não foi possível salvar o cadastro da OSC. Tente novamente.";
+        }
+    }
+
+    function montarCausas() {
+        const areas = [focoInput?.value, ...areasEscolhidas].filter(Boolean);
+        return [...new Set(areas.flatMap(area => CAUSA_PARA_ENUM[area] || []))];
+    }
+
+    form.addEventListener("submit", async (event) => {
         event.preventDefault();
 
-  
-        if (etapaAtual < etapas.length - 1) {
-            btnProximo.click();
+        if (etapaAtual < etapas.length - 1 || btnCadastrar.disabled) return;
+        mostrarStatusCadastro("");
+        if (linkLogin) linkLogin.hidden = true;
+        if (!await validarEtapa()) return;
+
+        const arquivoLogo = form.elements["logo"]?.files?.[0] || null;
+        if (arquivoLogo && arquivoLogo.size > 10 * 1024 * 1024) {
+            mostrarStatusCadastro("A imagem da logo não pode ultrapassar 10 MB.");
+            form.elements["logo"].focus();
             return;
         }
 
-        if (!validarEtapa()) return;
+        const diasFuncionamento = [...form.querySelectorAll('input[name="dias_funcionamento[]"]:checked')]
+            .map(campo => campo.value);
+        const payload = {
+            cnpj: cnpj.value.replace(/\D/g, ""),
+            causas: montarCausas(),
+            ods: [...odsEscolhidas].map(Number),
+            nome: valorTexto("nome_ong"),
+            descricaoCurta: valorTexto("descricao_curta"),
+            descricao: valorTexto("descricao_completa"),
+            anoFundacao: Number.parseInt(valorTexto("ano_fundacao"), 10),
+            email: valorTexto("email_institucional"),
+            telefone: valorTexto("telefone"),
+            whatsapp: valorTexto("whatsapp"),
+            site: valorTexto("site"),
+            linkedin: valorTexto("linkedin"),
+            instagram: valorTexto("instagram"),
+            youtube: valorTexto("youtube"),
+            areaGeografica: valorTexto("area_geografica"),
+            pais: valorTexto("pais"),
+            estado: valorTexto("estado"),
+            cidade: valorTexto("cidade"),
+            cep: valorTexto("cep"),
+            bairro: valorTexto("bairro"),
+            rua: valorTexto("rua"),
+            numero: valorTexto("numero"),
+            complemento: valorTexto("complemento"),
+            diasFuncionamento,
+            horarioAbertura: valorTexto("horario_abertura"),
+            horarioFechamento: valorTexto("horario_fechamento"),
+            atendimentoPresencial: !!form.elements["atendimento_presencial"]?.checked,
+            atendimentoOnline: !!form.elements["atendimento_online"]?.checked,
+            necessitaAgendamento: valorSimNao("necessita_agendamento"),
+            aceitaVoluntarios: valorSimNao("aceita_voluntarios"),
+            frequenciaVoluntariado: valorTexto("frequencia_voluntariado"),
+            idadeMinimaVoluntario: valorTexto("idade_minima_voluntario")
+                ? Number.parseInt(valorTexto("idade_minima_voluntario"), 10)
+                : null,
+            processoSeletivoVoluntario: valorSimNao("processo_seletivo_voluntario"),
+            emiteCertificadoVoluntario: valorSimNao("emite_certificado_voluntario"),
+            atividadesVoluntariado: valorTexto("atividades_voluntariado")
+        };
 
-        const dados = new FormData(form);
+        const multipart = new FormData();
+        multipart.append(
+            "dados",
+            new Blob([JSON.stringify(payload)], { type: "application/json" })
+        );
+        if (arquivoLogo) multipart.append("logo", arquivoLogo);
 
-        dados.delete("senha");
-        dados.delete("confirmar_senha");
-        console.log("Cadastro da OSC:", Object.fromEntries(dados));
+        btnCadastrar.disabled = true;
+        btnCadastrar.setAttribute("aria-busy", "true");
+        const textoOriginal = btnCadastrar.textContent;
+        btnCadastrar.textContent = "Enviando...";
 
-        if (alertaCadastro) {
-            alertaCadastro.hidden = false;
-            btnIrLogin?.focus();
+        try {
+            const resposta = await fetchAutenticado("/osc/create", {
+                method: "POST",
+                body: multipart
+            });
+
+            if (!resposta.ok) {
+                const detalhe = await mensagemErroResposta(resposta);
+                if (resposta.status === 401 || resposta.status === 403) {
+                    mostrarStatusCadastro(
+                        resposta.status === 401
+                            ? "Entre em uma conta ativa e confirmada para cadastrar a OSC. Seus dados foram mantidos."
+                            : "Sua conta não tem permissão para cadastrar uma OSC. Seus dados foram mantidos."
+                    );
+                    if (linkLogin) linkLogin.hidden = false;
+                } else {
+                    mostrarStatusCadastro(detalhe);
+                }
+                return;
+            }
+
+            if (alertaCadastro) {
+                alertaCadastro.hidden = false;
+                btnIrLogin?.focus();
+            }
+        } catch (erro) {
+            console.error("Falha ao enviar cadastro da OSC:", erro);
+            mostrarStatusCadastro(
+                erro instanceof Error
+                    ? `${erro.message} Seus dados foram mantidos; tente novamente.`
+                    : "Não foi possível conectar ao serviço. Seus dados foram mantidos; tente novamente."
+            );
+        } finally {
+            btnCadastrar.disabled = false;
+            btnCadastrar.removeAttribute("aria-busy");
+            btnCadastrar.textContent = textoOriginal;
         }
     });
 
     btnIrLogin?.addEventListener("click", () => {
-        window.location.href = URL_LOGIN;
+        window.location.href = "/";
     });
-
 
     /* =====================================================
        INICIALIZAÇÃO
@@ -672,9 +922,7 @@ document.addEventListener("DOMContentLoaded", () => {
     mostrarEtapa(0);
     atualizarAreasSecundarias();
     atualizarOds();
+    atualizarSugestoesOds();
     atualizarVoluntariado();
-    atualizarCamposDoacao();
-    atualizarMateriais();
-    atualizarRequisitos();
 
 });

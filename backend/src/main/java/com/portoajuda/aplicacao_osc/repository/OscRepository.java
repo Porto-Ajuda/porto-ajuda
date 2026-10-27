@@ -15,6 +15,7 @@ import java.util.Optional;
 
 public interface OscRepository extends JpaRepository<Osc, Integer> {
     Optional<Osc> findByCnpj(Cnpj cnpj);
+
     Optional<Osc> findByUsuarioId(Integer UsuarioId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
@@ -23,11 +24,11 @@ public interface OscRepository extends JpaRepository<Osc, Integer> {
     boolean existsByIdAndUsuarioId(Integer id, Integer usuarioId);
 
     @Query("""
-          SELECT COUNT(m) > 0
-          FROM OscMembros m
-          WHERE m.usuario.id = :usuarioId
-          AND m.osc.id = :oscId
-    """)
+                SELECT COUNT(m) > 0
+                FROM OscMembros m
+                WHERE m.usuario.id = :usuarioId
+                AND m.osc.id = :oscId
+            """)
     boolean userBelongsOsc(@Param("oscId") Integer oscId, @Param("usuarioId") Integer usuarioId);
 
     boolean existsByCnpj(Cnpj cnpj);
