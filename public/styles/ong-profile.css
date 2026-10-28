@@ -2547,3 +2547,193 @@ body {
         height: 36px;
     }
 }
+/* Perfil público da OSC: sistema editorial Porto Ajuda. */
+.perfil-publico {
+  --perfil-noite: #161928;
+  --perfil-roxo-profundo: #2e1c50;
+  --perfil-roxo: #3e2871;
+  --perfil-roxo-ui: #453b80;
+  --perfil-azul: #4a5492;
+  --perfil-azul-claro: #5b68ac;
+  --perfil-dourado: #f2aa1a;
+  --perfil-dourado-2: #ddaa41;
+  --perfil-dourado-claro: #f9c86b;
+  --perfil-dourado-suave: #fce0a1;
+  --perfil-texto: #f7f5fa;
+  --perfil-texto-suave: #d8d5e2;
+  --perfil-linha: rgba(249, 200, 107, .22);
+  width: min(1200px, calc(100% - 48px));
+  min-height: 60vh;
+  margin: 36px auto 88px;
+  color: var(--perfil-texto);
+  font-family: 'Poppins', sans-serif;
+}
+.perfil-publico [hidden] { display: none !important; }
+.perfil-publico .estado-perfil {
+  width: min(760px, 100%); margin: 12vh auto; padding: 32px;
+  border: 1px solid var(--perfil-linha); border-radius: 12px;
+  background: var(--perfil-roxo-profundo); color: var(--perfil-texto);
+  text-align: center; line-height: 1.75;
+}
+.perfil-publico .estado-perfil h1,
+.perfil-publico .bloco-perfil h2,
+.perfil-publico #nome-ong { font-family: 'Cormorant Garamond', serif; }
+.perfil-publico .estado-perfil h1 { color: var(--perfil-dourado-claro); }
+.perfil-publico .estado-perfil p { color: var(--perfil-texto-suave); }
+
+/* O cabeçalho é uma única superfície institucional, com a marca em primeiro plano. */
+.perfil-publico .hero-container {
+  display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(360px, .92fr);
+  align-items: center; gap: clamp(36px, 6vw, 88px);
+  min-height: 0; padding: clamp(42px, 6vw, 76px);
+  overflow: hidden; border: 1px solid rgba(249, 200, 107, .2); border-radius: 16px;
+  background: linear-gradient(115deg, #161928 4%, #2e1c50 100%); color: var(--perfil-texto);
+}
+.perfil-publico .infos-ong { width: auto; min-width: 0; }
+.perfil-publico .sobre-label {
+  margin: 0 0 18px; color: var(--perfil-dourado-claro);
+  font-size: .78rem; font-weight: 500; letter-spacing: .09em; line-height: 1.6;
+}
+.perfil-publico #nome-ong {
+  max-width: 15ch; margin: 0; color: #fff;
+  font-size: clamp(3.25rem, 6.3vw, 6rem); font-weight: 600; line-height: .96;
+  overflow-wrap: anywhere;
+}
+.perfil-publico .descricao-curta {
+  max-width: 54ch; margin: 22px 0 0; color: #e6e2ed;
+  font-size: 1rem; line-height: 1.8;
+}
+.perfil-publico .causas-secundarias,
+.perfil-publico .metadado-osc,
+.perfil-publico .feedback-perfil {
+  margin: 12px 0 0; color: var(--perfil-texto-suave); font-size: .84rem; line-height: 1.7;
+}
+.perfil-publico .identidade-osc {
+  width: 100%; min-height: 340px; display: grid; place-items: center; align-content: center;
+  gap: 16px; margin: 0; padding: 8px; border: 0; border-radius: 0;
+  background: transparent; text-align: center;
+}
+.perfil-publico #logo-ong {
+  display: block; width: min(100%, 440px); height: clamp(280px, 31vw, 420px);
+  object-fit: contain; object-position: center;
+}
+.perfil-publico .logo-fallback {
+  display: grid; place-items: center; width: min(70%, 270px); aspect-ratio: 1;
+  border: 1px solid rgba(249, 200, 107, .48); border-radius: 50%;
+  background: rgba(69, 59, 128, .28); color: var(--perfil-dourado-claro);
+  font: 600 4rem 'Cormorant Garamond', serif;
+}
+.perfil-publico .identidade-osc figcaption { color: var(--perfil-texto-suave); font-size: .8rem; }
+.perfil-publico .acoes-hero { display: flex; flex-wrap: wrap; gap: 10px; margin: 28px 0 0; }
+.perfil-publico .acoes-hero :is(a, button) {
+  min-height: 46px; display: inline-flex; align-items: center; justify-content: center;
+  padding: 10px 16px; border: 1px solid var(--perfil-dourado-2); border-radius: 7px;
+  background: transparent; color: #fff; font: 500 .84rem 'Poppins', sans-serif;
+  text-decoration: none; text-align: center; cursor: pointer;
+}
+.perfil-publico .acoes-hero .btn-destaque { border-color: var(--perfil-dourado); background: var(--perfil-dourado); color: var(--perfil-noite); }
+.perfil-publico .acoes-hero :is(a, button):hover { border-color: var(--perfil-dourado-claro); background: rgba(249, 200, 107, .12); }
+.perfil-publico .acoes-hero .btn-destaque:hover { background: var(--perfil-dourado-claro); color: var(--perfil-noite); }
+.perfil-publico :is(a, button):focus-visible { outline: 3px solid var(--perfil-dourado-claro); outline-offset: 4px; }
+
+/* O corpo mantém um fundo escuro contínuo; divisores e texto criam hierarquia sem cartões. */
+.perfil-publico .divider { height: 1px; margin: 0; }
+.perfil-publico .divider::before { background: linear-gradient(90deg, transparent, var(--perfil-linha), transparent); }
+.perfil-publico .conteudo-perfil {
+  width: 100%; display: block; margin: 0; padding: 0 clamp(24px, 6vw, 76px);
+  border: 0; border-radius: 0; background: transparent;
+}
+.perfil-publico .bloco-perfil {
+  min-width: 0; margin: 0; padding: 34px 0; border: 0; border-bottom: 1px solid var(--perfil-linha);
+  border-radius: 0; background: transparent;
+}
+.perfil-publico .bloco-perfil h2 {
+  margin: 0 0 14px; color: var(--perfil-dourado-claro);
+  font-size: clamp(1.8rem, 3.1vw, 2.5rem); font-weight: 600; line-height: 1.08;
+}
+.perfil-publico .bloco-perfil p,
+.perfil-publico .lista-perfil {
+  max-width: 70ch; margin-top: 0; color: var(--perfil-texto-suave);
+  font: 400 .94rem/1.85 'Poppins', sans-serif; overflow-wrap: anywhere;
+}
+.perfil-publico #apresentacao { padding-top: 42px; }
+.perfil-publico #sobre-texto { max-width: 72ch; white-space: pre-line; }
+.perfil-publico .grupo-localizacao {
+  display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr);
+  column-gap: clamp(32px, 7vw, 96px); border-bottom: 1px solid var(--perfil-linha);
+}
+.perfil-publico .grupo-localizacao .bloco-perfil { border-bottom: 0; }
+.perfil-publico #localizacao { align-self: start; }
+.perfil-publico #endereco-institucional { display: none; }
+.perfil-publico #contato { align-self: start; }
+.perfil-publico .lista-perfil { display: grid; gap: 8px; margin-bottom: 0; padding: 0; list-style: none; }
+.perfil-publico .lista-perfil li { padding: 0 0 8px; border-bottom: 1px solid rgba(249, 200, 107, .12); }
+.perfil-publico .lista-perfil li:last-child { border-bottom: 0; }
+.perfil-publico .lista-perfil a { color: var(--perfil-dourado-suave); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+.perfil-publico .lista-perfil a:hover { color: var(--perfil-dourado-claro); }
+.perfil-publico .texto-ausente { color: #c9c5d4 !important; font-size: .86rem !important; font-style: normal; }
+.perfil-publico #voluntariado-status { color: #fff; }
+.perfil-publico .ods-container { padding-bottom: 46px; border-bottom: 0; }
+.perfil-publico .ods-container h2 { margin-bottom: 20px; }
+.perfil-publico .ods { display: flex; flex-wrap: wrap; gap: 12px; }
+.perfil-publico .ods-item {
+  width: clamp(72px, 8vw, 104px); height: auto; aspect-ratio: 1; padding: 0;
+  border: 0; border-radius: 4px; background: transparent; cursor: pointer;
+}
+.perfil-publico .ods-item img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.perfil-publico .ods-item:hover { transform: translateY(-2px); box-shadow: none; }
+.perfil-publico .ods-item:focus-visible { outline: 3px solid var(--perfil-dourado-claro); outline-offset: 4px; }
+
+/* Os modos globais seguem ativos sem reintroduzir fundos brancos nesta página. */
+body.modo-claro .perfil-publico { color: var(--perfil-texto); }
+body.modo-claro .perfil-publico .hero-container { background: linear-gradient(115deg, #161928 4%, #2e1c50 100%); }
+body.modo-claro .perfil-publico .conteudo-perfil,
+body.modo-claro .perfil-publico .bloco-perfil { background: transparent; }
+body.alto-contraste .perfil-publico .hero-container,
+body.alto-contraste .perfil-publico .conteudo-perfil,
+body.alto-contraste .perfil-publico .bloco-perfil { background: #000 !important; }
+body.alto-contraste .perfil-publico .grupo-localizacao,
+body.alto-contraste .perfil-publico .bloco-perfil { border-color: #fff; }
+body.alto-contraste .perfil-publico :is(.bloco-perfil p, .lista-perfil, .texto-ausente, .identidade-osc figcaption) { color: #fff !important; }
+
+@media (max-width: 850px) {
+  .perfil-publico { width: min(100% - 36px, 720px); margin-top: 24px; }
+  .perfil-publico .hero-container { grid-template-columns: minmax(0, 1fr) minmax(260px, .8fr); gap: 24px; padding: 36px; }
+  .perfil-publico .identidade-osc { min-height: 260px; }
+  .perfil-publico #logo-ong { height: clamp(220px, 34vw, 300px); }
+  .perfil-publico #nome-ong { font-size: clamp(3rem, 7vw, 4.5rem); }
+  .perfil-publico .conteudo-perfil { padding-inline: 30px; }
+}
+@media (max-width: 620px) {
+  .perfil-publico { width: calc(100% - 28px); margin: 16px auto 56px; }
+  .perfil-publico .hero-container { grid-template-columns: 1fr; gap: 18px; padding: 30px 22px 24px; }
+  .perfil-publico .infos-ong { display: contents; }
+  .perfil-publico .sobre-label { grid-row: 1; margin-bottom: 0; }
+  .perfil-publico #nome-ong { grid-row: 2; max-width: 14ch; font-size: clamp(2.9rem, 12vw, 4.1rem); }
+  .perfil-publico .descricao-curta { grid-row: 3; margin-top: 0; }
+  .perfil-publico .causas-secundarias { grid-row: 5; }
+  .perfil-publico .metadado-osc { grid-row: 6; }
+  .perfil-publico .identidade-osc { grid-row: 4; min-height: 0; padding: 0; }
+  .perfil-publico #logo-ong { width: 100%; height: clamp(220px, 72vw, 330px); }
+  .perfil-publico .logo-fallback { width: min(60%, 200px); font-size: 3rem; }
+  .perfil-publico .causas-secundarias, .perfil-publico .metadado-osc { margin-top: 0; }
+  .perfil-publico .acoes-hero { grid-row: 7; display: grid; grid-template-columns: 1fr; margin-top: 4px; }
+  .perfil-publico .acoes-hero :is(a, button) { width: 100%; min-height: 48px; }
+  .perfil-publico #mensagem-compartilhar { grid-row: 8; }
+  .perfil-publico .conteudo-perfil { padding-inline: 18px; }
+  .perfil-publico .bloco-perfil { padding: 27px 0; }
+  .perfil-publico #apresentacao { padding-top: 32px; }
+  .perfil-publico .grupo-localizacao { grid-template-columns: 1fr; column-gap: 0; }
+  .perfil-publico .grupo-localizacao .bloco-perfil { padding: 27px 0; }
+}
+@media (max-width: 360px) {
+  .perfil-publico { width: calc(100% - 20px); }
+  .perfil-publico .hero-container { padding: 24px 18px 20px; }
+  .perfil-publico .conteudo-perfil { padding-inline: 14px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .perfil-publico *, .perfil-publico *::before, .perfil-publico *::after {
+    scroll-behavior: auto !important; transition-duration: .01ms !important;
+    animation-duration: .01ms !important; animation-iteration-count: 1 !important;
+  }
+}
