@@ -2046,6 +2046,7 @@ body {
     object-fit: cover;
     display: block;
 }
+
 .acss-tema--claro .acss-tema__icone {
     background: linear-gradient(145deg, #FFF6D6, var(--gold-light));
     color: var(--gold-dark);
