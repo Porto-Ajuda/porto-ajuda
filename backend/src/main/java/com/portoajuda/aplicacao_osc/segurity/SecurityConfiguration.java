@@ -72,12 +72,16 @@ public class SecurityConfiguration {
                                                                 "/proximidade",
                                                                 "/apoio",
                                                                 "/ong-profile",
-                                                                "/cadastro-ong",
+                                                                "/cadastro-osc",
                                                                 "/pages/**",
                                                                 "/assets/**",
                                                                 "/styles/**",
                                                                 "/components/**",
                                                                 "/doom/**")
+                                                .permitAll()
+
+                                                // A página é pública; os dados pessoais seguem protegidos em /usuario/perfil.
+                                                .requestMatchers(HttpMethod.GET, "/perfil")
                                                 .permitAll()
 
                                                 // Rotas públicas de autenticação
@@ -126,7 +130,8 @@ public class SecurityConfiguration {
 
                                                 .requestMatchers(
                                                                 HttpMethod.GET,
-                                                                "/osc/consultar-cnpj/**")
+                                                                "/osc/consultar-cnpj/**",
+                                                                "/osc/{id}")
                                                 .permitAll()
 
                                                 // Demais rotas exigem autenticação

@@ -64,6 +64,8 @@ class OscPersistenciaServiceTest {
         verify(oscRepository).save(captor.capture());
         Osc salva = captor.getValue();
 
+        assertEquals(CausaSocial.EDUCACAO, salva.getCausaPrincipal());
+        assertEquals(Set.of(CausaSocial.SAUDE), salva.getCausasSecundarias());
         assertEquals(Set.of(CausaSocial.EDUCACAO, CausaSocial.SAUDE), salva.getCausas());
         assertEquals(Set.of(3, 4, 17), salva.getOds());
         assertSame(usuario, salva.getUsuario());
@@ -72,6 +74,8 @@ class OscPersistenciaServiceTest {
         assertEquals("Apoio à educação", salva.getDescricaoCurta());
         assertTrue(usuario.getRoles().contains(role));
         assertEquals("Instituto Exemplo", resposta.nome());
+        assertEquals(CausaSocial.EDUCACAO, resposta.causaPrincipal());
+        assertEquals(Set.of(CausaSocial.SAUDE), resposta.causasSecundarias());
         assertEquals(Set.of(3, 4, 17), resposta.ods());
     }
 
@@ -84,6 +88,79 @@ class OscPersistenciaServiceTest {
 
         assertEquals(422, erro.getStatusCode().value());
         verify(oscRepository, never()).save(any());
+    }
+
+    @Test
+    void rejeitaCausaPrincipalRepetidaNasSecundariasAntesDeSalvar() {
+        RequestOscDTO pedido = dados(
+                Set.of(), CausaSocial.EDUCACAO, Set.of(CausaSocial.EDUCACAO), null);
+
+        ResponseStatusException erro = assertThrows(
+                ResponseStatusException.class,
+                () -> service.salvar(pedido, 7, new Coordenadas(-23.5, -46.6), null));
+
+        assertEquals(422, erro.getStatusCode().value());
+        verify(oscRepository, never()).save(any());
+    }
+
+    @Test
+    void aceitaContratoAntigoSemInferirCausaPrincipal() {
+        RequestOscDTO pedido = dados(
+                Set.of(), null, Set.of(), Set.of(CausaSocial.EDUCACAO, CausaSocial.SAUDE));
+        when(oscRepository.existsByCnpj(any())).thenReturn(false);
+        when(usuarioRepository.findById(7)).thenReturn(Optional.of(usuario));
+        when(roleRepository.findByNome("OSC")).thenReturn(Optional.of(role));
+        when(oscRepository.save(any(Osc.class))).thenAnswer(invocacao -> invocacao.getArgument(0));
+
+        service.salvar(pedido, 7, new Coordenadas(-23.5, -46.6), null);
+
+        ArgumentCaptor<Osc> captor = ArgumentCaptor.forClass(Osc.class);
+        verify(oscRepository).save(captor.capture());
+        assertNull(captor.getValue().getCausaPrincipal());
+        assertEquals(Set.of(CausaSocial.EDUCACAO, CausaSocial.SAUDE),
+                captor.getValue().getCausasSecundarias());
+    }
+
+    @Test
+    void rejeitaCadastroSemCausaPrincipalNemSecundariaPelasRegrasAtuais() {
+        RequestOscDTO pedido = dados(Set.of(), null, Set.of(), null);
+
+        ResponseStatusException erro = assertThrows(
+                ResponseStatusException.class,
+                () -> service.salvar(pedido, 7, new Coordenadas(-23.5, -46.6), null));
+
+        assertEquals(422, erro.getStatusCode().value());
+        verify(oscRepository, never()).save(any());
+    }
+
+    @Test
+    void salvaCadastroSemOdsQuandoListaEstaAusenteOuVazia() {
+        when(oscRepository.existsByCnpj(any())).thenReturn(false);
+        when(usuarioRepository.findById(7)).thenReturn(Optional.of(usuario));
+        when(roleRepository.findByNome("OSC")).thenReturn(Optional.of(role));
+        when(oscRepository.save(any(Osc.class))).thenAnswer(invocacao -> invocacao.getArgument(0));
+
+        ResponseOscDTO resposta = service.salvar(
+                dados(null), 7, new Coordenadas(-23.5, -46.6), null);
+
+        ArgumentCaptor<Osc> captor = ArgumentCaptor.forClass(Osc.class);
+        verify(oscRepository).save(captor.capture());
+        assertTrue(captor.getValue().getOds().isEmpty());
+        assertEquals(CausaSocial.EDUCACAO, captor.getValue().getCausaPrincipal());
+        assertEquals(Set.of(CausaSocial.SAUDE), captor.getValue().getCausasSecundarias());
+        assertTrue(resposta.ods().isEmpty());
+
+        reset(oscRepository, usuarioRepository, roleRepository);
+        usuario.getRoles().clear();
+        when(oscRepository.existsByCnpj(any())).thenReturn(false);
+        when(usuarioRepository.findById(7)).thenReturn(Optional.of(usuario));
+        when(roleRepository.findByNome("OSC")).thenReturn(Optional.of(role));
+        when(oscRepository.save(any(Osc.class))).thenAnswer(invocacao -> invocacao.getArgument(0));
+
+        ResponseOscDTO respostaVazia = service.salvar(
+                dados(Set.of()), 7, new Coordenadas(-23.5, -46.6), null);
+
+        assertTrue(respostaVazia.ods().isEmpty());
     }
 
     @Test
@@ -113,9 +190,19 @@ class OscPersistenciaServiceTest {
     }
 
     private RequestOscDTO dados(Set<Integer> ods) {
+        return dados(ods, CausaSocial.EDUCACAO, Set.of(CausaSocial.SAUDE), null);
+    }
+
+    private RequestOscDTO dados(
+            Set<Integer> ods,
+            CausaSocial causaPrincipal,
+            Set<CausaSocial> causasSecundarias,
+            Set<CausaSocial> causasLegadas) {
         return new RequestOscDTO(
                 "11222333000181",
-                Set.of(CausaSocial.EDUCACAO, CausaSocial.SAUDE),
+                causaPrincipal,
+                causasSecundarias,
+                causasLegadas,
                 ods,
                 "Instituto Exemplo",
                 "Apoio à educação",

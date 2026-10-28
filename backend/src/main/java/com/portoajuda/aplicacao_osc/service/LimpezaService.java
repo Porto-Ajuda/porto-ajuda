@@ -188,10 +188,10 @@ public class LimpezaService {
     }
 
     // TESTES: executa a cada minuto.
-    @Scheduled(cron = "0 * * * * *", zone = "America/Sao_Paulo")
+    // @Scheduled(cron = "0 * * * * *", zone = "America/Sao_Paulo")
 
     // PRODUÇÃO: substitua a anotação acima pela seguinte:
-    // @Scheduled(cron = "0 0 * * * *", zone = "America/Sao_Paulo")
+    @Scheduled(cron = "0 0 * * * *", zone = "America/Sao_Paulo")
     @Transactional
     public void executarLimpezaAutomatica() {
         log.info("Iniciando limpeza automática.");

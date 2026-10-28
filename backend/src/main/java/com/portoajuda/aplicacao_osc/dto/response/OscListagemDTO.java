@@ -12,6 +12,9 @@ public record OscListagemDTO(
         Integer id,
         String nome,
         String logo,
+        CausaSocial causaPrincipal,
+        Set<CausaSocial> causasSecundarias,
+        /** Compatibilidade para consumidores antigos da lista plana. */
         Set<CausaSocial> causas,
         Set<Integer> ods,
         boolean ativo,
@@ -28,7 +31,8 @@ public record OscListagemDTO(
 ) {
     public static OscListagemDTO de(Osc osc) {
         return new OscListagemDTO(
-                osc.getId(), osc.getNome(), osc.getLogo(), copiar(osc.getCausas()), copiar(osc.getOds()),
+                osc.getId(), osc.getNome(), osc.getLogo(), osc.getCausaPrincipal(),
+                copiar(osc.getCausasSecundarias()), copiar(osc.getCausas()), copiar(osc.getOds()),
                 osc.isAtivo(), osc.getDescricaoCurta(), osc.getDescricao(), osc.getRua(),
                 osc.getNumero(), osc.getBairro(), osc.getCidade(), osc.getEstado(), osc.getPais(),
                 osc.getLatitude(), osc.getLongitude());

@@ -14,6 +14,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 @Setter
@@ -30,12 +31,11 @@ public class Osc {
         @Column(name = "cnpj", nullable = false, length = 14, unique = true)
         private Cnpj cnpj;
 
-        @BatchSize(size = 100)
-        @ElementCollection(targetClass = CausaSocial.class)
+        @Getter(AccessLevel.NONE)
+        @Setter(AccessLevel.NONE)
+        @ElementCollection
         @CollectionTable(name = "osc_causas", joinColumns = @JoinColumn(name = "id_osc"))
-        @Column(name = "causa")
-        @Enumerated(EnumType.STRING)
-        private Set<CausaSocial> causas = new HashSet<>();
+        private Set<CausaOscRegistro> registrosCausas = new HashSet<>();
 
         @BatchSize(size = 100)
         @ElementCollection
@@ -168,4 +168,77 @@ public class Osc {
         @UpdateTimestamp
         @Column(name = "data_atualizacao", nullable = false)
         private LocalDateTime dataAtualizacao;
+
+        /** Compatibilidade para respostas e integrações que ainda usam a lista plana de causas. */
+        public CausaSocial getCausaPrincipal() {
+                CausaSocial principal = null;
+                for (CausaOscRegistro registro : registrosCausas) {
+                        CausaSocial valor = registro.getCausaPrincipal();
+                        if (valor != null && principal != null && principal != valor) {
+                                throw new IllegalStateException("A OSC possui causas principais inconsistentes.");
+                        }
+                        if (valor != null) {
+                                principal = valor;
+                        }
+                }
+                return principal;
+        }
+
+        public void setCausaPrincipal(CausaSocial causaPrincipal) {
+                setCausasSociais(causaPrincipal, getCausasSecundarias());
+        }
+
+        public Set<CausaSocial> getCausasSecundarias() {
+                CausaSocial principal = getCausaPrincipal();
+                Set<CausaSocial> secundarias = new LinkedHashSet<>();
+                for (CausaOscRegistro registro : registrosCausas) {
+                        CausaSocial causa = registro.getCausa();
+                        if (causa != null && causa != principal) {
+                                secundarias.add(causa);
+                        }
+                }
+                return secundarias;
+        }
+
+        public void setCausasSecundarias(Set<CausaSocial> causasSecundarias) {
+                setCausasSociais(getCausaPrincipal(), causasSecundarias);
+        }
+
+        public void setCausasSociais(CausaSocial causaPrincipal, Set<CausaSocial> causasSecundarias) {
+                Set<CausaSocial> secundarias = causasSecundarias == null
+                                ? Set.of()
+                                : new LinkedHashSet<>(causasSecundarias);
+                if (secundarias.contains(null)) {
+                        throw new IllegalArgumentException("As causas secundárias não podem conter valores nulos.");
+                }
+                if (causaPrincipal != null && secundarias.contains(causaPrincipal)) {
+                        throw new IllegalArgumentException("A causa principal não pode ser secundária.");
+                }
+                Set<CausaOscRegistro> novosRegistros = new LinkedHashSet<>();
+                if (secundarias.isEmpty()) {
+                        if (causaPrincipal != null) {
+                                novosRegistros.add(new CausaOscRegistro(null, causaPrincipal));
+                        }
+                } else {
+                        for (CausaSocial secundaria : secundarias) {
+                                novosRegistros.add(new CausaOscRegistro(secundaria, causaPrincipal));
+                        }
+                }
+                registrosCausas.clear();
+                registrosCausas.addAll(novosRegistros);
+        }
+
+        public Set<CausaSocial> getCausas() {
+                Set<CausaSocial> todas = new HashSet<>();
+                if (getCausaPrincipal() != null) {
+                        todas.add(getCausaPrincipal());
+                }
+                todas.addAll(getCausasSecundarias());
+                return todas;
+        }
+
+        /** Compatibilidade de leitura do formato antigo; não define uma causa principal por inferência. */
+        public void setCausas(Set<CausaSocial> causas) {
+                setCausasSociais(null, causas);
+        }
 }

@@ -28,6 +28,8 @@ import com.portoajuda.aplicacao_osc.dto.response.OscListagemDTO;
 import com.portoajuda.aplicacao_osc.service.ValidacaoCnpjOscService;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.portoajuda.aplicacao_osc.dto.response.OscPerfilDTO;
+
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/osc")
@@ -75,6 +77,13 @@ public class OscController {
         ConsultaCnpjDTO resultado = validacaoCnpjOscService.validar(cnpj);
 
         return ResponseEntity.ok(resultado);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<OscPerfilDTO> buscarPerfil(
+            @PathVariable Integer id) {
+        return ResponseEntity.ok(
+                oscService.buscarPerfilPublico(id));
     }
 
     @PreAuthorize("hasRole('OSC')")

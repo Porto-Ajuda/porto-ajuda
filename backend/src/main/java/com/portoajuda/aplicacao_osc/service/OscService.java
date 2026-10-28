@@ -8,6 +8,7 @@ import com.portoajuda.aplicacao_osc.dto.response.ConsultaCnpjDTO;
 import com.portoajuda.aplicacao_osc.dto.response.ResponseOscDTO;
 import com.portoajuda.aplicacao_osc.dto.response.OscListagemDTO;
 import com.portoajuda.aplicacao_osc.entity.*;
+import com.portoajuda.aplicacao_osc.enums.CausaSocial;
 import com.portoajuda.aplicacao_osc.repository.OscMembrosRepository;
 import com.portoajuda.aplicacao_osc.repository.OscRepository;
 import com.portoajuda.aplicacao_osc.repository.RoleRepository;
@@ -17,7 +18,7 @@ import com.portoajuda.aplicacao_osc.utils.Cnpj;
 // import com.portoajuda.aplicacao_osc.utils.Cpf;
 import com.portoajuda.aplicacao_osc.utils.Email;
 // import io.jsonwebtoken.Jwts;
-import jakarta.transaction.Transactional;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -31,8 +32,13 @@ import org.springframework.web.server.ResponseStatusException;
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 // import java.util.List;
 // import java.util.Set;
+
+import com.portoajuda.aplicacao_osc.dto.response.OscPerfilDTO;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -162,18 +168,54 @@ public class OscService {
 
     @Transactional
     public void update(UpdateOscDTO updateOscDTO, Usuario usuario) throws AccessDeniedException {
-        Osc osc = oscRepository.findByCnpj(new Cnpj(updateOscDTO.cnpj()))
+        Osc osc = oscRepository.findForUpdateByCnpj(new Cnpj(updateOscDTO.cnpj()))
                 .orElseThrow(() -> new IllegalArgumentException("Cnpj não encontrado"));
         boolean isDono = oscRepository.existsByIdAndUsuarioId(osc.getId(), usuario.getId());
         boolean isMembro = oscRepository.userBelongsOsc(osc.getId(), usuario.getId());
-        if(!isDono && !isMembro){
+        if (!isDono && !isMembro) {
             throw new AccessDeniedException("Você não pode alterar os dados dessa ONG");
         }
         osc.setDescricao(updateOscDTO.descricao());
         osc.setEmail(new Email(updateOscDTO.email()));
         osc.setTelefone(updateOscDTO.telefone());
         osc.setSite(updateOscDTO.site());
+
+        if (updateOscDTO.causaPrincipal() != null || updateOscDTO.causasSecundarias() != null) {
+            CausaSocial causaPrincipal = updateOscDTO.causaPrincipal() == null
+                    ? osc.getCausaPrincipal()
+                    : updateOscDTO.causaPrincipal();
+            Set<CausaSocial> causasSecundarias = updateOscDTO.causasSecundarias() == null
+                    ? new HashSet<>(osc.getCausasSecundarias())
+                    : new HashSet<>(updateOscDTO.causasSecundarias());
+
+            if (causasSecundarias.contains(null)) {
+                throw new ResponseStatusException(
+                        HttpStatus.UNPROCESSABLE_ENTITY,
+                        "As causas secundárias não podem conter valores nulos.");
+            }
+            if (causaPrincipal != null && causasSecundarias.contains(causaPrincipal)) {
+                throw new ResponseStatusException(
+                        HttpStatus.UNPROCESSABLE_ENTITY,
+                        "A causa principal não pode aparecer entre as causas secundárias.");
+            }
+
+            osc.setCausasSociais(causaPrincipal, causasSecundarias);
+        }
+
+        if (updateOscDTO.ods() != null) {
+            osc.setOds(validarOds(updateOscDTO.ods()));
+        }
         oscRepository.save(osc);
+    }
+
+    private Set<Integer> validarOds(Set<Integer> valores) {
+        Set<Integer> ods = valores == null ? new HashSet<>() : new HashSet<>(valores);
+        if (ods.stream().anyMatch(numero -> numero == null || numero < 1 || numero > 17)) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNPROCESSABLE_ENTITY,
+                    "Selecione somente ODS de 1 a 17.");
+        }
+        return ods;
     }
 
     @Transactional
@@ -181,7 +223,7 @@ public class OscService {
         Osc osc = oscRepository.findByUsuarioId(usuario.getId())
                 .orElseThrow(() -> new IllegalArgumentException("Osc não encontrada"));
         boolean isDono = oscRepository.existsByIdAndUsuarioId(osc.getId(), usuario.getId());
-        if(!isDono){
+        if (!isDono) {
             throw new AccessDeniedException("Você não pode deletar essa ONG");
         }
         oscRepository.delete(osc);
@@ -193,13 +235,13 @@ public class OscService {
                 .orElseThrow(() -> new IllegalArgumentException("Osc não encontrada"));
         boolean isDono = oscRepository.existsByIdAndUsuarioId(osc.getId(), usuario.getId());
         boolean isMembro = oscRepository.userBelongsOsc(osc.getId(), usuario.getId());
-        if(!isDono && !isMembro){
+        if (!isDono && !isMembro) {
             throw new AccessDeniedException("Você não pode adicionar membros nessa ONG");
         }
 
         Usuario novoMembro = usuarioRepository.findByEmail(new Email(newMembroDTO.email()))
                 .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado"));
-        if(!usuarioRepository.usuarioIsMember(novoMembro.getId())){
+        if (usuarioRepository.usuarioIsMember(novoMembro.getId())) {
             throw new AccessDeniedException("Esse usuário já pertence a uma ONG");
         }
         Role role = roleRepository.findByNome("OSC")
@@ -219,19 +261,30 @@ public class OscService {
                 .orElseThrow(() -> new IllegalArgumentException("Osc não encontrada"));
         boolean isDono = oscRepository.existsByIdAndUsuarioId(osc.getId(), usuario.getId());
         boolean isMembro = oscRepository.userBelongsOsc(osc.getId(), usuario.getId());
-        if(!isDono && !isMembro){
+        if (!isDono && !isMembro) {
             throw new AccessDeniedException("Você não pertence à essa ONG");
         }
         OscMembros membroOsc = membrosRepository.findByUsuarioEmail(email)
-                        .orElseThrow(() -> new IllegalArgumentException("Usuário Membro não encontrado"));
-        if(!membroOsc.getOsc().getId().equals(osc.getId())){
+                .orElseThrow(() -> new IllegalArgumentException("Usuário Membro não encontrado"));
+        if (!membroOsc.getOsc().getId().equals(osc.getId())) {
             throw new AccessDeniedException("Erro ao buscar membro nessa ONG");
         }
 
         membrosRepository.delete(membroOsc);
     }
+
+    @Transactional(readOnly = true)
+    public OscPerfilDTO buscarPerfilPublico(Integer id) {
+        Osc osc = oscRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Organização não encontrada."));
+
+        return OscPerfilDTO.de(osc);
+    }
+
     @org.springframework.transaction.annotation.Transactional(readOnly = true)
-    public Page<OscListagemDTO> viewAll(Pageable pageable){
+    public Page<OscListagemDTO> viewAll(Pageable pageable) {
         return oscRepository.findAll(pageable).map(OscListagemDTO::de);
     }
 }

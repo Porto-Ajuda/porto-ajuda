@@ -19,7 +19,8 @@ class OscListagemDTOTest {
         osc.setNome("OSC exemplo");
         osc.setDescricao("Descrição pública");
         osc.setCidade("Santos");
-        osc.setCausas(Set.of(CausaSocial.EDUCACAO));
+        osc.setCausaPrincipal(CausaSocial.EDUCACAO);
+        osc.setCausasSecundarias(Set.of());
         osc.setOds(Set.of(4));
         osc.setAtivo(true);
         osc.setLatitude(-23.96);
@@ -31,6 +32,7 @@ class OscListagemDTOTest {
         assertNotSame(osc.getCausas(), dto.causas());
         assertNotSame(osc.getOds(), dto.ods());
         assertTrue(json.contains("\"nome\":\"OSC exemplo\""));
+        assertTrue(json.contains("\"causaPrincipal\":\"EDUCACAO\""));
         assertTrue(json.contains("\"causas\":[\"EDUCACAO\"]"));
         assertTrue(json.contains("\"cidade\":\"Santos\""));
         assertTrue(json.contains("\"ativo\":true"));

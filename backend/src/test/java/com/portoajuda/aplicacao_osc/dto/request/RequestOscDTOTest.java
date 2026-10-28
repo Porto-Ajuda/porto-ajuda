@@ -9,6 +9,7 @@ import tools.jackson.databind.json.JsonMapper;
 
 import java.util.Set;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class RequestOscDTOTest {
@@ -21,7 +22,9 @@ class RequestOscDTOTest {
     void rejeitaCnpjFormatoInvalidoECamposObrigatoriosAusentes() {
         RequestOscDTO pedido = new RequestOscDTO(
                 "123",
-                Set.of(CausaSocial.EDUCACAO),
+                CausaSocial.EDUCACAO,
+                Set.of(CausaSocial.SAUDE),
+                null,
                 Set.of(),
                 "",
                 "",
@@ -50,6 +53,23 @@ class RequestOscDTOTest {
 
         org.junit.jupiter.api.Assertions.assertThrows(
                 JacksonException.class,
-                () -> mapper.readValue("{\"causas\":[\"CAUSA_INEXISTENTE\"]}", RequestOscDTO.class));
+                () -> mapper.readValue("{\"causaPrincipal\":\"CAUSA_INEXISTENTE\"}", RequestOscDTO.class));
+    }
+
+    @Test
+    void recebeCausasSeparadasEDeduplicaCausasEOdsNoPayloadJson() throws Exception {
+        var mapper = JsonMapper.builder().build();
+
+        RequestOscDTO pedido = mapper.readValue("""
+                {
+                  "causaPrincipal": "EDUCACAO",
+                  "causasSecundarias": ["SAUDE", "CULTURA", "SAUDE"],
+                  "ods": [3, 3, 17]
+                }
+                """, RequestOscDTO.class);
+
+        assertEquals(CausaSocial.EDUCACAO, pedido.causaPrincipal());
+        assertEquals(Set.of(CausaSocial.SAUDE, CausaSocial.CULTURA), pedido.causasSecundarias());
+        assertEquals(Set.of(3, 17), pedido.ods());
     }
 }

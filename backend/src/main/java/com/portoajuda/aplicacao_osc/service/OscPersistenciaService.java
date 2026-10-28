@@ -6,6 +6,7 @@ import com.portoajuda.aplicacao_osc.dto.response.ResponseOscDTO;
 import com.portoajuda.aplicacao_osc.entity.Osc;
 import com.portoajuda.aplicacao_osc.entity.Role;
 import com.portoajuda.aplicacao_osc.entity.Usuario;
+import com.portoajuda.aplicacao_osc.enums.CausaSocial;
 import com.portoajuda.aplicacao_osc.repository.OscRepository;
 import com.portoajuda.aplicacao_osc.repository.RoleRepository;
 import com.portoajuda.aplicacao_osc.repository.UsuarioRepository;
@@ -43,6 +44,7 @@ public class OscPersistenciaService {
             Coordenadas coordenadas,
             String logoUrl) {
 
+        CausasValidadas causas = validarCausas(dados);
         validarValoresDeDominio(dados, coordenadas);
         Cnpj cnpj = new Cnpj(dados.cnpj());
         if (oscRepository.existsByCnpj(cnpj)) {
@@ -68,7 +70,7 @@ public class OscPersistenciaService {
 
         Osc osc = new Osc();
         osc.setCnpj(cnpj);
-        osc.setCausas(new HashSet<>(dados.causas()));
+        osc.setCausasSociais(causas.principal(), causas.secundarias());
         osc.setOds(validarOds(dados.ods()));
         osc.setUsuario(usuario);
         osc.setNome(dados.nome().trim());
@@ -114,9 +116,52 @@ public class OscPersistenciaService {
                 salva.getId(),
                 salva.getCnpj().getCnpj(),
                 salva.getNome(),
+                salva.getCausaPrincipal(),
+                Set.copyOf(salva.getCausasSecundarias()),
                 Set.copyOf(salva.getCausas()),
                 Set.copyOf(salva.getOds()));
     }
+
+    private CausasValidadas validarCausas(RequestOscDTO dados) {
+        Set<CausaSocial> secundarias = dados.causasSecundarias() == null
+                ? new HashSet<>()
+                : new HashSet<>(dados.causasSecundarias());
+
+        if (dados.causas() != null && !dados.causas().isEmpty()) {
+            if (dados.causaPrincipal() != null || !secundarias.isEmpty()) {
+                throw new ResponseStatusException(
+                        UNPROCESSABLE_ENTITY,
+                        "Envie causaPrincipal e causasSecundarias, sem misturar o campo antigo causas.");
+            }
+            // Mantém o contrato antigo sem inferir qual valor seria a causa principal.
+            secundarias.addAll(dados.causas());
+        }
+
+        if (secundarias.contains(null)) {
+            throw new ResponseStatusException(
+                    UNPROCESSABLE_ENTITY,
+                    "As causas secundárias não podem conter valores nulos.");
+        }
+
+        if (dados.causaPrincipal() == null && secundarias.isEmpty()) {
+            throw new ResponseStatusException(
+                    UNPROCESSABLE_ENTITY,
+                    "Selecione uma causa principal.");
+        }
+        if (dados.causaPrincipal() != null && secundarias.contains(dados.causaPrincipal())) {
+            throw new ResponseStatusException(
+                    UNPROCESSABLE_ENTITY,
+                    "A causa principal não pode aparecer entre as causas secundárias.");
+        }
+
+        return new CausasValidadas(
+                dados.causaPrincipal(),
+                secundarias);
+    }
+
+    private record CausasValidadas(
+            CausaSocial principal,
+            Set<CausaSocial> secundarias) {}
 
     private void validarValoresDeDominio(RequestOscDTO dados, Coordenadas coordenadas) {
         if (dados.anoFundacao() > LocalDate.now().getYear()) {
@@ -167,7 +212,7 @@ public class OscPersistenciaService {
     }
 
     private Set<Integer> validarOds(Set<Integer> valores) {
-        Set<Integer> resultado = valores == null ? Set.of() : new HashSet<>(valores);
+        Set<Integer> resultado = valores == null ? new HashSet<>() : new HashSet<>(valores);
         if (resultado.stream().anyMatch(ods -> ods == null || ods < 1 || ods > 17)) {
             throw new ResponseStatusException(
                     UNPROCESSABLE_ENTITY,

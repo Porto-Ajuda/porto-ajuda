@@ -16,6 +16,10 @@ import java.util.Optional;
 public interface OscRepository extends JpaRepository<Osc, Integer> {
     Optional<Osc> findByCnpj(Cnpj cnpj);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select o from Osc o where o.cnpj = :cnpj")
+    Optional<Osc> findForUpdateByCnpj(@Param("cnpj") Cnpj cnpj);
+
     Optional<Osc> findByUsuarioId(Integer UsuarioId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)

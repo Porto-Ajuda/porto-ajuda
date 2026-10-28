@@ -63,6 +63,17 @@ document.addEventListener("DOMContentLoaded", () => {
         esporte: ["ESPORTE"]
     };
 
+    const AREA_POR_CAUSA = {
+        INCLUSAO_SOCIAL: "assistencia-social",
+        COMBATE_POBREZA: "assistencia-social",
+        ANIMAIS: "protecao-animal",
+        MEIO_AMBIENTE: "meio-ambiente",
+        EDUCACAO: "educacao",
+        SAUDE: "saude",
+        CULTURA: "cultura",
+        ESPORTE: "esporte"
+    };
+
     const SUGESTOES_ODS_POR_AREA = {
         "assistencia-social": [1, 10, 16],
         "protecao-animal": [15],
@@ -313,9 +324,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (!etapa) return false;
 
-        // 1. Área principal
+        // 1. Causa principal
         if (etapa.contains(focoInput) && !focoInput.value) {
-            mostrarErro(botaoFoco, "Selecione a área principal da ONG.");
+            mostrarErro(botaoFoco, "Selecione a causa principal da ONG.");
             botaoFoco.focus();
             return false;
         }
@@ -423,16 +434,6 @@ document.addEventListener("DOMContentLoaded", () => {
             focoSelecionado.textContent = opcao.textContent.trim();
             opcoesFoco.classList.remove("aberto");
 
-            if (areasEscolhidas.has(focoInput.value)) {
-                areasSelecionadas
-                    .querySelector(
-                        `.area-selecionada[data-valor="${focoInput.value}"]`
-                    )
-                    ?.remove();
-
-                areasEscolhidas.delete(focoInput.value);
-            }
-
             limparErro();
             atualizarAreasSecundarias();
             atualizarSugestoesOds();
@@ -453,7 +454,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const valor = opcao.dataset.valor;
             const nome = opcao.textContent.trim();
 
-            if (focoInput.value === valor || areasEscolhidas.has(valor)) {
+            if (areasEscolhidas.has(valor)) {
                 return;
             }
 
@@ -483,8 +484,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         opcoesSecundarias.querySelectorAll("button").forEach(opcao => {
             const valor = opcao.dataset.valor;
-            const esconder =
-                areasEscolhidas.has(valor) || valor === focoInput.value;
+            const esconder = areasEscolhidas.has(valor);
 
             opcao.disabled = esconder;
             opcao.style.display = esconder ? "none" : "";
@@ -548,7 +548,8 @@ document.addEventListener("DOMContentLoaded", () => {
     function atualizarSugestoesOds() {
         if (!odsSugestoes) return;
 
-        const areas = [focoInput?.value, ...areasEscolhidas].filter(Boolean);
+        const areaPrincipal = AREA_POR_CAUSA[focoInput?.value];
+        const areas = [areaPrincipal, ...areasEscolhidas].filter(Boolean);
         const sugestoes = new Set(
             areas.flatMap(area => SUGESTOES_ODS_POR_AREA[area] || [])
         );
@@ -561,7 +562,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (pendentes.length === 0) {
             odsSugestoes.textContent = areas.length
                 ? "As sugestões já estão selecionadas. Você ainda pode incluir outras ODS no menu."
-                : "Selecione uma área para ver sugestões.";
+            : "Selecione uma causa principal para ver sugestões.";
             return;
         }
 
@@ -799,8 +800,17 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function montarCausas() {
-        const areas = [focoInput?.value, ...areasEscolhidas].filter(Boolean);
-        return [...new Set(areas.flatMap(area => CAUSA_PARA_ENUM[area] || []))];
+        const causaPrincipal = focoInput?.value || null;
+        const causasSecundarias = new Set(
+            [...areasEscolhidas]
+                .flatMap(area => CAUSA_PARA_ENUM[area] || [])
+                .filter(causa => causa !== causaPrincipal)
+        );
+
+        return {
+            causaPrincipal,
+            causasSecundarias: [...causasSecundarias]
+        };
     }
 
     form.addEventListener("submit", async (event) => {
@@ -822,7 +832,7 @@ document.addEventListener("DOMContentLoaded", () => {
             .map(campo => campo.value);
         const payload = {
             cnpj: cnpj.value.replace(/\D/g, ""),
-            causas: montarCausas(),
+            ...montarCausas(),
             ods: [...odsEscolhidas].map(Number),
             nome: valorTexto("nome_ong"),
             descricaoCurta: valorTexto("descricao_curta"),

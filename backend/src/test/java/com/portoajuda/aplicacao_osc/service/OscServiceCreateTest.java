@@ -62,7 +62,8 @@ class OscServiceCreateTest {
         RequestOscDTO dados = dados();
         Coordenadas coordenadas = new Coordenadas(-23.55, -46.63);
         ResponseOscDTO resposta = new ResponseOscDTO(
-                81, CNPJ, "Instituto Exemplo", Set.of(CausaSocial.EDUCACAO), Set.of(4));
+                81, CNPJ, "Instituto Exemplo", CausaSocial.EDUCACAO,
+                Set.of(), Set.of(CausaSocial.EDUCACAO), Set.of(4));
         when(oscRepository.existsByCnpj(any())).thenReturn(false);
         when(validacaoCnpjOscService.validar(CNPJ)).thenReturn(
                 new ConsultaCnpjDTO(CNPJ, "Instituto Exemplo", null, "2010-01-01",
@@ -137,7 +138,9 @@ class OscServiceCreateTest {
     private RequestOscDTO dados() {
         return new RequestOscDTO(
                 CNPJ,
-                Set.of(CausaSocial.EDUCACAO),
+                CausaSocial.EDUCACAO,
+                Set.of(),
+                null,
                 Set.of(4),
                 "Instituto Exemplo",
                 "Apoio à educação",
