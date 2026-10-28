@@ -19,17 +19,20 @@ public class GeocodingService {
                 .build();
     }
 
-    public Coordenadas buscarCoordenadas(String cep, String cidade, String rua, String numero) {
+    public Coordenadas buscarCoordenadas(
+            String cep,
+            String cidade,
+            String rua,
+            String numero
+    ) {
+        String endereco = rua + ", " + numero + ", "
+                + cidade + ", São Paulo, Brasil";
 
         NominatimResponse[] resposta = restClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/search")
-                        .queryParam("street", rua + ", " + numero)
-                        .queryParam("city", cidade)
-                        .queryParam("state", "São Paulo")
-                        .queryParam("country", "Brazil")
+                        .queryParam("q", endereco)
                         .queryParam("countrycodes", "br")
-                        .queryParam("postalcode", cep)
                         .queryParam("format", "jsonv2")
                         .queryParam("limit", 1)
                         .build())
@@ -38,16 +41,9 @@ public class GeocodingService {
 
         if (resposta == null || resposta.length == 0) {
             throw new IllegalArgumentException(
-                    "Endereço não encontrado para: " +
-                            rua + ", " + numero + ", " +
-                            cidade + ", " + cep
+                    "Não foi possível localizar o endereço: " + endereco
             );
         }
-
-        System.out.println("CEP: " + cep);
-        System.out.println("Cidade: " + cidade);
-        System.out.println("Rua: " + rua);
-        System.out.println("Número: " + numero);
 
         return new Coordenadas(
                 Double.parseDouble(resposta[0].lat()),

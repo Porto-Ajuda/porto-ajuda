@@ -17,13 +17,18 @@ import java.io.IOException;
 
 @Component
 @RequiredArgsConstructor
-public class JwtAuthFilter  extends OncePerRequestFilter {
+public class JwtAuthFilter extends OncePerRequestFilter {
+
     private final UsuarioRepository usuarioRepository;
     private final JwtService jwtService;
 
-
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain
+    ) throws ServletException, IOException {
+
         String authHeader = request.getHeader("Authorization");
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
@@ -34,34 +39,47 @@ public class JwtAuthFilter  extends OncePerRequestFilter {
         String token = authHeader.substring(7);
 
         try {
-            Integer id = Integer.valueOf(jwtService.extractSubject(token));
+            Integer id = Integer.valueOf(
+                    jwtService.extractSubject(token)
+            );
 
-            if (SecurityContextHolder.getContext().getAuthentication() == null) {
+            Usuario usuario = usuarioRepository.findById(id)
+                    .orElse(null);
 
-                Usuario usuario = usuarioRepository.findById(id)
-                        .orElse(null);
+            if (usuario == null
+                    || !usuario.isEnabled()
+                    || !jwtService.validateToken(token, usuario)) {
 
-                if (usuario != null && jwtService.validateToken(token, usuario)) {
+                SecurityContextHolder.clearContext();
+                response.sendError(
+                        HttpServletResponse.SC_UNAUTHORIZED,
+                        "Token inválido ou usuário inativo"
+                );
+                return;
+            }
 
-                    UsernamePasswordAuthenticationToken authToken =
-                            new UsernamePasswordAuthenticationToken(
-                                    usuario,
-                                    null,
-                                    usuario.getAuthorities()
-                            );
-
-                    authToken.setDetails(
-                            new WebAuthenticationDetailsSource()
-                                    .buildDetails(request)
+            UsernamePasswordAuthenticationToken authToken =
+                    new UsernamePasswordAuthenticationToken(
+                            usuario,
+                            null,
+                            usuario.getAuthorities()
                     );
 
-                    SecurityContextHolder.getContext()
-                            .setAuthentication(authToken);
-                }
-            }
+            authToken.setDetails(
+                    new WebAuthenticationDetailsSource()
+                            .buildDetails(request)
+            );
+
+            SecurityContextHolder.getContext()
+                    .setAuthentication(authToken);
 
         } catch (Exception e) {
             SecurityContextHolder.clearContext();
+            response.sendError(
+                    HttpServletResponse.SC_UNAUTHORIZED,
+                    "Token inválido"
+            );
+            return;
         }
 
         filterChain.doFilter(request, response);

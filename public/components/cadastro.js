@@ -8,7 +8,7 @@
 (function () {
     "use strict";
 
-    const API_URL = "https://porto-ajuda.up.railway.app";
+    const API_URL = "https://api.portoajuda.com.br/";
 
     // ---------- ELEMENTOS ----------
     const formCadastro = document.getElementById("form-cadastro");

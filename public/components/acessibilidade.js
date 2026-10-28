@@ -18,7 +18,7 @@ fechar.addEventListener("click", () => {
 // PREFERÊNCIAS
 // ==========================
 
-const API_URL = "https://porto-ajuda.up.railway.app";
+const API_URL = "https://api.portoajuda.com.br/";
 
 const CHAVE_PREFERENCIAS = "portoAjudaPreferencias";
 

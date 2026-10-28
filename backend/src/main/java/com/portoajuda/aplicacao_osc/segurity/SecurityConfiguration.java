@@ -37,6 +37,8 @@ public class SecurityConfiguration {
                                 "/v3/api-docs",
                                 "/swagger-resources/**",
                                 "/webjars/**",
+                                "/post/causa-social",
+                                "/post/all",
                                 "/osc/list")
                         .permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**")
