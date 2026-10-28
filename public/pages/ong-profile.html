@@ -7,8 +7,8 @@
   <title>Perfil da organização | Porto Ajuda</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="../styles/ong-profile.css">
   <link rel="stylesheet" href="../styles/geral.css">
+  <link rel="stylesheet" href="../styles/ong-profile.css">
   <script type="module" src="../components/header_footer.js" defer></script>
   <script type="module" src="../components/ong-profile.js" defer></script>
 </head>
@@ -32,7 +32,11 @@
           <p id="descricao-texto" class="descricao-curta"></p>
           <p id="causas-secundarias" class="causas-secundarias" hidden></p>
           <p id="ano-fundacao" class="metadado-osc" hidden></p>
-          <button id="compartilhar" class="btn btn-secundario" type="button">Compartilhar organização</button>
+          <nav class="acoes-hero" aria-label="Navegação do perfil">
+            <a class="btn btn-destaque" href="#apresentacao">Conhecer a organização</a>
+            <a class="btn btn-secundario" href="#contato">Ver formas de contato</a>
+            <button id="compartilhar" class="btn btn-secundario" type="button">Compartilhar organização</button>
+          </nav>
           <p id="mensagem-compartilhar" class="feedback-perfil" role="status" aria-live="polite"></p>
         </div>
         <figure class="identidade-osc">
@@ -45,27 +49,29 @@
       <div class="divider" aria-hidden="true"></div>
 
       <div class="conteudo-perfil">
-        <section class="bloco-perfil" id="apresentacao">
+        <section class="bloco-perfil bloco-editorial" id="apresentacao">
           <h2>Sobre a organização</h2>
           <p id="sobre-texto"></p>
         </section>
 
-        <section class="bloco-perfil" id="localizacao">
-          <h2>Onde atua</h2>
-          <p id="localizacao-texto"></p>
-          <p id="abrangencia-texto" hidden></p>
-        </section>
+        <div class="grupo-localizacao" aria-label="Localização e contato">
+          <section class="bloco-perfil" id="localizacao">
+            <h2>Onde atua</h2>
+            <p id="localizacao-texto"></p>
+            <p id="abrangencia-texto" hidden></p>
+          </section>
 
-        <section class="bloco-perfil" id="endereco-institucional">
-          <h2>Endereço institucional</h2>
-          <p id="endereco-texto"></p>
-        </section>
+          <section class="bloco-perfil" id="endereco-institucional">
+            <h2>Endereço institucional</h2>
+            <p id="endereco-texto"></p>
+          </section>
 
-        <section class="bloco-perfil" id="contato">
-          <h2>Contato</h2>
-          <ul id="contatos-lista" class="lista-perfil"></ul>
-          <p id="contato-vazio" class="texto-ausente" hidden>Esta organização não cadastrou canais públicos de contato no perfil.</p>
-        </section>
+          <section class="bloco-perfil" id="contato">
+            <h2>Contato</h2>
+            <ul id="contatos-lista" class="lista-perfil"></ul>
+            <p id="contato-vazio" class="texto-ausente" hidden>Esta organização não cadastrou canais públicos de contato no perfil.</p>
+          </section>
+        </div>
 
         <section class="bloco-perfil" id="funcionamento">
           <h2>Atendimento e funcionamento</h2>
