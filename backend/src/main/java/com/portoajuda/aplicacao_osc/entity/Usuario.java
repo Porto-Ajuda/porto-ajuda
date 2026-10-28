@@ -17,9 +17,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
+// import java.util.List;
 import java.util.Set;
-import java.util.stream.Stream;
+// import java.util.stream.Stream;
 
 @Getter
 @Setter
@@ -36,11 +36,7 @@ public class Usuario implements UserDetails {
     private Set<Post> posts;
 
     @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(name = "usuario_roles",
-            joinColumns = @JoinColumn(
-                    name = "id_usuario", nullable = false),
-            inverseJoinColumns = @JoinColumn(
-                    name = "id_role", nullable = false))
+    @JoinTable(name = "usuario_roles", joinColumns = @JoinColumn(name = "id_usuario", nullable = false), inverseJoinColumns = @JoinColumn(name = "id_role", nullable = false))
     private Set<Role> roles = new HashSet<>();
 
     @Column(name = "cpf", nullable = false, length = 11, unique = true)
@@ -58,6 +54,9 @@ public class Usuario implements UserDetails {
     @Column(name = "nome", nullable = false, length = 255)
     private String nome;
 
+    @Column(name = "foto_perfil_url", length = 1024)
+    private String fotoPerfilUrl;
+
     @Column(name = "genero", nullable = false)
     @Enumerated(EnumType.STRING)
     private Genero genero;
@@ -73,6 +72,15 @@ public class Usuario implements UserDetails {
 
     @Column(name = "ativo", nullable = false)
     private boolean ativo = true;
+
+    @Column(name = "data_solicitacao_exclusao")
+    private LocalDateTime dataSolicitacaoExclusao;
+
+    @Column(name = "data_exclusao_agendada")
+    private LocalDateTime dataExclusaoAgendada;
+
+    @Column(name = "email_verificado", nullable = false)
+    private boolean emailVerificado = false;
 
     @Setter(AccessLevel.NONE)
     @CreationTimestamp

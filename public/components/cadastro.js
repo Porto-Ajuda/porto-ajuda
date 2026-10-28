@@ -5,10 +5,11 @@
  * Está dentro de uma função para não colidir nomes
  * com o login.js.
  * ===================================================== */
+
+import { getAPI_URL } from "./modoBack.js";
+
 (function () {
     "use strict";
-
-    const API_URL = "https://api.portoajuda.com.br/";
 
     // ---------- ELEMENTOS ----------
     const formCadastro = document.getElementById("form-cadastro");
@@ -18,6 +19,10 @@
     const cep = document.getElementById("cep");
     const nascimento = document.getElementById("nascimento");
     const termos = document.getElementById("check-termos");
+    const usarNomeSocial = document.getElementById("usar-nome-social");
+    const campoNomeSocial = document.getElementById("campo-nome-social");
+    const nomeSocial = document.getElementById("nome-social-cadastro");
+    const nomeCivil = document.getElementById("nome-cadastro");
 
     const dropdownGenero = document.getElementById("dropdown-genero");
     const botaoGenero = document.getElementById("botao-genero");
@@ -48,6 +53,17 @@
     const reqEspecial = document.getElementById("req-especial");
 
     let etapa = 0;
+
+    usarNomeSocial?.addEventListener("change", () => {
+        const habilitado = usarNomeSocial.checked;
+        if (campoNomeSocial) campoNomeSocial.hidden = !habilitado;
+        if (nomeSocial) {
+            nomeSocial.disabled = !habilitado;
+            nomeSocial.required = habilitado;
+            if (habilitado) nomeSocial.focus();
+        }
+        usarNomeSocial.setAttribute("aria-expanded", String(habilitado));
+    });
 
     // ---------- FUNÇÕES AUXILIARES ----------
     const somenteNumeros = (valor) => valor.replace(/\D/g, "");
@@ -235,6 +251,14 @@
     }
 
     function validarEtapa(n) {
+
+        if (n === 0 && usarNomeSocial?.checked && nomeSocial && !nomeSocial.value.trim()) {
+            nomeSocial.setCustomValidity("Informe o nome social ou desmarque a opção.");
+            nomeSocial.reportValidity();
+            nomeSocial.focus();
+            return false;
+        }
+        nomeSocial?.setCustomValidity("");
 
         // Campos nativos (required, type=email etc.)
         const campos = rows[n].querySelectorAll("input");
@@ -474,7 +498,14 @@
 
         // Termos
         if (!termos.checked) {
-            termos.reportValidity();
+            termos.focus();
+            if (!document.querySelector(".alerta-personalizado")) {
+                window.mostrarAlerta?.(
+                    "aviso",
+                    "Atenção",
+                    "Para continuar seu cadastro, você precisa aceitar os Termos de Uso e a Política de Privacidade."
+                );
+            }
             return;
         }
 
@@ -511,11 +542,9 @@
 
             cep: somenteNumeros(cep.value),
 
-            nome: document
-                .querySelector("#form-cadastro input[placeholder='Nome']")
-                .value.trim(),
+            nome: nomeCivil.value.trim(),
 
-            nomeSocial: "",
+            nomeSocial: usarNomeSocial?.checked ? nomeSocial.value.trim() : "",
 
             dataNascimento: normalizarData(nascimento.value),
 
@@ -543,39 +572,80 @@
         }
     });
 
+
     async function postCadastro(usuario) {
-
         try {
+            const API_URL = (await getAPI_URL()).replace(/\/+$/, "");
 
-            const response = await fetch(`${API_URL}/usuario/register`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(usuario)
-            });
+            // 1. Obtém o token CSRF antes do cadastro.
+            const csrfResponse = await fetch(
+                `${API_URL}/usuario/csrf`,
+                {
+                    method: "GET",
+                    credentials: "include",
+                    headers: {
+                        Accept: "application/json"
+                    },
+                    cache: "no-store"
+                }
+            );
 
-            // Lê o corpo como texto e tenta converter em JSON
+            if (!csrfResponse.ok) {
+                throw new Error(
+                    `Não foi possível obter o token CSRF: HTTP ${csrfResponse.status}`
+                );
+            }
+
+            const csrf = await csrfResponse.json();
+
+            if (!csrf.headerName || !csrf.token) {
+                throw new Error(
+                    "O servidor não retornou os dados necessários do token CSRF."
+                );
+            }
+
+            // 2. Envia o cadastro com cookies e token CSRF.
+            const response = await fetch(
+                `${API_URL}/usuario/register`,
+                {
+                    method: "POST",
+                    credentials: "include",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Accept: "application/json",
+                        [csrf.headerName]: csrf.token
+                    },
+                    body: JSON.stringify(usuario),
+                    cache: "no-store"
+                }
+            );
+
             const texto = await response.text();
             let data = {};
 
             try {
                 data = texto ? JSON.parse(texto) : {};
-            } catch (e) {
-                data = texto; // resposta que não é JSON
+            } catch {
+                data = { message: texto };
             }
 
-            console.log("Resposta do cadastro:", response.status, data);
+            console.log("Resposta do cadastro:", response.status);
 
             const mensagem = extrairMensagem(data);
 
             if (response.ok) {
-                mostrarAlertaCadastro(mensagem || "Sua conta foi criada com sucesso.");
+                mostrarAlertaCadastro(
+                    mensagem || "Sua conta foi criada com sucesso."
+                );
                 return;
             }
 
             if (response.status === 400) {
-                mostrarAlerta("erro", "Dados inválidos", mensagem || "Verifique os dados informados.");
+                mostrarAlerta(
+                    "erro",
+                    "Dados inválidos",
+                    mensagem || "Verifique os dados informados."
+                );
                 return;
             }
 
@@ -583,38 +653,45 @@
                 mostrarAlerta(
                     "erro",
                     "Acesso negado",
-                    mensagem || "O servidor recusou a requisição (verifique CORS e permissões)."
+                    mensagem || "O servidor recusou a requisição."
                 );
                 return;
             }
 
             if (response.status === 409) {
-                mostrarAlerta("aviso", "Usuário já cadastrado", mensagem || "Já existe um usuário cadastrado com esses dados.");
+                mostrarAlerta(
+                    "aviso",
+                    "Usuário já cadastrado",
+                    mensagem || "Já existe um usuário com esses dados."
+                );
                 return;
             }
 
             if (response.status >= 500) {
-                mostrarAlerta("erro", "Erro no servidor", "Ocorreu um problema no servidor. Tente novamente mais tarde.");
+                mostrarAlerta(
+                    "erro",
+                    "Erro no servidor",
+                    "Ocorreu um problema no servidor. Tente novamente mais tarde."
+                );
                 return;
             }
 
             mostrarAlerta(
                 "erro",
                 "Não foi possível cadastrar",
-                mensagem || `O servidor retornou o código ${response.status}.`
+                mensagem || `O servidor retornou HTTP ${response.status}.`
             );
-
         } catch (error) {
-
             console.error("Erro ao realizar cadastro:", error);
 
             mostrarAlerta(
                 "erro",
-                "Erro de conexão",
-                "Não foi possível conectar ao servidor."
+                "Erro de conexão ou segurança",
+                error.message || "Não foi possível concluir o cadastro."
             );
         }
     }
+
 
     // ---------- ALERTA DE SUCESSO ----------
     function mostrarAlertaCadastro(mensagem) {

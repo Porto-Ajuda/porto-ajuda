@@ -13,12 +13,13 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
     <link rel="stylesheet" href="../styles/geral.css">
-    <link rel="stylesheet" href="../styles/acessibilidade.css">
     <link rel="stylesheet" href="../styles/perfil.css">
 
-    <script src="../components/header_footer.js" defer></script>
-    <script src="../components/perfil.js" defer></script>
-
+    <script type="module" src="../components/header_footer.js" defer></script>
+    <script type="module" src="../components/perfil.js" defer></script>
+    <script type="module" src="../components/logout.js" defer></script>
+     <script type="module" src="../components/abas-perfil.js" defer></script>
+      <script type="module" src="../components/filtros-perfil.js" defer></script>
 </head>
 
 <body>
@@ -29,10 +30,16 @@
     <!-- NAVBAR -->
     <!-- ========================= -->
 
-    <header class="navbar"></header>
+    <header class="navbar">
 
+    </header>
+
+    <!-- <div id="estado-autenticacao" role="status" aria-live="polite">
+        Verificando sua sessão...
+    </div> -->
 
     <section class="surgir">
+        <!-- <section class="surgir" id="conteudo-protegido" hidden> -->
 
         <section class="hero">
 
@@ -45,7 +52,8 @@
                     </div>
 
                     <h1>
-                        SUA <br>
+                        SUA
+                        <br>
                         <span>CONTA</span>
                     </h1>
 
@@ -69,16 +77,29 @@
 
                     <section class="painel-perfil" aria-labelledby="titulo-perfil">
 
-                        <div class="foto-perfil" aria-hidden="true">
-                            FL
+
+                        <div class="foto-perfil-container">
+                            <div class="foto-perfil" id="foto-perfil">
+                                --
+                            </div>
+
+                            <div class="grupo-botoes acoes-edicao-perfil" hidden>
+                                <label for="input-foto-perfil" class="botao botao-secundario">
+                                    Alterar foto
+                                </label>
+
+                                <input type="file" id="input-foto-perfil" accept="image/jpeg,image/png,image/webp"
+                                    hidden>
+
+                                <p id="estado-foto-perfil" role="status" aria-live="polite"></p>
+                            </div>
                         </div>
 
-                        <h2 id="titulo-perfil">
-                            Fulano de Tal
-                        </h2>
 
-                        <p class="data-cadastro">
-                            33 de Fevereiro de 1800
+                        <h2 id="perfil-nome">Carregando...</h2>
+
+                        <p class="data-cadastro" id="perfil-data-cadastro">
+                            Carregando data de cadastro...
                         </p>
 
 
@@ -86,68 +107,22 @@
 
                         <div class="campo-perfil">
 
-                            <label for="nome">
-                                Nome
-                            </label>
+                            <label for="perfil-nome-civil" id="label-nome-civil">Nome</label>
+                            <input id="perfil-nome-civil" name="nomeSocial" type="text" autocomplete="nickname"
+                                disabled>
 
-                            <input
-                                id="nome"
-                                type="text"
-                                disabled
-                            >
+                            <label for="data-nascimento">Data de nascimento</label>
+                            <input id="data-nascimento" name="dataNascimento" type="text" disabled>
 
+                            <label for="email">E-mail</label>
+                            <input id="email" name="email" type="email" autocomplete="email" disabled>
 
-                            <label for="nome-social">
-                                Nome Social
-                            </label>
+                            <label for="telefone">Telefone</label>
+                            <input id="telefone" name="telefone" type="tel" autocomplete="tel" disabled>
 
-                            <input
-                                id="nome-social"
-                                type="text"
-                                disabled
-                            >
-
-
-                            <label for="email">
-                                E-mail
-                            </label>
-
-                            <input
-                                id="email"
-                                type="text"
-                            >
-
-
-                            <label for="telefone">
-                                Telefone
-                            </label>
-
-                            <input
-                                id="telefone"
-                                type="tel"
-                                disabled
-                            >
-
-
-                            <label for="senha">
-                                Senha
-                            </label>
-
-                            <input
-                                id="senha"
-                                type="text"
-                                disabled
-                            >
-
-
-                            <!-- AÇÃO PRINCIPAL -->
-
-                            <button
-                                class="btn"
-                                type="button"
-                            >
-                                Alterar Dados
-                            </button>
+                            <label for="cep">CEP</label>
+                            <input id="cep" name="cep" type="text" inputmode="numeric" autocomplete="postal-code"
+                                maxlength="9" placeholder="00000-000" disabled>
 
                         </div>
 
@@ -165,53 +140,38 @@
                         <!-- ABAS -->
                         <!-- ========================= -->
 
-                        <button
-                            class="aba"
-                            role="tab"
-                            id="aba-registro"
-                            aria-controls="painel-registro"
-                            aria-selected="true"
-                            type="button"
-                        >
-                            Registro
-                        </button>
-
-
-                        <button
-                            class="aba"
-                            role="tab"
-                            id="aba-acss"
-                            aria-controls="painel-acss"
-                            aria-selected="false"
-                            type="button"
-                        >
-                            Acessibilidade
-                        </button>
-
-
-                        <button
-                            class="aba"
-                            role="tab"
-                            id="aba-configuracoes"
-                            aria-controls="painel-configuracoes"
-                            aria-selected="false"
-                            type="button"
-                        >
-                            Configurações
-                        </button>
+                      
+<div class="abas-perfil" role="tablist" aria-label="Seções do perfil">
+ 
+    <button class="aba" role="tab" id="aba-registro" aria-controls="painel-registro"
+        aria-selected="true" type="button">
+        Registro
+    </button>
+ 
+    <button class="aba" role="tab" id="aba-acss" aria-controls="painel-acss"
+        aria-selected="false" type="button">
+        Acessibilidade
+    </button>
+ 
+    <button class="aba" role="tab" id="aba-configuracoes" aria-controls="painel-configuracoes"
+        aria-selected="false" type="button">
+        Configurações
+    </button>
+ 
+    <!-- Linha dourada que desliza entre as abas -->
+    <span class="aba-indicador" aria-hidden="true"></span>
+ 
+</div>
+ 
+ 
 
 
                         <!-- ====================================================== -->
                         <!-- PAINEL 1 — REGISTRO -->
                         <!-- ====================================================== -->
 
-                        <div
-                            class="painel painel-aba"
-                            role="tabpanel"
-                            id="painel-registro"
-                            aria-labelledby="aba-registro"
-                            tabindex="0"
-                        >
+                        <div class="painel painel-aba" role="tabpanel" id="painel-registro"
+                            aria-labelledby="aba-registro" tabindex="0">
 
 
                             <!-- RESUMO DO REGISTRO -->
@@ -263,11 +223,7 @@
 
                                 <!-- BAIXAR DECLARAÇÃO -->
 
-                                <button
-                                    class="botao botao-secundario"
-                                    type="button"
-                                    id="baixar-registro"
-                                >
+                                <button class="botao botao-secundario" type="button" id="baixar-registro">
                                     Baixar Registro
                                 </button>
 
@@ -276,72 +232,89 @@
 
                             <div class="divider">
 
-                                <img
-                                    class="lua"
-                                    src="../assets/moon.png"
-                                >
-
                             </div>
 
 
                             <!-- FILTROS DO REGISTRO -->
 
-                            <div
-                                class="filtros-registro"
-                                role="group"
-                                aria-label="Filtrar registro"
-                            >
-
-                                <button
-                                    class="filtro"
-                                    type="button"
-                                    aria-pressed="true"
-                                    data-filtro="tudo"
-                                >
-                                    Tudo
-                                </button>
-
-
-                                <button
-                                    class="filtro"
-                                    type="button"
-                                    aria-pressed="false"
-                                    data-filtro="doacao"
-                                >
-                                    Doações
-                                </button>
-
-
-                                <button
-                                    class="filtro"
-                                    type="button"
-                                    aria-pressed="false"
-                                    data-filtro="voluntariado"
-                                >
-                                    Voluntariado
-                                </button>
-
-                            </div>
-
-
-                            <!-- ANO DO REGISTRO -->
-
-                            <p class="ano-registro">
-                                2026
-                            </p>
-
-
-                            <!-- LINHA DO TEMPO -->
-
-                            <ul class="linha-tempo">
+                       
+<div class="barra-registro">
+ 
+    <div class="filtros-registro" role="group" aria-label="Filtrar registro por tipo">
+ 
+        <button class="filtro" type="button" aria-pressed="true" data-filtro="tudo">
+            Tudo
+        </button>
+ 
+        <button class="filtro" type="button" aria-pressed="false" data-filtro="doacao">
+            Doações
+        </button>
+ 
+        <button class="filtro" type="button" aria-pressed="false" data-filtro="voluntariado">
+            Voluntariado
+        </button>
+ 
+    </div>
+ 
+    <button class="botao-filtro-data" type="button" id="botao-filtro-data"
+        aria-expanded="false" aria-controls="painel-filtro-data">
+        <i class="fa-solid fa-filter" aria-hidden="true"></i>
+        Filtrar por data
+        <span class="filtro-badge" id="filtro-badge" hidden>0</span>
+        <i class="fa-solid fa-chevron-down filtro-seta" aria-hidden="true"></i>
+    </button>
+ 
+</div>
+ 
+ 
+<!-- PAINEL DE FILTRO POR ANO / MÊS / DIA (abre e fecha com animação) -->
+ 
+<div class="filtro-data" id="painel-filtro-data" inert>
+    <div class="filtro-data__interno">
+        <div class="filtro-data__campos">
+ 
+            <div class="filtro-data__campo">
+                <label for="filtro-ano">Ano</label>
+                <select id="filtro-ano">
+                    <option value="">Todos</option>
+                </select>
+            </div>
+ 
+            <div class="filtro-data__campo">
+                <label for="filtro-mes">Mês</label>
+                <select id="filtro-mes">
+                    <option value="">Todos</option>
+                </select>
+            </div>
+ 
+            <div class="filtro-data__campo">
+                <label for="filtro-dia">Dia</label>
+                <select id="filtro-dia">
+                    <option value="">Todos</option>
+                </select>
+            </div>
+ 
+            <button class="botao-limpar-data" type="button" id="limpar-filtro-data">
+                Limpar
+            </button>
+ 
+        </div>
+    </div>
+</div>
+ 
+<p class="contador-registros" id="contador-registros" role="status" aria-live="polite"></p>
+ 
+<!-- ANO DO REGISTRO (o JS atualiza conforme o filtro) -->
+ 
+<p class="ano-registro">
+    2026
+</p>
+<ul class="linha-tempo">
 
 
                                 <!-- Registro de doação -->
 
-                                <li
-                                    class="registro"
-                                    data-tipo="doacao"
-                                >
+                                <li class="registro" data-tipo="doacao">
 
                                     <div class="data-registro">
                                         15 SET
@@ -371,10 +344,7 @@
 
                                 <!-- Registro de voluntariado -->
 
-                                <li
-                                    class="registro"
-                                    data-tipo="voluntariado"
-                                >
+                                <li class="registro" data-tipo="voluntariado">
 
                                     <div class="data-registro">
                                         07 SET
@@ -398,10 +368,7 @@
 
                                 <!-- Registro de doação -->
 
-                                <li
-                                    class="registro"
-                                    data-tipo="doacao"
-                                >
+                                <li class="registro" data-tipo="doacao">
 
                                     <div class="data-registro">
                                         28 AGO
@@ -431,10 +398,7 @@
 
                                 <!-- Registro de voluntariado -->
 
-                                <li
-                                    class="registro"
-                                    data-tipo="voluntariado"
-                                >
+                                <li class="registro" data-tipo="voluntariado">
 
                                     <div class="data-registro">
                                         16 AGO
@@ -458,10 +422,7 @@
 
                                 <!-- Registro de doação -->
 
-                                <li
-                                    class="registro"
-                                    data-tipo="doacao"
-                                >
+                                <li class="registro" data-tipo="doacao">
 
                                     <div class="data-registro">
                                         02 AGO
@@ -491,10 +452,7 @@
 
                                 <!-- Registro de voluntariado -->
 
-                                <li
-                                    class="registro"
-                                    data-tipo="voluntariado"
-                                >
+                                <li class="registro" data-tipo="voluntariado">
 
                                     <div class="data-registro">
                                         19 JUL
@@ -518,10 +476,7 @@
 
                                 <!-- Registro de doação -->
 
-                                <li
-                                    class="registro"
-                                    data-tipo="doacao"
-                                >
+                                <li class="registro" data-tipo="doacao">
 
                                     <div class="data-registro">
                                         05 JUL
@@ -551,10 +506,7 @@
 
                                 <!-- Registro de voluntariado -->
 
-                                <li
-                                    class="registro"
-                                    data-tipo="voluntariado"
-                                >
+                                <li class="registro" data-tipo="voluntariado">
 
                                     <div class="data-registro">
                                         21 JUN
@@ -580,20 +532,13 @@
 
                             <!-- ESTADO VAZIO -->
 
-                            <div
-                                class="estado-vazio"
-                                id="registro-vazio"
-                                hidden
-                            >
+                            <div class="estado-vazio" id="registro-vazio" hidden>
 
                                 <h3></h3>
 
                                 <p></p>
 
-                                <button
-                                    class="botao botao-secundario"
-                                    type="button"
-                                >
+                                <button class="botao botao-secundario" type="button">
                                 </button>
 
                             </div>
@@ -605,242 +550,220 @@
                         <!-- PAINEL 2 — ACSS -->
                         <!-- ====================================================== -->
 
-                        <div
-                            class="painel painel-aba"
-                            role="tabpanel"
-                            id="painel-acss"
-                            aria-labelledby="aba-acss"
-                            tabindex="0"
-                            hidden
-                        >
+                      
+<div class="painel painel-aba" role="tabpanel" id="painel-acss" aria-labelledby="aba-acss"
+    tabindex="0" hidden>
+ 
+    <!-- LIBRAS -->
+ 
+    <div class="acss-configuracao">
+ 
+        <div>
+            <h3 class="VLB">VLibras</h3>
+            <p>Ativa o recurso de tradução de conteúdos para Libras.</p>
+        </div>
+ 
+        <label class="acss-interruptor">
+            <input type="checkbox" id="acss-libras">
+            <span></span>
+        </label>
+ 
+    </div>
+ 
+ 
+    <!-- TAMANHO DA LETRA — NÍVEIS -->
+ 
+    <div class="acss-grupo">
+ 
+        <h3 id="titulo-tamanho-letra">Tamanho da letra</h3>
+        <p>Escolha o nível de tamanho dos textos exibidos no site.</p>
+ 
+        <div class="acss-niveis" role="radiogroup" aria-labelledby="titulo-tamanho-letra">
+ 
+            <label class="acss-nivel">
+                <input type="radio" name="acss-tamanho-letra" value="pequeno">
+                <span class="acss-nivel__cartao">
+                    <span class="acss-nivel__letra" aria-hidden="true">Aa</span>
+                    <span class="acss-nivel__nome">Pequeno</span>
+                    <span class="acss-nivel__perc">90%</span>
+                </span>
+            </label>
+ 
+            <label class="acss-nivel">
+                <input type="radio" name="acss-tamanho-letra" value="medio" checked>
+                <span class="acss-nivel__cartao">
+                    <span class="acss-nivel__letra" aria-hidden="true">Aa</span>
+                    <span class="acss-nivel__nome">Médio</span>
+                    <span class="acss-nivel__perc">100%</span>
+                </span>
+            </label>
+ 
+            <label class="acss-nivel">
+                <input type="radio" name="acss-tamanho-letra" value="grande">
+                <span class="acss-nivel__cartao">
+                    <span class="acss-nivel__letra" aria-hidden="true">Aa</span>
+                    <span class="acss-nivel__nome">Grande</span>
+                    <span class="acss-nivel__perc">120%</span>
+                </span>
+            </label>
+ 
+            <label class="acss-nivel">
+                <input type="radio" name="acss-tamanho-letra" value="extra-grande">
+                <span class="acss-nivel__cartao">
+                    <span class="acss-nivel__letra" aria-hidden="true">Aa</span>
+                    <span class="acss-nivel__nome">Extra grande</span>
+                    <span class="acss-nivel__perc">140%</span>
+                </span>
+            </label>
+ 
+        </div>
+ 
+    </div>
+ 
+ 
+    <!-- MODO DE EXIBIÇÃO — TEMAS COM ÍCONE -->
+ 
+    <div class="acss-grupo">
+ 
+        <h3 id="titulo-modo-exibicao">Modo de exibição</h3>
+        <p>Escolha a aparência da página.</p>
+ 
+      <div class="acss-temas" role="radiogroup" aria-labelledby="titulo-modo-exibicao">
+
+    <label class="acss-tema acss-tema--claro">
+        <input type="radio" name="acss-modo-exibicao" value="claro">
+        <span class="acss-tema__cartao">
+            <span class="acss-tema__icone">
+                <img src="../assets/" alt="">
+            </span>
+            <span class="acss-tema__nome">Tema claro</span>
+        </span>
+    </label>
+
+    <label class="acss-tema acss-tema--escuro">
+        <input type="radio" name="acss-modo-exibicao" value="escuro" checked>
+        <span class="acss-tema__cartao">
+            <span class="acss-tema__icone">
+                <img src="../assets/logo-night.png" alt="">
+            </span>
+            <span class="acss-tema__nome">Tema escuro</span>
+        </span>
+    </label>
+
+    <label class="acss-tema acss-tema--contraste">
+        <input type="radio" name="acss-modo-exibicao" value="alto-contraste">
+        <span class="acss-tema__cartao">
+            <span class="acss-tema__icone">
+                <img src="../assets/tema-contraste.png" alt="">
+            </span>
+            <span class="acss-tema__nome">Alto contraste</span>
+        </span>
+    </label>
+
+</div>
+    
+ 
+    </div>
+ 
+ 
+    <!-- CHECKLIST — TIPOS DE ONGs DE PREFERÊNCIA -->
+ 
+    <div class="acss-grupo">
+ 
+        <h3 id="titulo-tipos-ong">Tipos de ONGs de preferência</h3>
+        <p>Marque as causas que você mais gostaria de apoiar.</p>
+ 
+        <div class="acss-chips" role="group" aria-labelledby="titulo-tipos-ong">
+ 
+            <label class="acss-chip">
+                <input type="checkbox" name="acss-tipos-ong" value="alimentacao">
+                <span class="acss-chip__rotulo"><span class="acss-chip__caixa" aria-hidden="true"></span><i class="fa-solid fa-bowl-food" aria-hidden="true"></i>Alimentação</span>
+            </label>
+ 
+            <label class="acss-chip">
+                <input type="checkbox" name="acss-tipos-ong" value="criancas-adolescentes">
+                <span class="acss-chip__rotulo"><span class="acss-chip__caixa" aria-hidden="true"></span><i class="fa-solid fa-child" aria-hidden="true"></i>Crianças e adolescentes</span>
+            </label>
+ 
+            <label class="acss-chip">
+                <input type="checkbox" name="acss-tipos-ong" value="idosos">
+                <span class="acss-chip__rotulo"><span class="acss-chip__caixa" aria-hidden="true"></span><i class="fa-solid fa-person-cane" aria-hidden="true"></i>Idosos</span>
+            </label>
+ 
+            <label class="acss-chip">
+                <input type="checkbox" name="acss-tipos-ong" value="saude">
+                <span class="acss-chip__rotulo"><span class="acss-chip__caixa" aria-hidden="true"></span><i class="fa-solid fa-heart-pulse" aria-hidden="true"></i>Saúde</span>
+            </label>
+ 
+            <label class="acss-chip">
+                <input type="checkbox" name="acss-tipos-ong" value="educacao">
+                <span class="acss-chip__rotulo"><span class="acss-chip__caixa" aria-hidden="true"></span><i class="fa-solid fa-graduation-cap" aria-hidden="true"></i>Educação</span>
+            </label>
+ 
+            <label class="acss-chip">
+                <input type="checkbox" name="acss-tipos-ong" value="animais">
+                <span class="acss-chip__rotulo"><span class="acss-chip__caixa" aria-hidden="true"></span><i class="fa-solid fa-paw" aria-hidden="true"></i>Animais</span>
+            </label>
+ 
+            <label class="acss-chip">
+                <input type="checkbox" name="acss-tipos-ong" value="meio-ambiente">
+                <span class="acss-chip__rotulo"><span class="acss-chip__caixa" aria-hidden="true"></span><i class="fa-solid fa-leaf" aria-hidden="true"></i>Meio ambiente</span>
+            </label>
+ 
+            <label class="acss-chip">
+                <input type="checkbox" name="acss-tipos-ong" value="moradia">
+                <span class="acss-chip__rotulo"><span class="acss-chip__caixa" aria-hidden="true"></span><i class="fa-solid fa-house" aria-hidden="true"></i>Moradia</span>
+            </label>
+ 
+            <label class="acss-chip">
+                <input type="checkbox" name="acss-tipos-ong" value="pessoas-com-deficiencia">
+                <span class="acss-chip__rotulo"><span class="acss-chip__caixa" aria-hidden="true"></span><i class="fa-solid fa-wheelchair" aria-hidden="true"></i>Pessoas com deficiência</span>
+            </label>
+ 
+            <label class="acss-chip">
+                <input type="checkbox" name="acss-tipos-ong" value="mulheres">
+                <span class="acss-chip__rotulo"><span class="acss-chip__caixa" aria-hidden="true"></span><i class="fa-solid fa-venus" aria-hidden="true"></i>Mulheres</span>
+            </label>
+ 
+            <label class="acss-chip">
+                <input type="checkbox" name="acss-tipos-ong" value="cultura-esporte">
+                <span class="acss-chip__rotulo"><span class="acss-chip__caixa" aria-hidden="true"></span><i class="fa-solid fa-masks-theater" aria-hidden="true"></i>Cultura e esporte</span>
+            </label>
+ 
+            <label class="acss-chip">
+                <input type="checkbox" name="acss-tipos-ong" value="emergencias">
+                <span class="acss-chip__rotulo"><span class="acss-chip__caixa" aria-hidden="true"></span><i class="fa-solid fa-life-ring" aria-hidden="true"></i>Emergências</span>
+            </label>
+ 
+        </div>
+ 
+        <div class="acss-chips-rodape">
+            <span id="acss-contador-ong" role="status" aria-live="polite">Nenhum tipo selecionado</span>
+            <button type="button" class="acss-link" id="acss-limpar-ong">Limpar seleção</button>
+        </div>
+ 
+    </div>
+ 
+ 
+    <div class="grupo-botoes">
+        <button class="botao botao-secundario" type="button" id="salvar-preferencias-acss">
+            Salvar preferências
+        </button>
+    </div>
+ 
+    <p id="estado-preferencias-acss" role="status" aria-live="polite" hidden></p>
+ 
+</div>
+ 
 
-
-                            <!-- LEITURA DE TELA -->
-
-                            <div class="acss-configuracao">
-
-                                <div>
-
-                                    <h3 class="LT">
-                                        Leitura de tela
-                                    </h3>
-
-                                    <p>
-                                        Ativa recursos compatíveis com leitores de tela
-                                        para facilitar a navegação pelo site.
-                                    </p>
-
-                                </div>
-
-
-                                <label class="acss-interruptor">
-
-                                    <input
-                                        type="checkbox"
-                                        id="acss-leitura-tela"
-                                    >
-
-                                    <span></span>
-
-                                </label>
-
-                            </div>
-
-
-                            <!-- LIBRAS -->
-
-                            <div class="acss-configuracao">
-
-                                <div>
-
-                                    <h3 class="VLB">
-                                        VLibras
-                                    </h3>
-
-                                    <p>
-                                        Ativa o recurso de tradução de conteúdos para Libras.
-                                    </p>
-
-                                </div>
-
-
-                                <label class="acss-interruptor">
-
-                                    <input
-                                        type="checkbox"
-                                        id="acss-libras"
-                                    >
-
-                                    <span></span>
-
-                                </label>
-
-                            </div>
-
-
-                            <div class="divider">
-
-                                <img
-                                    class="lua"
-                                    src="../assets/moon.png"
-                                >
-
-                            </div>
-
-
-                            <!-- TAMANHO DA LETRA -->
-
-                            <div class="acss-configuracao">
-
-                                <div>
-
-                                    <h3>
-                                        Tamanho da letra
-                                    </h3>
-
-                                    <p>
-                                        Escolha o tamanho dos textos exibidos no site.
-                                    </p>
-
-                                </div>
-
-
-                                <div class="acss-campo-configuracao">
-
-                                    <label for="acss-tamanho-letra"></label>
-
-                                    <select id="acss-tamanho-letra">
-
-                                        <option value="pequeno">
-                                            Pequeno
-                                        </option>
-
-                                        <option
-                                            value="medio"
-                                            selected
-                                        >
-                                            Médio
-                                        </option>
-
-                                        <option value="grande">
-                                            Grande
-                                        </option>
-
-                                        <option value="extra-grande">
-                                            Extra grande
-                                        </option>
-
-                                    </select>
-
-                                </div>
-
-                            </div>
-
-
-                            <!-- APARÊNCIA -->
-
-                            <div class="acss-configuracao">
-
-                                <div>
-
-                                    <h3>
-                                        Modo de exibição
-                                    </h3>
-
-                                    <p>
-                                        Escolha o modo de aparência da página.
-                                    </p>
-
-                                </div>
-
-
-                                <div class="acss-campo-configuracao">
-
-                                    <label for="acss-modo-exibicao"></label>
-
-                                    <select id="acss-modo-exibicao">
-
-                                        <option
-                                            value="escuro"
-                                            selected
-                                        >
-                                            Escuro
-                                        </option>
-
-                                        <option value="claro">
-                                            Claro
-                                        </option>
-
-                                        <option value="alto-contraste">
-                                            Alto contraste
-                                        </option>
-
-                                    </select>
-
-                                </div>
-
-                            </div>
-
-
-                            <!-- IDIOMA -->
-
-                            <div class="acss-configuracao">
-
-                                <div>
-
-                                    <h3>
-                                        Idioma de preferência
-                                    </h3>
-
-                                    <p>
-                                        Escolha o idioma preferencial para a interface.
-                                    </p>
-
-                                </div>
-
-
-                                <div class="acss-campo-configuracao">
-
-                                    <label for="acss-idioma"></label>
-
-                                    <select id="acss-idioma">
-
-                                        <option
-                                            value="pt-BR"
-                                            selected
-                                        >
-                                            Português (BR)
-                                        </option>
-
-                                        <option value="en">
-                                            English
-                                        </option>
-
-                                        <option value="es">
-                                            Español
-                                        </option>
-
-                                    </select>
-
-                                </div>
-
-                            </div>
-
-                        </div>
 
 
                         <!-- ====================================================== -->
                         <!-- PAINEL 3 — CONFIGURAÇÕES -->
                         <!-- ====================================================== -->
 
-                        <div
-                            class="painel painel-aba"
-                            role="tabpanel"
-                            id="painel-configuracoes"
-                            aria-labelledby="aba-configuracoes"
-                            tabindex="0"
-                            hidden
-                        >
+                        <div class="painel painel-aba" role="tabpanel" id="painel-configuracoes"
+                            aria-labelledby="aba-configuracoes" tabindex="0" hidden>
 
 
                             <!-- ================================================== -->
@@ -852,7 +775,7 @@
                                 <div>
 
                                     <h3>
-                                        Criar conta de OSC
+                                        Criar conta de ONG
                                     </h3>
 
                                     <p>
@@ -867,14 +790,9 @@
 
                                 <div class="grupo-botoes">
 
-                                    <button
-                                        class="botao botao-secundario"
-                                        type="button"
-                                        id="criar-osc"
-                                    >
+                                    <button class="botao botao-secundario" type="button" id="criar-osc">
                                         Criar conta
                                     </button>
-
                                 </div>
 
                             </div>
@@ -889,7 +807,7 @@
                                 <div>
 
                                     <h3>
-                                        Trocar para conta de OSC
+                                        Trocar para conta de ONG
                                     </h3>
 
                                     <p>
@@ -904,46 +822,8 @@
 
                                 <div class="grupo-botoes">
 
-                                    <button
-                                        class="botao botao-secundario"
-                                        type="button"
-                                        id="trocar-osc"
-                                    >
+                                    <button class="botao botao-secundario" type="button" id="trocar-osc">
                                         Trocar conta
-                                    </button>
-
-                                </div>
-
-                            </div>
-
-                            <!-- ================================================== -->
-                            <!-- ENCERRAR SESSÕES -->
-                            <!-- ================================================== -->
-
-                            <div class="configuracao">
-
-                                <div>
-
-                                    <h3>
-                                        Encerrar outras sessões
-                                    </h3>
-
-                                    <p>
-                                        Desconecte sua conta de outros dispositivos
-                                        onde ela esteja aberta.
-                                    </p>
-
-                                </div>
-
-
-                                <div class="grupo-botoes">
-
-                                    <button
-                                        class="botao botao-secundario"
-                                        id="encerrar-sessoes"
-                                        type="button"
-                                    >
-                                        Encerrar sessões
                                     </button>
 
                                 </div>
@@ -954,18 +834,18 @@
                             <!-- ENDEREÇO -->
                             <!-- ================================================== -->
                             <div class="divider">
-                        <img class="lua" src="../assets/moon.png">
-                    </div>
+                                <img class="lua" src="../assets/moon.png">
+                            </div>
                             <div class="configuracao">
 
                                 <div>
 
                                     <h3>
-                                        Informações de endereço
+                                        Informações pessoais
                                     </h3>
 
                                     <p>
-                                        Altere ou atualize o endereço associado
+                                        Altere ou atualize os dados associados
                                         à sua conta.
                                     </p>
 
@@ -974,15 +854,23 @@
 
                                 <div class="grupo-botoes">
 
-                                    <button
-                                        class="botao botao-secundario"
-                                        type="button"
-                                        id="alterar-endereco"
-                                    >
-                                        Alterar endereço
+                                    <button class="botao botao-secundario" type="button" id="alterar-dados-perfil">
+                                        Alterar dados
                                     </button>
 
                                 </div>
+
+                                <div class="grupo-botoes acoes-edicao-perfil" hidden>
+                                    <button class="botao botao-secundario" type="button" id="salvar-dados-perfil">
+                                        Salvar alterações
+                                    </button>
+
+                                    <button class="botao botao-secundario" type="button" id="cancelar-edicao-perfil">
+                                        Cancelar
+                                    </button>
+                                </div>
+
+                                <p id="estado-edicao-perfil" role="status" aria-live="polite" hidden></p>
 
                             </div>
 
@@ -992,7 +880,7 @@
                             <!-- ================================================== -->
                             <!-- NOTIFICAÇÕES POR E-MAIL -->
                             <!-- ================================================== -->
-                    
+
                             <div class="configuracao">
 
                                 <div>
@@ -1010,10 +898,7 @@
 
                                 <label class="interruptor">
 
-                                    <input
-                                        type="checkbox"
-                                        id="notificacao-email"
-                                    >
+                                    <input type="checkbox" id="notificacao-email">
 
                                     <span></span>
 
@@ -1043,10 +928,7 @@
 
                                 <label class="interruptor">
 
-                                    <input
-                                        type="checkbox"
-                                        id="notificacao-atividade"
-                                    >
+                                    <input type="checkbox" id="notificacao-atividade">
 
                                     <span></span>
 
@@ -1054,13 +936,31 @@
 
                             </div>
 
+                            <div class="divider">
+                                <img class="lua" src="../assets/moon.png">
+                            </div>
+                            <!-- ================================================== -->
+                            <!-- ENCERRAR SESSÃO -->
+                            <!-- ================================================== -->
+
+                            <div class="configuracao">
+                                <div>
+                                    <h3 class="perigo">Sair da conta</h3>
+                                    <p>Encerre sua sessão neste dispositivo.</p>
+                                </div>
+
+                                <div class="grupo-botoes">
+                                    <button class="botao botao-secundario perigo" type="button" id="botao-logout">
+                                        Sair da conta
+                                    </button>
+                                </div>
+                            </div>
+
+                            <p id="estado-logout" role="status" aria-live="polite" hidden></p>
 
                             <!-- ================================================== -->
                             <!-- EXCLUSÃO DA CONTA -->
                             <!-- ================================================== -->
-                            <div class="divider">
-                        <img class="lua" src="../assets/moon.png">
-                    </div>
                             <div class="configuracao">
 
                                 <div>
@@ -1070,8 +970,9 @@
                                     </h3>
 
                                     <p>
-                                        A exclusão da conta removerá seus dados
-                                        e não poderá ser desfeita.
+                                        A conta será desativada imediatamente e os dados serão preservados por seis
+                                        meses.
+                                        Você poderá cancelar a solicitação durante esse prazo.
                                     </p>
 
                                 </div>
@@ -1079,17 +980,15 @@
 
                                 <div class="grupo-botoes">
 
-                                    <button
-                                        class="botao botao-secundario perigo"
-                                        type="button"
-                                        id="excluir-conta"
-                                    >
-                                        Excluir conta
+                                    <button class="botao botao-secundario perigo" type="button" id="excluir-conta">
+                                        Solicitar exclusão
                                     </button>
 
                                 </div>
 
                             </div>
+
+                            <p id="estado-exclusao-conta" role="status" aria-live="polite" hidden></p>
 
                         </div>
 
@@ -1102,6 +1001,53 @@
         </section>
 
     </section>
+
+
+    <!-- Modal de confirmação de exclusão da conta -->
+    <div id="modal-exclusao-conta" class="modal-confirmacao" role="dialog" aria-modal="true"
+        aria-labelledby="titulo-modal-exclusao" aria-describedby="descricao-modal-exclusao" hidden>
+        <div class="modal-confirmacao__conteudo">
+            <button type="button" id="fechar-modal-exclusao" class="modal-confirmacao__fechar"
+                aria-label="Fechar confirmação">
+                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+            </button>
+
+            <div class="modal-confirmacao__icone" aria-hidden="true">
+                <i class="fa-solid fa-user-slash"></i>
+            </div>
+
+            <span class="modal-confirmacao__etiqueta">
+                Segurança da conta
+            </span>
+
+            <h2 id="titulo-modal-exclusao">
+                Solicitar exclusão
+            </h2>
+
+            <p id="descricao-modal-exclusao">
+                Sua conta será desativada imediatamente e a exclusão definitiva
+                ocorrerá após seis meses. Durante esse período, você poderá
+                cancelar a solicitação e recuperar sua conta.
+            </p>
+
+            <p class="modal-confirmacao__aviso">
+                <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+                Deseja realmente continuar?
+            </p>
+
+            <div class="modal-confirmacao__acoes">
+                <button type="button" id="cancelar-modal-exclusao"
+                    class="modal-confirmacao__botao modal-confirmacao__botao--secundario">
+                    Cancelar
+                </button>
+
+                <button type="button" id="confirmar-modal-exclusao"
+                    class="modal-confirmacao__botao modal-confirmacao__botao--perigo">
+                    Solicitar exclusão
+                </button>
+            </div>
+        </div>
+    </div>
 
 
     <footer id="footer"></footer>

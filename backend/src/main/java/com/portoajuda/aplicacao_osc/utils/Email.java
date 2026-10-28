@@ -1,10 +1,10 @@
 package com.portoajuda.aplicacao_osc.utils;
 
-import jakarta.persistence.Embeddable;
-import lombok.Getter;
+// import jakarta.persistence.Embeddable;
+// import lombok.Getter;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+// import java.util.regex.Matcher;
+// import java.util.regex.Pattern;
 
 public record Email(String valor) {
     private static final String REGEX = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";

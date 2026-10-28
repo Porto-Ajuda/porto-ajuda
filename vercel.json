@@ -1,0 +1,70 @@
+{
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "outputDirectory": "public",
+  "redirects": [
+    {
+      "source": "/public/pages/confirmacao-email",
+      "destination": "/pages/confirmacao-email",
+      "permanent": false
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/pages/Porto-Ajuda"
+    },
+    {
+      "source": "/sobre",
+      "destination": "/pages/sobre"
+    },
+    {
+      "source": "/iniciativas",
+      "destination": "/pages/iniciativas"
+    },
+    {
+      "source": "/apoie",
+      "destination": "/pages/apoie"
+    },
+    {
+      "source": "/contato",
+      "destination": "/pages/contato"
+    },
+    {
+      "source": "/login",
+      "destination": "/pages/login"
+    },
+    {
+      "source": "/contribuicao",
+      "destination": "/pages/contribuicao"
+    },
+    {
+      "source": "/doacao-ong",
+      "destination": "/pages/doacao-ong"
+    },
+    {
+      "source": "/perfil",
+      "destination": "/pages/perfil"
+    },
+    {
+      "source": "/oscs",
+      "destination": "/pages/oscs-page"
+    },
+    {
+      "source": "/proximidade",
+      "destination": "/pages/proximity"
+    },
+    {
+      "source": "/apoio",
+      "destination": "/pages/apoie"
+    },
+    {
+      "source": "/ong-profile",
+      "destination": "/pages/ong-profile"
+    },
+    {
+      "source": "/cadastro-osc",
+      "destination": "/pages/cadastro-osc"
+    }
+  ]
+}

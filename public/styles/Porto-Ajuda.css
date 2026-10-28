@@ -119,13 +119,13 @@ body {
   justify-content: space-between;
 
   padding:
-    150px 90px 80px;
+    150px 90px 10px;
 }
 
 .hero-text {
   width: 100%;
   text-align: center;
-  padding-top: 130px;
+  padding-top: 100px;
 }
 
 .hero h1 {
@@ -202,11 +202,13 @@ background:
     transition: all 0.3s ease;
 }
 
-.search-button:hover i {
+.search-button:hover i,
+.search-button:focus-within i {
     transform: translateX(0);
 }
 
-.search-button:hover {
+.search-button:hover,
+.search-button:focus-within {
   width: 190px;
   height: 70px;
   border-radius:37px;
@@ -245,7 +247,8 @@ gap: 15px;
     1px solid rgba(255, 255, 255, .06);
 }
 
-.search-button:hover input {
+.search-button:hover input,
+.search-button:focus-within input {
     width: 120px;
     opacity: 1;
 }
@@ -1740,7 +1743,8 @@ Lista escondida
     gap: 12px;
   }
 
-  .search-button:hover {
+  .search-button:hover,
+  .search-button:focus-within {
 
     width: 100%;
 
@@ -1760,7 +1764,8 @@ Lista escondida
     font-size: 14px;
   }
 
-  .search-button:hover input {
+  .search-button:hover input,
+  .search-button:focus-within input {
 
     width: 100%;
   }
@@ -2133,4 +2138,34 @@ Lista escondida
         pointer-events: auto;
     }
 
+}
+
+
+@media (min-width: 769px) {
+
+  .regioes {
+    pointer-events: auto;
+
+    transition:
+      opacity .2s ease 0.5s,
+      visibility .2s linear 0.5s;
+  }
+
+  .dropdown-regiao:hover .regioes,
+  .dropdown-regiao.aberto .regioes {
+    transition-delay: 0s;
+  }
+
+  .search-box:has(.dropdown-regiao:hover) .dropdown-regiao:not(:hover) .regioes {
+    opacity: 0;
+    visibility: hidden;
+    transition: none;
+  }
+
+
+  .search-box:has(.dropdown-regiao.aberto) .dropdown-regiao:not(.aberto):not(:hover) .regioes {
+    opacity: 0;
+    visibility: hidden;
+    transition: none;
+  }
 }

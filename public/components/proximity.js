@@ -1,9 +1,24 @@
+import { getAPI_URL } from "./modoBack.js";
+
+const API_URL = getAPI_URL();
+
+const ROTAS = API_URL === "http://localhost:8080"
+    || API_URL === "https://api.portoajuda.com.br"
+    ? {
+        ongProfile: "/ong-profile",
+    }
+    : {
+        ongProfile: "ong-profile.html",
+    };
+
 const posicaoInicial = [-24.090, -46.500];
 const zoomInicial = 13;
 
 let posicaoUsuario = null;
 
 var map = L.map('map').setView(posicaoInicial, zoomInicial);
+const camadaMarcadoresOngs = L.layerGroup().addTo(map);
+let ongsCarregadas = [];
 
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -156,168 +171,177 @@ function destacarOng(ongId) {
 
 // Criar ongs
 
-async function carregarOngs() {
 
-    const telaCarregamento = document.querySelector("#tela-carregamento");
+function formatarCategoria(causas) {
+    const categorias = {
+        EDUCACAO: "Educação",
+        SAUDE: "Assistência Social",
+        MEIO_AMBIENTE: "Meio Ambiente",
+        ANIMAIS: "Proteção Animal",
+        INCLUSAO_SOCIAL: "Assistência Social",
+        ESPORTE: "Esporte",
+        CULTURA: "Cultura",
+        COMBATE_POBREZA: "Assistência Social"
+    };
 
-    // Tenta localizar o usuário
+    if (!Array.isArray(causas) || causas.length === 0) {
+        return "Organização social";
+    }
 
-    const localizacao = await Promise.race([
-
-        localizarUsuario(),
-
-        new Promise(resolve => {
-
-            setTimeout(() => {
-
-                console.log(
-                    "Tempo limite de localização atingido."
-                );
-
-                resolve(null);
-
-            }, 10000);
-
-        })
-
-    ]);
-
-    ongs.forEach(ong => {
-
-        let distancia = null;
-
-        // Só calcula distância se:
-        // 1. O usuário foi localizado
-        // 2. A ONG possui coordenadas
-        if (
-            localizacao &&
-            ong.latitude != null &&
-            ong.longitude != null
-        ) {
-
-            distancia = calcularDistancia(
-                localizacao.latitude,
-                localizacao.longitude,
-                ong.latitude,
-                ong.longitude
-            );
-
-        }
-
-        const card = document.createElement("div");
-
-        card.classList.add("ong");
-        card.id = `ong-${ong.id}`;
-
-        card.innerHTML = `
-    <div class="ong-imagem">
-        <img 
-            src="${ong.imagem || '../assets/ong-padrao.png'}"
-            alt="Imagem de ${ong.nome}"
-        >
-    </div>
-
-    <div class="ong-info">
-
-        <h3>${ong.nome}</h3>
-
-        <p>${ong.categoria}</p>
-
-        ${distancia !== null
-                ? `<span>${distancia.toFixed(1)} km</span>`
-                : `<span>Distância indisponível</span>`
-            }
-
-    </div>
-
-    <a href="ong-profile.html?id=${ong.id}" class="botao-ong">
-        Ver ONG
-    </a>
-`;
-
-        // Só permite clicar no mapa se houver coordenadas
-        if (
-            ong.latitude != null &&
-            ong.longitude != null
-        ) {
-
-            card.addEventListener("click", (evento) => {
-
-                // Não interfere no botão "Ver ONG"
-                if (evento.target.closest(".botao-ong")) {
-                    return;
-                }
-
-                map.setView(
-                    [
-                        ong.latitude,
-                        ong.longitude
-                    ],
-                    19
-                );
-
-                // No celular, fecha a lista depois de selecionar a ONG
-                if (window.innerWidth <= 768) {
-                    fecharPainelOngs();
-                }
-
-            });
-
-            const icone = L.divIcon({
-
-                html: escolherIcone(ong.categoria),
-
-                className: "icone-ong",
-
-                iconSize: [45, 45],
-
-                iconAnchor: [22, 45]
-
-            });
-
-            const marcador = L.marker(
-                [ong.latitude, ong.longitude],
-                { icon: icone }
-            )
-                .addTo(map)
-                .bindPopup(`
-            <strong>${ong.nome}</strong><br>
-            ${ong.categoria}<br>
-            ${ong.endereco}
-        `);
-
-            marcador.on("click", () => {
-
-                // Se o painel estiver fechado, abre primeiro
-                if (painelOngs.classList.contains("fechado")) {
-
-                    abrirPainelOngs();
-
-                    // Espera a animação do painel terminar
-                    setTimeout(() => {
-                        destacarOng(ong.id);
-                    }, 350);
-
-                } else {
-
-                    destacarOng(ong.id);
-
-                }
-
-            });
-
-        }
-
-        document
-            .querySelector(".lista-ongs")
-            .appendChild(card);
-
-    });
-
-    telaCarregamento.classList.add("oculto");
-
+    return categorias[causas[0]] || "Organização social";
 }
 
+function formatarEndereco(ong) {
+    return [
+        ong.rua,
+        ong.numero,
+        ong.bairro,
+        ong.cidade,
+        ong.estado,
+        ong.pais
+    ]
+        .filter(valor => valor != null && String(valor).trim() !== "")
+        .join(", ");
+}
+
+function converterOngDaAPI(ong) {
+    return {
+        id: ong.id,
+        nome: ong.nome,
+        imagem: ong.logo || "../assets/ong-padrao.png",
+        categoria: formatarCategoria(ong.causas),
+        descricao: ong.descricaoCurta || ong.descricao || "",
+        endereco: formatarEndereco(ong),
+        latitude: Number(ong.latitude),
+        longitude: Number(ong.longitude),
+        ods: Array.isArray(ong.ods) ? ong.ods : []
+    };
+}
+
+async function buscarOngs() {
+    const organizacoes = [];
+    let numeroPagina = 0;
+    let ultimaPagina = false;
+
+    do {
+        const resposta = await fetch(`${API_URL}/osc/list?page=${numeroPagina}&size=100`, {
+            headers: { Accept: "application/json" }
+        });
+        if (!resposta.ok) {
+            throw new Error(`Falha ao carregar OSCs: HTTP ${resposta.status}`);
+        }
+
+        const pagina = await resposta.json();
+        if (!pagina || !Array.isArray(pagina.content) || !Number.isInteger(pagina.totalPages)) {
+            throw new Error("A API retornou uma página de OSCs inválida.");
+        }
+        organizacoes.push(...pagina.content);
+        ultimaPagina = pagina.last === true || numeroPagina + 1 >= pagina.totalPages;
+        numeroPagina += 1;
+    } while (!ultimaPagina);
+
+    return organizacoes
+        .filter(ong => ong && ong.ativo === true)
+        .map(converterOngDaAPI);
+}
+function temCoordenadasValidas(ong) {
+    return Number.isFinite(ong.latitude) && Number.isFinite(ong.longitude)
+        && ong.latitude >= -90 && ong.latitude <= 90
+        && ong.longitude >= -180 && ong.longitude <= 180
+        && (ong.latitude !== 0 || ong.longitude !== 0);
+}
+
+function elemento(tag, texto, classe) {
+    const node = document.createElement(tag);
+    if (texto) node.textContent = texto;
+    if (classe) node.className = classe;
+    return node;
+}
+
+function aplicarBusca() {
+    const termo = document.querySelector(".barra-pesquisa input")?.value.trim().toLocaleLowerCase("pt-BR") || "";
+    document.querySelectorAll(".lista-ongs .ong").forEach(card => {
+        card.hidden = !card.dataset.busca.includes(termo);
+    });
+}
+
+function criarCartao(ong, localizacao) {
+    const card = elemento("article", null, "ong");
+    card.id = `ong-${ong.id}`;
+    card.dataset.busca = `${ong.nome} ${ong.categoria} ${ong.endereco}`.toLocaleLowerCase("pt-BR");
+
+    const molduraImagem = elemento("div", null, "ong-imagem");
+    const imagem = document.createElement("img");
+    imagem.src = ong.imagem;
+    imagem.alt = `Logo de ${ong.nome}`;
+    imagem.onerror = () => { imagem.src = "../assets/ong-padrao.png"; };
+    molduraImagem.appendChild(imagem);
+
+    const info = elemento("div", null, "ong-info");
+    info.append(elemento("h3", ong.nome), elemento("p", ong.categoria));
+    if (ong.descricao) info.appendChild(elemento("p", ong.descricao));
+    if (ong.endereco) info.appendChild(elemento("p", ong.endereco));
+    if (ong.ods.length) info.appendChild(elemento("span", `ODS: ${ong.ods.join(", ")}`));
+
+    const distancia = localizacao && temCoordenadasValidas(ong)
+        ? calcularDistancia(localizacao.latitude, localizacao.longitude, ong.latitude, ong.longitude)
+        : null;
+    info.appendChild(elemento("span", distancia === null ? "Distância indisponível" : `${distancia.toFixed(1)} km`));
+
+    const link = elemento("a", "Ver OSC", "botao-ong");
+    link.href = `${ROTAS.ongProfile}?id=${encodeURIComponent(ong.id)}`;
+    card.append(molduraImagem, info, link);
+
+    if (temCoordenadasValidas(ong)) {
+        card.addEventListener("click", evento => {
+            if (evento.target.closest(".botao-ong")) return;
+            map.setView([ong.latitude, ong.longitude], 19);
+            if (window.innerWidth <= 768) fecharPainelOngs();
+        });
+
+        const conteudoPopup = document.createElement("div");
+        conteudoPopup.append(elemento("strong", ong.nome), document.createElement("br"), elemento("span", ong.categoria));
+        if (ong.endereco) conteudoPopup.append(document.createElement("br"), elemento("span", ong.endereco));
+        const marcador = L.marker([ong.latitude, ong.longitude], {
+            icon: L.divIcon({ html: escolherIcone(ong.categoria), className: "icone-ong", iconSize: [45, 45], iconAnchor: [22, 45] })
+        }).bindPopup(conteudoPopup);
+        marcador.on("click", () => {
+            if (painelOngs.classList.contains("fechado")) {
+                abrirPainelOngs();
+                setTimeout(() => destacarOng(ong.id), 350);
+            } else destacarOng(ong.id);
+        });
+        camadaMarcadoresOngs.addLayer(marcador);
+    }
+    return card;
+}
+async function carregarOngs() {
+    const telaCarregamento = document.querySelector("#tela-carregamento");
+    const listaOngs = document.querySelector(".lista-ongs");
+    try {
+        ongsCarregadas = await buscarOngs();
+        const localizacao = ongsCarregadas.length > 0
+            ? await Promise.race([
+                localizarUsuario(),
+                new Promise(resolve => setTimeout(() => resolve(null), 10000))
+            ])
+            : null;
+
+        listaOngs.replaceChildren();
+        camadaMarcadoresOngs.clearLayers();
+        if (ongsCarregadas.length === 0) {
+            listaOngs.appendChild(elemento("p", "Nenhuma organização ativa foi encontrada.", "mensagem-lista-ongs"));
+            return;
+        }
+        ongsCarregadas.forEach(ong => listaOngs.appendChild(criarCartao(ong, localizacao)));
+        aplicarBusca();
+    } catch (erro) {
+        console.error("Falha ao carregar OSCs de /osc/list:", erro);
+        listaOngs.replaceChildren(elemento("p", "Não foi possível carregar as organizações. Tente novamente mais tarde.", "mensagem-lista-ongs"));
+    } finally {
+        telaCarregamento?.classList.add("oculto");
+    }
+}
 carregarOngs();
 
 const painelOngs = document.querySelector("#painel-ongs");
@@ -337,6 +361,7 @@ function abrirPainelOngs() {
     }, 350);
 }
 
+document.querySelector(".barra-pesquisa input")?.addEventListener("input", aplicarBusca);
 botaoFecharOngs.addEventListener("click", fecharPainelOngs);
 botaoAbrirOngs.addEventListener("click", abrirPainelOngs);
 

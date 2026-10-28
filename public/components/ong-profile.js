@@ -1,382 +1,248 @@
+﻿import { getAPI_URL } from "./modoBack.js";
+const API_URL = getAPI_URL();
+
 // ========================================
 // DADOS DAS ODS
 // ========================================
 
 const dadosODS = {
-
     1: {
-        titulo: "Erradicação da Pobreza",
-
-        descricao:
-            "Erradicar a pobreza em todas as suas formas e em todos os lugares.",
-
-        busca:
-            "A ODS 1 busca reduzir a pobreza em suas diferentes dimensões, ampliar a proteção social e garantir que pessoas em situação de vulnerabilidade tenham acesso a recursos, serviços básicos e oportunidades.",
-
+        titulo: "ErradicaÃ§Ã£o da Pobreza",
+        descricao: "Erradicar a pobreza em todas as suas formas e em todos os lugares.",
+        busca: "A ODS 1 busca reduzir a pobreza em suas diferentes dimensÃµes, ampliar a proteÃ§Ã£o social e garantir que pessoas em situaÃ§Ã£o de vulnerabilidade tenham acesso a recursos, serviÃ§os bÃ¡sicos e oportunidades.",
         metas: [
             "Erradicar a pobreza extrema.",
-            "Reduzir significativamente a proporção de pessoas vivendo na pobreza.",
-            "Ampliar sistemas e medidas de proteção social.",
-            "Garantir acesso a serviços básicos e recursos econômicos.",
-            "Aumentar a resiliência de pessoas em situação de vulnerabilidade."
+            "Reduzir significativamente a proporÃ§Ã£o de pessoas vivendo na pobreza.",
+            "Ampliar sistemas e medidas de proteÃ§Ã£o social.",
+            "Garantir acesso a serviÃ§os bÃ¡sicos e recursos econÃ´micos.",
+            "Aumentar a resiliÃªncia de pessoas em situaÃ§Ã£o de vulnerabilidade."
         ],
-
-        contribuicao:
-            "ONGs podem contribuir oferecendo assistência social, alimentação, moradia, capacitação, acesso a serviços e apoio direto a pessoas e famílias em situação de vulnerabilidade."
+        contribuicao: "ONGs podem contribuir oferecendo assistÃªncia social, alimentaÃ§Ã£o, moradia, capacitaÃ§Ã£o, acesso a serviÃ§os e apoio direto a pessoas e famÃ­lias em situaÃ§Ã£o de vulnerabilidade."
     },
-
 
     2: {
-        titulo: "Fome Zero e Agricultura Sustentável",
-
-        descricao:
-            "Acabar com a fome, alcançar a segurança alimentar e melhoria da nutrição e promover a agricultura sustentável.",
-
-        busca:
-            "A ODS 2 busca garantir que todas as pessoas tenham acesso regular a alimentos seguros, nutritivos e suficientes, além de combater todas as formas de má nutrição e promover sistemas alimentares sustentáveis.",
-
+        titulo: "Fome Zero e Agricultura SustentÃ¡vel",
+        descricao: "Acabar com a fome, alcanÃ§ar a seguranÃ§a alimentar e melhoria da nutriÃ§Ã£o e promover a agricultura sustentÃ¡vel.",
+        busca: "A ODS 2 busca garantir que todas as pessoas tenham acesso regular a alimentos seguros, nutritivos e suficientes, alÃ©m de combater todas as formas de mÃ¡ nutriÃ§Ã£o e promover sistemas alimentares sustentÃ¡veis.",
         metas: [
             "Acabar com a fome e garantir acesso a alimentos seguros e nutritivos.",
-            "Combater todas as formas de má nutrição.",
-            "Promover uma agricultura sustentável e produtiva.",
+            "Combater todas as formas de mÃ¡ nutriÃ§Ã£o.",
+            "Promover uma agricultura sustentÃ¡vel e produtiva.",
             "Aumentar a produtividade e a renda de pequenos produtores.",
-            "Preservar a diversidade genética de sementes, plantas e animais."
+            "Preservar a diversidade genÃ©tica de sementes, plantas e animais."
         ],
-
-        contribuicao:
-            "ONGs podem contribuir por meio da distribuição de alimentos, cozinhas comunitárias, combate ao desperdício, apoio a agricultores e iniciativas de segurança alimentar."
+        contribuicao: "ONGs podem contribuir por meio da distribuiÃ§Ã£o de alimentos, cozinhas comunitÃ¡rias, combate ao desperdÃ­cio, apoio a agricultores e iniciativas de seguranÃ§a alimentar."
     },
-
 
     3: {
-        titulo: "Saúde e Bem-Estar",
-
-        descricao:
-            "Assegurar uma vida saudável e promover o bem-estar para todas as pessoas, em todas as idades.",
-
-        busca:
-            "A ODS 3 busca melhorar a saúde da população, reduzir mortes evitáveis, combater doenças e ampliar o acesso a serviços de saúde e prevenção.",
-
+        titulo: "SaÃºde e Bem-Estar",
+        descricao: "Assegurar uma vida saudÃ¡vel e promover o bem-estar para todas as pessoas, em todas as idades.",
+        busca: "A ODS 3 busca melhorar a saÃºde da populaÃ§Ã£o, reduzir mortes evitÃ¡veis, combater doenÃ§as e ampliar o acesso a serviÃ§os de saÃºde e prevenÃ§Ã£o.",
         metas: [
             "Reduzir a mortalidade materna.",
-            "Reduzir mortes evitáveis de recém-nascidos e crianças.",
-            "Combater doenças transmissíveis.",
-            "Promover a saúde mental e o bem-estar.",
-            "Ampliar o acesso universal aos serviços de saúde."
+            "Reduzir mortes evitÃ¡veis de recÃ©m-nascidos e crianÃ§as.",
+            "Combater doenÃ§as transmissÃ­veis.",
+            "Promover a saÃºde mental e o bem-estar.",
+            "Ampliar o acesso universal aos serviÃ§os de saÃºde."
         ],
-
-        contribuicao:
-            "ONGs podem atuar com prevenção, atendimento, campanhas de saúde, apoio psicológico, orientação, promoção de hábitos saudáveis e encaminhamento para serviços públicos."
+        contribuicao: "ONGs podem atuar com prevenÃ§Ã£o, atendimento, campanhas de saÃºde, apoio psicolÃ³gico, orientaÃ§Ã£o, promoÃ§Ã£o de hÃ¡bitos saudÃ¡veis e encaminhamento para serviÃ§os pÃºblicos."
     },
-
 
     4: {
-        titulo: "Educação de Qualidade",
-
-        descricao:
-            "Assegurar a educação inclusiva, equitativa e de qualidade e promover oportunidades de aprendizagem ao longo da vida.",
-
-        busca:
-            "A ODS 4 busca garantir que todas as pessoas tenham acesso a uma educação de qualidade, inclusiva e equitativa.",
-
+        titulo: "EducaÃ§Ã£o de Qualidade",
+        descricao: "Assegurar a educaÃ§Ã£o inclusiva, equitativa e de qualidade e promover oportunidades de aprendizagem ao longo da vida.",
+        busca: "A ODS 4 busca garantir que todas as pessoas tenham acesso a uma educaÃ§Ã£o de qualidade, inclusiva e equitativa.",
         metas: [
-            "Garantir educação básica gratuita e de qualidade.",
-            "Ampliar o acesso à educação infantil.",
-            "Aumentar o acesso ao ensino técnico e superior.",
-            "Desenvolver competências relevantes para o trabalho.",
-            "Promover educação para o desenvolvimento sustentável."
+            "Garantir educaÃ§Ã£o bÃ¡sica gratuita e de qualidade.",
+            "Ampliar o acesso Ã  educaÃ§Ã£o infantil.",
+            "Aumentar o acesso ao ensino tÃ©cnico e superior.",
+            "Desenvolver competÃªncias relevantes para o trabalho.",
+            "Promover educaÃ§Ã£o para o desenvolvimento sustentÃ¡vel."
         ],
-
-        contribuicao:
-            "ONGs podem oferecer reforço escolar, cursos, oficinas, bibliotecas, acesso à tecnologia, capacitação profissional e atividades educativas."
+        contribuicao: "ONGs podem oferecer reforÃ§o escolar, cursos, oficinas, bibliotecas, acesso Ã  tecnologia, capacitaÃ§Ã£o profissional e atividades educativas."
     },
-
 
     5: {
-        titulo: "Igualdade de Gênero",
-
-        descricao:
-            "Alcançar a igualdade de gênero e empoderar todas as mulheres e meninas.",
-
-        busca:
-            "A ODS 5 busca eliminar a discriminação e a violência contra mulheres e meninas e ampliar sua participação e autonomia.",
-
+        titulo: "Igualdade de GÃªnero",
+        descricao: "AlcanÃ§ar a igualdade de gÃªnero e empoderar todas as mulheres e meninas.",
+        busca: "A ODS 5 busca eliminar a discriminaÃ§Ã£o e a violÃªncia contra mulheres e meninas e ampliar sua participaÃ§Ã£o e autonomia.",
         metas: [
-            "Eliminar todas as formas de discriminação contra mulheres e meninas.",
-            "Combater a violência e a exploração.",
-            "Eliminar práticas prejudiciais às meninas e mulheres.",
+            "Eliminar todas as formas de discriminaÃ§Ã£o contra mulheres e meninas.",
+            "Combater a violÃªncia e a exploraÃ§Ã£o.",
+            "Eliminar prÃ¡ticas prejudiciais Ã s meninas e mulheres.",
             "Reconhecer e valorizar o trabalho de cuidado.",
-            "Promover a participação e a igualdade de oportunidades."
+            "Promover a participaÃ§Ã£o e a igualdade de oportunidades."
         ],
-
-        contribuicao:
-            "ONGs podem oferecer acolhimento, orientação, capacitação, apoio social, educação e serviços de proteção para mulheres e meninas."
+        contribuicao: "ONGs podem oferecer acolhimento, orientaÃ§Ã£o, capacitaÃ§Ã£o, apoio social, educaÃ§Ã£o e serviÃ§os de proteÃ§Ã£o para mulheres e meninas."
     },
-
 
     6: {
-        titulo: "Água Potável e Saneamento",
-
-        descricao:
-            "Assegurar a disponibilidade e a gestão sustentável da água e do saneamento para todas as pessoas.",
-
-        busca:
-            "A ODS 6 busca garantir acesso universal à água potável, saneamento e higiene, além de promover a gestão sustentável dos recursos hídricos.",
-
+        titulo: "Ãgua PotÃ¡vel e Saneamento",
+        descricao: "Assegurar a disponibilidade e a gestÃ£o sustentÃ¡vel da Ã¡gua e do saneamento para todas as pessoas.",
+        busca: "A ODS 6 busca garantir acesso universal Ã  Ã¡gua potÃ¡vel, saneamento e higiene, alÃ©m de promover a gestÃ£o sustentÃ¡vel dos recursos hÃ­dricos.",
         metas: [
-            "Garantir acesso universal à água potável.",
+            "Garantir acesso universal Ã  Ã¡gua potÃ¡vel.",
             "Garantir saneamento e higiene adequados.",
-            "Melhorar a qualidade da água.",
-            "Aumentar a eficiência no uso da água.",
-            "Proteger ecossistemas relacionados à água."
+            "Melhorar a qualidade da Ã¡gua.",
+            "Aumentar a eficiÃªncia no uso da Ã¡gua.",
+            "Proteger ecossistemas relacionados Ã  Ã¡gua."
         ],
-
-        contribuicao:
-            "ONGs podem desenvolver projetos de saneamento, educação ambiental, acesso à água, preservação de recursos hídricos e higiene."
+        contribuicao: "ONGs podem desenvolver projetos de saneamento, educaÃ§Ã£o ambiental, acesso Ã  Ã¡gua, preservaÃ§Ã£o de recursos hÃ­dricos e higiene."
     },
-
 
     7: {
-        titulo: "Energia Limpa e Acessível",
-
-        descricao:
-            "Assegurar o acesso confiável, sustentável, moderno e a preço acessível à energia para todas as pessoas.",
-
-        busca:
-            "A ODS 7 busca ampliar o acesso à energia e aumentar a participação de fontes renováveis e tecnologias mais eficientes.",
-
+        titulo: "Energia Limpa e AcessÃ­vel",
+        descricao: "Assegurar o acesso confiÃ¡vel, sustentÃ¡vel, moderno e a preÃ§o acessÃ­vel Ã  energia para todas as pessoas.",
+        busca: "A ODS 7 busca ampliar o acesso Ã  energia e aumentar a participaÃ§Ã£o de fontes renovÃ¡veis e tecnologias mais eficientes.",
         metas: [
-            "Garantir acesso universal à energia.",
-            "Aumentar a participação das energias renováveis.",
-            "Melhorar a eficiência energética.",
+            "Garantir acesso universal Ã  energia.",
+            "Aumentar a participaÃ§Ã£o das energias renovÃ¡veis.",
+            "Melhorar a eficiÃªncia energÃ©tica.",
             "Ampliar o acesso a tecnologias de energia limpa.",
-            "Fortalecer a infraestrutura energética sustentável."
+            "Fortalecer a infraestrutura energÃ©tica sustentÃ¡vel."
         ],
-
-        contribuicao:
-            "ONGs podem atuar com educação energética, projetos de energia solar, eficiência energética e acesso à energia em comunidades vulneráveis."
+        contribuicao: "ONGs podem atuar com educaÃ§Ã£o energÃ©tica, projetos de energia solar, eficiÃªncia energÃ©tica e acesso Ã  energia em comunidades vulnerÃ¡veis."
     },
-
 
     8: {
-        titulo: "Trabalho Decente e Crescimento Econômico",
-
-        descricao:
-            "Promover o crescimento econômico sustentado, inclusivo e sustentável, emprego pleno e produtivo e trabalho decente para todas as pessoas.",
-
-        busca:
-            "A ODS 8 busca promover oportunidades de trabalho digno, crescimento econômico sustentável e condições adequadas de trabalho.",
-
+        titulo: "Trabalho Decente e Crescimento EconÃ´mico",
+        descricao: "Promover o crescimento econÃ´mico sustentado, inclusivo e sustentÃ¡vel, emprego pleno e produtivo e trabalho decente para todas as pessoas.",
+        busca: "A ODS 8 busca promover oportunidades de trabalho digno, crescimento econÃ´mico sustentÃ¡vel e condiÃ§Ãµes adequadas de trabalho.",
         metas: [
-            "Promover crescimento econômico sustentável.",
+            "Promover crescimento econÃ´mico sustentÃ¡vel.",
             "Aumentar oportunidades de trabalho decente.",
             "Reduzir o desemprego entre jovens.",
-            "Eliminar trabalho forçado e trabalho infantil.",
+            "Eliminar trabalho forÃ§ado e trabalho infantil.",
             "Proteger direitos trabalhistas."
         ],
-
-        contribuicao:
-            "ONGs podem oferecer capacitação profissional, orientação para o mercado de trabalho, empreendedorismo e programas de inclusão produtiva."
+        contribuicao: "ONGs podem oferecer capacitaÃ§Ã£o profissional, orientaÃ§Ã£o para o mercado de trabalho, empreendedorismo e programas de inclusÃ£o produtiva."
     },
-
 
     9: {
-        titulo: "Indústria, Inovação e Infraestrutura",
-
-        descricao:
-            "Construir infraestruturas resilientes, promover a industrialização inclusiva e sustentável e fomentar a inovação.",
-
-        busca:
-            "A ODS 9 busca desenvolver infraestrutura sustentável, estimular a inovação e ampliar o acesso a tecnologias e oportunidades econômicas.",
-
+        titulo: "IndÃºstria, InovaÃ§Ã£o e Infraestrutura",
+        descricao: "Construir infraestruturas resilientes, promover a industrializaÃ§Ã£o inclusiva e sustentÃ¡vel e fomentar a inovaÃ§Ã£o.",
+        busca: "A ODS 9 busca desenvolver infraestrutura sustentÃ¡vel, estimular a inovaÃ§Ã£o e ampliar o acesso a tecnologias e oportunidades econÃ´micas.",
         metas: [
-            "Desenvolver infraestrutura sustentável e resiliente.",
-            "Promover industrialização inclusiva.",
+            "Desenvolver infraestrutura sustentÃ¡vel e resiliente.",
+            "Promover industrializaÃ§Ã£o inclusiva.",
             "Ampliar o acesso de pequenas empresas a recursos.",
-            "Modernizar infraestruturas de forma sustentável.",
-            "Aumentar a pesquisa e a inovação."
+            "Modernizar infraestruturas de forma sustentÃ¡vel.",
+            "Aumentar a pesquisa e a inovaÃ§Ã£o."
         ],
-
-        contribuicao:
-            "ONGs podem desenvolver projetos tecnológicos, capacitação digital, inovação social e iniciativas que ampliem o acesso à infraestrutura."
+        contribuicao: "ONGs podem desenvolver projetos tecnolÃ³gicos, capacitaÃ§Ã£o digital, inovaÃ§Ã£o social e iniciativas que ampliem o acesso Ã  infraestrutura."
     },
-
 
     10: {
-        titulo: "Redução das Desigualdades",
-
-        descricao:
-            "Reduzir a desigualdade dentro dos países e entre eles.",
-
-        busca:
-            "A ODS 10 busca promover a inclusão social, econômica e política e reduzir desigualdades relacionadas à renda e às condições sociais.",
-
+        titulo: "ReduÃ§Ã£o das Desigualdades",
+        descricao: "Reduzir a desigualdade dentro dos paÃ­ses e entre eles.",
+        busca: "A ODS 10 busca promover a inclusÃ£o social, econÃ´mica e polÃ­tica e reduzir desigualdades relacionadas Ã  renda e Ã s condiÃ§Ãµes sociais.",
         metas: [
-            "Aumentar a renda da população mais pobre.",
-            "Promover inclusão social, econômica e política.",
+            "Aumentar a renda da populaÃ§Ã£o mais pobre.",
+            "Promover inclusÃ£o social, econÃ´mica e polÃ­tica.",
             "Garantir igualdade de oportunidades.",
-            "Reduzir práticas discriminatórias.",
-            "Facilitar migração segura e responsável."
+            "Reduzir prÃ¡ticas discriminatÃ³rias.",
+            "Facilitar migraÃ§Ã£o segura e responsÃ¡vel."
         ],
-
-        contribuicao:
-            "ONGs podem atuar diretamente com populações vulneráveis, oferecendo assistência social, educação, inclusão profissional e acesso a direitos."
+        contribuicao: "ONGs podem atuar diretamente com populaÃ§Ãµes vulnerÃ¡veis, oferecendo assistÃªncia social, educaÃ§Ã£o, inclusÃ£o profissional e acesso a direitos."
     },
-
 
     11: {
-        titulo: "Cidades e Comunidades Sustentáveis",
-
-        descricao:
-            "Tornar as cidades e os assentamentos humanos inclusivos, seguros, resilientes e sustentáveis.",
-
-        busca:
-            "A ODS 11 busca melhorar as cidades, tornando-as mais acessíveis, seguras, inclusivas e sustentáveis para todas as pessoas.",
-
+        titulo: "Cidades e Comunidades SustentÃ¡veis",
+        descricao: "Tornar as cidades e os assentamentos humanos inclusivos, seguros, resilientes e sustentÃ¡veis.",
+        busca: "A ODS 11 busca melhorar as cidades, tornando-as mais acessÃ­veis, seguras, inclusivas e sustentÃ¡veis para todas as pessoas.",
         metas: [
-            "Garantir acesso à habitação adequada.",
-            "Melhorar o transporte público.",
-            "Promover urbanização inclusiva e sustentável.",
-            "Proteger o patrimônio cultural e natural.",
+            "Garantir acesso Ã  habitaÃ§Ã£o adequada.",
+            "Melhorar o transporte pÃºblico.",
+            "Promover urbanizaÃ§Ã£o inclusiva e sustentÃ¡vel.",
+            "Proteger o patrimÃ´nio cultural e natural.",
             "Reduzir impactos ambientais das cidades."
         ],
-
-        contribuicao:
-            "ONGs podem trabalhar com moradia, mobilidade, espaços públicos, meio ambiente, inclusão urbana e apoio a comunidades."
+        contribuicao: "ONGs podem trabalhar com moradia, mobilidade, espaÃ§os pÃºblicos, meio ambiente, inclusÃ£o urbana e apoio a comunidades."
     },
-
 
     12: {
-        titulo: "Consumo e Produção Responsáveis",
-
-        descricao:
-            "Assegurar padrões de produção e de consumo sustentáveis.",
-
-        busca:
-            "A ODS 12 busca reduzir o desperdício e tornar a produção e o consumo mais eficientes e sustentáveis.",
-
+        titulo: "Consumo e ProduÃ§Ã£o ResponsÃ¡veis",
+        descricao: "Assegurar padrÃµes de produÃ§Ã£o e de consumo sustentÃ¡veis.",
+        busca: "A ODS 12 busca reduzir o desperdÃ­cio e tornar a produÃ§Ã£o e o consumo mais eficientes e sustentÃ¡veis.",
         metas: [
             "Promover uso eficiente dos recursos naturais.",
-            "Reduzir desperdício de alimentos.",
-            "Diminuir a geração de resíduos.",
-            "Estimular reciclagem e reutilização.",
-            "Promover práticas empresariais sustentáveis."
+            "Reduzir desperdÃ­cio de alimentos.",
+            "Diminuir a geraÃ§Ã£o de resÃ­duos.",
+            "Estimular reciclagem e reutilizaÃ§Ã£o.",
+            "Promover prÃ¡ticas empresariais sustentÃ¡veis."
         ],
-
-        contribuicao:
-            "ONGs podem atuar com reciclagem, reaproveitamento, educação ambiental, combate ao desperdício e consumo consciente."
+        contribuicao: "ONGs podem atuar com reciclagem, reaproveitamento, educaÃ§Ã£o ambiental, combate ao desperdÃ­cio e consumo consciente."
     },
-
 
     13: {
-        titulo: "Ação Contra a Mudança Global do Clima",
-
-        descricao:
-            "Tomar medidas urgentes para combater a mudança climática e seus impactos.",
-
-        busca:
-            "A ODS 13 busca fortalecer a capacidade de adaptação às mudanças climáticas e ampliar ações de educação, conscientização e planejamento climático.",
-
+        titulo: "AÃ§Ã£o Contra a MudanÃ§a Global do Clima",
+        descricao: "Tomar medidas urgentes para combater a mudanÃ§a climÃ¡tica e seus impactos.",
+        busca: "A ODS 13 busca fortalecer a capacidade de adaptaÃ§Ã£o Ã s mudanÃ§as climÃ¡ticas e ampliar aÃ§Ãµes de educaÃ§Ã£o, conscientizaÃ§Ã£o e planejamento climÃ¡tico.",
         metas: [
-            "Fortalecer a adaptação às mudanças climáticas.",
-            "Aumentar a resiliência diante de eventos climáticos.",
-            "Integrar medidas climáticas às políticas públicas.",
-            "Ampliar educação e conscientização climática.",
-            "Mobilizar recursos para ações climáticas."
+            "Fortalecer a adaptaÃ§Ã£o Ã s mudanÃ§as climÃ¡ticas.",
+            "Aumentar a resiliÃªncia diante de eventos climÃ¡ticos.",
+            "Integrar medidas climÃ¡ticas Ã s polÃ­ticas pÃºblicas.",
+            "Ampliar educaÃ§Ã£o e conscientizaÃ§Ã£o climÃ¡tica.",
+            "Mobilizar recursos para aÃ§Ãµes climÃ¡ticas."
         ],
-
-        contribuicao:
-            "ONGs podem atuar com educação ambiental, recuperação de áreas degradadas, prevenção de riscos e projetos de adaptação climática."
+        contribuicao: "ONGs podem atuar com educaÃ§Ã£o ambiental, recuperaÃ§Ã£o de Ã¡reas degradadas, prevenÃ§Ã£o de riscos e projetos de adaptaÃ§Ã£o climÃ¡tica."
     },
-
 
     14: {
-        titulo: "Vida na Água",
-
-        descricao:
-            "Conservar e usar de forma sustentável os oceanos, mares e recursos marinhos para o desenvolvimento sustentável.",
-
-        busca:
-            "A ODS 14 busca proteger os ecossistemas marinhos, combater a poluição e promover o uso sustentável dos oceanos e recursos marinhos.",
-
+        titulo: "Vida na Ãgua",
+        descricao: "Conservar e usar de forma sustentÃ¡vel os oceanos, mares e recursos marinhos para o desenvolvimento sustentÃ¡vel.",
+        busca: "A ODS 14 busca proteger os ecossistemas marinhos, combater a poluiÃ§Ã£o e promover o uso sustentÃ¡vel dos oceanos e recursos marinhos.",
         metas: [
-            "Reduzir a poluição dos oceanos.",
+            "Reduzir a poluiÃ§Ã£o dos oceanos.",
             "Proteger ecossistemas marinhos e costeiros.",
-            "Combater a pesca predatória.",
-            "Promover pesca sustentável.",
-            "Conservar áreas marinhas."
+            "Combater a pesca predatÃ³ria.",
+            "Promover pesca sustentÃ¡vel.",
+            "Conservar Ã¡reas marinhas."
         ],
-
-        contribuicao:
-            "ONGs podem desenvolver ações de limpeza de praias, educação ambiental, proteção da fauna marinha e preservação de ecossistemas costeiros."
+        contribuicao: "ONGs podem desenvolver aÃ§Ãµes de limpeza de praias, educaÃ§Ã£o ambiental, proteÃ§Ã£o da fauna marinha e preservaÃ§Ã£o de ecossistemas costeiros."
     },
-
 
     15: {
         titulo: "Vida Terrestre",
-
-        descricao:
-            "Proteger, recuperar e promover o uso sustentável dos ecossistemas terrestres, combater a desertificação e deter a perda de biodiversidade.",
-
-        busca:
-            "A ODS 15 busca preservar florestas, ecossistemas terrestres e biodiversidade, além de combater a degradação do solo e a perda de espécies.",
-
+        descricao: "Proteger, recuperar e promover o uso sustentÃ¡vel dos ecossistemas terrestres, combater a desertificaÃ§Ã£o e deter a perda de biodiversidade.",
+        busca: "A ODS 15 busca preservar florestas, ecossistemas terrestres e biodiversidade, alÃ©m de combater a degradaÃ§Ã£o do solo e a perda de espÃ©cies.",
         metas: [
             "Proteger ecossistemas terrestres.",
-            "Promover manejo sustentável das florestas.",
-            "Combater a desertificação.",
+            "Promover manejo sustentÃ¡vel das florestas.",
+            "Combater a desertificaÃ§Ã£o.",
             "Reduzir a perda de biodiversidade.",
-            "Combater o tráfico de espécies protegidas."
+            "Combater o trÃ¡fico de espÃ©cies protegidas."
         ],
-
-        contribuicao:
-            "ONGs podem trabalhar com proteção animal, reflorestamento, conservação ambiental, recuperação de áreas e educação ambiental."
+        contribuicao: "ONGs podem trabalhar com proteÃ§Ã£o animal, reflorestamento, conservaÃ§Ã£o ambiental, recuperaÃ§Ã£o de Ã¡reas e educaÃ§Ã£o ambiental."
     },
-
 
     16: {
-        titulo: "Paz, Justiça e Instituições Eficazes",
-
-        descricao:
-            "Promover sociedades pacíficas e inclusivas, proporcionar acesso à justiça para todos e construir instituições eficazes, responsáveis e inclusivas.",
-
-        busca:
-            "A ODS 16 busca promover sociedades pacíficas, reduzir a violência, ampliar o acesso à justiça e fortalecer instituições transparentes e responsáveis.",
-
+        titulo: "Paz, JustiÃ§a e InstituiÃ§Ãµes Eficazes",
+        descricao: "Promover sociedades pacÃ­ficas e inclusivas, proporcionar acesso Ã  justiÃ§a para todos e construir instituiÃ§Ãµes eficazes, responsÃ¡veis e inclusivas.",
+        busca: "A ODS 16 busca promover sociedades pacÃ­ficas, reduzir a violÃªncia, ampliar o acesso Ã  justiÃ§a e fortalecer instituiÃ§Ãµes transparentes e responsÃ¡veis.",
         metas: [
-            "Reduzir violência e mortes relacionadas à violência.",
-            "Combater abuso, exploração e tráfico de pessoas.",
-            "Garantir acesso igualitário à justiça.",
-            "Reduzir corrupção e suborno.",
-            "Garantir acesso público à informação."
+            "Reduzir violÃªncia e mortes relacionadas Ã  violÃªncia.",
+            "Combater abuso, exploraÃ§Ã£o e trÃ¡fico de pessoas.",
+            "Garantir acesso igualitÃ¡rio Ã  justiÃ§a.",
+            "Reduzir corrupÃ§Ã£o e suborno.",
+            "Garantir acesso pÃºblico Ã  informaÃ§Ã£o."
         ],
-
-        contribuicao:
-            "ONGs podem atuar na defesa de direitos, assistência jurídica, proteção de grupos vulneráveis, prevenção da violência e fortalecimento da cidadania."
+        contribuicao: "ONGs podem atuar na defesa de direitos, assistÃªncia jurÃ­dica, proteÃ§Ã£o de grupos vulnerÃ¡veis, prevenÃ§Ã£o da violÃªncia e fortalecimento da cidadania."
     },
 
-
     17: {
-        titulo: "Parcerias e Meios de Implementação",
-
-        descricao:
-            "Fortalecer os meios de implementação e revitalizar a parceria global para o desenvolvimento sustentável.",
-
-        busca:
-            "A ODS 17 reconhece que o cumprimento dos demais objetivos depende de cooperação, recursos, tecnologia, conhecimento e parcerias entre governos, organizações e sociedade civil.",
-
+        titulo: "Parcerias e Meios de ImplementaÃ§Ã£o",
+        descricao: "Fortalecer os meios de implementaÃ§Ã£o e revitalizar a parceria global para o desenvolvimento sustentÃ¡vel.",
+        busca: "A ODS 17 reconhece que o cumprimento dos demais objetivos depende de cooperaÃ§Ã£o, recursos, tecnologia, conhecimento e parcerias entre governos, organizaÃ§Ãµes e sociedade civil.",
         metas: [
-            "Mobilizar recursos financeiros para o desenvolvimento sustentável.",
-            "Ampliar cooperação científica e tecnológica.",
+            "Mobilizar recursos financeiros para o desenvolvimento sustentÃ¡vel.",
+            "Ampliar cooperaÃ§Ã£o cientÃ­fica e tecnolÃ³gica.",
             "Fortalecer capacidades institucionais.",
-            "Promover um sistema de comércio mais justo.",
+            "Promover um sistema de comÃ©rcio mais justo.",
             "Fortalecer parcerias entre governos, empresas e sociedade civil."
         ],
-
-        contribuicao:
-            "ONGs podem estabelecer parcerias, compartilhar conhecimento, mobilizar voluntários e recursos e trabalhar conjuntamente com outras organizações."
+        contribuicao: "ONGs podem estabelecer parcerias, compartilhar conhecimento, mobilizar voluntÃ¡rios e recursos e trabalhar conjuntamente com outras organizaÃ§Ãµes."
     }
-
 };
 
 
@@ -384,1454 +250,432 @@ const dadosODS = {
 // CRIAR MODAL DAS ODS
 // ========================================
 
-const modalODS =
-    document.createElement("div");
 
-modalODS.classList.add("modal-ods");
+const NOMES_CAUSAS = {
+    EDUCACAO: "Educação",
+    SAUDE: "Saúde",
+    MEIO_AMBIENTE: "Meio ambiente",
+    ANIMAIS: "Proteção animal",
+    INCLUSAO_SOCIAL: "Inclusão social",
+    ESPORTE: "Esporte",
+    CULTURA: "Cultura",
+    COMBATE_POBREZA: "Combate à pobreza"
+};
 
+const modalODS = document.createElement("div");
+modalODS.className = "modal-ods";
+modalODS.hidden = true;
+modalODS.setAttribute("role", "dialog");
+modalODS.setAttribute("aria-modal", "true");
+modalODS.setAttribute("aria-labelledby", "modal-ods-titulo");
 modalODS.innerHTML = `
-
-    <div class="modal-ods-caixa">
-
-        <!-- CABEÇALHO FIXO -->
+    <div class="modal-ods-caixa" tabindex="-1">
         <div class="modal-ods-cabecalho">
-
             <div class="modal-ods-cabecalho-titulo">
                 <span class="modal-ods-numero"></span>
-                <h2 class="modal-ods-titulo"></h2>
+                <h2 class="modal-ods-titulo" id="modal-ods-titulo"></h2>
             </div>
-
-            <button
-                class="fechar-modal-ods"
-                aria-label="Fechar explicação da ODS"
-            >
-                &times;
-            </button>
-
+            <button class="fechar-modal-ods" type="button" aria-label="Fechar informações da ODS">&times;</button>
         </div>
-
-
-        <!-- CONTEÚDO COM SCROLL -->
         <div class="modal-ods-scroll">
-
             <div class="modal-ods-conteudo">
-
-                <div class="modal-ods-imagem">
-
-                    <img
-                        class="modal-ods-img"
-                        src=""
-                        alt=""
-                    >
-
-                </div>
-
+                <div class="modal-ods-imagem"><img class="modal-ods-img" alt=""></div>
                 <div class="modal-ods-informacoes">
-
-                    <div class="modal-ods-linha"></div>
-
                     <p class="modal-ods-descricao"></p>
-
-                    <h3>
-                        O que essa ODS busca?
-                    </h3>
-
-                    <p class="modal-ods-busca"></p>
-
-                    <h3>
-                        Principais metas
-                    </h3>
-
-                    <ul class="modal-ods-metas"></ul>
-
-                    <h3>
-                        Como uma ONG pode contribuir?
-                    </h3>
-
-                    <p class="modal-ods-contribuicao"></p>
-
+                    <h3>O que essa ODS busca?</h3><p class="modal-ods-busca"></p>
+                    <h3>Principais metas</h3><ul class="modal-ods-metas"></ul>
+                    <h3>Como uma OSC pode contribuir?</h3><p class="modal-ods-contribuicao"></p>
                 </div>
-
             </div>
-
         </div>
-
-    </div>
-
-`;
-
+    </div>`;
 document.body.appendChild(modalODS);
 
-
-// ========================================
-// ABRIR MODAL DAS ODS
-// ========================================
-
-function abrirModalODS(numero) {
-
-    const dados =
-        dadosODS[numero];
-
-    if (!dados) {
-
-        console.warn(
-            `Não existem informações cadastradas para a ODS ${numero}.`
-        );
-
-        return;
-    }
-
-
-    // Imagem
-
-    const imagem =
-        modalODS.querySelector(
-            ".modal-ods-img"
-        );
-
-    imagem.src =
-        `../assets/ods${numero}.png`;
-
-    imagem.alt =
-        `ODS ${numero} - ${dados.titulo}`;
-
-
-    // Número
-
-    modalODS.querySelector(
-        ".modal-ods-numero"
-    ).textContent =
-        `ODS ${numero}`;
-
-
-    // Título
-
-    modalODS.querySelector(
-        ".modal-ods-titulo"
-    ).textContent =
-        dados.titulo;
-
-
-    // Descrição
-
-    modalODS.querySelector(
-        ".modal-ods-descricao"
-    ).textContent =
-        dados.descricao;
-
-
-    // O que busca
-
-    modalODS.querySelector(
-        ".modal-ods-busca"
-    ).textContent =
-        dados.busca;
-
-
-    // Metas
-
-    const listaMetas =
-        modalODS.querySelector(
-            ".modal-ods-metas"
-        );
-
-    listaMetas.innerHTML = "";
-
-
-    dados.metas.forEach(meta => {
-
-        const li =
-            document.createElement("li");
-
-        li.textContent = meta;
-
-        listaMetas.appendChild(li);
-
-    });
-
-
-    // Contribuição das ONGs
-
-    modalODS.querySelector(
-        ".modal-ods-contribuicao"
-    ).textContent =
-        dados.contribuicao;
-
-
-    // Abre
-
-    modalODS.classList.add("aberto");
-
-    document.body.style.overflow = "hidden";
-}
-
-
-// ========================================
-// FECHAR MODAL
-// ========================================
-
+let acionadorModalODS = null;
 function fecharModalODS() {
-
+    if (modalODS.hidden) return;
+    modalODS.hidden = true;
     modalODS.classList.remove("aberto");
-
     document.body.style.overflow = "";
+    document.querySelector(".perfil-publico")?.removeAttribute("inert");
+    document.querySelector(".navbar")?.removeAttribute("inert");
+    document.querySelector("#footer")?.removeAttribute("inert");
+    acionadorModalODS?.focus();
 }
 
-
-// Fechar pelo X
-
-modalODS
-    .querySelector(".fechar-modal-ods")
-    .addEventListener(
-        "click",
-        fecharModalODS
-    );
-
-
-// Fechar clicando fora
-
-modalODS.addEventListener(
-    "click",
-    evento => {
-
-        if (
-            evento.target === modalODS
-        ) {
-
-            fecharModalODS();
-
-        }
-
-    }
-);
-
-
-// Fechar com ESC
-
-document.addEventListener(
-    "keydown",
-    evento => {
-
-        if (
-            evento.key === "Escape" &&
-            modalODS.classList.contains("aberto")
-        ) {
-
-            fecharModalODS();
-
-        }
-
-    }
-);
-
-document.addEventListener("DOMContentLoaded", () => {
-
-    // ========================================
-    // CARROSSEL
-    // ========================================
-
-    const track = document.querySelector(".carrossel-track");
-    const imagens = document.querySelectorAll(".carrossel-track img");
-
-    let indice = 0;
-
-    if (track && imagens.length > 1) {
-
-        function proximaImagem() {
-
-            indice++;
-
-            if (indice >= imagens.length) {
-                indice = 0;
-            }
-
-            track.style.transform =
-                `translateX(-${indice * 100}%)`;
-        }
-
-        setInterval(proximaImagem, 5000);
-    }
-
-
-    // ========================================
-    // PEGAR ID DA URL
-    // ========================================
-
-    const params = new URLSearchParams(
-        window.location.search
-    );
-
-    const idOng = Number(
-        params.get("id")
-    );
-
-    console.log(
-        "ID recebido pela URL:",
-        idOng
-    );
-
-    console.log(
-        "Array de ONGs:",
-        ongs
-    );
-
-
-    // ========================================
-    // VERIFICAR ID
-    // ========================================
-
-    if (!idOng) {
-
-        console.error(
-            "ID da ONG não foi informado na URL."
-        );
-
-        return;
-    }
-
-
-    // ========================================
-    // ENCONTRAR ONG
-    // ========================================
-
-    const ong = ongs.find(
-        ong => ong.id === idOng
-    );
-
-
-    if (!ong) {
-
-        console.error(
-            "ONG não encontrada."
-        );
-
-        return;
-    }
-
-
-    console.log(
-        "ONG encontrada:",
-        ong
-    );
-
-
-    // ========================================
-    // NOME
-    // ========================================
-
-    const nomeOng =
-        document.querySelector("#nome-ong");
-
-    if (nomeOng) {
-
-        nomeOng.textContent =
-            ong.nome || "Nome não informado";
-    }
-
-
-    // ========================================
-    // CATEGORIA
-    // ========================================
-
-    const categoriaOng =
-        document.querySelector("#categoria-ong");
-
-    if (categoriaOng) {
-
-        categoriaOng.textContent =
-            ong.categoria || "Categoria não informada";
-    }
-
-
-    // ========================================
-    // DESCRIÇÃO CURTA
-    // ========================================
-
-    const descricaoOng =
-        document.querySelector("#descricao-texto");
-
-    if (descricaoOng) {
-
-        descricaoOng.textContent =
-            ong.descricao ||
-            "Esta iniciativa ainda não possui uma descrição cadastrada.";
-    }
-
-
-    // ========================================
-    // SOBRE
-    // ========================================
-
-    const sobreOng =
-        document.querySelector("#sobre-texto");
-
-    if (sobreOng) {
-
-        sobreOng.textContent =
-            ong.sobre ||
-            ong.descricao ||
-            "Informações sobre esta iniciativa ainda não foram cadastradas.";
-    }
-
-
-    // ========================================
-    // PÚBLICO ATENDIDO
-    // ========================================
-
-    const publicoOng =
-        document.querySelector("#publico-texto");
-
-    if (publicoOng) {
-
-        publicoOng.textContent =
-            ong.publico ||
-            "Público atendido não informado.";
-    }
-
-
-    // ========================================
-    // SERVIÇOS / ATUAÇÃO
-    // ========================================
-
-    const listaServicos =
-        document.querySelector("#servicos-lista");
-
-    if (listaServicos) {
-
-        listaServicos.innerHTML = "";
-
-        if (
-            Array.isArray(ong.servicos) &&
-            ong.servicos.length > 0
-        ) {
-
-            ong.servicos.forEach(servico => {
-
-                const item =
-                    document.createElement("li");
-
-                item.textContent = servico;
-
-                listaServicos.appendChild(item);
-            });
-
-        } else {
-
-            const item =
-                document.createElement("li");
-
-            item.textContent =
-                "Informações sobre a atuação ainda não cadastradas.";
-
-            listaServicos.appendChild(item);
+function abrirModalODS(numero, acionador) {
+    const dados = dadosODS[numero];
+    if (!dados) return;
+    acionadorModalODS = acionador;
+    const imagem = modalODS.querySelector(".modal-ods-img");
+    imagem.src = `../assets/ods${numero}.png`;
+    imagem.alt = `ODS ${numero}: ${dados.titulo}`;
+    modalODS.querySelector(".modal-ods-numero").textContent = `ODS ${numero}`;
+    modalODS.querySelector(".modal-ods-titulo").textContent = dados.titulo;
+    modalODS.querySelector(".modal-ods-descricao").textContent = dados.descricao;
+    modalODS.querySelector(".modal-ods-busca").textContent = dados.busca;
+    modalODS.querySelector(".modal-ods-contribuicao").textContent = dados.contribuicao;
+    const metas = modalODS.querySelector(".modal-ods-metas");
+    metas.replaceChildren(...dados.metas.map(meta => {
+        const item = document.createElement("li");
+        item.textContent = meta;
+        return item;
+    }));
+    modalODS.hidden = false;
+    modalODS.classList.add("aberto");
+    document.body.style.overflow = "hidden";
+    document.querySelector(".perfil-publico")?.setAttribute("inert", "");
+    document.querySelector(".navbar")?.setAttribute("inert", "");
+    document.querySelector("#footer")?.setAttribute("inert", "");
+    modalODS.querySelector(".fechar-modal-ods").focus();
+}
+
+modalODS.querySelector(".fechar-modal-ods").addEventListener("click", fecharModalODS);
+modalODS.addEventListener("click", evento => {
+    if (evento.target === modalODS) fecharModalODS();
+});
+document.addEventListener("keydown", evento => {
+    if (modalODS.hidden) return;
+    if (evento.key === "Escape") {
+        fecharModalODS();
+    } else if (evento.key === "Tab") {
+        const controles = [...modalODS.querySelectorAll("button, a[href], [tabindex]:not([tabindex='-1'])")];
+        if (!controles.length) return;
+        const primeiro = controles[0];
+        const ultimo = controles.at(-1);
+        if (evento.shiftKey && document.activeElement === primeiro) {
+            evento.preventDefault();
+            ultimo.focus();
+        } else if (!evento.shiftKey && document.activeElement === ultimo) {
+            evento.preventDefault();
+            primeiro.focus();
         }
     }
-
-
-    // ========================================
-    // ODS
-    // ========================================
-
-    const containerOds =
-        document.querySelector("#ods-container");
-
-    if (containerOds) {
-
-        containerOds.innerHTML = "";
-
-        if (
-            Array.isArray(ong.ods) &&
-            ong.ods.length > 0
-        ) {
-
-            ong.ods.forEach(numero => {
-
-                const item =
-                    document.createElement("div");
-
-                item.classList.add("ods-item");
-
-                // Guarda qual ODS é essa
-                item.dataset.ods = numero;
-
-
-                const imagem =
-                    document.createElement("img");
-
-                imagem.src =
-                    `../assets/ods${numero}.png`;
-
-                imagem.alt =
-                    `Objetivo de Desenvolvimento Sustentável ${numero}`;
-
-                imagem.onerror = () => {
-
-                    console.warn(
-                        `Imagem da ODS ${numero} não encontrada.`
-                    );
-
-                    item.remove();
-                };
-
-
-                item.appendChild(imagem);
-
-                containerOds.appendChild(item);
-
-
-                // ========================================
-                // CLIQUE NA ODS
-                // ========================================
-
-                item.addEventListener("click", () => {
-
-                    abrirModalODS(numero);
-
-                });
-
-            });
-
-        } else {
-
-            containerOds.innerHTML = `
-            <p>
-                Nenhuma ODS cadastrada para esta iniciativa.
-            </p>
-        `;
-        }
-    }
-
-    // ========================================
-    // DOAÇÃO
-    // ========================================
-
-    const botaoDoacao =
-        document.querySelector("#Doacao");
-
-    const botaoDoacaoFooter =
-        document.querySelector("#Doacao-footer");
-
-    const modalDoacao =
-        document.querySelector("#modal-doacao");
-
-    const fecharDoacao =
-        document.querySelector("#fechar-doacao");
-
-    const nomeOngDoacao =
-        document.querySelector("#nome-ong-doacao");
-
-
-    // ========================================
-    // AVISO PIX
-    // ========================================
-
-    const avisoPix =
-        document.querySelector("#aviso-pix");
-
-    const fecharAvisoPix =
-        document.querySelector("#fechar-aviso-pix");
-
-
-    // ========================================
-    // REGIÃO
-    // ========================================
-
-    const regiaoOng =
-        document.querySelector("#regiao-ong");
-
-    if (regiaoOng) {
-
-        regiaoOng.textContent =
-            descobrirRegiao(ong.endereco);
-    }
-
-
-    // ========================================
-    // ENDEREÇO
-    // ========================================
-
-    console.log(
-        "Endereço:",
-        ong.endereco
-    );
-
-
-    // ========================================
-    // IMAGEM DA ONG
-    // ========================================
-
-    /*
-     * No seu HTML atual o carrossel usa
-     * imagens fixas.
-     *
-     * Portanto, não existe mais #imagem-ong.
-     *
-     * Se a ONG tiver uma imagem própria,
-     * podemos trocar a primeira imagem
-     * do carrossel por ela.
-     */
-
-    if (ong.imagem && imagens.length > 0) {
-
-        imagens[0].src =
-            ong.imagem;
-
-        imagens[0].alt =
-            `Imagem de ${ong.nome}`;
-    }
-
-    // ========================================
-    // ESCONDER DOAÇÃO PARA SERVIÇOS PÚBLICOS
-    // ========================================
-
-    if (ong.tipo === "PUBLICO") {
-
-        if (botaoDoacao) {
-            botaoDoacao.style.display = "none";
-        }
-
-        if (botaoDoacaoFooter) {
-            botaoDoacaoFooter.style.display = "none";
-        }
-
-    }
-
-
-    // ========================================
-    // ABRIR MODAL
-    // ========================================
-
-    function abrirModalDoacao() {
-
-        // Verificar se existe PIX cadastrado
-
-        if (!ong.pix) {
-
-            if (avisoPix) {
-                avisoPix.style.display = "flex";
-            }
-
-            return;
-        }
-
-
-        // Colocar nome da ONG
-
-        if (nomeOngDoacao) {
-
-            nomeOngDoacao.textContent =
-                `Doação para ${ong.nome}`;
-
-        }
-
-
-        // Abrir modal
-
-        if (modalDoacao) {
-
-            modalDoacao.style.display = "flex";
-
-        }
-
-    }
-
-    // ========================================
-    // FECHAR AVISO PIX
-    // ========================================
-
-    if (fecharAvisoPix) {
-
-        fecharAvisoPix.addEventListener(
-            "click",
-            () => {
-
-                avisoPix.style.display = "none";
-
-            }
-        );
-
-    }
-
-
-    // ========================================
-    // CLICAR FORA DO AVISO
-    // ========================================
-
-    if (avisoPix) {
-
-        avisoPix.addEventListener(
-            "click",
-            evento => {
-
-                if (evento.target === avisoPix) {
-
-                    avisoPix.style.display = "none";
-
-                }
-
-            }
-        );
-
-    }
-
-    // ========================================
-    // BOTÃO PRINCIPAL
-    // ========================================
-
-    if (botaoDoacao) {
-
-        botaoDoacao.addEventListener(
-            "click",
-            abrirModalDoacao
-        );
-
-    }
-
-
-    // ========================================
-    // BOTÃO DO FOOTER
-    // ========================================
-
-    if (botaoDoacaoFooter) {
-
-        botaoDoacaoFooter.addEventListener(
-            "click",
-            abrirModalDoacao
-        );
-
-    }
-
-
-    // ========================================
-    // FECHAR MODAL
-    // ========================================
-
-    if (fecharDoacao) {
-
-        fecharDoacao.addEventListener(
-            "click",
-            () => {
-
-                modalDoacao.style.display = "none";
-
-            }
-        );
-
-    }
-
-
-    // ========================================
-    // CLICAR FORA DO MODAL
-    // ========================================
-
-    if (modalDoacao) {
-
-        modalDoacao.addEventListener(
-            "click",
-            evento => {
-
-                if (
-                    evento.target === modalDoacao
-                ) {
-
-                    modalDoacao.style.display =
-                        "none";
-
-                }
-
-            }
-        );
-
-    }
-
-    // ========================================
-    // CONFIGURAÇÃO DO PIX
-    // ========================================
-
-    const botoesValor =
-        document.querySelectorAll(".valor-pix");
-
-    const botaoOutro =
-        document.querySelector("#botao-outro");
-
-    const modalValor =
-        document.querySelector("#modal-valor");
-
-    const fecharModal =
-        document.querySelector("#fechar-modal");
-
-    const inputValor =
-        document.querySelector("#valor");
-
-    const botaoGerar =
-        document.querySelector("#gerar-pix");
-
-    const resultadoPix =
-        document.querySelector("#resultado-pix");
-
-    const qrcode =
-        document.querySelector("#qrcode");
-
-    const valorExibido =
-        document.querySelector("#valor-exibido");
-
-    const chavePixInput =
-        document.querySelector("#chave-pix");
-
-    const copiarChave =
-        document.querySelector("#copiar-chave");
-
-    const pixCopiaCola =
-        document.querySelector("#pix-copia-cola");
-
-    const botaoCopiar =
-        document.querySelector("#copiar-pix");
-
-    const mensagemCopia =
-        document.querySelector("#mensagem-copia");
-
-    // ========================================
-    // LIMPAR TEXTO
-    // ========================================
-
-    function limparTexto(texto) {
-
-        return texto
-            .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "")
-            .replace(/[^a-zA-Z0-9 ]/g, "")
-            .toUpperCase();
-
-    }
-
-
-    // ========================================
-    // CAMPO PIX
-    // ========================================
-
-    function campoPix(id, valor) {
-
-        const tamanho =
-            valor.length
-                .toString()
-                .padStart(2, "0");
-
-        return id + tamanho + valor;
-
-    }
-
-
-    // ========================================
-    // CRC16
-    // ========================================
-
-    function calcularCRC16(payload) {
-
-        let crc = 0xFFFF;
-
-        for (
-            let i = 0;
-            i < payload.length;
-            i++
-        ) {
-
-            crc ^=
-                payload.charCodeAt(i) << 8;
-
-            for (
-                let j = 0;
-                j < 8;
-                j++
-            ) {
-
-                if (
-                    (crc & 0x8000) !== 0
-                ) {
-
-                    crc =
-                        (crc << 1) ^ 0x1021;
-
-                } else {
-
-                    crc <<= 1;
-
-                }
-
-                crc &= 0xFFFF;
-
-            }
-
-        }
-
-        return crc
-            .toString(16)
-            .toUpperCase()
-            .padStart(4, "0");
-
-    }
-
-    // ========================================
-    // GERAR PIX
-    // ========================================
-
-    function gerarPix(valor) {
-
-        valor = Number(valor);
-
-        if (
-            !Number.isFinite(valor) ||
-            valor <= 0
-        ) {
-
-            alert(
-                "Digite um valor válido."
-            );
-
-            return null;
-
-        }
-
-
-        // Verificar PIX da ONG
-
-        if (!ong.pix) {
-
-            alert(
-                "Esta ONG ainda não possui uma chave PIX cadastrada."
-            );
-
-            return null;
-
-        }
-
-
-        const chavePix =
-            ong.pix.chave;
-
-        const nomeRecebedor =
-            ong.pix.nome;
-
-        const cidadeRecebedor =
-            ong.pix.cidade;
-
-
-        const nome =
-            limparTexto(nomeRecebedor)
-                .substring(0, 25);
-
-        const cidade =
-            limparTexto(cidadeRecebedor)
-                .substring(0, 15);
-
-
-        // 00 - Payload Format Indicator
-
-        const payloadFormat =
-            campoPix("00", "01");
-
-
-        // 26 - Merchant Account Information
-
-        const gui =
-            campoPix(
-                "00",
-                "BR.GOV.BCB.PIX"
-            );
-
-        const chave =
-            campoPix(
-                "01",
-                chavePix
-            );
-
-        const merchantAccountInformation =
-            campoPix(
-                "26",
-                gui + chave
-            );
-
-
-        // 52 - Merchant Category Code
-
-        const merchantCategoryCode =
-            campoPix(
-                "52",
-                "0000"
-            );
-
-
-        // 53 - Moeda
-
-        const moeda =
-            campoPix(
-                "53",
-                "986"
-            );
-
-
-        // 54 - Valor
-
-        const valorFormatado =
-            valor.toFixed(2);
-
-        const valorPix =
-            campoPix(
-                "54",
-                valorFormatado
-            );
-
-
-        // 58 - País
-
-        const pais =
-            campoPix(
-                "58",
-                "BR"
-            );
-
-
-        // 59 - Nome
-
-        const nomePix =
-            campoPix(
-                "59",
-                nome
-            );
-
-
-        // 60 - Cidade
-
-        const cidadePix =
-            campoPix(
-                "60",
-                cidade
-            );
-
-
-        // 62 - TXID
-
-        const txid =
-            campoPix(
-                "05",
-                "***"
-            );
-
-        const dadosAdicionais =
-            campoPix(
-                "62",
-                txid
-            );
-
-
-        // Montar payload
-
-        let payload =
-            payloadFormat +
-            merchantAccountInformation +
-            merchantCategoryCode +
-            moeda +
-            valorPix +
-            pais +
-            nomePix +
-            cidadePix +
-            dadosAdicionais;
-
-
-        // CRC
-
-        payload += "6304";
-
-        const crc =
-            calcularCRC16(payload);
-
-        payload += crc;
-
-
-        return payload;
-
-    }
-
-    // ========================================
-    // MOSTRAR PIX
-    // ========================================
-
-    function mostrarPix(valor) {
-
-        const pix =
-            gerarPix(valor);
-
-        if (!pix) {
-            return;
-        }
-
-
-        // Verificar biblioteca
-
-        if (
-            typeof QRCode === "undefined"
-        ) {
-
-            console.error(
-                "QRCode não foi carregado."
-            );
-
-            alert(
-                "A biblioteca do QR Code não foi carregada."
-            );
-
-            return;
-
-        }
-
-
-        // Limpar QR anterior
-
-        qrcode.innerHTML = "";
-
-
-        // Gerar QR
-
-        new QRCode(qrcode, {
-
-            text: pix,
-
-            width: 275,
-
-            height: 275,
-
-            correctLevel:
-                QRCode.CorrectLevel.M
-
-        });
-
-
-        // Mostrar valor
-
-        valorExibido.textContent =
-            Number(valor).toLocaleString(
-                "pt-BR",
-                {
-                    style: "currency",
-                    currency: "BRL"
-                }
-            );
-
-
-        // Mostrar chave da ONG
-
-        chavePixInput.value =
-            ong.pix.chave;
-
-
-        // Mostrar PIX Copia e Cola
-
-        pixCopiaCola.value =
-            pix;
-
-
-        // Mostrar resultado
-
-        resultadoPix.style.display =
-            "block";
-
-
-        // Limpar mensagem
-
-        mensagemCopia.textContent = "";
-
-
-        // Rolar até o resultado
-
-        resultadoPix.scrollIntoView({
-            behavior: "smooth",
-            block: "center"
-        });
-
-    }
-
-    // ========================================
-    // BOTÕES DE VALOR
-    // ========================================
-
-    botoesValor.forEach(botao => {
-
-        botao.addEventListener(
-            "click",
-            () => {
-
-                const valor =
-                    Number(
-                        botao.dataset.valor
-                    );
-
-
-                botoesValor.forEach(
-                    botaoAtual => {
-
-                        botaoAtual.classList.remove(
-                            "ativo"
-                        );
-
-                    }
-                );
-
-
-                botao.classList.add("ativo");
-
-
-                mostrarPix(valor);
-
-            }
-        );
-
-    });
-
-    // ========================================
-    // ABRIR OUTRO VALOR
-    // ========================================
-
-    if (botaoOutro) {
-
-        botaoOutro.addEventListener(
-            "click",
-            () => {
-
-                modalValor.style.display =
-                    "flex";
-
-                inputValor.value = "";
-
-                setTimeout(() => {
-
-                    inputValor.focus();
-
-                }, 100);
-
-            }
-        );
-
-    }
-
-
-    // ========================================
-    // FECHAR OUTRO VALOR
-    // ========================================
-
-    if (fecharModal) {
-
-        fecharModal.addEventListener(
-            "click",
-            () => {
-
-                modalValor.style.display =
-                    "none";
-
-            }
-        );
-
-    }
-
-
-    // ========================================
-    // CLICAR FORA
-    // ========================================
-
-    if (modalValor) {
-
-        modalValor.addEventListener(
-            "click",
-            evento => {
-
-                if (
-                    evento.target === modalValor
-                ) {
-
-                    modalValor.style.display =
-                        "none";
-
-                }
-
-            }
-        );
-
-    }
-
-    // ========================================
-    // CONFIRMAR OUTRO VALOR
-    // ========================================
-
-    if (botaoGerar) {
-
-        botaoGerar.addEventListener(
-            "click",
-            () => {
-
-                const valor =
-                    Number(inputValor.value);
-
-
-                if (
-                    !Number.isFinite(valor) ||
-                    valor <= 0
-                ) {
-
-                    const textoAvisoPix =
-                        document.querySelector("#texto-aviso-pix");
-
-                    const avisoPix =
-                        document.querySelector("#aviso-pix");
-
-                    if (textoAvisoPix) {
-
-                        textoAvisoPix.textContent =
-                            "Digite um valor maior que R$ 0,00.";
-
-                    }
-
-                    if (avisoPix) {
-
-                        avisoPix.style.display = "flex";
-
-                    }
-
-                    inputValor.focus();
-
-                    return;
-                }
-
-
-                modalValor.style.display =
-                    "none";
-
-
-                botoesValor.forEach(
-                    botao => {
-
-                        botao.classList.remove(
-                            "ativo"
-                        );
-
-                    }
-                );
-
-
-                mostrarPix(valor);
-
-            }
-        );
-
-    }
-
-    // ========================================
-    // ENTER
-    // ========================================
-
-    if (inputValor) {
-
-        inputValor.addEventListener(
-            "keydown",
-            evento => {
-
-                if (evento.key === "Enter") {
-
-                    evento.preventDefault();
-
-                    botaoGerar.click();
-
-                }
-
-            }
-        );
-
-    }
-
-    // ========================================
-    // COPIAR CHAVE PIX
-    // ========================================
-
-    if (copiarChave) {
-
-        copiarChave.addEventListener(
-            "click",
-            async () => {
-
-                try {
-
-                    await navigator.clipboard.writeText(
-                        ong.pix.chave
-                    );
-
-                    mensagemCopia.textContent =
-                        "Chave PIX copiada!";
-
-                } catch (erro) {
-
-                    chavePixInput.select();
-
-                    document.execCommand("copy");
-
-                    mensagemCopia.textContent =
-                        "Chave PIX copiada!";
-
-                }
-
-            }
-        );
-
-    }
-
-
 });
 
-
-// ========================================
-// DESCOBRIR REGIÃO
-// ========================================
-
-function descobrirRegiao(endereco) {
-
-    if (!endereco) {
-
-        return "Região não informada";
-    }
-
-
-    const enderecoMinusculo =
-        endereco.toLowerCase();
-
-
-    if (
-        enderecoMinusculo.includes(
-            "praia grande"
-        )
-    ) {
-
-        return "Praia Grande - SP";
-    }
-
-
-    if (
-        enderecoMinusculo.includes(
-            "são vicente"
-        ) ||
-        enderecoMinusculo.includes(
-            "sao vicente"
-        )
-    ) {
-
-        return "São Vicente - SP";
-    }
-
-
-    if (
-        enderecoMinusculo.includes(
-            "santos"
-        )
-    ) {
-
-        return "Santos - SP";
-    }
-
-
-    return "Baixada Santista";
+function textoLimpo(valor) {
+    return typeof valor === "string" ? valor.trim() : "";
 }
+
+function adicionarItem(lista, rotulo, valor) {
+    const texto = textoLimpo(valor);
+    if (!texto) return false;
+    const item = document.createElement("li");
+    const titulo = document.createElement("strong");
+    titulo.textContent = `${rotulo}: `;
+    item.append(titulo, document.createTextNode(texto));
+    lista.appendChild(item);
+    return true;
+}
+
+function urlSegura(valor) {
+    let texto = textoLimpo(valor);
+    if (!texto) return null;
+    if (!/^[a-z][a-z\d+.-]*:/i.test(texto)) texto = `https://${texto}`;
+    try {
+        const url = new URL(texto);
+        return ["http:", "https:"].includes(url.protocol) && !url.username && !url.password
+            ? url
+            : null;
+    } catch {
+        return null;
+    }
+}
+
+function adicionarContato(lista, rotulo, valor, href, externo = false) {
+    const texto = textoLimpo(valor);
+    if (!texto || !href) return false;
+    const item = document.createElement("li");
+    const link = document.createElement("a");
+    link.textContent = `${rotulo}: ${texto}`;
+    link.href = href;
+    if (externo) {
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+    }
+    item.appendChild(link);
+    lista.appendChild(item);
+    return true;
+}
+
+function renderizarContato(osc) {
+    const lista = document.getElementById("contatos-lista");
+    lista.replaceChildren();
+    let quantidade = 0;
+    const email = textoLimpo(osc.email);
+    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        quantidade += Number(adicionarContato(lista, "E-mail institucional", email, `mailto:${email}`));
+    }
+    const telefone = textoLimpo(osc.telefone);
+    const digitosTelefone = telefone.replace(/\D/g, "");
+    if (digitosTelefone.length >= 8) {
+        quantidade += Number(adicionarContato(lista, "Telefone", telefone, `tel:${telefone.replace(/[^\d+]/g, "")}`));
+    }
+    const whatsapp = textoLimpo(osc.whatsapp);
+    let digitosWhatsApp = whatsapp.replace(/\D/g, "");
+    if (digitosWhatsApp.length === 10 || digitosWhatsApp.length === 11) digitosWhatsApp = `55${digitosWhatsApp}`;
+    if (digitosWhatsApp.length >= 10) {
+        quantidade += Number(adicionarContato(lista, "WhatsApp", whatsapp, `https://wa.me/${digitosWhatsApp}`, true));
+    }
+    for (const [campo, rotulo] of [["site", "Site"], ["instagram", "Instagram"], ["linkedin", "LinkedIn"], ["youtube", "YouTube"]]) {
+        const url = urlSegura(osc[campo]);
+        if (url) quantidade += Number(adicionarContato(lista, rotulo, url.hostname.replace(/^www\./, ""), url.href, true));
+    }
+    document.getElementById("contato-vazio").hidden = quantidade > 0;
+}
+
+function renderizarFuncionamento(osc) {
+    const lista = document.getElementById("funcionamento-lista");
+    lista.replaceChildren();
+    let quantidade = 0;
+    quantidade += Number(adicionarItem(lista, "Horários informados", osc.diasHorariosFuncionamento));
+    if (!textoLimpo(osc.diasHorariosFuncionamento)) {
+        const abertura = textoLimpo(osc.horarioAbertura).slice(0, 5);
+        const fechamento = textoLimpo(osc.horarioFechamento).slice(0, 5);
+        if (abertura && fechamento) quantidade += Number(adicionarItem(lista, "Horário", `${abertura}–${fechamento}`));
+    }
+    for (const [campo, rotulo] of [["atendimentoPresencial", "Atendimento presencial"], ["atendimentoOnline", "Atendimento online"], ["necessitaAgendamento", "Agendamento necessário"]]) {
+        if (typeof osc[campo] === "boolean") {
+            quantidade += Number(adicionarItem(lista, rotulo, osc[campo] ? "Sim" : "Não"));
+        }
+    }
+    document.getElementById("funcionamento-vazio").hidden = quantidade > 0;
+}
+
+function renderizarVoluntariado(osc) {
+    const lista = document.getElementById("voluntariado-lista");
+    lista.replaceChildren();
+    const status = document.getElementById("voluntariado-status");
+    const detalhes = [];
+    if (typeof osc.aceitaVoluntarios === "boolean") {
+        status.textContent = osc.aceitaVoluntarios
+            ? "Esta organização informa que aceita pessoas voluntárias."
+            : "Esta organização informa que não está aceitando pessoas voluntárias.";
+    } else {
+        status.textContent = "A disponibilidade de voluntariado não foi informada.";
+    }
+    if (osc.aceitaVoluntarios === true) {
+        if (osc.frequenciaVoluntariado) detalhes.push(["Frequência", osc.frequenciaVoluntariado]);
+        if (Number.isInteger(osc.idadeMinimaVoluntario) && osc.idadeMinimaVoluntario >= 0) detalhes.push(["Idade mínima", `${osc.idadeMinimaVoluntario} anos`]);
+        if (typeof osc.processoSeletivoVoluntario === "boolean") detalhes.push(["Processo seletivo", osc.processoSeletivoVoluntario ? "Sim" : "Não"]);
+        if (typeof osc.emiteCertificadoVoluntario === "boolean") detalhes.push(["Emite certificado", osc.emiteCertificadoVoluntario ? "Sim" : "Não"]);
+        for (const [rotulo, valor] of detalhes) adicionarItem(lista, rotulo, valor);
+        const atividades = typeof osc.atividadesVoluntariado === "string"
+            ? osc.atividadesVoluntariado.split(/[\r\n;]+/).map(item => item.trim()).filter(Boolean)
+            : [];
+        for (const atividade of atividades) adicionarItem(lista, "Atividade", atividade);
+    }
+    document.getElementById("voluntariado-vazio").hidden = lista.children.length > 0;
+}
+
+function renderizarODS(osc) {
+    const container = document.getElementById("ods-container");
+    container.replaceChildren();
+    const valores = Array.isArray(osc.ods) ? [...new Set(osc.ods.map(Number))] : [];
+    const validos = valores.filter(numero => Number.isInteger(numero) && numero >= 1 && numero <= 17 && dadosODS[numero]);
+    if (!validos.length) {
+        const aviso = document.createElement("p");
+        aviso.className = "texto-ausente";
+        aviso.textContent = valores.length ? "Os ODS cadastrados não puderam ser reconhecidos." : "Nenhum ODS foi cadastrado para esta organização.";
+        container.appendChild(aviso);
+        return;
+    }
+    for (const numero of validos) {
+        const botao = document.createElement("button");
+        botao.type = "button";
+        botao.className = "ods-item";
+        botao.dataset.ods = String(numero);
+        botao.setAttribute("aria-haspopup", "dialog");
+        botao.setAttribute("aria-label", `Ver informações sobre a ODS ${numero}: ${dadosODS[numero].titulo}`);
+        const imagem = document.createElement("img");
+        imagem.src = `../assets/ods${numero}.png`;
+        imagem.alt = "";
+        imagem.onerror = () => {
+            botao.remove();
+            if (container.querySelectorAll(".ods-item").length === 0) {
+                const aviso = document.createElement("p");
+                aviso.className = "texto-ausente";
+                aviso.textContent = "Não foi possível carregar os ícones dos ODS desta organização.";
+                container.replaceChildren(aviso);
+            }
+        };
+        botao.appendChild(imagem);
+        botao.addEventListener("click", () => abrirModalODS(numero, botao));
+        container.appendChild(botao);
+    }
+}
+
+function renderizarCausas(osc) {
+    const principal = document.getElementById("causa-principal");
+    const secundarias = document.getElementById("causas-secundarias");
+    const enumCausas = Object.keys(NOMES_CAUSAS);
+    principal.textContent = "";
+    secundarias.textContent = "";
+    secundarias.hidden = true;
+    let causaPrincipal = enumCausas.includes(osc.causaPrincipal) ? osc.causaPrincipal : null;
+    let causasSecundarias = Array.isArray(osc.causasSecundarias)
+        ? osc.causasSecundarias.filter(valor => enumCausas.includes(valor))
+        : [];
+    if (!causaPrincipal && causasSecundarias.length === 0 && Array.isArray(osc.causas)) {
+        causasSecundarias = osc.causas.filter(valor => enumCausas.includes(valor));
+    }
+    causasSecundarias = [...new Set(causasSecundarias)].filter(valor => valor !== causaPrincipal);
+    principal.textContent = causaPrincipal ? `Causa principal: ${NOMES_CAUSAS[causaPrincipal]}` : "Causa principal não informada";
+    if (causasSecundarias.length) {
+        secundarias.textContent = `Outras causas: ${causasSecundarias.map(valor => NOMES_CAUSAS[valor]).join(" · ")}`;
+        secundarias.hidden = false;
+    }
+}
+
+function urlPublicaPerfil(id) {
+    const url = new URL("/ong-profile", "https://portoajuda.com.br");
+    url.searchParams.set("id", String(id));
+    return url.href;
+}
+
+async function copiarTexto(texto) {
+    if (navigator.clipboard?.writeText && window.isSecureContext) {
+        await navigator.clipboard.writeText(texto);
+        return;
+    }
+    const campo = document.createElement("textarea");
+    campo.value = texto;
+    campo.setAttribute("readonly", "");
+    campo.style.position = "fixed";
+    campo.style.opacity = "0";
+    document.body.appendChild(campo);
+    campo.select();
+    const copiado = document.execCommand("copy");
+    campo.remove();
+    if (!copiado) throw new Error("Cópia indisponível");
+}
+
+function configurarCompartilhamento(osc) {
+    const botao = document.getElementById("compartilhar");
+    const feedback = document.getElementById("mensagem-compartilhar");
+    botao.addEventListener("click", async () => {
+        const url = urlPublicaPerfil(osc.id);
+        feedback.textContent = "";
+        if (navigator.share) {
+            try {
+                await navigator.share({ title: osc.nome || "Perfil de OSC", text: "Conheça esta organização no Porto Ajuda.", url });
+                feedback.textContent = "Link compartilhado.";
+                return;
+            } catch (erro) {
+                if (erro?.name === "AbortError") return;
+            }
+        }
+        try {
+            await copiarTexto(url);
+            feedback.textContent = "Link público copiado.";
+        } catch {
+            feedback.textContent = "Não foi possível compartilhar o link neste navegador.";
+        }
+    });
+}
+
+function renderizarPerfil(osc) {
+    document.title = `${textoLimpo(osc.nome) || "Organização"} | Porto Ajuda`;
+    document.getElementById("nome-ong").textContent = textoLimpo(osc.nome) || "Organização da sociedade civil";
+    const descricaoCurta = document.getElementById("descricao-texto");
+    descricaoCurta.textContent = textoLimpo(osc.descricaoCurta);
+    descricaoCurta.hidden = !textoLimpo(osc.descricaoCurta);
+    document.getElementById("sobre-texto").textContent = textoLimpo(osc.descricao) || "A organização não cadastrou uma apresentação institucional.";
+    if (Number.isInteger(osc.anoFundacao) && osc.anoFundacao > 0) {
+        const ano = document.getElementById("ano-fundacao");
+        ano.textContent = `Fundada em ${osc.anoFundacao}`;
+        ano.hidden = false;
+    }
+    renderizarCausas(osc);
+
+    const logo = document.getElementById("logo-ong");
+    const fallback = document.getElementById("logo-fallback");
+    const urlLogo = urlSegura(osc.logo);
+    if (urlLogo) {
+        logo.src = urlLogo.href;
+        logo.alt = `Logotipo de ${textoLimpo(osc.nome) || "organização"}`;
+        logo.hidden = false;
+        fallback.hidden = true;
+        logo.onerror = () => {
+            logo.hidden = true;
+            fallback.hidden = false;
+        };
+    }
+
+    const localizacao = [textoLimpo(osc.cidade), textoLimpo(osc.estado), textoLimpo(osc.pais)]
+        .filter(Boolean).join(", ");
+    document.getElementById("localizacao-texto").textContent = localizacao || "Localização não informada.";
+    const abrangencia = textoLimpo(osc.areaGeografica);
+    if (abrangencia) {
+        const rotulosAbrangencia = {
+            bairro: "Bairro",
+            cidade: "Cidade",
+            municipal: "Municipal",
+            regional: "Regional",
+            estadual: "Estadual",
+            nacional: "Nacional",
+            internacional: "Internacional"
+        };
+        const campo = document.getElementById("abrangencia-texto");
+        campo.textContent = `Área de atuação informada: ${rotulosAbrangencia[abrangencia.toLocaleLowerCase("pt-BR")] || abrangencia}.`;
+        campo.hidden = false;
+    }
+    // O endpoint não informa se logradouro e CEP têm autorização de publicação.
+    document.getElementById("endereco-institucional").hidden = true;
+
+    renderizarContato(osc);
+    renderizarFuncionamento(osc);
+    renderizarVoluntariado(osc);
+    renderizarODS(osc);
+    configurarCompartilhamento(osc);
+}
+
+async function carregarPerfil() {
+    const carregamento = document.getElementById("perfil-carregamento");
+    const erro = document.getElementById("perfil-erro");
+    const conteudo = document.getElementById("perfil-conteudo");
+    const tituloErro = document.getElementById("perfil-erro-titulo");
+    const mensagemErro = document.getElementById("perfil-erro-mensagem");
+    carregamento.hidden = false;
+    erro.hidden = true;
+    conteudo.hidden = true;
+    carregamento.textContent = "Carregando perfil da organização…";
+
+    const id = Number(new URLSearchParams(window.location.search).get("id"));
+    if (!Number.isInteger(id) || id <= 0) {
+        carregamento.hidden = true;
+        tituloErro.textContent = "Perfil não identificado";
+        mensagemErro.textContent = "O link não contém um identificador válido para a organização.";
+        erro.hidden = false;
+        return;
+    }
+
+    try {
+        const resposta = await fetch(`${API_URL}/osc/${encodeURIComponent(id)}`, {
+            headers: { Accept: "application/json" },
+            cache: "no-store"
+        });
+        if (resposta.status === 404) {
+            tituloErro.textContent = "Organização não encontrada";
+            mensagemErro.textContent = "Este perfil não está disponível. Confira o link ou volte à lista de organizações.";
+            throw new Error("estado-ja-apresentado");
+        }
+        if (!resposta.ok) throw new Error("api-indisponivel");
+        const osc = await resposta.json();
+        if (!osc || Number(osc.id) !== id || typeof osc.nome !== "string") throw new Error("resposta-invalida");
+        renderizarPerfil(osc);
+        carregamento.hidden = true;
+        conteudo.hidden = false;
+        return;
+    } catch (falha) {
+        carregamento.hidden = true;
+        if (falha.message !== "estado-ja-apresentado") {
+            tituloErro.textContent = "Não foi possível carregar o perfil";
+            mensagemErro.textContent = "Verifique sua conexão e tente novamente. As informações da organização não foram carregadas.";
+        }
+        erro.hidden = false;
+    }
+}
+
+document.getElementById("perfil-tentar-novamente").addEventListener("click", carregarPerfil);
+document.addEventListener("DOMContentLoaded", carregarPerfil, { once: true });

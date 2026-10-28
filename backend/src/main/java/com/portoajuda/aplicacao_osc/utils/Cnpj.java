@@ -8,7 +8,7 @@ public class Cnpj {
     private String cnpj;
 
     public Cnpj(String cnpj) {
-       this.cnpj = validateCnpj(cnpj);
+        this.cnpj = validateCnpj(cnpj);
     }
 
     private String validateCnpj(String cnpj) {
@@ -28,8 +28,8 @@ public class Cnpj {
             nums[i] = cnpj.charAt(i) - '0';
         }
 
-        int[] peso1 = {5,4,3,2,9,8,7,6,5,4,3,2};
-        int[] peso2 = {6,5,4,3,2,9,8,7,6,5,4,3,2};
+        int[] peso1 = { 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2 };
+        int[] peso2 = { 6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2 };
 
         int soma = 0;
         for (int i = 0; i < 12; i++) {

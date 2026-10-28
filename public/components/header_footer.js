@@ -1,3 +1,66 @@
+import { getAPI_URL } from "./modoBack.js";
+import {
+    fetchAutenticado,
+    sessaoInvalidaConfirmada
+} from "./api.js";
+import {
+    CHAVE_ESTADO_SESSAO,
+    iniciarRenovacaoPeriodica,
+    marcarSessaoAnonima,
+    obterEstadoSessao
+} from "./auth.js";
+import { montarAvatar, restaurarIconePadrao } from "./avatar.js";
+
+
+const API_URL = getAPI_URL();
+
+console.log("================================");
+console.log("API ESCOLHIDA:", API_URL);
+console.log("================================");
+
+const ROTAS = API_URL === "http://localhost:8080"
+    || API_URL === "https://api.portoajuda.com.br"
+    ? {
+        home: "/",
+        sobre: "/sobre",
+        iniciativas: "/iniciativas",
+        apoie: "/apoie",
+        proximidade: "/proximidade",
+        login: "/login",
+        contato: "/contato"
+    }
+    : {
+        home: "Porto-Ajuda.html",
+        sobre: "sobre.html",
+        iniciativas: "iniciativas.html",
+        apoie: "apoie.html",
+        proximidade: "proximity.html",
+        login: "login.html",
+        contato: "contato.html"
+    };
+
+
+// ==========================
+// FAVICON — PORTO AJUDA
+// ==========================
+
+(function configurarFavicon() {
+    const faviconUrl = "/assets/favicon.png";
+
+    let favicon = document.querySelector(
+        'link[rel="icon"]'
+    );
+
+    if (!favicon) {
+        favicon = document.createElement("link");
+        favicon.rel = "icon";
+        document.head.appendChild(favicon);
+    }
+
+    favicon.type = "image/png";
+    favicon.href = faviconUrl;
+})();
+
 /* =========================================================
    TOUR
 ========================================================= */
@@ -11,14 +74,44 @@ cssTour.href =
 
 document.head.appendChild(cssTour);
 
-
 const jsTour =
     document.createElement("script");
+
+jsTour.type = "module";
 
 jsTour.src =
     "../components/tour.js";
 
 document.body.appendChild(jsTour);
+
+/* =========================================================
+   ACESSIBILIDADE
+   ========================================================= */
+
+const cssAcessibilidade =
+    document.createElement("link");
+
+cssAcessibilidade.rel =
+    "stylesheet";
+
+cssAcessibilidade.href =
+    "../styles/acessibilidade.css";
+
+document.head.appendChild(
+    cssAcessibilidade
+);
+
+const jsAcessibilidade =
+    document.createElement("script");
+
+jsAcessibilidade.type = "module";
+
+jsAcessibilidade.src =
+    "../components/acessibilidade.js";
+
+document.body.appendChild(
+    jsAcessibilidade
+);
 
 /* =========================================================
    MODAL
@@ -64,7 +157,7 @@ document.body.insertAdjacentHTML(
 
 const cabecalho = `
 
-<a href="Porto-Ajuda.html">
+<a href="${ROTAS.home}">
 
     <div class="logo">
 
@@ -90,7 +183,7 @@ const cabecalho = `
     <ul class="nav-links">
 
         <li>
-            <a href="Porto-Ajuda.html">
+            <a href="${ROTAS.home}">
                 Home
             </a>
         </li>
@@ -98,7 +191,7 @@ const cabecalho = `
         <li id="barra">|</li>
 
         <li>
-            <a href="sobre.html">
+            <a href="${ROTAS.sobre}">
                 Sobre
             </a>
         </li>
@@ -106,7 +199,7 @@ const cabecalho = `
         <li id="barra">|</li>
 
         <li>
-            <a href="iniciativas.html">
+            <a href="${ROTAS.iniciativas}">
                 Campanhas Sociais
             </a>
         </li>
@@ -114,7 +207,7 @@ const cabecalho = `
         <li id="barra">|</li>
 
         <li>
-            <a href="apoie.html">
+            <a href="${ROTAS.apoie}">
                 Apoiar o Site
             </a>
         </li>
@@ -122,7 +215,7 @@ const cabecalho = `
         <li id="barra">|</li>
 
         <li>
-            <a href="proximity.html">
+            <a href="${ROTAS.proximidade}">
                 ONG's Regionais
             </a>
         </li>
@@ -151,16 +244,13 @@ const cabecalho = `
     <!-- PERFIL -->
 
     <a
-        href="login.html"
+        id="link-acesso-usuario"
+        href="${ROTAS.login}"
         aria-label="Entrar ou acessar perfil"
     >
-
         <div class="profile-icon">
-
             <i class="fa-regular fa-user"></i>
-
         </div>
-
     </a>
 
 </div>
@@ -174,6 +264,187 @@ document
         "beforeend",
         cabecalho
     );
+
+/* =========================================================
+   AVATAR NO ÍCONE DE PERFIL (FOTO OU INICIAIS)
+   ========================================================= */
+
+let usuarioDoIcone = null;
+
+function obterIconePerfil() {
+    return document.querySelector("#link-acesso-usuario .profile-icon");
+}
+
+function aplicarAvatarNoIcone(dados) {
+    const icone = obterIconePerfil();
+
+    if (!icone || !dados) return;
+
+    usuarioDoIcone = { ...usuarioDoIcone, ...dados };
+    montarAvatar(icone, usuarioDoIcone);
+}
+
+function limparAvatarDoIcone() {
+    const icone = obterIconePerfil();
+
+    usuarioDoIcone = null;
+
+    if (icone) {
+        restaurarIconePadrao(icone);
+    }
+}
+
+async function carregarAvatarDoIcone() {
+    try {
+        const resposta = await fetchAutenticado(
+            "/usuario/perfil",
+            { method: "GET" }
+        );
+
+        // Se falhar, mantém o ícone padrão.
+        if (!resposta.ok) return;
+
+        aplicarAvatarNoIcone(await resposta.json());
+    } catch (erro) {
+        console.warn("Não foi possível carregar o avatar do usuário:", erro);
+    }
+}
+
+// A página de perfil já busca /usuario/perfil e avisa a navbar por aqui.
+window.addEventListener("perfil:atualizado", (evento) => {
+    aplicarAvatarNoIcone(evento.detail);
+});
+
+/* =========================================================
+   LINK INTELIGENTE: LOGIN OU PERFIL
+   ========================================================= */
+
+function estaNaPaginaPerfil() {
+    const caminho = window.location.pathname.replace(/\/+$/, "");
+
+    return caminho === "/perfil"
+        || caminho === "/perfil.html"
+        || caminho.endsWith("/pages/perfil.html");
+}
+
+async function configurarLinkAcessoUsuario() {
+    const link = document.getElementById("link-acesso-usuario");
+
+    if (!link) return;
+
+    const estadoSessao = obterEstadoSessao();
+
+    // O estado persistido só serve de indicação para armar o timer. A validade
+    // da sessão continua sendo confirmada pelas chamadas protegidas ao backend.
+    if (estadoSessao === "authenticated") {
+        iniciarRenovacaoPeriodica();
+    }
+
+    // A própria página de perfil já confirma a sessão ao buscar os dados.
+    // Evita disparar /sessao-atual em paralelo com /perfil.
+    if (estaNaPaginaPerfil()) {
+        link.href = "/perfil";
+        link.setAttribute("aria-label", "Verificando acesso ao perfil");
+        return;
+    }
+
+    link.href = estadoSessao === "authenticated"
+        ? "/perfil"
+        : ROTAS.login;
+    link.setAttribute(
+        "aria-label",
+        estadoSessao === "authenticated"
+            ? "Verificando acesso ao perfil"
+            : "Entrar ou acessar perfil"
+    );
+
+    // Visitantes já confirmados como anônimos não precisam consultar a API
+    // em cada navegação. O login e o refresh reativam esta verificação.
+    if (estadoSessao === "anonymous") {
+        return;
+    }
+
+    try {
+        const resposta = await fetchAutenticado(
+            "/usuario/sessao-atual",
+            {
+                method: "GET"
+            }
+        );
+
+        if (!resposta.ok) {
+            if (sessaoInvalidaConfirmada(resposta)) {
+                link.href = ROTAS.login;
+                link.setAttribute("aria-label", "Entrar ou acessar perfil");
+                return;
+            }
+
+            console.warn(
+                `Não foi possível confirmar a sessão (HTTP ${resposta.status}).`
+            );
+
+            if (estadoSessao !== "authenticated") {
+                link.href = "/perfil";
+                link.setAttribute("aria-label", "Tentar verificar o acesso");
+            }
+
+            return;
+        }
+
+        const dados = await resposta.json();
+
+        if (dados.autenticado === true) {
+            link.href = "/perfil";
+            link.setAttribute(
+                "aria-label",
+                "Acessar meu perfil"
+            );
+            void carregarAvatarDoIcone();
+        } else {
+            marcarSessaoAnonima();
+            link.href = ROTAS.login;
+            link.setAttribute("aria-label", "Entrar ou acessar perfil");
+        }
+    } catch (erro) {
+        console.error(
+            "Não foi possível verificar a sessão do usuário:",
+            erro
+        );
+
+        if (estadoSessao !== "authenticated") {
+            link.href = "/perfil";
+            link.setAttribute("aria-label", "Tentar verificar o acesso");
+        }
+    }
+}
+
+configurarLinkAcessoUsuario();
+
+window.addEventListener("storage", (evento) => {
+    if (evento.key !== CHAVE_ESTADO_SESSAO) {
+        return;
+    }
+
+    const link = document.getElementById("link-acesso-usuario");
+
+    if (!link) {
+        return;
+    }
+
+    if (evento.newValue === "anonymous") {
+        link.href = ROTAS.login;
+        link.setAttribute("aria-label", "Entrar ou acessar perfil");
+        limparAvatarDoIcone();
+        return;
+    }
+
+    if (
+        evento.newValue === "authenticated" &&
+        evento.oldValue !== "authenticated"
+    ) {
+        void configurarLinkAcessoUsuario();
+    }
+});
 
 /* =========================================================
    MENU ATIVO + BARRA DESLIZANTE
@@ -249,7 +520,14 @@ if (navegacao) {
 
     function moverIndicador(link) {
 
-        if (!link) return;
+        if (!link) {
+
+            // Página fora do menu: não há link atual para onde voltar,
+            // então a barra encolhe e some.
+            indicador.style.width = "0px";
+
+            return;
+        }
 
         const linkRect =
             link.getBoundingClientRect();
@@ -390,31 +668,31 @@ const menuMobileHTML = `
         <ul class="menu-mobile-links">
 
             <li>
-                <a href="Porto-Ajuda.html">
+                <a href="${ROTAS.home}">
                     Home
                 </a>
             </li>
 
             <li>
-                <a href="sobre.html">
+                <a href="${ROTAS.sobre}">
                     Sobre
                 </a>
             </li>
 
             <li>
-                <a href="iniciativas.html">
+                <a href="${ROTAS.iniciativas}">
                     Campanhas Sociais
                 </a>
             </li>
 
             <li>
-                <a href="apoie.html">
+                <a href="${ROTAS.apoie}">
                     Apoiar o Site
                 </a>
             </li>
 
             <li>
-                <a href="proximity.html">
+                <a href="${ROTAS.proximidade}">
                     ONG's Regionais
                 </a>
             </li>
@@ -576,7 +854,7 @@ botaoFecharMenu?.addEventListener(
 
 /*
    Clicar fora do painel fecha o menu.
-
+ 
    Como o overlay está por cima de toda a página,
    o usuário não consegue interagir com nada
    atrás dele.
@@ -726,9 +1004,13 @@ const rodape = `
     </button>
 
 
-    <a href="contato.html">
+    <button
+        class="btn-contato"
+        type="button"
+        onclick="window.location.href='${ROTAS.contato}'"
+    >
         Contato
-    </a>
+    </button>
 
     <button id="btn-tour" class="btn-tour" type="button" title="Iniciar tour do site">
     <i class="fa-solid fa-circle-question"></i>
@@ -877,40 +1159,6 @@ document.body.insertAdjacentHTML(
     acessibilidadeHTML
 );
 
-
-/* =========================================================
-   CSS ACESSIBILIDADE
-   ========================================================= */
-
-const cssAcessibilidade =
-    document.createElement("link");
-
-cssAcessibilidade.rel =
-    "stylesheet";
-
-cssAcessibilidade.href =
-    "../styles/acessibilidade.css";
-
-document.head.appendChild(
-    cssAcessibilidade
-);
-
-
-/* =========================================================
-   JS ACESSIBILIDADE
-   ========================================================= */
-
-const jsAcessibilidade =
-    document.createElement("script");
-
-jsAcessibilidade.src =
-    "../components/acessibilidade.js";
-
-document.body.appendChild(
-    jsAcessibilidade
-);
-
-
 /* =========================================================
    VLibras
    ========================================================= */
@@ -1015,7 +1263,7 @@ window.carregarVLibras =
                                 );
 
 
-                                resolver(
+                                resolve(
                                     botaoVLibras
                                 );
 
@@ -1243,7 +1491,7 @@ let vlibrasEstavaAberto = false;
 /*
    O VLibras pode recriar elementos depois de
    carregado. Por isso usamos um MutationObserver.
-
+ 
    Assim, mesmo que o botão/popup apareça
    posteriormente, ele será escondido.
 */

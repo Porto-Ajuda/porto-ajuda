@@ -2007,6 +2007,218 @@ body {
         transform 0.2s ease;
 }
 
+/* Perfil público: estados e dados vindos do contrato da API. */
+.perfil-publico {
+  min-height: 60vh;
+}
+
+.estado-perfil {
+  width: min(760px, calc(100% - 40px));
+  margin: 130px auto 70px;
+  padding: 28px;
+  border: 1px solid rgba(242, 170, 26, .3);
+  border-radius: 18px;
+  background: rgba(46, 28, 80, .82);
+  color: var(--text);
+  text-align: center;
+}
+
+.estado-perfil h1 {
+  margin-bottom: 12px;
+  color: var(--gold-light);
+  font-family: 'Cormorant Garamond', serif;
+}
+
+.estado-perfil p {
+  color: var(--text-soft);
+}
+
+.estado-perfil-erro .btn {
+  margin-top: 22px;
+}
+
+.infos-ong h1 {
+  max-width: 18ch;
+  overflow-wrap: anywhere;
+}
+
+.descricao-curta {
+  max-width: 56ch;
+  color: var(--text-soft);
+  line-height: 1.8;
+}
+
+.causas-secundarias,
+.metadado-osc,
+.feedback-perfil {
+  color: var(--text-soft);
+  line-height: 1.7;
+}
+
+.btn-secundario {
+  margin-top: 22px;
+}
+
+.identidade-osc {
+  width: 46%;
+  min-height: 320px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 16px;
+  margin: 0;
+  padding: 32px;
+  border: 1px solid rgba(252, 224, 161, .2);
+  border-radius: 28px;
+  background: linear-gradient(145deg, rgba(62, 40, 113, .85), rgba(22, 25, 40, .75));
+  text-align: center;
+}
+
+.identidade-osc img {
+  display: block;
+  width: min(100%, 300px);
+  max-height: 300px;
+  object-fit: contain;
+}
+
+.identidade-osc #logo-ong[hidden],
+.identidade-osc #logo-fallback[hidden] {
+  display: none !important;
+}
+
+.logo-fallback {
+  width: 150px;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(252, 224, 161, .4);
+  border-radius: 50%;
+  background: rgba(242, 170, 26, .1);
+  color: var(--gold-light);
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 3rem;
+}
+
+.identidade-osc figcaption {
+  color: var(--text-soft);
+  font-size: .85rem;
+}
+
+.conteudo-perfil {
+  width: min(1100px, calc(100% - 48px));
+  margin: 0 auto 80px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.bloco-perfil {
+  min-width: 0;
+  padding: 28px;
+  border: 1px solid rgba(252, 224, 161, .15);
+  border-radius: 18px;
+  background: rgba(46, 28, 80, .62);
+}
+
+.bloco-perfil h2 {
+  margin: 0 0 16px;
+  color: var(--gold-light);
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.8rem;
+  line-height: 1.2;
+}
+
+.bloco-perfil p,
+.lista-perfil {
+  color: var(--text-soft);
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+
+.texto-ausente {
+  color: var(--text-soft);
+  font-style: italic;
+}
+
+.lista-perfil {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.lista-perfil li + li {
+  margin-top: 8px;
+}
+
+.lista-perfil a {
+  color: var(--gold-soft);
+  text-underline-offset: 3px;
+  overflow-wrap: anywhere;
+}
+
+.lista-perfil a:hover {
+  color: var(--gold-light);
+}
+
+.ods-container h2 {
+  margin-bottom: 20px;
+  color: var(--gold-light);
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.8rem;
+}
+
+.ods-item {
+  display: block;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.ods-item:focus-visible,
+.btn:focus-visible,
+.lista-perfil a:focus-visible,
+.fechar-modal-ods:focus-visible {
+  outline: 3px solid var(--gold-light);
+  outline-offset: 4px;
+}
+
+.modal-ods[hidden] {
+  display: none;
+}
+
+@media (max-width: 1000px) {
+  .identidade-osc {
+    width: 100%;
+    min-height: 280px;
+  }
+}
+
+@media (max-width: 700px) {
+  .conteudo-perfil {
+    width: calc(100% - 32px);
+    grid-template-columns: 1fr;
+    gap: 16px;
+    margin-bottom: 48px;
+  }
+
+  .bloco-perfil {
+    padding: 22px;
+  }
+
+  .hero-container {
+    padding-bottom: 54px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
+
 
 .fechar-modal-ods:hover {
     color: #F2AA1A;

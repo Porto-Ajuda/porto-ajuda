@@ -1,0 +1,107 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Poppins:wght@300;400;500;600&display=swap');
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css');
+
+:root {
+  /* FUNDOS */
+  --bg-main: #161928;
+  --bg-section: #2E1C50;
+  --bg-card: #3E2871;
+  --bg-card-hover: #453B80;
+  --bg-card-hover2: #292F72;
+  --dark-contrast: #070b29cf;
+
+  /* INTERFACE */
+  --primary: #6674D8;
+  --primary-hover: #7B87E8;
+  --secondary: #8B6EDB;
+  --secondary-hover: #9D83E8;
+
+  /* ROXOS */
+  --purple: #7C5CCF;
+  --purple-dark: #51369B;
+  --purple-light: #A995F0;
+
+  /* DOURADOS */
+  --gold: #F2AA1A;
+  --gold-dark: #DDAA41;
+  --gold-light: #F9C86B;
+  --gold-soft: #FCE0A1;
+
+  /* TEXTOS */
+  --text: #FFFFFF;
+  --text-soft: #D9DCF0;
+  --text-muted: #A8AECA;
+  --text-disabled: #72799C;
+
+  /* BORDAS */
+  --border: #353C78;
+  --border-light: #454C8C;
+  --border-gold: #F5B52E;
+
+  /* ESTADOS */
+  --success: #45C99A;
+  --warning: #F5B52E;
+  --error: #F06B7A;
+  --info: #6CA8FF;
+}
+
+.frame-login { 
+    height: auto;
+     min-height: 380px;
+      max-height: 90vh; 
+      overflow-y: auto; }
+
+.form-login-osc {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 16px;
+  padding: 6px 4px;
+  text-align: center;
+}
+
+.botao-entrar { 
+    flex: none; 
+    width: 100%; 
+    margin-top: 4px;
+ }
+
+.links-login {
+  color: var(--text-soft);
+  font-size: .82rem;
+  text-align: center;
+}
+
+.links-login-direita { 
+    text-align: right; 
+    margin-top: -6px; 
+}
+
+.links-login a {
+  color: var(--gold-light);
+  font-weight: 500;
+  text-decoration: none;
+  transition: color .25s ease;
+}
+
+.links-login a:hover { 
+    color: var(--gold);
+     text-decoration: underline; 
+    }
+
+.msg-login {
+  padding: 10px 12px;
+  border: 1px solid rgba(240, 107, 122, .4);
+  border-radius: 12px;
+  background: rgba(240, 107, 122, .1);
+  color: #ffc9cf;
+  text-align: center;
+}
+
+.campo input[aria-invalid="true"] {
+     border-color: var(--error); 
+    }
+
+@media (max-width: 900px) {
+  .frame-login { height: auto; max-height: none; }
+}
