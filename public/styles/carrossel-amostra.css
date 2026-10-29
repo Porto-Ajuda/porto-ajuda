@@ -1,0 +1,558 @@
+
+/* =========================================
+   CARROSSEL DE ORGANIZAÇÕES — PORTO AJUDA
+========================================= */
+
+.secao-ongs {
+    --ongs-fundo: #161928;
+    --ongs-roxo: #2E1C50;
+    --ongs-roxo-claro: #453B80;
+    --ongs-azul: #4A5492;
+    --ongs-dourado: #F2AA1A;
+    --ongs-dourado-claro: #F9C86B;
+    --ongs-texto: #FFFFFF;
+    --ongs-texto-secundario: #D0D1DE;
+
+    position: relative;
+    width: 100%;
+    padding: 64px 0;
+    color: var(--ongs-texto);
+    background: transparent;
+    overflow: hidden;
+}
+
+/* =========================================
+   CABEÇALHO
+========================================= */
+
+.cabecalho-ongs {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+
+    width: min(100% - 64px, 1440px);
+    margin: 0 auto 30px;
+}
+
+.subtitulo-ongs {
+    display: inline-block;
+    margin-bottom: 12px;
+
+    color: var(--ongs-dourado);
+    font-family: "Poppins", sans-serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+}
+
+.cabecalho-ongs h2 {
+    margin: 0;
+
+    color: var(--ongs-texto);
+    font-family: "Cormorant Garamond", serif;
+    font-size: clamp(2rem, 4vw, 3.25rem);
+    font-weight: 600;
+    line-height: 1.05;
+}
+
+.cabecalho-ongs p {
+    max-width: 540px;
+    margin: 12px 0 0;
+
+    color: var(--ongs-texto-secundario);
+    font-family: "Poppins", sans-serif;
+    font-size: 0.92rem;
+    line-height: 1.7;
+}
+
+/* =========================================
+   CONTROLES DO CARROSSEL
+========================================= */
+
+.controles-carrossel {
+    display: flex;
+    flex-shrink: 0;
+    gap: 10px;
+}
+
+.controles-carrossel button {
+    display: grid;
+    place-items: center;
+
+    width: 46px;
+    height: 46px;
+    padding: 0;
+
+    border: 1px solid rgb(249 200 107 / 35%);
+    border-radius: 50%;
+
+    color: var(--ongs-dourado-claro);
+    background: rgb(46 28 80 / 70%);
+
+    font-size: 0.95rem;
+    cursor: pointer;
+
+    transition:
+        color 220ms ease,
+        background 220ms ease,
+        border-color 220ms ease,
+        transform 220ms ease;
+}
+
+.controles-carrossel button:hover:not(:disabled) {
+    color: var(--ongs-fundo);
+    background: var(--ongs-dourado);
+    border-color: var(--ongs-dourado);
+    transform: translateY(-2px);
+}
+
+.controles-carrossel button:focus-visible {
+    outline: 3px solid var(--ongs-dourado-claro);
+    outline-offset: 4px;
+}
+
+.controles-carrossel button:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+/* =========================================
+   ÁREA DE NAVEGAÇÃO
+========================================= */
+
+.carrossel-ongs {
+    width: 100%;
+    padding: 12px 32px 24px;
+
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    scroll-behavior: smooth;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-x: contain;
+
+    scrollbar-width: thin;
+    scrollbar-color: var(--ongs-roxo-claro) transparent;
+}
+
+.carrossel-ongs::-webkit-scrollbar {
+    height: 6px;
+}
+
+.carrossel-ongs::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.carrossel-ongs::-webkit-scrollbar-thumb {
+    background: var(--ongs-roxo-claro);
+    border-radius: 20px;
+}
+
+/* =========================================
+   FAIXA DE CARDS
+========================================= */
+
+#cards-osc {
+    display: flex;
+    align-items: stretch;
+    gap: 18px;
+
+    width: 100%;
+    min-width: 0;
+}
+
+/* =========================================
+   CARD DA OSC
+========================================= */
+
+.card-osc {
+    position: relative;
+    isolation: isolate;
+
+    display: block;
+    flex: 0 0 250px;
+
+    height: 350px;
+    min-width: 0;
+
+    overflow: hidden;
+    border: 1px solid rgb(255 255 255 / 10%);
+    border-radius: 14px;
+
+    color: var(--ongs-texto);
+    background: var(--ongs-roxo);
+
+    text-decoration: none;
+
+    scroll-snap-align: start;
+
+    box-shadow: 0 8px 24px rgb(0 0 0 / 18%);
+
+    transition:
+        flex-basis 420ms cubic-bezier(0.2, 0.75, 0.25, 1),
+        border-color 250ms ease,
+        box-shadow 250ms ease;
+}
+
+/* Imagem cobrindo todo o card */
+
+.card-osc-imagem {
+    position: absolute;
+    z-index: -2;
+    inset: 0;
+
+    display: block;
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+    object-position: center;
+
+    transition:
+        transform 500ms ease,
+        filter 350ms ease;
+}
+
+/* Gradiente para preservar a leitura do nome */
+
+.card-osc::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+
+    background: linear-gradient(
+        to bottom,
+        rgb(22 25 40 / 35%) 0%,
+        transparent 27%,
+        rgb(22 25 40 / 5%) 42%,
+        rgb(22 25 40 / 82%) 75%,
+        rgb(22 25 40 / 98%) 100%
+    );
+
+    pointer-events: none;
+}
+
+/* Brilho dourado sutil */
+
+.card-osc::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+
+    border: 1px solid transparent;
+    border-radius: inherit;
+
+    pointer-events: none;
+
+    transition: border-color 250ms ease;
+}
+
+/* =========================================
+   ÍCONE DA CATEGORIA
+========================================= */
+
+.card-osc-categoria {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+
+    display: grid;
+    place-items: center;
+
+    width: 42px;
+    height: 42px;
+
+    border: 1px solid rgb(249 200 107 / 45%);
+    border-radius: 11px;
+
+    color: var(--ongs-dourado-claro);
+    background: rgb(22 25 40 / 82%);
+
+    font-size: 1.25rem;
+
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+
+    transition:
+        background 250ms ease,
+        border-color 250ms ease;
+}
+
+/* =========================================
+   INFORMAÇÕES
+========================================= */
+
+.card-osc-informacoes {
+    position: absolute;
+    inset: auto 0 0;
+
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 9px;
+
+    padding: 22px 18px 20px;
+
+    /*
+     * No card normal, o conteúdo fica concentrado
+     * no nome e na categoria.
+     */
+}
+
+.card-osc-nome {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+
+    overflow: hidden;
+
+    width: 100%;
+    margin: 0;
+
+    color: var(--ongs-texto);
+    font-family: "Cormorant Garamond", serif;
+    font-size: 1.65rem;
+    font-weight: 600;
+    line-height: 1.05;
+
+    overflow-wrap: anywhere;
+}
+
+.card-osc-area {
+    display: inline-flex;
+    align-items: center;
+
+    max-width: 100%;
+    padding: 5px 9px;
+
+    border: 1px solid rgb(249 200 107 / 30%);
+    border-radius: 5px;
+
+    color: var(--ongs-dourado-claro);
+    background: rgb(46 28 80 / 78%);
+
+    font-family: "Poppins", sans-serif;
+    font-size: 0.69rem;
+    font-weight: 500;
+    line-height: 1.4;
+}
+
+/* Informações extras */
+
+.card-osc-localizacao,
+.card-osc-descricao {
+    width: 100%;
+    margin: 0;
+
+    color: var(--ongs-texto-secundario);
+    font-family: "Poppins", sans-serif;
+    font-size: 0.78rem;
+    line-height: 1.6;
+
+    overflow-wrap: anywhere;
+}
+
+/* Botão visual dentro do link que envolve o card */
+
+.card-osc-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+
+    margin-top: 7px;
+    padding: 10px 0 2px;
+
+    border-bottom: 1px solid var(--ongs-dourado);
+
+    color: var(--ongs-dourado-claro);
+    font-family: "Poppins", sans-serif;
+    font-size: 0.78rem;
+    font-weight: 600;
+
+    transition: gap 220ms ease;
+}
+
+.card-osc-link i {
+    font-size: 0.75rem;
+}
+
+/* =========================================
+   ESTADO EXPANDIDO — DESKTOP
+========================================= */
+
+@media (hover: hover) and (pointer: fine) {
+    .card-osc {
+        flex-basis: 250px;
+    }
+
+    .card-osc:hover,
+    .card-osc:focus-visible {
+        flex-basis: 430px;
+
+        border-color: rgb(242 170 26 / 65%);
+        box-shadow: 0 18px 40px rgb(0 0 0 / 32%);
+    }
+
+    .card-osc:hover .card-osc-imagem,
+    .card-osc:focus-visible .card-osc-imagem {
+        transform: scale(1.04);
+    }
+
+    .card-osc:hover::after,
+    .card-osc:focus-visible::after {
+        border-color: rgb(242 170 26 / 35%);
+    }
+
+    .card-osc:hover .card-osc-categoria,
+    .card-osc:focus-visible .card-osc-categoria {
+        background: rgb(46 28 80 / 95%);
+        border-color: var(--ongs-dourado);
+    }
+
+    .card-osc:hover .card-osc-link,
+    .card-osc:focus-visible .card-osc-link {
+        gap: 15px;
+    }
+}
+
+/* =========================================
+   FOCO E ACESSIBILIDADE
+========================================= */
+
+.card-osc:focus-visible {
+    outline: 3px solid var(--ongs-dourado);
+    outline-offset: 4px;
+    z-index: 2;
+}
+
+/* =========================================
+   ESTADOS DE CARREGAMENTO E ERRO
+========================================= */
+
+.mensagem-carrossel-ongs {
+    flex: 0 0 100%;
+
+    margin: 20px 0;
+    padding: 24px;
+
+    border: 1px solid rgb(255 255 255 / 10%);
+    border-radius: 12px;
+
+    color: var(--ongs-texto-secundario);
+    font-family: "Poppins", sans-serif;
+    font-size: 0.9rem;
+    line-height: 1.7;
+}
+
+/* =========================================
+   RESPONSIVIDADE
+========================================= */
+
+@media (max-width: 768px) {
+    .secao-ongs {
+        padding: 44px 0;
+    }
+
+    .cabecalho-ongs {
+        align-items: flex-end;
+        width: calc(100% - 36px);
+        gap: 14px;
+        margin-bottom: 22px;
+    }
+
+    .cabecalho-ongs h2 {
+        font-size: clamp(1.8rem, 7vw, 2.5rem);
+    }
+
+    .cabecalho-ongs p {
+        font-size: 0.82rem;
+    }
+
+    .controles-carrossel {
+        gap: 7px;
+    }
+
+    .controles-carrossel button {
+        width: 38px;
+        height: 38px;
+        font-size: 0.8rem;
+    }
+
+    .carrossel-ongs {
+        padding: 10px 18px 20px;
+    }
+
+    #cards-osc {
+        gap: 13px;
+    }
+
+    .card-osc {
+        flex-basis: min(76vw, 290px);
+        height: 340px;
+    }
+
+    /*
+     * No celular não há hover.
+     * Os cards mantêm largura fixa e o usuário
+     * navega pelo toque ou pelas setas.
+     */
+    .card-osc-informacoes {
+        padding: 18px 15px;
+        gap: 8px;
+    }
+
+    .card-osc-nome {
+        font-size: 1.5rem;
+    }
+
+    .card-osc-localizacao,
+    .card-osc-descricao {
+        font-size: 0.75rem;
+    }
+
+    .card-osc-link {
+        font-size: 0.75rem;
+    }
+}
+
+@media (max-width: 420px) {
+    .cabecalho-ongs {
+        align-items: flex-start;
+    }
+
+    .cabecalho-ongs p {
+        max-width: 230px;
+    }
+
+    .controles-carrossel button {
+        width: 34px;
+        height: 34px;
+    }
+
+    .card-osc {
+        flex-basis: 78vw;
+        height: 320px;
+    }
+}
+
+/* =========================================
+   REDUÇÃO DE MOVIMENTO
+========================================= */
+
+@media (prefers-reduced-motion: reduce) {
+    .card-osc,
+    .card-osc-imagem,
+    .card-osc::after,
+    .card-osc-categoria,
+    .card-osc-link,
+    .controles-carrossel button {
+        transition: none !important;
+    }
+
+    .carrossel-ongs {
+        scroll-behavior: auto;
+    }
+}

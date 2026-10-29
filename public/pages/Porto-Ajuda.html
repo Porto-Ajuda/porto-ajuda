@@ -12,8 +12,10 @@
 
   <link rel="stylesheet" href="../styles/Porto-Ajuda.css">
   <link rel="stylesheet" href="../styles/geral.css">
+  <link rel="stylesheet" href="../styles/carrossel-amostra.css">
 
   <script type="module" src="../components/header_footer.js" defer></script>
+  <script type="module" src="../components/carrossel-amostra.js"></script>
 
   <script src="../components/crud.js" defer></script>
 
@@ -253,14 +255,39 @@
           <span>Destaques</span>
         </h2>
 
-        <div class="cards" id="cards-osc">
+        <section class="secao-ongs" aria-labelledby="titulo-ongs">
+          <div class="cabecalho-ongs">
+            <div>
+              <span class="subtitulo-ongs">CONHEÇA QUEM TRANSFORMA</span>
+              <h2 id="titulo-ongs">Organizações parceiras</h2>
+              <p>Descubra iniciativas que fazem a diferença.</p>
+            </div>
+
+            <div class="controles-carrossel">
+              <button type="button" id="ongs-anterior" aria-label="Organizações anteriores">
+                <i class="fa-solid fa-arrow-left"></i>
+              </button>
+
+              <button type="button" id="ongs-proximo" aria-label="Próximas organizações">
+                <i class="fa-solid fa-arrow-right"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="carrossel-ongs" id="carrossel-ongs">
+            <div class="cards" id="cards-osc">
+              <!-- Os cards das OSCs serão inseridos pelo JavaScript -->
+            </div>
+          </div>
+        </section>
+        <!-- <div class="cards" id="cards-osc">
 
           <div class="card card-vazio"></div>
           <div class="card card-vazio"></div>
           <div class="card card-vazio"></div>
           <div class="card card-vazio"></div>
 
-        </div>
+        </div> -->
 
         <!-- <a href="/oscs" class="section-link">
           Ver todas ONG's →
