@@ -315,39 +315,6 @@ a:hover {
   color: gold;
 }
 
-.opcoes {
-  border-radius: 12px;
-  font-size: 16px;
-  padding: 2px;
-  display: flex;
-  flex-direction: column;
-}
-
-.opcoes h2 {
-  color: gold;
-  margin-bottom: 10px;
-  font-size: 1.2rem;
-  text-align: center;
-}
-
-label,
-a {
-  display: inline;
-  align-items: left;
-  gap: 5px;
-  color: rgb(255, 255, 255);
-  text-decoration: none;
-}
-
-a {
-  outline: none;
-  transition: color .5s ease-in;
-}
-
-a:hover {
-  color: gold;
-}
-
 /* ========================= */
 /* BOTÃO */
 /* ========================= */
@@ -420,8 +387,7 @@ a:hover {
     flex-direction: column-reverse;
   }
 
-  .form-sec,
-  .art {
+  .form-sec {
     width: 100%;
   }
 
@@ -819,12 +785,6 @@ a:hover {
   gap: 4px;
 
   z-index: 9999;
-}
-
-.requisitos-senha span {
-  display: block;
-  font-size: .75rem;
-  color: var(--text-soft);
 }
 
 .requisitos-senha span {

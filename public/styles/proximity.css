@@ -532,11 +532,6 @@ body {
    PAINEL FECHADO
 ======================================== */
 
-#painel-ongs.fechado {
-    transform: translateX(-100%);
-}
-
-
 /* Quando estiver fechado,
    o botão acompanha o painel */
 
