@@ -956,7 +956,7 @@ document.getElementById("criar-stripe").addEventListener("click", async () => {
         botao.disabled = true;
         botao.textContent = "Aguarde...";
 
-        const response = await fetch(`${backendUrl}/stripe/account-link`, {
+        const response = await fetch(`${API_URL}/stripe/account-link`, {
             method: "GET",
             credentials: "include"
         });
