@@ -949,35 +949,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 });
 
-document.getElementById("criar-stripe").addEventListener("click", async () => {
+document.getElementById("criar-stripe").addEventListener("click", () => {
     const botao = document.getElementById("criar-stripe");
-
-    try {
-        botao.disabled = true;
-        botao.textContent = "Aguarde...";
-
-        const response = await fetch(`${API_URL}/stripe/account-link`, {
-            method: "GET",
-            credentials: "include"
-        });
-
-        if (!response.ok) {
-            throw new Error("Não foi possível iniciar o cadastro Stripe.");
-        }
-
-        const stripeUrl = response.headers.get("Location");
-
-        if (!stripeUrl) {
-            throw new Error("O servidor não retornou o link do Stripe.");
-        }
-
-        window.location.href = stripeUrl;
-
-    } catch (error) {
-        console.error("Erro Stripe:", error);
-        alert(error.message);
-
-        botao.disabled = false;
-        botao.textContent = "Criar conta";
-    }
+    botao.disabled = true;
+    botao.textContent = "Aguarde...";
+    window.location.assign(`${API_URL}/stripe/account-link`);
 });
