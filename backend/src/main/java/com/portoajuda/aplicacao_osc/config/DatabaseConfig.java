@@ -102,8 +102,11 @@ public class DatabaseConfig {
         ds.setJdbcUrl(url);
         ds.setUsername(username);
         ds.setPassword(password);
-        ds.setMaximumPoolSize(10);
-        ds.setConnectionTimeout(5000);
+        ds.setMaximumPoolSize(4);
+        ds.setMinimumIdle(1);
+        ds.setMaxLifetime(600000);
+        ds.setIdleTimeout(300000);
+        ds.setConnectionTimeout(30000);
         return ds;
     }
 

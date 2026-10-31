@@ -1,4 +1,4 @@
-package com.portoajuda.aplicacao_osc.controller.auth;
+package com.portoajuda.aplicacao_osc.controller;
 
 import com.portoajuda.aplicacao_osc.dto.request.RequestLoginDTO;
 import com.portoajuda.aplicacao_osc.dto.request.RequestCancelarExclusaoDTO;

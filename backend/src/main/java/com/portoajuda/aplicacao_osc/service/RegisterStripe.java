@@ -1,7 +1,7 @@
 package com.portoajuda.aplicacao_osc.service;
 
 import com.portoajuda.aplicacao_osc.entity.Osc;
-import com.portoajuda.aplicacao_osc.entity.StripeAccount;
+import com.portoajuda.aplicacao_osc.entity.StripeAccounts;
 import com.portoajuda.aplicacao_osc.entity.Usuario;
 import com.portoajuda.aplicacao_osc.repository.OscRepository;
 import com.portoajuda.aplicacao_osc.repository.StripeAccountRepository;
@@ -16,7 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.util.UUID;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 @Service
@@ -25,6 +25,8 @@ public class RegisterStripe {
     private final OscRepository oscRepository;
     @Value("${APP_FRONTEND_URL}")
     private String urlSite;
+    @Value("${APP_BACKEND_URL}")
+    private String urlBackend;
     private final StripeAccountRepository stripeAccountRepository;
 
     public String createStripeAccount(Usuario usuario) throws StripeException {
@@ -33,10 +35,11 @@ public class RegisterStripe {
         if(!osc.getUsuario().getId().equals(usuario.getId())){
             throw new RuntimeException("Você não possui permissão para criar uma conta Stripe para essa OSC");
         }
-        if (stripeAccountRepository.existsByOscId(osc.getId())) {
-            StripeAccount stripeAccount = stripeAccountRepository.findByOscId(osc.getId())
-                    .orElseThrow(() -> new RuntimeException("Erro ao buscar a conta Stripe da OSC"));
-            return stripeAccount.getStripeAccountId();
+
+        Optional<StripeAccounts> existing = stripeAccountRepository.findByOscId(osc.getId());
+
+        if (existing.isPresent()) {
+            return existing.get().getStripeAccountId();
         }
         AccountCreateParams params = AccountCreateParams.builder()
                 .setContactEmail(osc.getEmail().valor())
@@ -59,8 +62,13 @@ public class RegisterStripe {
                                                         .setRequested(true)
                                                         .build()
                                                 )
-                                                .setBacsDebitPayments(
-                                                        AccountCreateParams.Configuration.Merchant.Capabilities.BacsDebitPayments.builder()
+                                                .setAmazonPayPayments(
+                                                        AccountCreateParams.Configuration.Merchant.Capabilities.AmazonPayPayments.builder()
+                                                        .setRequested(true)
+                                                        .build()
+                                                )
+                                                .setSamsungPayPayments(
+                                                        AccountCreateParams.Configuration.Merchant.Capabilities.SamsungPayPayments.builder()
                                                         .setRequested(true)
                                                         .build()
                                                 )
@@ -103,11 +111,11 @@ public class RegisterStripe {
 
         Account account = stripeClient.v2().core().accounts().create(params, options);
 
-        StripeAccount stripeAccount = new StripeAccount();
-        stripeAccount.setOsc(osc);
-        stripeAccount.setStripeAccountId(account.getId());
-        stripeAccount.setLivemode(account.getLivemode());
-        stripeAccountRepository.save(stripeAccount);
+        StripeAccounts stripeAccounts = new StripeAccounts();
+        stripeAccounts.setOsc(osc);
+        stripeAccounts.setStripeAccountId(account.getId());
+        stripeAccounts.setLivemode(account.getLivemode());
+        stripeAccountRepository.save(stripeAccounts);
 
         return account.getId();
     }
@@ -121,7 +129,7 @@ public class RegisterStripe {
                                 .setAccountOnboarding(
                                         AccountLinkCreateParams.UseCase.AccountOnboarding.builder()
                                                 .setReturnUrl(urlSite)
-                                                .setRefreshUrl(urlSite + "/refresh/account-onboarding")
+                                                .setRefreshUrl(urlBackend + "/refresh/account-onboarding")
                                                 .build()
                                 )
                                 .build()
@@ -143,7 +151,7 @@ public class RegisterStripe {
             throw new RuntimeException("Você não possui permissão");
         }
 
-        StripeAccount account = stripeAccountRepository
+        StripeAccounts account = stripeAccountRepository
                 .findByOscId(osc.getId())
                 .orElseThrow(() ->
                         new RuntimeException("Conta Stripe não encontrada"));

@@ -7,7 +7,7 @@
  * http://localhost:8080
  *
  * Produção:
- * https://api.portoajuda.com.br
+ * ${APP_BACKEND_URL}
  * ===================================================== */
 
 "use strict";
@@ -20,7 +20,7 @@ export function getAPI_URL() {
         hostname === "127.0.0.1"
     )
         ? "http://localhost:8080"
-        : "https://api.portoajuda.com.br";
+        : "${APP_BACKEND_URL}";
 
     console.log("========================================");
     console.log("VERIFICAÇÃO DO BACKEND");

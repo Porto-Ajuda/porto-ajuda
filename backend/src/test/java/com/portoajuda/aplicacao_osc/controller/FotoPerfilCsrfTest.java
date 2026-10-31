@@ -16,7 +16,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.portoajuda.aplicacao_osc.controller.auth.AuthController;
 import com.portoajuda.aplicacao_osc.entity.Usuario;
 import com.portoajuda.aplicacao_osc.repository.PreferenciasAcessibilidadeRepository;
 import com.portoajuda.aplicacao_osc.repository.UsuarioRepository;
