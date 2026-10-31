@@ -12,7 +12,7 @@ import { marcarSessaoAnonima } from "./auth.js";
 const API_URL = getAPI_URL();
 
 const ROTAS = API_URL === "http://localhost:8080"
-    || API_URL === "${APP_BACKEND_URL}"
+    || API_URL === "https://api.portoajuda.com.br"
     ? {
         cadastroOng: "/cadastro-osc",
     }

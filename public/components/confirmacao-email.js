@@ -5,7 +5,7 @@ const API_BASE_URL = (
     window.location.hostname === "127.0.0.1"
 )
     ? "http://localhost:8080"
-    : "${APP_BACKEND_URL}";
+    : "https://api.portoajuda.com.br";
 
 // Configuração do favicon.
 (function configurarFavicon() {
