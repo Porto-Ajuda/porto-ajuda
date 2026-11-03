@@ -183,14 +183,6 @@ body {
   margin-bottom: 20px;
 }
 
-.sobre-label::before,
-.sobre-label::after {
-  content: '';
-  width: 40px;
-  height: 1px;
-  background: rgba(255, 255, 255, 0.3);
-}
-
 /* ========================= */
 /* TÍTULO HERO */
 /* ========================= */
@@ -207,15 +199,6 @@ body {
   color: var(--gold);
 }
 
-.sobre-subtitulo {
-  margin-top: 30px;
-
-  line-height: 1.8;
-
-  color: var(--text-soft);
-
-  font-size: 1.1rem;
-}
 /* ========================= */
 /* LABEL */
 /* ========================= */

@@ -119,7 +119,7 @@ body {
   justify-content: space-between;
 
   padding:
-    150px 90px 10px;
+    150px 90px 1px;
 }
 
 .hero-text {
@@ -707,15 +707,9 @@ Lista escondida
     font-size: 3.5rem;
   }
 
-  .hero-image,
   .section-image {
     width: 320px;
     height: 320px;
-  }
-
-  .hero-image img {
-    width: 270px;
-    height: 270px;
   }
 
   .card {

@@ -571,22 +571,6 @@ body {
    BOTÕES DAS ABAS
    ========================================================== */
 
-.abas-perfil {
-    display: flex;
-
-    align-items: center;
-
-    gap: 8px;
-
-    width: 100%;
-
-    margin-bottom: 18px;
-
-    border-bottom:
-        1px solid rgba(255, 255, 255, 0.10);
-}
-
-
 .aba {
     position: relative;
 
@@ -1126,7 +1110,6 @@ body {
     margin-top: 25px;
 }
 
-.LT,
 .VLB {
     display: block;
     width: 100%;
@@ -2353,11 +2336,6 @@ body {
 
     .painel-aba {
         padding: 18px;
-    }
-
-
-    .abas-perfil {
-        overflow-x: auto;
     }
 
 

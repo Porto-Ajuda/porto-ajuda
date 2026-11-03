@@ -1123,3 +1123,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 });
 
+document.getElementById("criar-stripe").addEventListener("click", () => {
+    const botao = document.getElementById("criar-stripe");
+    botao.disabled = true;
+    botao.textContent = "Aguarde...";
+    window.location.assign(`${API_URL}/stripe/account-link`);
+});
