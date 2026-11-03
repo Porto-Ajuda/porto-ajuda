@@ -15,9 +15,11 @@ const ROTAS = API_URL === "http://localhost:8080"
     || API_URL === "https://api.portoajuda.com.br"
     ? {
         cadastroOng: "/cadastro-osc",
+        perfilOng: "ong-profile"
     }
     : {
         cadastroOng: "cadastro-osc.html",
+        perfilOng: "ong-profile"
     };
 
 const TAMANHO_MAXIMO_FOTO = 10 * 1024 * 1024;
@@ -910,14 +912,186 @@ document.addEventListener("DOMContentLoaded", async () => {
                 botaoSalvarAcss.disabled = false;
             }
         });
-        /* =============================================
-           11. CRIAR CONTA DE OSC
-           ============================================= */
 
+        /* =============================================
+   11. CRIAR E TROCAR CONTA DE OSC
+   ============================================= */
+
+        // Criar conta de OSC
         const botaoCriarOng = document.getElementById("criar-osc");
 
         botaoCriarOng?.addEventListener("click", () => {
             window.location.href = ROTAS.cadastroOng;
+        });
+
+        // Trocar conta de OSC
+        const botaoTrocarOng = document.getElementById("trocar-osc");
+
+        const modalTrocarOng = document.getElementById("modal-trocar-osc");
+        const listaOngsUsuario = document.getElementById("lista-oscs-usuario");
+        const estadoTrocarOng = document.getElementById("estado-trocar-osc");
+        const botaoFecharTrocarOng = document.getElementById("fechar-modal-trocar-osc");
+
+        let focoAnteriorTrocaOng = null;
+
+        function fecharModalTrocarOng() {
+            if (!modalTrocarOng || modalTrocarOng.hidden) return;
+
+            modalTrocarOng.hidden = true;
+            document.body.style.overflow = "";
+
+            if (focoAnteriorTrocaOng instanceof HTMLElement) {
+                focoAnteriorTrocaOng.focus();
+            }
+        }
+
+        function abrirModalTrocarOng() {
+            if (!modalTrocarOng) return;
+
+            focoAnteriorTrocaOng = document.activeElement;
+
+            modalTrocarOng.hidden = false;
+            document.body.style.overflow = "hidden";
+
+            botaoFecharTrocarOng?.focus();
+        }
+
+        function acessarPerfilOng(osc) {
+            if (!osc?.id) {
+                throw new Error("Não foi possível identificar esta organização.");
+            }
+
+            window.location.href =
+                `${ROTAS.perfilOng}?id=${encodeURIComponent(osc.id)}`;
+        }
+
+        function criarItemOng(osc) {
+            const item = document.createElement("button");
+
+            item.type = "button";
+            item.className = "item-selecao-osc";
+
+            const logo = document.createElement("img");
+
+            logo.className = "item-selecao-osc-logo";
+            logo.alt = "";
+
+            if (osc.logo) {
+                logo.src = osc.logo;
+            } else {
+                logo.src = "../assets/logo-night.png";
+            }
+
+            const informacoes = document.createElement("span");
+            informacoes.className = "item-selecao-osc-informacoes";
+
+            const nome = document.createElement("strong");
+            nome.textContent = osc.nome || "Organização sem nome";
+
+            const cargo = document.createElement("small");
+            cargo.textContent = osc.cargo || "Membro";
+
+            informacoes.append(nome, cargo);
+            item.append(logo, informacoes);
+
+            item.addEventListener("click", () => {
+                acessarPerfilOng(osc);
+            });
+
+            return item;
+        }
+
+        async function carregarMinhasOngs() {
+            if (!botaoTrocarOng || botaoTrocarOng.disabled) return;
+
+            botaoTrocarOng.disabled = true;
+            botaoTrocarOng.textContent = "Carregando...";
+
+            try {
+                const resposta = await fetchAutenticado("/osc/minhas", {
+                    method: "GET"
+                });
+
+                if (await sessaoInvalidaConfirmada(resposta)) {
+                    window.location.replace("/login");
+                    return;
+                }
+
+                const resultado = await resposta.json().catch(() => null);
+
+                if (!resposta.ok) {
+                    throw new Error(
+                        resultado?.mensagem ||
+                        resultado?.message ||
+                        `Não foi possível carregar suas organizações (HTTP ${resposta.status}).`
+                    );
+                }
+
+                if (!Array.isArray(resultado)) {
+                    throw new Error("O servidor retornou uma resposta inválida.");
+                }
+
+                if (resultado.length === 0) {
+                    abrirModalTrocarOng();
+
+                    estadoTrocarOng.textContent =
+                        "Você ainda não está vinculado a nenhuma organização.";
+
+                    return;
+                }
+
+                // Se houver apenas uma OSC, acessa diretamente.
+                if (resultado.length === 1) {
+                    acessarPerfilOng(resultado[0]);
+                    return;
+                }
+
+                // Se houver várias, apresenta a seleção.
+                listaOngsUsuario.replaceChildren();
+
+                resultado.forEach(osc => {
+                    listaOngsUsuario.appendChild(criarItemOng(osc));
+                });
+
+                estadoTrocarOng.textContent = "";
+
+                abrirModalTrocarOng();
+
+            } catch (erro) {
+                console.error("Erro ao carregar organizações:", erro);
+
+                abrirModalTrocarOng();
+
+                estadoTrocarOng.textContent =
+                    erro.message || "Não foi possível carregar suas organizações.";
+
+            } finally {
+                botaoTrocarOng.disabled = false;
+                botaoTrocarOng.textContent = "Trocar conta";
+            }
+        }
+
+        botaoTrocarOng?.addEventListener("click", carregarMinhasOngs);
+
+        botaoFecharTrocarOng?.addEventListener(
+            "click",
+            fecharModalTrocarOng
+        );
+
+        modalTrocarOng?.addEventListener("click", evento => {
+            if (evento.target === modalTrocarOng) {
+                fecharModalTrocarOng();
+            }
+        });
+
+        document.addEventListener("keydown", evento => {
+            if (
+                evento.key === "Escape" &&
+                modalTrocarOng &&
+                !modalTrocarOng.hidden
+            ) {
+                fecharModalTrocarOng();
+            }
         });
 
     } catch (erro) {

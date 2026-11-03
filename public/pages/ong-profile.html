@@ -16,7 +16,7 @@
   <header class="navbar"></header>
   <div class="stars" aria-hidden="true"></div>
 
-  <main class="perfil-publico">
+  <main id="perfil-pagina-ong" class="perfil-publico">
     <p id="perfil-carregamento" class="estado-perfil" role="status" aria-live="polite">Carregando perfil da organização…</p>
     <section id="perfil-erro" class="estado-perfil estado-perfil-erro" role="alert" hidden>
       <h1 id="perfil-erro-titulo">Não foi possível carregar o perfil</h1>
@@ -25,6 +25,7 @@
     </section>
 
     <div id="perfil-conteudo" hidden>
+      <div id="notificacao-osc" class="notificacao-osc" role="status" aria-live="polite" hidden></div>
       <section class="hero-container" aria-labelledby="nome-ong">
         <div class="infos-ong">
           <p class="sobre-label"><span id="causa-principal"></span></p>
@@ -48,6 +49,13 @@
 
       <div class="divider" aria-hidden="true"></div>
 
+      <nav id="abas-osc" class="abas-osc" aria-label="Seções da organização" hidden>
+        <button type="button" id="aba-publica" role="tab" aria-controls="painel-publico" aria-selected="true">Página da ONG</button>
+        <button type="button" id="aba-membros" role="tab" aria-controls="painel-membros" aria-selected="false" tabindex="-1">Membros</button>
+        <button type="button" id="aba-dados" role="tab" aria-controls="painel-dados" aria-selected="false" tabindex="-1">Dados da ONG</button>
+      </nav>
+
+      <section id="painel-publico" class="painel-aba" role="tabpanel" aria-labelledby="aba-publica" tabindex="0">
       <div class="conteudo-perfil">
         <section class="bloco-perfil bloco-editorial" id="apresentacao">
           <h2>Sobre a organização</h2>
@@ -106,6 +114,109 @@
           <div class="ods" id="ods-container"></div>
         </section>
       </div>
+      </section>
+      <section id="painel-membros" class="painel-aba painel-gestao-osc" role="tabpanel" aria-labelledby="aba-membros" tabindex="0" hidden>
+        <h2>Membros</h2>
+        <p class="texto-ausente">Pessoas vinculadas a esta organização e seus cargos.</p>
+        <form id="form-adicionar-membro" class="form-gestao-osc">
+          <label for="novo-membro-email">E-mail da conta cadastrada</label>
+          <input id="novo-membro-email" type="email" required>
+          <label for="novo-membro-cargo">Cargo</label>
+          <select id="novo-membro-cargo" required>
+            <option value="MEMBRO">Membro</option>
+            <option value="EDITOR">Editor</option>
+            <option value="ADMINISTRADOR">Administrador</option>
+          </select>
+          <button class="btn" type="submit">Adicionar membro</button>
+          <p id="membros-feedback" role="status" aria-live="polite"></p>
+        </form>
+        <ul id="lista-membros" class="lista-membros-osc"></ul>
+      </section>
+      <section id="painel-dados" class="painel-aba painel-gestao-osc" role="tabpanel" aria-labelledby="aba-dados" tabindex="0" hidden>
+        <p id="aviso-somente-leitura" class="aviso-permissao" hidden>Você não possui permissão para editar as informações desta organização. Entre em contato com um administrador ou com o criador da ONG para solicitar alterações.</p>
+        <section id="edicao-osc" class="bloco-perfil painel-gestao-osc" hidden>
+          <form id="form-edicao-osc" class="form-gestao-osc">
+            <fieldset id="campos-edicao-osc" class="campos-edicao-osc">
+              <section class="secao-form-osc">
+                <h2>Identificação</h2>
+                <div class="grade-form-osc">
+                  <div class="informacao-fixa"><span>CNPJ</span><output id="edicao-cnpj"></output><small>Informação não editável</small></div>
+                  <div class="informacao-fixa"><span>Nome da organização</span><output id="edicao-nome"></output><small>Informação não editável</small></div>
+                  <div class="informacao-fixa"><span>Ano de fundação</span><output id="edicao-ano"></output><small>Informação não editável</small></div>
+                  <div class="informacao-fixa"><span>Causa principal</span><output id="edicao-causa-principal"></output><small>Informação não editável</small></div>
+                  <div class="campo-edicao"><span>Outras causas</span><div id="edicao-causas-selecionadas" class="areas-selecionadas"></div><button type="button" class="botao-adicionar-area" id="edicao-adicionar-causa"><span>+</span> Adicionar causa</button><div class="dropdown-secundario dropdown-edicao" id="edicao-dropdown-causas"><div class="dropdown-opcoes" id="edicao-opcoes-causas"></div></div></div>
+                  <div class="campo-edicao campo-largo"><span>ODS relacionadas</span><div id="edicao-ods-selecionadas" class="ods-selecionadas"></div><button type="button" class="botao-adicionar-ods" id="edicao-adicionar-ods"><span>+</span> Adicionar ODS</button><div class="dropdown-ods dropdown-edicao" id="edicao-dropdown-ods"><div class="dropdown-opcoes" id="edicao-opcoes-ods"></div></div></div>
+                </div>
+              </section>
+              <section class="secao-form-osc">
+                <h2>Apresentação</h2>
+                <div class="grade-form-osc">
+                  <label class="campo-largo">Descrição curta<input id="edicao-descricao-curta" maxlength="200" required></label>
+                  <label class="campo-largo">Descrição completa<textarea id="edicao-descricao" rows="5" maxlength="10000" required></textarea></label>
+                  <p class="campo-ajuda campo-largo">História, objetivos, projetos e campanhas não possuem campos próprios no cadastro atual.</p>
+                </div>
+              </section>
+              <section class="secao-form-osc">
+                <h2>Localização</h2>
+                <div class="grade-form-osc">
+                  <label>País<input id="edicao-pais" required></label>
+                  <label>Estado<input id="edicao-estado"></label>
+                  <label>Cidade<input id="edicao-cidade" required></label>
+                  <label>CEP<input id="edicao-cep" required maxlength="9"></label>
+                  <label>Bairro<input id="edicao-bairro" required></label>
+                  <label>Rua<input id="edicao-rua" required></label>
+                  <label>Número<input id="edicao-numero"></label>
+                  <label>Complemento<input id="edicao-complemento" maxlength="100"></label>
+                  <label>Área geográfica<select id="edicao-area-geografica" required><option value="">Selecione</option><option value="bairro">Bairro</option><option value="cidade">Cidade</option><option value="municipal">Municipal</option><option value="regional">Regional</option><option value="estadual">Estadual</option><option value="nacional">Nacional</option><option value="internacional">Internacional</option></select></label>
+                </div>
+              </section>
+              <section class="secao-form-osc">
+                <h2>Contato</h2>
+                <div class="grade-form-osc">
+                  <label>E-mail institucional<input id="edicao-email" type="email" maxlength="255" required></label>
+                  <label>Telefone<input id="edicao-telefone" type="tel" maxlength="15"></label>
+                  <label>WhatsApp<input id="edicao-whatsapp" type="tel" maxlength="20"></label>
+                  <label>Site<input id="edicao-site" type="url" maxlength="255"></label>
+                  <label>Instagram<input id="edicao-instagram" type="url" maxlength="500"></label>
+                  <label>LinkedIn<input id="edicao-linkedin" type="url" maxlength="500"></label>
+                  <label>YouTube<input id="edicao-youtube" type="url" maxlength="500"></label>
+                </div>
+              </section>
+              <section class="secao-form-osc">
+                <h2>Funcionamento</h2>
+                <div class="grade-form-osc">
+                  <div class="campo-edicao campo-largo"><span>Dias de funcionamento</span><div class="dias-semana dias-semana-edicao" id="edicao-dias-semana"></div></div>
+                  <label>Abre às<input id="edicao-horario-abertura" type="time"></label>
+                  <label>Fecha às<input id="edicao-horario-fechamento" type="time"></label>
+                  <label>Atendimento presencial<select id="edicao-presencial"><option value="">Não informado</option><option value="true">Sim</option><option value="false">Não</option></select></label>
+                  <label>Atendimento online<select id="edicao-online"><option value="">Não informado</option><option value="true">Sim</option><option value="false">Não</option></select></label>
+                  <label>Precisa agendar?<select id="edicao-agendamento"><option value="">Não informado</option><option value="true">Sim</option><option value="false">Não</option></select></label>
+                </div>
+              </section>
+              <section class="secao-form-osc">
+                <h2>Voluntariado e atividades</h2>
+                <div class="grade-form-osc">
+                  <label>Aceita voluntários?<select id="edicao-aceita-voluntarios"><option value="">Não informado</option><option value="true">Sim</option><option value="false">Não</option></select></label>
+                  <div class="grupo-voluntariado campo-largo" id="edicao-campos-voluntariado"><div class="grade-form-osc"><label>Frequência<input id="edicao-frequencia" maxlength="30"></label>
+                  <label>Idade mínima<input id="edicao-idade-minima" type="number" min="0" max="99"></label>
+                  <label>Processo seletivo?<select id="edicao-processo-seletivo"><option value="">Não informado</option><option value="true">Sim</option><option value="false">Não</option></select></label>
+                  <label>Emite certificado?<select id="edicao-certificado"><option value="">Não informado</option><option value="true">Sim</option><option value="false">Não</option></select></label>
+                  <label class="campo-largo">Atividades<textarea id="edicao-atividades" rows="4" maxlength="10000"></textarea></label></div></div>
+                </div>
+              </section>
+              <p class="campo-ajuda">O perfil ainda não tem campos de história, objetivos, galeria de atividades, doações ou imagem de capa. O logotipo é gerenciado no cadastro e não possui fluxo de troca.</p>
+              <div class="acoes-edicao"><button class="btn btn-secundario" id="edicao-descartar" type="button" disabled>Descartar alterações</button><button class="btn" type="submit">Salvar informações</button></div>
+            </fieldset>
+            <p id="edicao-feedback" role="status" aria-live="polite"></p>
+          </form>
+        </section>
+        <dialog id="dialogo-descartar" class="dialogo-descartar"><form method="dialog"><h2>Descartar alterações?</h2><p>As informações preenchidas voltarão aos valores carregados anteriormente.</p><div><button class="btn btn-secundario" value="cancelar">Continuar editando</button><button class="btn" value="descartar">Descartar alterações</button></div></form></dialog>
+        <section id="zona-perigo" class="zona-perigo" hidden>
+          <h2>Excluir organização</h2>
+          <p>Excluir a organização remove seu perfil e os dados associados.</p>
+          <button id="excluir-osc" class="btn btn-secundario" type="button" hidden>Excluir organização</button>
+        </section>
+      </section>
     </div>
   </main>
 

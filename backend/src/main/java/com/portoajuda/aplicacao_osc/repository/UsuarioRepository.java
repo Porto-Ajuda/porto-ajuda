@@ -43,13 +43,6 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
         @Query("DELETE FROM Usuario usuario WHERE usuario.id = :usuarioId")
         int excluirPorIdSemCascade(@Param("usuarioId") Integer usuarioId);
 
-        @Query("""
-                        SELECT COUNT(m) > 0
-                        FROM OscMembros m
-                        WHERE m.usuario.id = :usuarioId
-                        """)
-        boolean usuarioIsMember(Integer usuarioId);
-
         List<Usuario> findByAtivoFalseAndDataSolicitacaoExclusaoIsNotNullAndDataExclusaoAgendadaLessThanEqual(
                         LocalDateTime agora);
 }

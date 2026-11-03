@@ -1,5 +1,10 @@
 ﻿import { getAPI_URL } from "./modoBack.js";
+import { fetchAutenticado, sessaoInvalidaConfirmada } from "./api.js";
+import { obterEstadoSessao } from "./auth.js";
+import { confirmarPorDigitacao, notificar as notificarSistema } from "./confirm-modal.js";
 const API_URL = getAPI_URL();
+let oscAtual = null;
+let cargoAtual = null;
 
 // ========================================
 // DADOS DAS ODS
@@ -630,6 +635,497 @@ function renderizarPerfil(osc) {
     configurarCompartilhamento(osc);
 }
 
+function rotuloCargo(cargo) {
+    return ({ CRIADOR: "Criador", ADMINISTRADOR: "Administrador", EDITOR: "Editor", MEMBRO: "Membro" })[cargo] || cargo;
+}
+
+function notificar(elemento, mensagem, tipoInformado = null) {
+    const tipo = tipoInformado || (/mas n[aã]o foi poss[ií]vel atualizar/i.test(mensagem) ? "aviso"
+        : /n[aã]o foi|inv[aá]lido|permiss[aã]o|erro|falha|n[aã]o encontramos|j[aá] faz parte/i.test(mensagem) ? "erro" : "sucesso");
+    if (elemento) {
+        clearTimeout(elemento._timerNotificacao);
+        elemento.textContent = mensagem;
+        elemento._timerNotificacao = setTimeout(() => { elemento.textContent = ""; }, 6000);
+    }
+    notificarSistema(mensagem, tipo);
+}
+
+async function mensagemErroApi(resposta, acao = "concluir a operação") {
+    if (resposta?.status === 403) return "Você não possui permissão para realizar esta ação.";
+    if (resposta?.status === 404 && acao === "adicionar") return "Não encontramos uma conta cadastrada com esse e-mail. Verifique o endereço ou solicite que a pessoa crie uma conta.";
+    if (resposta?.status === 409 && acao === "adicionar") return "Essa pessoa já faz parte desta organização.";
+    if (resposta?.status === 409 && acao === "excluir organização") return "Esta organização possui histórico de doações e não pode ser excluída.";
+    if (resposta?.status === 400 && acao === "adicionar") return "Informe um endereço de e-mail válido e selecione um cargo.";
+    if (acao === "carregar dados") return "Não foi possível carregar os dados da organização. Tente novamente em instantes.";
+    if (acao === "carregar membros") return "Não foi possível carregar a lista de membros. Tente novamente em instantes.";
+    try {
+        const body = await resposta.clone().json();
+        const detalhe = body?.detail || body?.message || body?.mensagem;
+        if (typeof detalhe === "string" && detalhe.trim()) return detalhe;
+    } catch { /* Respostas sem corpo JSON usam a mensagem amigável padrão. */ }
+    return "Não foi possível concluir a operação. Tente novamente.";
+}
+
+const causasOsc = [
+    ["EDUCACAO", "Educação"], ["SAUDE", "Saúde"], ["MEIO_AMBIENTE", "Meio ambiente"],
+    ["ANIMAIS", "Proteção animal"], ["INCLUSAO_SOCIAL", "Inclusão social"],
+    ["ESPORTE", "Esporte"], ["CULTURA", "Cultura"], ["COMBATE_POBREZA", "Combate à pobreza"]
+];
+const diasOsc = [["segunda", "Segunda-feira"], ["terca", "Terça-feira"], ["quarta", "Quarta-feira"], ["quinta", "Quinta-feira"], ["sexta", "Sexta-feira"], ["sabado", "Sábado"], ["domingo", "Domingo"]];
+const nomesOds = ["Erradicação da pobreza", "Fome zero e agricultura sustentável", "Saúde e bem-estar", "Educação de qualidade", "Igualdade de gênero", "Água potável e saneamento", "Energia limpa e acessível", "Trabalho decente e crescimento econômico", "Indústria, inovação e infraestrutura", "Redução das desigualdades", "Cidades e comunidades sustentáveis", "Consumo e produção responsáveis", "Ação contra a mudança global do clima", "Vida na água", "Vida terrestre", "Paz, justiça e instituições eficazes", "Parcerias e meios de implementação"];
+let causasEdicao = new Set();
+let odsEdicao = new Set();
+let snapshotEdicao = null;
+let snapshotDadosEdicao = null;
+
+function prepararOpcoesCausas() {
+    const causaPrincipal = oscAtual?.causaPrincipal;
+    document.getElementById("edicao-causa-principal").textContent = causasOsc.find(([v]) => v === causaPrincipal)?.[1] || causaPrincipal || "Não informado";
+    const opcoesCausas = document.getElementById("edicao-opcoes-causas");
+    if (!opcoesCausas.childElementCount) causasOsc.forEach(([valor, rotulo]) => {
+        const botao = document.createElement("button"); botao.type = "button"; botao.dataset.valor = valor; botao.textContent = rotulo;
+        botao.addEventListener("click", () => { if (valor === causaPrincipal || causasEdicao.has(valor)) return; causasEdicao.add(valor); renderizarCausasEdicao(); sincronizarOpcoesSelecao(); atualizarEstadoEdicao(); });
+        opcoesCausas.append(botao);
+    });
+    const opcoesOds = document.getElementById("edicao-opcoes-ods");
+    if (!opcoesOds.childElementCount) nomesOds.forEach((nome, indice) => {
+        const numero = String(indice + 1); const botao = document.createElement("button"); botao.type = "button"; botao.dataset.valor = numero;
+        botao.innerHTML = `<span class="ods-numero">ODS ${numero}</span> ${nome}`;
+        botao.addEventListener("click", () => { if (odsEdicao.has(numero)) return; odsEdicao.add(numero); renderizarOdsEdicao(); sincronizarOpcoesSelecao(); atualizarEstadoEdicao(); }); opcoesOds.append(botao);
+    });
+    const dias = document.getElementById("edicao-dias-semana");
+    if (!dias.childElementCount) diasOsc.forEach(([valor, rotulo]) => { const label = document.createElement("label"); const input = document.createElement("input"); input.type = "checkbox"; input.value = valor; input.dataset.dia = "true"; input.addEventListener("change", atualizarEstadoEdicao); label.append(input, document.createTextNode(` ${rotulo}`)); dias.append(label); });
+    const botaoCausas = document.getElementById("edicao-adicionar-causa");
+    const botaoOds = document.getElementById("edicao-adicionar-ods");
+    if (!botaoCausas.dataset.inicializado) { botaoCausas.addEventListener("click", () => alternarDropdown("edicao-dropdown-causas")); botaoCausas.dataset.inicializado = "true"; }
+    if (!botaoOds.dataset.inicializado) { botaoOds.addEventListener("click", () => alternarDropdown("edicao-dropdown-ods")); botaoOds.dataset.inicializado = "true"; }
+}
+
+function alternarDropdown(id) { const atual = document.getElementById(id); const lista = atual.querySelector(".dropdown-opcoes"); const visivel = lista.classList.toggle("aberto"); sincronizarOpcoesSelecao(); if (visivel) lista.querySelector("button:not([hidden])")?.focus(); }
+function sincronizarOpcoesSelecao() {
+    document.querySelectorAll("#edicao-opcoes-causas button").forEach(botao => { botao.hidden = causasEdicao.has(botao.dataset.valor) || botao.dataset.valor === oscAtual?.causaPrincipal; });
+    document.querySelectorAll("#edicao-opcoes-ods button").forEach(botao => { botao.hidden = odsEdicao.has(botao.dataset.valor); });
+}
+function renderizarCausasEdicao() { const area = document.getElementById("edicao-causas-selecionadas"); area.replaceChildren(); for (const valor of causasEdicao) { const item = document.createElement("span"); item.className = "area-selecionada"; item.textContent = causasOsc.find(([v]) => v === valor)?.[1] || valor; const btn = document.createElement("button"); btn.type = "button"; btn.setAttribute("aria-label", `Remover ${item.textContent}`); btn.textContent = "×"; btn.addEventListener("click", () => { causasEdicao.delete(valor); renderizarCausasEdicao(); sincronizarOpcoesSelecao(); atualizarEstadoEdicao(); }); item.append(btn); area.append(item); } }
+function renderizarOdsEdicao() { const area = document.getElementById("edicao-ods-selecionadas"); area.replaceChildren(); for (const valor of odsEdicao) { const item = document.createElement("span"); item.className = "ods-selecionada"; const numero = document.createElement("strong"); numero.className = "ods-numero"; numero.textContent = `ODS ${valor}`; const titulo = document.createElement("span"); titulo.textContent = nomesOds[Number(valor)-1]; item.append(numero, titulo); const btn = document.createElement("button"); btn.type = "button"; btn.setAttribute("aria-label", `Remover ODS ${valor}`); btn.textContent = "×"; btn.addEventListener("click", () => { odsEdicao.delete(valor); renderizarOdsEdicao(); sincronizarOpcoesSelecao(); atualizarEstadoEdicao(); }); item.append(btn); area.append(item); } }
+function capturarEdicao() { const campos = [...document.querySelectorAll("#form-edicao-osc input:not([data-dia]), #form-edicao-osc select, #form-edicao-osc textarea")].map(el => [el.id, el.value]); const dias = [...document.querySelectorAll("#edicao-dias-semana input:checked")].map(el => el.value).sort(); return JSON.stringify({ campos, causas: [...causasEdicao].sort(), ods: [...odsEdicao].sort((a,b)=>Number(a)-Number(b)), dias }); }
+function atualizarEstadoEdicao() { if (!snapshotEdicao) return; document.getElementById("edicao-descartar").disabled = capturarEdicao() === snapshotEdicao; }
+function definirSnapshotEdicao() { snapshotEdicao = capturarEdicao(); atualizarEstadoEdicao(); }
+
+function definirSelectBooleano(id, valor) {
+    document.getElementById(id).value = typeof valor === "boolean" ? String(valor) : "";
+}
+
+function valorBooleano(id) {
+    const valor = document.getElementById(id).value;
+    return valor === "" ? null : valor === "true";
+}
+
+function preencherCamposEdicao(dados) {
+    prepararOpcoesCausas();
+    const campos = {
+        "edicao-descricao-curta": dados.descricaoCurta, "edicao-descricao": dados.descricao,
+        "edicao-pais": dados.pais, "edicao-estado": dados.estado,
+        "edicao-cidade": dados.cidade, "edicao-cep": dados.cep, "edicao-bairro": dados.bairro,
+        "edicao-rua": dados.rua, "edicao-numero": dados.numero, "edicao-complemento": dados.complemento,
+        "edicao-area-geografica": dados.areaGeografica, "edicao-email": dados.email,
+        "edicao-telefone": dados.telefone, "edicao-whatsapp": dados.whatsapp, "edicao-site": dados.site,
+        "edicao-instagram": dados.instagram, "edicao-linkedin": dados.linkedin, "edicao-youtube": dados.youtube,
+        "edicao-horario-abertura": dados.horarioAbertura,
+        "edicao-horario-fechamento": dados.horarioFechamento, "edicao-frequencia": dados.frequenciaVoluntariado,
+        "edicao-idade-minima": dados.idadeMinimaVoluntario, "edicao-atividades": dados.atividadesVoluntariado
+    };
+    for (const [id, valor] of Object.entries(campos)) document.getElementById(id).value = valor ?? "";
+    document.getElementById("edicao-cnpj").textContent = dados.cnpj || "Não informado";
+    document.getElementById("edicao-nome").textContent = dados.nome || "Não informado";
+    document.getElementById("edicao-ano").textContent = dados.anoFundacao ?? "Não informado";
+    document.getElementById("edicao-causa-principal").textContent = causasOsc.find(([v]) => v === dados.causaPrincipal)?.[1] || dados.causaPrincipal || "Não informado";
+    causasEdicao = new Set(dados.causasSecundarias || []); renderizarCausasEdicao();
+    odsEdicao = new Set((dados.ods || []).map(String)); renderizarOdsEdicao();
+    sincronizarOpcoesSelecao();
+    const parseDias = (dados.diasHorariosFuncionamento || "").toLocaleLowerCase("pt-BR");
+    const diasCadastrados = new Set(diasOsc.filter(([valor, nome]) => parseDias.includes(valor) || parseDias.includes(nome.toLocaleLowerCase("pt-BR"))).map(([valor]) => valor));
+    document.querySelectorAll("#edicao-dias-semana input").forEach(input => { input.checked = diasCadastrados.has(input.value); });
+    definirSelectBooleano("edicao-presencial", dados.atendimentoPresencial);
+    definirSelectBooleano("edicao-online", dados.atendimentoOnline);
+    definirSelectBooleano("edicao-agendamento", dados.necessitaAgendamento);
+    definirSelectBooleano("edicao-aceita-voluntarios", dados.aceitaVoluntarios);
+    definirSelectBooleano("edicao-processo-seletivo", dados.processoSeletivoVoluntario);
+    definirSelectBooleano("edicao-certificado", dados.emiteCertificadoVoluntario);
+    atualizarCamposVoluntariado();
+}
+function atualizarCamposVoluntariado() { const sim = document.getElementById("edicao-aceita-voluntarios").value === "true"; const grupo = document.getElementById("edicao-campos-voluntariado"); grupo.hidden = !sim; grupo.querySelectorAll("input,select,textarea").forEach(el => { el.disabled = !sim; }); }
+
+async function requisicaoAutenticada(caminho, opcoes = {}) {
+    const resposta = await fetchAutenticado(caminho, opcoes);
+    return await sessaoInvalidaConfirmada(resposta) ? null : resposta;
+}
+
+async function carregarMembros() {
+    const resposta = await requisicaoAutenticada(`/osc/${oscAtual.id}/membros`);
+    if (!resposta?.ok) throw new Error(await mensagemErroApi(resposta, "carregar membros"));
+    const membros = await resposta.json();
+    const lista = document.getElementById("lista-membros");
+    lista.replaceChildren();
+
+    for (const membro of membros) {
+        const item = document.createElement("li");
+        const dados = document.createElement("div");
+        const nome = document.createElement("strong");
+        const email = document.createElement("span");
+        nome.textContent = membro.nome;
+        email.textContent = membro.email;
+        dados.append(nome, email);
+
+        const podeGerir = ["CRIADOR", "ADMINISTRADOR"].includes(cargoAtual);
+        const podeAlterarEsteCargo = podeGerir && membro.cargo !== "CRIADOR" && (membro.cargo !== "ADMINISTRADOR" || cargoAtual === "CRIADOR");
+        if (podeAlterarEsteCargo) {
+            const cargo = document.createElement("select");
+            cargo.setAttribute("aria-label", `Cargo de ${membro.nome}`);
+            const opcoes = ["MEMBRO", "EDITOR", "ADMINISTRADOR"];
+            if (cargoAtual === "CRIADOR") opcoes.push("CRIADOR");
+            for (const valor of opcoes) {
+                const opcao = document.createElement("option");
+                opcao.value = valor;
+                opcao.textContent = rotuloCargo(valor);
+                cargo.append(opcao);
+            }
+            cargo.value = membro.cargo;
+            cargo.addEventListener("change", async () => {
+                const cargoAnterior = membro.cargo;
+                const cargoSolicitado = cargo.value;
+                cargo.disabled = true;
+                try {
+                    if (cargoSolicitado === "CRIADOR") {
+                        const confirmado = await confirmarPorDigitacao({
+                            titulo: "Transferir cargo de criador",
+                            descricao: "Você está prestes a transferir o cargo de criador desta organização. O novo criador assumirá essa responsabilidade e você passará a ser administrador.",
+                            identificacao: membro.nome,
+                            instrucao: "Para confirmar, digite:",
+                            frase: `TORNAR ${membro.nome} CRIADOR`,
+                            textoConfirmar: "Transferir criador",
+                            tipo: "Transferência de titularidade",
+                            estilo: "destrutivo",
+                            mensagemSucesso: "Cargo de criador transferido com sucesso.",
+                            origem: cargo,
+                            aoConfirmar: async () => {
+                                const respostaCargo = await requisicaoAutenticada(`/osc/${oscAtual.id}/membros/${membro.usuarioId}/cargo`, {
+                                    method: "PATCH",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({ cargo: "CRIADOR" })
+                                });
+                                if (!respostaCargo?.ok) throw new Error(await mensagemErroApi(respostaCargo, "transferir criador"));
+                                await atualizarCargoAtual();
+                                await carregarMembros();
+                            }
+                        });
+                        if (!confirmado) cargo.value = cargoAnterior;
+                        return;
+                    }
+                    const respostaCargo = await requisicaoAutenticada(`/osc/${oscAtual.id}/membros/${membro.usuarioId}/cargo`, {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ cargo: cargoSolicitado })
+                    });
+                    if (!respostaCargo?.ok) throw new Error(await mensagemErroApi(respostaCargo, "alterar cargo"));
+                    await atualizarCargoAtual();
+                    await carregarMembros();
+                    notificar(document.getElementById("membros-feedback"), "Cargo do membro atualizado com sucesso.");
+                } catch (erro) {
+                    notificar(document.getElementById("membros-feedback"), erro.message || "Não foi possível concluir a operação. Tente novamente.", "erro");
+                    cargo.value = cargoAnterior;
+                } finally {
+                    if (cargo.isConnected) cargo.disabled = false;
+                }
+            });
+            item.append(dados, cargo);
+        } else {
+            const cargoRotulo = document.createElement("span");
+            cargoRotulo.className = "cargo-membro-rotulo";
+            cargoRotulo.textContent = rotuloCargo(membro.cargo);
+            item.append(dados, cargoRotulo);
+        }
+
+        if (podeGerir && membro.cargo !== "CRIADOR" && (membro.cargo !== "ADMINISTRADOR" || cargoAtual === "CRIADOR")) {
+            const remover = document.createElement("button");
+            remover.type = "button";
+            remover.className = "btn btn-secundario";
+            remover.textContent = "Remover";
+            remover.addEventListener("click", async () => {
+                const feedback = document.getElementById("membros-feedback");
+                try {
+                    await confirmarPorDigitacao({
+                        titulo: "Confirmar remoção de membro",
+                        descricao: "Você está prestes a remover esta pessoa da organização. Ela perderá seu vínculo com esta ONG.",
+                        identificacao: membro.nome,
+                        instrucao: "Para confirmar, digite o texto abaixo:",
+                        frase: `REMOVER ${membro.nome}`,
+                        textoConfirmar: "Remover membro",
+                        tipo: "Remoção de membro",
+                        estilo: "destrutivo",
+                        mensagemSucesso: "Membro removido com sucesso.",
+                        origem: remover,
+                        aoConfirmar: async () => {
+                            const respostaRemocao = await requisicaoAutenticada(
+                                `/osc/${oscAtual.id}/membros?email=${encodeURIComponent(membro.email)}`,
+                                { method: "DELETE" }
+                            );
+                            if (!respostaRemocao?.ok) throw new Error(await mensagemErroApi(respostaRemocao, "remover membro"));
+                            await carregarMembros();
+                        }
+                    });
+                } catch (erro) {
+                    notificar(feedback, erro.message || "Não foi possível concluir a operação. Tente novamente.", "erro");
+                }
+            });
+            item.append(remover);
+        }
+        lista.append(item);
+    }
+}
+
+async function configurarGestao() {
+    const admin = ["CRIADOR", "ADMINISTRADOR"].includes(cargoAtual);
+    const abas = document.getElementById("abas-osc");
+    const painelMembros = document.getElementById("painel-membros");
+    const painelDados = document.getElementById("painel-dados");
+    const botaoExcluir = document.getElementById("excluir-osc");
+    const painelEdicao = document.getElementById("edicao-osc");
+    const formularioEdicao = document.getElementById("form-edicao-osc");
+    const feedbackEdicao = document.getElementById("edicao-feedback");
+    const feedbackMembros = document.getElementById("membros-feedback");
+    abas.hidden = false;
+    painelMembros.hidden = false;
+    painelDados.hidden = false;
+    document.getElementById("form-adicionar-membro").hidden = !admin;
+    const podeEditarDados = ["CRIADOR", "ADMINISTRADOR", "EDITOR"].includes(cargoAtual);
+    painelEdicao.hidden = false;
+    document.getElementById("aviso-somente-leitura").hidden = podeEditarDados;
+    document.getElementById("campos-edicao-osc").disabled = !podeEditarDados;
+    document.querySelector("#form-edicao-osc button[type=submit]").hidden = !podeEditarDados;
+    document.getElementById("zona-perigo").hidden = !admin;
+    botaoExcluir.hidden = !admin;
+
+    if (!formularioEdicao.dataset.inicializado) {
+        preencherCamposEdicao(oscAtual);
+        try {
+            const resposta = await requisicaoAutenticada(`/osc/${oscAtual.id}/edicao`);
+            if (!resposta?.ok) throw new Error(await mensagemErroApi(resposta, "carregar dados"));
+            const dados = await resposta.json();
+            preencherCamposEdicao(dados);
+            snapshotDadosEdicao = structuredClone(dados);
+            formularioEdicao.dataset.carregado = "true";
+        } catch (erro) {
+            notificar(feedbackEdicao, erro.message || "Não foi possível carregar os dados da organização. Tente novamente.", "erro");
+        }
+        formularioEdicao.addEventListener("submit", async (evento) => {
+            evento.preventDefault();
+            if (formularioEdicao.dataset.salvando === "true") return;
+            if (!formularioEdicao.reportValidity()) return;
+            formularioEdicao.dataset.salvando = "true";
+            const botaoSalvar = formularioEdicao.querySelector("button[type=submit]");
+            botaoSalvar.disabled = true;
+            notificar(feedbackEdicao, "Salvando…");
+            try {
+                const opcionais = (id) => document.getElementById(id).value.trim() || null;
+                const numeroOpcional = (id) => document.getElementById(id).value === "" ? null : Number(document.getElementById(id).value);
+                const resposta = await requisicaoAutenticada("/osc/put", {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        cnpj: snapshotDadosEdicao?.cnpj || oscAtual.cnpj,
+                        descricaoCurta: document.getElementById("edicao-descricao-curta").value.trim(),
+                        descricao: document.getElementById("edicao-descricao").value,
+                        email: document.getElementById("edicao-email").value,
+                        telefone: opcionais("edicao-telefone"), whatsapp: opcionais("edicao-whatsapp"),
+                        site: opcionais("edicao-site"), instagram: opcionais("edicao-instagram"),
+                        linkedin: opcionais("edicao-linkedin"), youtube: opcionais("edicao-youtube"),
+                        areaGeografica: document.getElementById("edicao-area-geografica").value,
+                        pais: document.getElementById("edicao-pais").value.trim(),
+                        estado: opcionais("edicao-estado"), cidade: document.getElementById("edicao-cidade").value.trim(),
+                        cep: document.getElementById("edicao-cep").value.trim(), bairro: document.getElementById("edicao-bairro").value.trim(),
+                        rua: document.getElementById("edicao-rua").value.trim(), numero: opcionais("edicao-numero"),
+                        complemento: opcionais("edicao-complemento"),
+                        diasHorariosFuncionamento: [...document.querySelectorAll("#edicao-dias-semana input:checked")].map(el => el.value).join(", ") || null,
+                        horarioAbertura: opcionais("edicao-horario-abertura"), horarioFechamento: opcionais("edicao-horario-fechamento"),
+                        atendimentoPresencial: valorBooleano("edicao-presencial"), atendimentoOnline: valorBooleano("edicao-online"),
+                        necessitaAgendamento: valorBooleano("edicao-agendamento"), aceitaVoluntarios,
+                        frequenciaVoluntariado: opcionais("edicao-frequencia"), idadeMinimaVoluntario: numeroOpcional("edicao-idade-minima"),
+                        processoSeletivoVoluntario: valorBooleano("edicao-processo-seletivo"), emiteCertificadoVoluntario: valorBooleano("edicao-certificado"),
+                        atividadesVoluntariado: opcionais("edicao-atividades"),
+                        causasSecundarias: [...causasEdicao], ods: [...odsEdicao].map(Number)
+                    })
+                });
+                if (!resposta?.ok) throw new Error(await mensagemErroApi(resposta, "salvar dados"));
+                const respostaEdicao = resposta.clone();
+                const dadosSalvos = await respostaEdicao.json().catch(() => null);
+                notificar(feedbackEdicao, "Informações da organização atualizadas com sucesso.");
+                const perfil = await fetch(`${API_URL}/osc/${oscAtual.id}`, { cache: "no-store" });
+                if (perfil.ok) { oscAtual = await perfil.json(); renderizarPerfil(oscAtual); }
+                const edicao = dadosSalvos || await (async () => { const r = await requisicaoAutenticada(`/osc/${oscAtual.id}/edicao`); return r?.ok ? r.json() : null; })();
+                if (edicao) { snapshotDadosEdicao = structuredClone(edicao); preencherCamposEdicao(edicao); }
+                else snapshotDadosEdicao = structuredClone({
+                    ...snapshotDadosEdicao,
+                    causasSecundarias: [...causasEdicao], ods: [...odsEdicao].map(Number),
+                    diasHorariosFuncionamento: [...document.querySelectorAll("#edicao-dias-semana input:checked")].map(el => el.value).join(", ") || null,
+                    aceitaVoluntarios: valorBooleano("edicao-aceita-voluntarios"),
+                    frequenciaVoluntariado: opcionais("edicao-frequencia"), idadeMinimaVoluntario: numeroOpcional("edicao-idade-minima"),
+                    processoSeletivoVoluntario: valorBooleano("edicao-processo-seletivo"), emiteCertificadoVoluntario: valorBooleano("edicao-certificado"),
+                    atividadesVoluntariado: opcionais("edicao-atividades")
+                });
+                definirSnapshotEdicao();
+            } catch (erro) {
+                notificar(feedbackEdicao, erro.message || "Não foi possível salvar as informações.", "erro");
+            } finally {
+                formularioEdicao.dataset.salvando = "false";
+                botaoSalvar.disabled = false;
+            }
+        });
+        formularioEdicao.addEventListener("input", atualizarEstadoEdicao);
+        formularioEdicao.addEventListener("change", (evento) => { if (evento.target.id === "edicao-aceita-voluntarios") atualizarCamposVoluntariado(); atualizarEstadoEdicao(); });
+        const dialogoDescartar = document.getElementById("dialogo-descartar");
+        dialogoDescartar.addEventListener("click", (evento) => {
+            if (evento.target === dialogoDescartar) dialogoDescartar.close("cancelar");
+        });
+        document.getElementById("edicao-descartar").addEventListener("click", async () => {
+            const dialogo = dialogoDescartar;
+            dialogo.showModal();
+            const escolha = await new Promise(resolve => dialogo.addEventListener("close", () => resolve(dialogo.returnValue), { once: true }));
+            if (escolha !== "descartar") return;
+            if (!snapshotDadosEdicao) return;
+            preencherCamposEdicao(structuredClone(snapshotDadosEdicao)); definirSnapshotEdicao();
+        });
+        formularioEdicao.dataset.inicializado = "true";
+        if (formularioEdicao.dataset.carregado === "true") definirSnapshotEdicao();
+    }
+
+    if (admin && !document.getElementById("form-adicionar-membro").dataset.inicializado) {
+        document.getElementById("form-adicionar-membro").addEventListener("submit", async (evento) => {
+            evento.preventDefault();
+            const formulario = evento.currentTarget;
+            if (!formulario.reportValidity()) return;
+            const emailInput = document.getElementById("novo-membro-email");
+            const botaoAdicionar = formulario.querySelector("button[type=submit]");
+            const email = emailInput.value.trim();
+            if (!emailInput.validity.valid || !email) {
+                emailInput.setCustomValidity("Informe um endereço de e-mail válido.");
+                emailInput.reportValidity();
+                emailInput.addEventListener("input", () => emailInput.setCustomValidity(""), { once: true });
+                return;
+            }
+            botaoAdicionar.disabled = true;
+            try {
+                const resposta = await requisicaoAutenticada(`/osc/${oscAtual.id}/membros`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        email,
+                        cargo: document.getElementById("novo-membro-cargo").value
+                    })
+                });
+                if (!resposta?.ok) throw new Error(await mensagemErroApi(resposta, "adicionar"));
+                let listaAtualizada = true;
+                try {
+                    await carregarMembros();
+                } catch {
+                    listaAtualizada = false;
+                }
+                formulario.reset();
+                notificar(feedbackMembros, listaAtualizada
+                    ? "Membro adicionado à organização com sucesso."
+                    : "Membro adicionado à organização, mas não foi possível atualizar a lista. Tente atualizar a lista em instantes.");
+            } catch (erro) {
+                notificar(feedbackMembros, erro.message || "Não foi possível concluir a operação. Tente novamente.", "erro");
+            } finally {
+                botaoAdicionar.disabled = false;
+            }
+        });
+        document.getElementById("form-adicionar-membro").dataset.inicializado = "true";
+    }
+
+    try { await carregarMembros(); }
+    catch (erro) { notificar(feedbackMembros, erro.message || "Não foi possível carregar a lista de membros.", "erro"); }
+
+    if (!botaoExcluir.dataset.inicializado) {
+        botaoExcluir.addEventListener("click", async () => {
+            try {
+                await confirmarPorDigitacao({
+                    titulo: "Excluir organização",
+                    descricao: "Esta ação excluirá a organização e poderá remover permanentemente suas informações e vínculos. Essa operação não deve ser realizada por engano.",
+                    identificacao: oscAtual.nome,
+                    instrucao: "Para confirmar, digite exatamente:",
+                    frase: "EXCLUIR ONG",
+                    textoConfirmar: "Excluir organização",
+                    tipo: "Exclusão permanente",
+                    estilo: "destrutivo",
+                    mensagemSucesso: "Organização excluída com sucesso.",
+                    origem: botaoExcluir,
+                    aoConfirmar: async () => {
+                        const resposta = await requisicaoAutenticada(`/osc/${oscAtual.id}`, { method: "DELETE" });
+                        if (!resposta?.ok) throw new Error(await mensagemErroApi(resposta, "excluir organização"));
+                        window.location.assign("/pages/oscs-page.html");
+                    }
+                });
+            } catch (erro) {
+                notificar(feedbackMembros, erro.message || "Não foi possível concluir a operação. Tente novamente.", "erro");
+            }
+        });
+        botaoExcluir.dataset.inicializado = "true";
+    }
+}
+
+async function carregarPermissoes(id) {
+    if (obterEstadoSessao() === "anonymous") return;
+    try {
+        const resposta = await requisicaoAutenticada("/osc/minhas");
+        if (!resposta?.ok) return;
+        const organizacoes = await resposta.json();
+        const vinculo = organizacoes.find((osc) => Number(osc.id) === Number(id));
+        if (!vinculo) return;
+        cargoAtual = vinculo.cargo;
+        configurarAbas();
+        await configurarGestao();
+    } catch {
+        // A consulta de autorização não bloqueia o perfil público.
+    }
+}
+
+function configurarAbas() {
+    const navegacao = document.getElementById("abas-osc");
+    if (navegacao.dataset.inicializada) return;
+    const abas = [...document.querySelectorAll("#abas-osc [role=tab]")];
+    const paineis = abas.map((aba) => document.getElementById(aba.getAttribute("aria-controls")));
+    function ativar(indice, atualizarHash = true) {
+        abas.forEach((aba, i) => {
+            const ativo = i === indice;
+            aba.setAttribute("aria-selected", String(ativo));
+            aba.tabIndex = ativo ? 0 : -1;
+            paineis[i].hidden = !ativo;
+        });
+        if (atualizarHash) history.replaceState(null, "", `${location.pathname}${location.search}#${["pagina", "membros", "dados"][indice]}`);
+    }
+    abas.forEach((aba, indice) => {
+        aba.addEventListener("click", () => ativar(indice));
+        aba.addEventListener("keydown", (evento) => {
+            if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(evento.key)) return;
+            evento.preventDefault();
+            const proximo = evento.key === "Home" ? 0 : evento.key === "End" ? abas.length - 1 : (indice + (evento.key === "ArrowRight" ? 1 : abas.length - 1)) % abas.length;
+            abas[proximo].focus();
+            ativar(proximo);
+        });
+    });
+    const hash = location.hash.slice(1);
+    ativar(hash === "membros" ? 1 : hash === "dados" ? 2 : 0, false);
+    navegacao.dataset.inicializada = "true";
+}
+
+async function atualizarCargoAtual() {
+    const resposta = await requisicaoAutenticada("/osc/minhas");
+    if (!resposta?.ok) return;
+    const organizacoes = await resposta.json();
+    cargoAtual = organizacoes.find((osc) => Number(osc.id) === Number(oscAtual.id))?.cargo || null;
+}
+
 async function carregarPerfil() {
     const carregamento = document.getElementById("perfil-carregamento");
     const erro = document.getElementById("perfil-erro");
@@ -663,9 +1159,11 @@ async function carregarPerfil() {
         if (!resposta.ok) throw new Error("api-indisponivel");
         const osc = await resposta.json();
         if (!osc || Number(osc.id) !== id || typeof osc.nome !== "string") throw new Error("resposta-invalida");
+        oscAtual = osc;
         renderizarPerfil(osc);
         carregamento.hidden = true;
         conteudo.hidden = false;
+        void carregarPermissoes(id);
         return;
     } catch (falha) {
         carregamento.hidden = true;

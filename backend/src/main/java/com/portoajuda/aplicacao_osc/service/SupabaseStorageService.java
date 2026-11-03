@@ -121,6 +121,17 @@ public class SupabaseStorageService {
                 .toBodilessEntity();
     }
 
+    public void removerLogoOscUrl(String url) {
+        if (url == null || url.isBlank()) return;
+        String marcador = "/" + bucket + "/";
+        int indice = url.indexOf(marcador);
+        if (indice < 0) return;
+        String caminho = url.substring(indice + marcador.length());
+        int query = caminho.indexOf('?');
+        if (query >= 0) caminho = caminho.substring(0, query);
+        removerLogoOsc(caminho);
+    }
+
     private void validarImagem(Integer usuarioId, byte[] arquivo, String contentType) {
         if (usuarioId == null || usuarioId <= 0) {
             throw new IllegalArgumentException("Usuário inválido.");

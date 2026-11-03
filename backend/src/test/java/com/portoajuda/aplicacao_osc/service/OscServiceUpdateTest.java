@@ -2,8 +2,10 @@ package com.portoajuda.aplicacao_osc.service;
 
 import com.portoajuda.aplicacao_osc.dto.request.UpdateOscDTO;
 import com.portoajuda.aplicacao_osc.entity.Osc;
+import com.portoajuda.aplicacao_osc.entity.OscMembros;
 import com.portoajuda.aplicacao_osc.entity.Usuario;
 import com.portoajuda.aplicacao_osc.enums.CausaSocial;
+import com.portoajuda.aplicacao_osc.enums.CargoOsc;
 import com.portoajuda.aplicacao_osc.repository.OscMembrosRepository;
 import com.portoajuda.aplicacao_osc.repository.OscRepository;
 import com.portoajuda.aplicacao_osc.repository.RoleRepository;
@@ -40,6 +42,7 @@ class OscServiceUpdateTest {
     @Mock private ValidacaoCnpjOscService validacaoCnpjOscService;
     @Mock private OscPersistenciaService persistenciaService;
     @Mock private SupabaseStorageService supabaseStorageService;
+    @Mock private LimpezaService limpezaService;
 
     private OscService service;
     private Usuario usuario;
@@ -55,19 +58,25 @@ class OscServiceUpdateTest {
                 geocodingService,
                 validacaoCnpjOscService,
                 persistenciaService,
-                supabaseStorageService);
+                supabaseStorageService,
+                limpezaService);
 
         usuario = new Usuario();
         ReflectionTestUtils.setField(usuario, "id", 25);
         osc = new Osc();
         ReflectionTestUtils.setField(osc, "id", 81);
         osc.setCnpj(new Cnpj(CNPJ));
+        osc.setUsuario(usuario);
         osc.setCausaPrincipal(CausaSocial.EDUCACAO);
         osc.setCausasSecundarias(Set.of(CausaSocial.SAUDE));
         osc.setOds(Set.of(4, 10));
 
         when(oscRepository.findForUpdateByCnpj(any())).thenReturn(Optional.of(osc));
-        when(oscRepository.existsByIdAndUsuarioId(81, 25)).thenReturn(true);
+        OscMembros vinculo = new OscMembros();
+        vinculo.setOsc(osc);
+        vinculo.setUsuario(usuario);
+        vinculo.setCargoOsc(CargoOsc.CRIADOR);
+        when(membrosRepository.findByOsc_IdAndUsuario_Id(81, 25)).thenReturn(Optional.of(vinculo));
     }
 
     @Test
@@ -104,5 +113,62 @@ class OscServiceUpdateTest {
 
         assertEquals(422, erro.getStatusCode().value());
         verify(oscRepository, never()).save(any(Osc.class));
+    }
+
+    @Test
+    void editorPodeEditarInformacoesDaOsc() {
+        prepararCargo(CargoOsc.EDITOR);
+
+        service.update(new UpdateOscDTO(
+                CNPJ, "Descrição do editor", "contato@exemplo.org.br", null, null,
+                null, null, null), usuario);
+
+        verify(oscRepository).save(osc);
+    }
+
+    @Test
+    void administradorPodeEditarInformacoesDaOsc() {
+        prepararCargo(CargoOsc.ADMINISTRADOR);
+
+        service.update(new UpdateOscDTO(
+                CNPJ, "Descrição do administrador", "contato@exemplo.org.br", null, null,
+                null, null, null), usuario);
+
+        verify(oscRepository).save(osc);
+    }
+
+    @Test
+    void membroNaoPodeEditarInformacoesDaOsc() {
+        prepararCargo(CargoOsc.MEMBRO);
+
+        assertThrows(ResponseStatusException.class, () -> service.update(new UpdateOscDTO(
+                CNPJ, "Tentativa", "contato@exemplo.org.br", null, null,
+                null, null, null), usuario));
+
+        verify(oscRepository, never()).save(any(Osc.class));
+    }
+
+    @Test
+    void visitanteNaoPodeEditarInformacoesDaOsc() {
+        osc.setUsuario(new Usuario());
+        ReflectionTestUtils.setField(osc.getUsuario(), "id", 1);
+        when(membrosRepository.findByOsc_IdAndUsuario_Id(81, 25)).thenReturn(Optional.empty());
+
+        assertThrows(ResponseStatusException.class, () -> service.update(new UpdateOscDTO(
+                CNPJ, "Tentativa", "contato@exemplo.org.br", null, null,
+                null, null, null), usuario));
+
+        verify(oscRepository, never()).save(any(Osc.class));
+    }
+
+    private void prepararCargo(CargoOsc cargo) {
+        Usuario proprietario = new Usuario();
+        ReflectionTestUtils.setField(proprietario, "id", 1);
+        osc.setUsuario(proprietario);
+        OscMembros vinculo = new OscMembros();
+        vinculo.setOsc(osc);
+        vinculo.setUsuario(usuario);
+        vinculo.setCargoOsc(cargo);
+        when(membrosRepository.findByOsc_IdAndUsuario_Id(81, 25)).thenReturn(Optional.of(vinculo));
     }
 }

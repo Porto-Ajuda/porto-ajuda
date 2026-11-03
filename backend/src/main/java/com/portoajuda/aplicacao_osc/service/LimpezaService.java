@@ -22,6 +22,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.web.server.ResponseStatusException;
+import static org.springframework.http.HttpStatus.CONFLICT;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -49,6 +51,7 @@ public class LimpezaService {
     private final PostCausasRepository postCausasRepository;
     private final VagaRepository vagaRepository;
     private final PreferenciasAcessibilidadeRepository preferenciasRepository;
+    private final SupabaseStorageService supabaseStorageService;
 
     private LocalDate ultimoAvisoDependenciasFinanceiras;
 
@@ -168,6 +171,32 @@ public class LimpezaService {
         // O cargo dos membros é texto livre e o sistema não define quem pode assumir
         // a titularidade. Portanto, nenhuma transferência automática é presumida.
         oscRepository.delete(osc);
+    }
+
+    @Transactional
+    public void excluirOscGerenciada(Osc osc) {
+        Integer oscId = osc.getId();
+        if (doacaoRepository.existsByOsc_Id(oscId)
+                || doacaoRepository.existsByPost_Osc_Id(oscId)) {
+            throw new ResponseStatusException(
+                    CONFLICT,
+                    "A organização possui histórico de doações e não pode ser excluída.");
+        }
+
+        String logo = osc.getLogo();
+        excluirOscSemHistoricoFinanceiro(osc);
+        if (logo != null && !logo.isBlank()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    try {
+                        supabaseStorageService.removerLogoOscUrl(logo);
+                    } catch (RuntimeException erro) {
+                        log.warn("Falha ao remover a logo da OSC {} após a exclusão confirmada.", oscId);
+                    }
+                }
+            });
+        }
     }
 
     private void registrarBloqueioFinanceiroSeNecessario(int quantidade) {
