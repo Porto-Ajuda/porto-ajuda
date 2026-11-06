@@ -1,6 +1,7 @@
 package com.portoajuda.aplicacao_osc.dto.request;
 
 import com.portoajuda.aplicacao_osc.enums.CausaSocial;
+import com.portoajuda.aplicacao_osc.utils.CnpjValido;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -8,14 +9,13 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import org.hibernate.validator.constraints.URL;
-import org.hibernate.validator.constraints.br.CNPJ;
 
 import java.time.LocalTime;
 import java.util.Set;
 
 /** Campos que podem ser alterados sem trocar a identidade ou o criador da OSC. */
 public record UpdateOscDTO(
-        @NotBlank @CNPJ(message = "CNPJ inválido") String cnpj,
+        @NotBlank @CnpjValido(message = "CNPJ inválido") String cnpj,
         @Size(max = 255) String nome,
         @NotBlank(message = "Descrição curta é obrigatória") @Size(max = 200) String descricaoCurta,
         @NotBlank(message = "Descrição é obrigatória") @Size(max = 10000) String descricao,

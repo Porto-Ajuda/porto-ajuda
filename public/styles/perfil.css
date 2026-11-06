@@ -1372,6 +1372,126 @@ body {
         0 8px 20px rgba(245, 181, 46, 0.2);
 }
 
+.seguranca-administrativa[hidden] {
+    display: none;
+}
+
+.seguranca-administrativa .telefone-seguranca {
+    margin-top: 10px;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.seguranca-administrativa #estado-seguranca-administrativa {
+    margin-top: 6px;
+    color: var(--gold-light);
+}
+
+.dialogo-verificacao-telefone {
+    width: min(92vw, 480px);
+    max-width: 480px;
+    max-height: 90vh;
+    padding: 0;
+    overflow: auto;
+    color: var(--text);
+    background: var(--bg-card);
+    border: 1px solid rgba(245, 181, 46, 0.4);
+    border-radius: 18px;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.48);
+}
+
+.dialogo-verificacao-telefone::backdrop {
+    background: rgba(12, 8, 24, 0.76);
+    backdrop-filter: blur(5px);
+}
+
+.dialogo-verificacao-telefone__conteudo {
+    position: relative;
+    display: grid;
+    gap: 14px;
+    padding: 30px;
+}
+
+.dialogo-verificacao-telefone__conteudo h2 {
+    margin: 0;
+    color: var(--gold);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.8rem;
+}
+
+.dialogo-verificacao-telefone__conteudo p {
+    margin: 0;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+
+.dialogo-verificacao-telefone__conteudo form {
+    display: grid;
+    gap: 12px;
+}
+
+.dialogo-verificacao-telefone__conteudo label {
+    color: var(--text);
+    font-size: 0.9rem;
+}
+
+.dialogo-verificacao-telefone__conteudo input {
+    width: 100%;
+    min-height: 46px;
+    box-sizing: border-box;
+    padding: 10px 12px;
+    color: var(--text);
+    background: var(--bg-main);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 10px;
+}
+
+.dialogo-verificacao-telefone__conteudo input:focus-visible,
+.dialogo-verificacao-telefone__fechar:focus-visible {
+    outline: 3px solid var(--gold);
+    outline-offset: 3px;
+}
+
+#codigo-verificacao-telefone {
+    text-align: center;
+    font-size: 1.35rem;
+    letter-spacing: 0.35em;
+    font-variant-numeric: tabular-nums;
+}
+
+.dialogo-verificacao-telefone__fechar {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    width: 38px;
+    height: 38px;
+    color: var(--text);
+    background: transparent;
+    border: 0;
+    border-radius: 50%;
+    font-size: 1.7rem;
+    cursor: pointer;
+}
+
+@media (max-width: 600px) {
+    .seguranca-administrativa {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .seguranca-administrativa .grupo-botoes {
+        width: 100%;
+    }
+
+    .seguranca-administrativa .botao {
+        justify-self: stretch;
+        width: 100%;
+    }
+
+    .dialogo-verificacao-telefone__conteudo {
+        padding: 26px 20px 22px;
+    }
+}
+
 /* ==========================================================
    INTERRUPTOR / CHECKBOX
    ========================================================== */
@@ -2819,6 +2939,10 @@ body {
 .item-selecao-osc-informacoes small {
     color: #c5c6d0;
     font-size: 13px;
+}
+
+.item-selecao-osc-informacoes .status-ong-inativa {
+    color: #f5d58d;
 }
 
 .estado-trocar-osc {

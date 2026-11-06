@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <title>Administração | Porto Ajuda</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles/admin.css">
+    <link rel="stylesheet" href="/styles/acesso-admin.css">
+    <script type="module" src="/components/acesso-admin.js" defer></script>
+    <script type="module" src="/components/admin.js" defer></script>
+</head>
+<body>
+    <a class="skip-link" href="#conteudo-principal">Pular para o conteúdo</a>
+    <div class="admin-shell">
+        <aside class="admin-sidebar" id="menu-admin" aria-label="Navegação administrativa">
+            <a class="admin-brand" href="/" aria-label="Porto Ajuda, página inicial">
+                <span class="admin-brand__mark" aria-hidden="true">PA</span>
+                <span><strong>PORTO AJUDA</strong><small>ADMINISTRAÇÃO</small></span>
+            </a>
+
+            <nav class="admin-nav" aria-label="Seções do painel">
+                <a class="admin-nav__link" href="#visao-geral" aria-current="page">
+                    <span aria-hidden="true">◈</span> Visão geral
+                </a>
+                <a class="admin-nav__link" href="#indicadores">
+                    <span aria-hidden="true">▦</span> Indicadores
+                </a>
+                <a class="admin-nav__link" href="#atividade">
+                    <span aria-hidden="true">◷</span> Atividade recente
+                </a>
+            </nav>
+
+            <div class="admin-sidebar__bottom">
+                <p class="admin-security-note"><span aria-hidden="true">●</span> Área protegida</p>
+                <button class="admin-logout" id="sair-painel-admin" type="button" hidden>
+                    <span aria-hidden="true">↗</span> Encerrar sessão administrativa
+                </button>
+                <a class="admin-back-link" href="/">Voltar ao Porto Ajuda</a>
+            </div>
+        </aside>
+
+        <main class="admin-main" id="conteudo-principal">
+            <header class="admin-topbar">
+                <button class="admin-menu-toggle" id="alternar-menu-admin" type="button"
+                    aria-expanded="false" aria-controls="menu-admin" aria-label="Abrir navegação">
+                    <span aria-hidden="true">☰</span>
+                </button>
+                <div class="admin-breadcrumb"><span>Porto Ajuda</span><span aria-hidden="true">/</span><strong>Visão geral</strong></div>
+                <p class="admin-session-indicator" id="estado-sessao-admin" role="status" aria-live="polite">
+                    Verificando sessão administrativa…
+                </p>
+            </header>
+
+            <section class="admin-content" id="visao-geral" aria-labelledby="titulo-painel-admin">
+                <div class="admin-page-heading">
+                    <div>
+                        <p class="eyebrow">CENTRO DE OPERAÇÕES</p>
+                        <h1 id="titulo-painel-admin">Visão geral</h1>
+                        <p class="admin-page-description">Indicadores atuais da plataforma Porto Ajuda.</p>
+                    </div>
+                    <button class="admin-refresh" id="atualizar-indicadores" type="button" hidden>
+                        <span aria-hidden="true">↻</span> Atualizar
+                    </button>
+                </div>
+
+                <section class="admin-state-card" id="estado-carregamento" role="status" aria-live="polite">
+                    <span class="state-spinner" aria-hidden="true"></span>
+                    <p>Verificando sessão administrativa…</p>
+                </section>
+
+                <section class="admin-state-card" id="estado-nao-autenticado" aria-labelledby="titulo-login-necessario" hidden>
+                    <span class="state-icon" aria-hidden="true">⌑</span>
+                    <h2 id="titulo-login-necessario">Acesso administrativo necessário</h2>
+                    <p>Entre pela autenticação administrativa para consultar os indicadores protegidos.</p>
+                    <button class="admin-primary-button" id="abrir-login-admin" type="button">Abrir autenticação administrativa</button>
+                </section>
+
+                <section class="admin-state-card admin-state-card--error" id="estado-sessao-expirada" role="alert" hidden>
+                    <span class="state-icon" aria-hidden="true">!</span>
+                    <h2>Sua sessão administrativa expirou.</h2>
+                    <p>Os dados protegidos foram removidos desta página. Autentique-se novamente para continuar.</p>
+                    <button class="admin-primary-button" data-abrir-login-admin type="button">Autenticar novamente</button>
+                </section>
+
+                <section class="admin-state-card admin-state-card--error" id="estado-erro-indicadores" role="alert" hidden>
+                    <span class="state-icon" aria-hidden="true">!</span>
+                    <h2>Não foi possível carregar os indicadores.</h2>
+                    <p id="mensagem-erro-indicadores">Verifique a conexão e tente novamente.</p>
+                    <button class="admin-primary-button" id="tentar-novamente-admin" type="button">Tentar novamente</button>
+                    <button class="admin-secondary-button" data-abrir-login-admin type="button">Abrir autenticação</button>
+                </section>
+
+                <div class="admin-dashboard" id="conteudo-dashboard" hidden>
+                    <section class="metric-grid" id="indicadores" aria-label="Indicadores da plataforma" aria-busy="true">
+                        <article class="metric-card metric-card--gold">
+                            <div class="metric-card__top"><span class="metric-icon" aria-hidden="true">♙</span><span class="metric-label">CONTAS</span></div>
+                            <h2>Usuários cadastrados</h2>
+                            <p class="metric-value" data-metric="registeredUsers">—</p>
+                            <p class="metric-footnote">Todos os registros de conta.</p>
+                        </article>
+                        <article class="metric-card">
+                            <div class="metric-card__top"><span class="metric-icon" aria-hidden="true">⌂</span><span class="metric-label">ORGANIZAÇÕES</span></div>
+                            <h2>ONGs ativas</h2>
+                            <p class="metric-value" data-metric="activeOrganizations">—</p>
+                            <p class="metric-footnote">Ativas e não arquivadas.</p>
+                        </article>
+                        <article class="metric-card">
+                            <div class="metric-card__top"><span class="metric-icon" aria-hidden="true">⌂</span><span class="metric-label">ORGANIZAÇÕES</span></div>
+                            <h2>ONGs inativas</h2>
+                            <p class="metric-value" data-metric="inactiveOrganizations">—</p>
+                            <p class="metric-footnote">Inativas e não arquivadas.</p>
+                        </article>
+                        <article class="metric-card">
+                            <div class="metric-card__top"><span class="metric-icon" aria-hidden="true">▤</span><span class="metric-label">CONTEÚDO</span></div>
+                            <h2>Publicações cadastradas</h2>
+                            <p class="metric-value" data-metric="publications">—</p>
+                            <p class="metric-footnote">Todos os registros de publicação.</p>
+                        </article>
+                        <article class="metric-card">
+                            <div class="metric-card__top"><span class="metric-icon" aria-hidden="true">✳</span><span class="metric-label">VOLUNTARIADO</span></div>
+                            <h2>Vagas cadastradas</h2>
+                            <p class="metric-value" data-metric="volunteerOpportunities">—</p>
+                            <p class="metric-footnote">Todos os registros de oportunidade.</p>
+                        </article>
+                        <article class="metric-card">
+                            <div class="metric-card__top"><span class="metric-icon" aria-hidden="true">▣</span><span class="metric-label">ARQUIVO</span></div>
+                            <h2>ONGs arquivadas</h2>
+                            <p class="metric-value" data-metric="archivedOrganizations">—</p>
+                            <p class="metric-footnote">Organizações preservadas no histórico.</p>
+                        </article>
+                    </section>
+
+                    <section class="admin-activity-card" id="atividade" aria-labelledby="titulo-atividade-admin">
+                        <div class="section-heading">
+                            <div>
+                                <p class="eyebrow">REGISTROS DE SEGURANÇA</p>
+                                <h2 id="titulo-atividade-admin">Atividade administrativa recente</h2>
+                            </div>
+                            <span class="activity-window">Últimos registros</span>
+                        </div>
+                        <p class="activity-state" id="estado-atividade-admin" role="status" aria-live="polite">Carregando atividade…</p>
+                        <ol class="activity-list" id="lista-atividade-admin" hidden></ol>
+                    </section>
+
+                    <p class="admin-generated-at" id="indicadores-atualizados-em"></p>
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+</html>

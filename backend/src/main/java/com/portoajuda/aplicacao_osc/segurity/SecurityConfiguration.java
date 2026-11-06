@@ -15,6 +15,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.http.HttpStatus;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 
 @Configuration
@@ -24,6 +25,7 @@ import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 public class SecurityConfiguration {
 
         private final JwtAuthFilter jwtAuthFilter;
+        private final AdminSessionAuthFilter adminSessionAuthFilter;
 
         @Bean
         public FilterRegistrationBean<JwtAuthFilter> jwtAuthFilterServletRegistration() {
@@ -33,13 +35,29 @@ public class SecurityConfiguration {
         }
 
         @Bean
-        public SecurityFilterChain filterChain(HttpSecurity http)
+        public FilterRegistrationBean<AdminSessionAuthFilter> adminSessionAuthFilterServletRegistration() {
+                FilterRegistrationBean<AdminSessionAuthFilter> registration =
+                                new FilterRegistrationBean<>(adminSessionAuthFilter);
+                registration.setEnabled(false);
+                return registration;
+        }
+
+        @Bean
+        public SecurityFilterChain filterChain(
+                        HttpSecurity http,
+                        @Value("${app.cookies.secure:true}") boolean secureCookies)
                         throws Exception {
+
+                CookieCsrfTokenRepository csrfRepository = CookieCsrfTokenRepository.withHttpOnlyFalse();
+                // The SPA is cross-origin. Keep the synchronizer cookie available to credentialed
+                // requests; the matching header remains mandatory for every state-changing request.
+                csrfRepository.setCookieCustomizer(cookie -> cookie
+                                .secure(secureCookies)
+                                .sameSite(secureCookies ? "None" : "Lax"));
 
                 http
                                 .csrf(csrf -> csrf
-                                                .csrfTokenRepository(
-                                                                CookieCsrfTokenRepository.withHttpOnlyFalse())
+                                                .csrfTokenRepository(csrfRepository)
                                                 .csrfTokenRequestHandler(
                                                                 new CsrfTokenRequestAttributeHandler()))
 
@@ -106,6 +124,11 @@ public class SecurityConfiguration {
                                                                 "/usuario/refresh")
                                                 .permitAll()
 
+                                                // A autenticação admin inicia sem sessão comum; a verificação
+                                                // de credenciais e códigos é feita no serviço do backend.
+                                                .requestMatchers(HttpMethod.POST, "/admin/auth/**")
+                                                .permitAll()
+
                                                 // Documentação
                                                 .requestMatchers(
                                                                 "/swagger-ui.html",
@@ -137,6 +160,9 @@ public class SecurityConfiguration {
                                                 // Demais rotas exigem autenticação
                                                 .anyRequest().authenticated())
 
+                                .addFilterBefore(
+                                                adminSessionAuthFilter,
+                                                UsernamePasswordAuthenticationFilter.class)
                                 .addFilterBefore(
                                                 jwtAuthFilter,
                                                 UsernamePasswordAuthenticationFilter.class);

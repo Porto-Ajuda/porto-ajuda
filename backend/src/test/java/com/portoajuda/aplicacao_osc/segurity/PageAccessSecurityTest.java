@@ -1,7 +1,9 @@
 package com.portoajuda.aplicacao_osc.segurity;
 
 import com.portoajuda.aplicacao_osc.controller.PageController;
+import com.portoajuda.aplicacao_osc.controller.AdminSessionCookie;
 import com.portoajuda.aplicacao_osc.repository.UsuarioRepository;
+import com.portoajuda.aplicacao_osc.service.AdminPrivilegedSessionService;
 import com.portoajuda.aplicacao_osc.service.SessaoUsuarioService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +31,15 @@ class PageAccessSecurityTest {
 
     @MockitoBean
     private SessaoUsuarioService sessaoUsuarioService;
+
+    @MockitoBean
+    private AdminPrivilegedSessionService adminPrivilegedSessionService;
+
+    @MockitoBean
+    private ClientIpResolver clientIpResolver;
+
+    @MockitoBean
+    private AdminSessionCookie adminSessionCookie;
 
     @Test
     void perfilServeHtmlAnonimamenteMasMantemApiPrivada() throws Exception {

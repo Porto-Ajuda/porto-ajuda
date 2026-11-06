@@ -1,3 +1,5 @@
+import { formatarCnpj, validarCnpj } from "./cnpj.js";
+
 document.addEventListener("DOMContentLoaded", () => {
 
     const form = document.getElementById("form-login-osc");
@@ -12,28 +14,6 @@ const URL_HOME = "./Porto-Ajuda.html";
 
 
     /* ---------- utilidades ---------- */
-
-    function cnpjValido(valor) {
-
-        const n = valor.replace(/\D/g, "");
-
-        if (n.length !== 14 || /^(\d)\1+$/.test(n)) return false;
-
-        const digito = (tamanho) => {
-            let soma = 0;
-            let peso = tamanho - 7;
-
-            for (let i = 0; i < tamanho; i++) {
-                soma += Number(n[i]) * peso--;
-                if (peso < 2) peso = 9;
-            }
-
-            const resto = soma % 11;
-            return resto < 2 ? 0 : 11 - resto;
-        };
-
-        return digito(12) === Number(n[12]) && digito(13) === Number(n[13]);
-    }
 
     function mostrarErro(mensagem, campo) {
 
@@ -58,13 +38,7 @@ const URL_HOME = "./Porto-Ajuda.html";
     /* ---------- máscara do CNPJ ---------- */
 
     campoCnpj.addEventListener("input", () => {
-        campoCnpj.value = campoCnpj.value
-            .replace(/\D/g, "")
-            .slice(0, 14)
-            .replace(/^(\d{2})(\d)/, "$1.$2")
-            .replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
-            .replace(/\.(\d{3})(\d)/, ".$1/$2")
-            .replace(/(\d{4})(\d)/, "$1-$2");
+        campoCnpj.value = formatarCnpj(campoCnpj.value);
 
         limparErro();
     });
@@ -101,8 +75,8 @@ const URL_HOME = "./Porto-Ajuda.html";
             return;
         }
 
-        if (!cnpjValido(campoCnpj.value)) {
-            mostrarErro("CNPJ inválido. Confira os números digitados.", campoCnpj);
+        if (!validarCnpj(campoCnpj.value)) {
+            mostrarErro("CNPJ inválido. Confira os caracteres e dígitos verificadores.", campoCnpj);
             return;
         }
 

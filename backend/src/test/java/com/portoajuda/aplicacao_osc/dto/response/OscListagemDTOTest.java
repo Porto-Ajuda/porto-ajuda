@@ -2,6 +2,7 @@ package com.portoajuda.aplicacao_osc.dto.response;
 
 import com.portoajuda.aplicacao_osc.entity.Osc;
 import com.portoajuda.aplicacao_osc.enums.CausaSocial;
+import com.portoajuda.aplicacao_osc.enums.StatusOsc;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -22,7 +23,7 @@ class OscListagemDTOTest {
         osc.setCausaPrincipal(CausaSocial.EDUCACAO);
         osc.setCausasSecundarias(Set.of());
         osc.setOds(Set.of(4));
-        osc.setAtivo(true);
+        osc.setStatus(StatusOsc.ATIVA);
         osc.setLatitude(-23.96);
         osc.setLongitude(-46.33);
 
@@ -35,7 +36,7 @@ class OscListagemDTOTest {
         assertTrue(json.contains("\"causaPrincipal\":\"EDUCACAO\""));
         assertTrue(json.contains("\"causas\":[\"EDUCACAO\"]"));
         assertTrue(json.contains("\"cidade\":\"Santos\""));
-        assertTrue(json.contains("\"ativo\":true"));
+        assertTrue(json.contains("\"status\":\"ATIVA\""));
         assertFalse(json.contains("usuario"));
         assertFalse(json.contains("senha"));
         assertFalse(json.contains("posts"));

@@ -33,6 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
@@ -312,7 +313,31 @@ class OscServiceMembroTest {
 
         assertThrows(ResponseStatusException.class, () -> service.delete(8, editor));
 
-        verify(limpezaService, never()).excluirOscGerenciada(any());
+        verify(limpezaService, never()).excluirOscGerenciada(any(), any(), anyString());
+    }
+
+    @Test
+    void criadorPodeArquivarOngDesativadaPelaPlataformaPeloFluxoAutorizado() {
+        prepararOscDoProprietario();
+
+        service.delete(8, proprietario);
+
+        verify(limpezaService).excluirOscGerenciada(osc, proprietario, "CRIADOR");
+        verify(oscRepository, never()).delete(osc);
+    }
+
+    @Test
+    void membroAdministradorMantemCargoQuandoTitularOriginalFoiRemovido() {
+        when(osc.getId()).thenReturn(8);
+        when(osc.getUsuario()).thenReturn(null);
+        Usuario administrador = new Usuario();
+        org.springframework.test.util.ReflectionTestUtils.setField(administrador, "id", 4);
+        OscMembros vinculoAdmin = new OscMembros();
+        vinculoAdmin.setCargoOsc(CargoOsc.ADMINISTRADOR);
+        when(membrosRepository.findByOsc_IdAndUsuario_Id(8, 4))
+                .thenReturn(Optional.of(vinculoAdmin));
+
+        assertEquals(CargoOsc.ADMINISTRADOR, service.obterCargoUsuario(osc, administrador));
     }
 
     @Test
@@ -327,6 +352,32 @@ class OscServiceMembroTest {
                 8, proprietario, new Email("criador@exemplo.org")));
 
         verify(membrosRepository, never()).delete(vinculoCriador);
+    }
+
+    @Test
+    void administradorPodeRemoverMembroQuandoCriadorFoiExcluido() {
+        when(oscRepository.findForUpdateById(8)).thenReturn(Optional.of(osc));
+        when(osc.getId()).thenReturn(8);
+        when(osc.getUsuario()).thenReturn(null);
+        when(proprietario.getId()).thenReturn(4);
+
+        OscMembros vinculoAdministrador = new OscMembros();
+        vinculoAdministrador.setCargoOsc(CargoOsc.ADMINISTRADOR);
+        when(membrosRepository.findByOsc_IdAndUsuario_Id(8, 4))
+                .thenReturn(Optional.of(vinculoAdministrador));
+
+        Usuario alvo = new Usuario();
+        org.springframework.test.util.ReflectionTestUtils.setField(alvo, "id", 5);
+        OscMembros vinculoAlvo = new OscMembros();
+        vinculoAlvo.setUsuario(alvo);
+        vinculoAlvo.setCargoOsc(CargoOsc.EDITOR);
+        Email emailAlvo = new Email("editor@exemplo.org");
+        when(membrosRepository.findByOsc_IdAndUsuario_Email(8, emailAlvo))
+                .thenReturn(Optional.of(vinculoAlvo));
+
+        service.removeMembro(8, proprietario, emailAlvo);
+
+        verify(membrosRepository).delete(vinculoAlvo);
     }
 
     private void prepararOscDoProprietario() {

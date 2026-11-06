@@ -21,7 +21,6 @@
     <script type="module" src="../components/abas-perfil.js" defer></script>
     <script type="module" src="../components/filtros-perfil.js" defer></script>
     <script type="module" src="../components/acessibilidade.js" defer></script>
-    <script type="module" src="../components/temas.js" defer></script>
     <script type="module" src="../components/avatar.js" defer></script>
     <script type="module" src="../components/tour.js" defer></script>
 </head>
@@ -659,7 +658,6 @@
                                         <input type="radio" name="acss-modo-exibicao" value="alto-contraste">
                                         <span class="acss-tema__cartao">
                                             <span class="acss-tema__icone">
-                                                <img src="../assets/tema-contraste.png" alt="">
                                             </span>
                                             <span class="acss-tema__nome">Alto contraste</span>
                                         </span>
@@ -932,6 +930,57 @@
                                 <p id="estado-edicao-perfil" role="status" aria-live="polite" hidden></p>
 
                             </div>
+
+                            <section id="seguranca-administrativa" class="configuracao seguranca-administrativa" aria-labelledby="titulo-seguranca-administrativa" hidden>
+                                <div>
+                                    <h3 id="titulo-seguranca-administrativa">Segurança administrativa</h3>
+                                    <p>Confirme seu telefone para proteger o acesso administrativo.</p>
+                                    <p class="telefone-seguranca">Telefone cadastrado: <span id="telefone-seguranca-mascarado"></span></p>
+                                    <p id="estado-seguranca-administrativa" role="status" aria-live="polite"></p>
+                                </div>
+                                <div class="grupo-botoes">
+                                    <button class="botao botao-secundario" type="button" id="iniciar-verificacao-telefone">
+                                        Verificar telefone
+                                    </button>
+                                </div>
+                            </section>
+
+                            <dialog id="dialog-verificacao-telefone" class="dialogo-verificacao-telefone"
+                                aria-labelledby="titulo-dialog-verificacao-telefone"
+                                aria-describedby="descricao-dialog-verificacao-telefone">
+                                <div class="dialogo-verificacao-telefone__conteudo">
+                                    <button class="dialogo-verificacao-telefone__fechar" type="button"
+                                        id="fechar-dialog-verificacao-telefone" aria-label="Fechar verificação">×</button>
+                                    <h2 id="titulo-dialog-verificacao-telefone">Verificar telefone</h2>
+                                    <p id="descricao-dialog-verificacao-telefone">
+                                        A confirmação será enviada por SMS ao telefone cadastrado.
+                                    </p>
+                                    <p id="estado-dialog-verificacao-telefone" role="status" aria-live="polite"></p>
+
+                                    <form id="form-solicitar-codigo-telefone" autocomplete="on">
+                                        <label for="senha-verificacao-telefone">Confirme sua senha</label>
+                                        <input id="senha-verificacao-telefone" name="senha" type="password"
+                                            autocomplete="current-password" required maxlength="255">
+                                        <button class="botao botao-secundario" type="submit" id="enviar-codigo-telefone">
+                                            Enviar código por SMS
+                                        </button>
+                                    </form>
+
+                                    <form id="form-confirmar-codigo-telefone" autocomplete="off" hidden>
+                                        <label for="codigo-verificacao-telefone">Código de seis dígitos</label>
+                                        <input id="codigo-verificacao-telefone" name="codigo" type="text"
+                                            inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}"
+                                            minlength="6" maxlength="6" required aria-describedby="expiracao-codigo-telefone">
+                                        <p id="expiracao-codigo-telefone" role="timer" aria-live="off"></p>
+                                        <button class="botao botao-secundario" type="submit" id="confirmar-codigo-telefone">
+                                            Confirmar telefone
+                                        </button>
+                                        <button class="botao botao-secundario" type="button" id="reenviar-codigo-telefone">
+                                            Solicitar outro código
+                                        </button>
+                                    </form>
+                                </div>
+                            </dialog>
 
 
 

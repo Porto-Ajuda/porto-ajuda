@@ -3,17 +3,19 @@ package com.portoajuda.aplicacao_osc.service;
 
 import com.portoajuda.aplicacao_osc.entity.Usuario;
 import com.portoajuda.aplicacao_osc.entity.Osc;
+import com.portoajuda.aplicacao_osc.entity.HistoricoStatusOsc;
+import com.portoajuda.aplicacao_osc.enums.OrigemDesativacao;
+import com.portoajuda.aplicacao_osc.enums.TipoEventoHistoricoOsc;
 import com.portoajuda.aplicacao_osc.repository.CodigoAutenticacaoRepository;
 import com.portoajuda.aplicacao_osc.repository.CandidaturasVoluntariadoRepository;
 import com.portoajuda.aplicacao_osc.repository.DoacaoRepository;
+import com.portoajuda.aplicacao_osc.repository.HistoricoStatusOscRepository;
 import com.portoajuda.aplicacao_osc.repository.OscMembrosRepository;
 import com.portoajuda.aplicacao_osc.repository.OscRepository;
-import com.portoajuda.aplicacao_osc.repository.PostCausasRepository;
 import com.portoajuda.aplicacao_osc.repository.PostRepository;
 import com.portoajuda.aplicacao_osc.repository.PreferenciasAcessibilidadeRepository;
 import com.portoajuda.aplicacao_osc.repository.SessaoUsuarioRepository;
 import com.portoajuda.aplicacao_osc.repository.UsuarioRepository;
-import com.portoajuda.aplicacao_osc.repository.VagaRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,13 +47,11 @@ public class LimpezaService {
     private final SessaoUsuarioRepository sessaoUsuarioRepository;
     private final CandidaturasVoluntariadoRepository candidaturasRepository;
     private final DoacaoRepository doacaoRepository;
+    private final HistoricoStatusOscRepository historicoStatusOscRepository;
     private final OscRepository oscRepository;
     private final OscMembrosRepository oscMembrosRepository;
     private final PostRepository postRepository;
-    private final PostCausasRepository postCausasRepository;
-    private final VagaRepository vagaRepository;
     private final PreferenciasAcessibilidadeRepository preferenciasRepository;
-    private final SupabaseStorageService supabaseStorageService;
 
     private LocalDate ultimoAvisoDependenciasFinanceiras;
 
@@ -122,7 +122,9 @@ public class LimpezaService {
             candidaturasRepository.excluirPorUsuarioId(usuarioId);
 
             for (Osc osc : oscsDoUsuario) {
-                excluirOscSemHistoricoFinanceiro(osc);
+                arquivarOsc(osc, usuario, "EXCLUSAO_CONTA", "Exclusão da conta do criador");
+                osc.setUsuario(null);
+                oscRepository.save(osc);
             }
 
             oscMembrosRepository.excluirPorUsuarioId(usuarioId);
@@ -158,23 +160,8 @@ public class LimpezaService {
                         usuario.getDataSolicitacaoExclusao().plusMonths(6));
     }
 
-    private void excluirOscSemHistoricoFinanceiro(Osc osc) {
-        Integer oscId = osc.getId();
-
-        candidaturasRepository.excluirPorOscId(oscId);
-        vagaRepository.excluirPorOscId(oscId);
-        postCausasRepository.excluirPorOscId(oscId);
-
-        postRepository.excluirPorOscId(oscId);
-        oscMembrosRepository.excluirPorOscId(oscId);
-
-        // O cargo dos membros é texto livre e o sistema não define quem pode assumir
-        // a titularidade. Portanto, nenhuma transferência automática é presumida.
-        oscRepository.delete(osc);
-    }
-
     @Transactional
-    public void excluirOscGerenciada(Osc osc) {
+    public void excluirOscGerenciada(Osc osc, Usuario ator, String autoridadeAtor) {
         Integer oscId = osc.getId();
         if (doacaoRepository.existsByOsc_Id(oscId)
                 || doacaoRepository.existsByPost_Osc_Id(oscId)) {
@@ -183,20 +170,52 @@ public class LimpezaService {
                     "A organização possui histórico de doações e não pode ser excluída.");
         }
 
-        String logo = osc.getLogo();
-        excluirOscSemHistoricoFinanceiro(osc);
-        if (logo != null && !logo.isBlank()) {
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                @Override
-                public void afterCommit() {
-                    try {
-                        supabaseStorageService.removerLogoOscUrl(logo);
-                    } catch (RuntimeException erro) {
-                        log.warn("Falha ao remover a logo da OSC {} após a exclusão confirmada.", oscId);
-                    }
-                }
-            });
+        arquivarOsc(
+                osc,
+                ator,
+                autoridadeAtor,
+                "Arquivamento solicitado pelo responsável da organização.");
+    }
+
+    private void arquivarOsc(
+            Osc osc,
+            Usuario ator,
+            String autoridadeAtor,
+            String motivo) {
+        if (osc.isArquivada()) {
+            throw new ResponseStatusException(CONFLICT, "A organização já está arquivada.");
         }
+
+        LocalDateTime agora = LocalDateTime.now(ZONA_APLICACAO);
+        LocalDateTime dataDesativacaoAnterior = osc.getDataUltimaDesativacao();
+        LocalDateTime dataArquivamentoAnterior = osc.getDataArquivamento();
+        Usuario arquivadorAnterior = osc.getArquivadaPor();
+        Integer arquivadorAnteriorIdSnapshot = osc.getArquivadaPorIdSnapshot();
+        String motivoArquivamentoAnterior = osc.getMotivoArquivamento();
+        osc.setDataArquivamento(agora);
+        osc.setArquivadaPor(ator);
+        osc.setArquivadaPorIdSnapshot(ator == null ? null : ator.getId());
+        osc.setMotivoArquivamento(motivo);
+        oscRepository.save(osc);
+
+        historicoStatusOscRepository.save(HistoricoStatusOsc.registrar(
+                osc,
+                osc.getStatus(),
+                osc.getStatus(),
+                OrigemDesativacao.ONG,
+                TipoEventoHistoricoOsc.ARQUIVAMENTO,
+                osc.getOrigemUltimaDesativacao(),
+                dataDesativacaoAnterior,
+                osc.getDesativadoPor(),
+                osc.getDesativadoPorIdSnapshot(),
+                osc.getMotivoUltimaDesativacao(),
+                dataArquivamentoAnterior,
+                arquivadorAnterior,
+                arquivadorAnteriorIdSnapshot,
+                motivoArquivamentoAnterior,
+                ator,
+                autoridadeAtor,
+                motivo));
     }
 
     private void registrarBloqueioFinanceiroSeNecessario(int quantidade) {
@@ -216,11 +235,8 @@ public class LimpezaService {
                 quantidade);
     }
 
-    // TESTES: executa a cada minuto.
-    // @Scheduled(cron = "0 * * * * *", zone = "America/Sao_Paulo")
-
-    // PRODUÇÃO: substitua a anotação acima pela seguinte:
-    @Scheduled(cron = "0 0 * * * *", zone = "America/Sao_Paulo")
+    // Desativado por padrão. Habilitar somente de forma explícita no ambiente desejado.
+    @Scheduled(cron = "${app.maintenance.cleanup-cron:-}", zone = "America/Sao_Paulo")
     @Transactional
     public void executarLimpezaAutomatica() {
         log.info("Iniciando limpeza automática.");

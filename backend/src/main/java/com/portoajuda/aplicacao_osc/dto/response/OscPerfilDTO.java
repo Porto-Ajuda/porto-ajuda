@@ -3,12 +3,17 @@ package com.portoajuda.aplicacao_osc.dto.response;
 
 import com.portoajuda.aplicacao_osc.entity.Osc;
 import com.portoajuda.aplicacao_osc.enums.CausaSocial;
+import com.portoajuda.aplicacao_osc.enums.StatusOsc;
 
 import java.time.LocalTime;
 import java.util.Set;
 
 public record OscPerfilDTO(
         Integer id,
+        StatusOsc status,
+        boolean arquivada,
+        boolean podeAlterarStatus,
+        boolean podeAdministrarStatusPlataforma,
         String nome,
         String logo,
         String descricaoCurta,
@@ -52,8 +57,26 @@ public record OscPerfilDTO(
         String atividadesVoluntariado
 ) {
     public static OscPerfilDTO de(Osc osc) {
+        return criar(osc, false, false);
+    }
+
+    public static OscPerfilDTO dePrivado(
+            Osc osc,
+            boolean podeAlterarStatus,
+            boolean podeAdministrarStatusPlataforma) {
+        return criar(osc, podeAlterarStatus, podeAdministrarStatusPlataforma);
+    }
+
+    private static OscPerfilDTO criar(
+            Osc osc,
+            boolean podeAlterarStatus,
+            boolean podeAdministrarStatusPlataforma) {
         return new OscPerfilDTO(
                 osc.getId(),
+                osc.getStatus(),
+                osc.isArquivada(),
+                podeAlterarStatus,
+                podeAdministrarStatusPlataforma,
                 osc.getNome(),
                 osc.getLogo(),
                 osc.getDescricaoCurta(),

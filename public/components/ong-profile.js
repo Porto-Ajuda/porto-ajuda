@@ -581,6 +581,14 @@ function configurarCompartilhamento(osc) {
 
 function renderizarPerfil(osc) {
     document.title = `${textoLimpo(osc.nome) || "Organização"} | Porto Ajuda`;
+    const avisoStatus = document.getElementById("estado-status-osc");
+    avisoStatus.hidden = osc.status !== "INATIVA" && !osc.arquivada;
+    avisoStatus.querySelector("strong").textContent = osc.arquivada
+        ? "Organização arquivada"
+        : "Organização inativa";
+    avisoStatus.querySelector("p").textContent = osc.arquivada
+        ? "O registro e o histórico foram preservados. A organização não aparece nas áreas públicas."
+        : "Este perfil está disponível para seus membros, mas não aparece nas áreas públicas do Porto Ajuda.";
     document.getElementById("nome-ong").textContent = textoLimpo(osc.nome) || "Organização da sociedade civil";
     const descricaoCurta = document.getElementById("descricao-texto");
     descricaoCurta.textContent = textoLimpo(osc.descricaoCurta);
@@ -633,6 +641,52 @@ function renderizarPerfil(osc) {
     renderizarVoluntariado(osc);
     renderizarODS(osc);
     configurarCompartilhamento(osc);
+    configurarControleStatus(osc);
+}
+
+function configurarControleStatus(osc) {
+    const painel = document.getElementById("gestao-status-osc");
+    const botao = document.getElementById("botao-status-osc");
+    const feedback = document.getElementById("feedback-status-osc");
+    const podeAdministrar = osc.podeAlterarStatus || osc.podeAdministrarStatusPlataforma;
+    painel.hidden = !podeAdministrar;
+    botao.textContent = osc.arquivada
+        ? "Restaurar organização"
+        : osc.status === "ATIVA" ? "Desativar organização" : "Ativar organização";
+    if (botao.dataset.inicializado) return;
+
+    botao.addEventListener("click", async () => {
+        const novoStatus = oscAtual.arquivada || oscAtual.status === "INATIVA"
+            ? "ATIVA"
+            : "INATIVA";
+        const rota = oscAtual.podeAdministrarStatusPlataforma
+            ? `/admin/oscs/${oscAtual.id}/status`
+            : `/osc/${oscAtual.id}/status`;
+        botao.disabled = true;
+        try {
+            const resposta = await requisicaoAutenticada(rota, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    status: novoStatus,
+                    motivo: document.getElementById("motivo-status-osc").value.trim() || null
+                })
+            });
+            if (!resposta?.ok) throw new Error(await mensagemErroApi(resposta, "alterar status"));
+            oscAtual.status = novoStatus;
+            oscAtual.arquivada = false;
+            document.getElementById("motivo-status-osc").value = "";
+            renderizarPerfil(oscAtual);
+            notificar(feedback, novoStatus === "ATIVA"
+                ? "Organização reativada com sucesso."
+                : "Organização desativada com sucesso.");
+        } catch (erro) {
+            notificar(feedback, erro.message || "Não foi possível alterar o status da organização.", "erro");
+        } finally {
+            botao.disabled = false;
+        }
+    });
+    botao.dataset.inicializado = "true";
 }
 
 function rotuloCargo(cargo) {
@@ -651,7 +705,7 @@ function notificar(elemento, mensagem, tipoInformado = null) {
 }
 
 async function mensagemErroApi(resposta, acao = "concluir a operação") {
-    if (resposta?.status === 403) return "Você não possui permissão para realizar esta ação.";
+    if (resposta?.status === 403 && acao !== "alterar status") return "Você não possui permissão para realizar esta ação.";
     if (resposta?.status === 404 && acao === "adicionar") return "Não encontramos uma conta cadastrada com esse e-mail. Verifique o endereço ou solicite que a pessoa crie uma conta.";
     if (resposta?.status === 409 && acao === "adicionar") return "Essa pessoa já faz parte desta organização.";
     if (resposta?.status === 409 && acao === "excluir organização") return "Esta organização possui histórico de doações e não pode ser excluída.";
@@ -894,6 +948,12 @@ async function configurarGestao() {
     const formularioEdicao = document.getElementById("form-edicao-osc");
     const feedbackEdicao = document.getElementById("edicao-feedback");
     const feedbackMembros = document.getElementById("membros-feedback");
+    if (oscAtual.arquivada) {
+        abas.hidden = true;
+        painelMembros.hidden = true;
+        painelDados.hidden = true;
+        return;
+    }
     abas.hidden = false;
     painelMembros.hidden = false;
     painelDados.hidden = false;
@@ -905,7 +965,6 @@ async function configurarGestao() {
     document.querySelector("#form-edicao-osc button[type=submit]").hidden = !podeEditarDados;
     document.getElementById("zona-perigo").hidden = !admin;
     botaoExcluir.hidden = !admin;
-
     if (!formularioEdicao.dataset.inicializado) {
         preencherCamposEdicao(oscAtual);
         try {
@@ -1147,10 +1206,13 @@ async function carregarPerfil() {
     }
 
     try {
-        const resposta = await fetch(`${API_URL}/osc/${encodeURIComponent(id)}`, {
-            headers: { Accept: "application/json" },
-            cache: "no-store"
-        });
+        const privada = await fetchAutenticado(`/osc/${encodeURIComponent(id)}/privado`);
+        const resposta = [401, 403, 404].includes(privada.status)
+            ? await fetch(`${API_URL}/osc/${encodeURIComponent(id)}`, {
+                headers: { Accept: "application/json" },
+                cache: "no-store"
+            })
+            : privada;
         if (resposta.status === 404) {
             tituloErro.textContent = "Organização não encontrada";
             mensagemErro.textContent = "Este perfil não está disponível. Confira o link ou volte à lista de organizações.";

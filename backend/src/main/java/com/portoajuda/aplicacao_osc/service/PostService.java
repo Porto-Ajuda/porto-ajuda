@@ -12,6 +12,7 @@ import com.portoajuda.aplicacao_osc.entity.Vaga;
 import com.portoajuda.aplicacao_osc.enums.CausaSocial;
 import com.portoajuda.aplicacao_osc.enums.ModalidadeVoluntariado;
 import com.portoajuda.aplicacao_osc.enums.StatusVaga;
+import com.portoajuda.aplicacao_osc.enums.StatusOsc;
 import com.portoajuda.aplicacao_osc.enums.TipoPost;
 import com.portoajuda.aplicacao_osc.repository.*;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +21,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -38,8 +41,7 @@ public class PostService {
         Usuario usuario = usuarioRepository.findByEmail(usuarioAuth.getEmail())
                 .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado"));
 
-        boolean isAdmin = usuarioAuth.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        boolean isAdmin = isAdminSession(usuarioAuth);
 
         boolean isOsc = usuarioAuth.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_OSC"));
@@ -55,7 +57,7 @@ public class PostService {
             post.setDataCriacao(LocalDateTime.now());
             postRepository.save(post);
         } else if (isOsc) {
-            Osc osc = oscRepository.findByUsuarioId(usuario.getId())
+            Osc osc = oscRepository.findByUsuarioIdAndDataArquivamentoIsNull(usuario.getId())
                     .orElseThrow(() -> new IllegalArgumentException("Erro ao encontrar OSC"));
             if(request.post().tipo().equals("DOACAO")){
                 post.setOsc(osc);
@@ -109,8 +111,7 @@ public class PostService {
 
     @Transactional
     public void update(RequestUpdatePostDTO request, Usuario usuarioAuth){
-        boolean isAdmin = usuarioAuth.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        boolean isAdmin = isAdminSession(usuarioAuth);
 
         boolean isOsc = usuarioAuth.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_OSC"));
@@ -119,7 +120,7 @@ public class PostService {
                 .orElseThrow(() -> new IllegalArgumentException("Erro ao buscar post"));
 
         if(isOsc){
-            Osc osc = oscRepository.findByUsuarioId(usuarioAuth.getId())
+            Osc osc = oscRepository.findByUsuarioIdAndDataArquivamentoIsNull(usuarioAuth.getId())
                     .orElseThrow(() -> new IllegalArgumentException("OSC não encontrada"));
             if (post.getOsc() == null ||
                     !post.getOsc().getId().equals(osc.getId())) {
@@ -192,8 +193,7 @@ public class PostService {
 
     @Transactional
     public void delete(Integer id, Usuario usuarioAuth) {
-        boolean isAdmin = usuarioAuth.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        boolean isAdmin = isAdminSession(usuarioAuth);
 
         boolean isOsc = usuarioAuth.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_OSC"));
@@ -217,7 +217,7 @@ public class PostService {
             return;
         }
 
-        Osc osc = oscRepository.findByUsuarioId(usuarioAuth.getId())
+        Osc osc = oscRepository.findByUsuarioIdAndDataArquivamentoIsNull(usuarioAuth.getId())
                 .orElseThrow(() -> new IllegalArgumentException(
                         "OSC não encontrada"
                 ));
@@ -245,8 +245,7 @@ public class PostService {
     @Transactional(readOnly = true)
     public List<ResponsePostDTO> getMeusPosts(Usuario usuarioAuth) {
 
-        boolean isAdmin = usuarioAuth.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        boolean isAdmin = isAdminSession(usuarioAuth);
 
         boolean isOsc = usuarioAuth.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_OSC"));
@@ -259,7 +258,7 @@ public class PostService {
         }
 
         if (isOsc) {
-            Osc osc = oscRepository.findByUsuarioId(usuarioAuth.getId())
+            Osc osc = oscRepository.findByUsuarioIdAndDataArquivamentoIsNull(usuarioAuth.getId())
                     .orElseThrow(() ->
                             new IllegalArgumentException("OSC não encontrada"));
 
@@ -277,7 +276,7 @@ public class PostService {
     //fazer DTO
     @Transactional(readOnly = true)
     public List<ResponsePostDTO> getPostsPorCausaSocial(CausaSocial causaSocial) {
-        return postRepository.findByOscCausas(causaSocial)
+        return postRepository.findPublicosPorCausaSocial(causaSocial, StatusOsc.ATIVA)
                 .stream()
                 .map(ResponsePostDTO::from)
                 .toList();
@@ -285,7 +284,17 @@ public class PostService {
 
     @Transactional(readOnly = true)
     public Page<ResponsePostDTO> getAll(Pageable pageable) {
-        return postRepository.findAll(pageable)
+        return postRepository.findPublicos(StatusOsc.ATIVA, pageable)
                 .map(ResponsePostDTO::from);
+    }
+
+    private boolean isAdminSession(Usuario usuario) {
+        boolean hasAdminRole = usuario.getAuthorities().stream()
+                .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        boolean hasAdminSession = authentication != null
+                && authentication.getAuthorities().stream()
+                        .anyMatch(authority -> "ADMIN_SESSION".equals(authority.getAuthority()));
+        return hasAdminRole && hasAdminSession;
     }
 }

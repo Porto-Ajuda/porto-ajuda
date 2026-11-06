@@ -1,6 +1,8 @@
 package com.portoajuda.aplicacao_osc.entity;
 
 import com.portoajuda.aplicacao_osc.enums.CausaSocial;
+import com.portoajuda.aplicacao_osc.enums.OrigemDesativacao;
+import com.portoajuda.aplicacao_osc.enums.StatusOsc;
 import com.portoajuda.aplicacao_osc.utils.Cnpj;
 import com.portoajuda.aplicacao_osc.utils.Email;
 import jakarta.persistence.*;
@@ -44,7 +46,7 @@ public class Osc {
         private Set<Integer> ods = new HashSet<>();
 
         @ManyToOne(fetch = FetchType.LAZY)
-        @JoinColumn(name = "id_usuario_criador", nullable = false)
+        @JoinColumn(name = "id_usuario_criador")
         private Usuario usuario;
 
         @OneToMany(mappedBy = "osc", cascade = CascadeType.PERSIST, orphanRemoval = true)
@@ -65,8 +67,39 @@ public class Osc {
         @Column(name = "logo", length = 1000)
         private String logo;
 
-        @Column(name = "ativo", nullable = false)
-        private boolean ativo;
+        @Enumerated(EnumType.STRING)
+        @Column(name = "status", nullable = false, length = 20)
+        private StatusOsc status = StatusOsc.INATIVA;
+
+        @Enumerated(EnumType.STRING)
+        @Column(name = "origem_ultima_desativacao", length = 30)
+        private OrigemDesativacao origemUltimaDesativacao;
+
+        @Column(name = "data_ultima_desativacao")
+        private LocalDateTime dataUltimaDesativacao;
+
+        @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumn(name = "id_usuario_desativou", foreignKey = @ForeignKey(name = "fk_oscs_usuario_desativou"))
+        private Usuario desativadoPor;
+
+        @Column(name = "id_usuario_desativou_snapshot")
+        private Integer desativadoPorIdSnapshot;
+
+        @Column(name = "motivo_ultima_desativacao", columnDefinition = "TEXT")
+        private String motivoUltimaDesativacao;
+
+        @Column(name = "data_arquivamento")
+        private LocalDateTime dataArquivamento;
+
+        @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumn(name = "id_usuario_arquivou", foreignKey = @ForeignKey(name = "fk_oscs_usuario_arquivou"))
+        private Usuario arquivadaPor;
+
+        @Column(name = "id_usuario_arquivou_snapshot")
+        private Integer arquivadaPorIdSnapshot;
+
+        @Column(name = "motivo_arquivamento", columnDefinition = "TEXT")
+        private String motivoArquivamento;
 
         @Column(name = "descricao", columnDefinition = "TEXT", nullable = false)
         private String descricao;
@@ -168,6 +201,10 @@ public class Osc {
         @UpdateTimestamp
         @Column(name = "data_atualizacao", nullable = false)
         private LocalDateTime dataAtualizacao;
+
+        public boolean isArquivada() {
+                return dataArquivamento != null;
+        }
 
         /** Compatibilidade para respostas e integrações que ainda usam a lista plana de causas. */
         public CausaSocial getCausaPrincipal() {

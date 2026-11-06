@@ -2,6 +2,7 @@
 package com.portoajuda.aplicacao_osc.service;
 
 import tools.jackson.databind.JsonNode;
+import com.portoajuda.aplicacao_osc.utils.Cnpj;
 import com.portoajuda.aplicacao_osc.dto.response.ConsultaCnpjDTO;
 import org.springframework.stereotype.Service;
 
@@ -18,7 +19,8 @@ public class ValidacaoCnpjOscService {
     }
 
     public ConsultaCnpjDTO validar(String cnpj) {
-        JsonNode dados = cnpjaService.consultarCnpj(cnpj);
+        String cnpjCanonico = new Cnpj(cnpj).getCnpj();
+        JsonNode dados = cnpjaService.consultarCnpj(cnpjCanonico);
 
         String cnpjConsultado = texto(dados, "taxId");
         String razaoSocial = texto(

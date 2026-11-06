@@ -14,6 +14,8 @@ import com.portoajuda.aplicacao_osc.dto.response.OscEdicaoDTO;
 import com.portoajuda.aplicacao_osc.entity.*;
 import com.portoajuda.aplicacao_osc.enums.CargoOsc;
 import com.portoajuda.aplicacao_osc.enums.CausaSocial;
+import com.portoajuda.aplicacao_osc.enums.OrigemDesativacao;
+import com.portoajuda.aplicacao_osc.enums.StatusOsc;
 import com.portoajuda.aplicacao_osc.repository.OscMembrosRepository;
 import com.portoajuda.aplicacao_osc.repository.OscRepository;
 import com.portoajuda.aplicacao_osc.repository.RoleRepository;
@@ -29,6 +31,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -63,7 +67,7 @@ public class OscService {
     // PERMISSÕES
     // =====================================================
 
-    private CargoOsc obterCargoUsuario(Osc osc, Usuario usuario) {
+    public CargoOsc obterCargoUsuario(Osc osc, Usuario usuario) {
 
         if (usuario == null || usuario.getId() == null) {
             throw new ResponseStatusException(
@@ -72,16 +76,19 @@ public class OscService {
         }
 
         Integer criadorId = osc.getUsuario() == null ? null : osc.getUsuario().getId();
-        if (criadorId == null) {
-            log.warn("A OSC {} não possui um criador original válido.", osc.getId());
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN,
-                    "O vínculo do criador desta organização está inconsistente.");
-        }
-        boolean donoOriginal = criadorId.equals(usuario.getId());
         OscMembros vinculo = membrosRepository
                 .findByOsc_IdAndUsuario_Id(osc.getId(), usuario.getId())
                 .orElse(null);
+        if (criadorId == null) {
+            if (vinculo == null || vinculo.getCargoOsc() == CargoOsc.CRIADOR) {
+                log.warn("A OSC {} não possui criador original e o vínculo do usuário não é válido.", osc.getId());
+                throw new ResponseStatusException(
+                        HttpStatus.FORBIDDEN,
+                        "O vínculo desta organização está inconsistente.");
+            }
+            return vinculo.getCargoOsc();
+        }
+        boolean donoOriginal = criadorId.equals(usuario.getId());
         if (vinculo == null) {
             if (donoOriginal) {
                 log.warn("Criador sem vínculo de membro na OSC {} para usuário {}.",
@@ -116,6 +123,12 @@ public class OscService {
             Osc osc,
             Usuario usuario,
             CargoOsc... cargosPermitidos) {
+
+        if (osc.isArquivada()) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Organização não encontrada.");
+        }
 
         CargoOsc cargo = obterCargoUsuario(osc, usuario);
 
@@ -218,11 +231,15 @@ public class OscService {
                     erro);
         }
 
-        String solicitado = cnpj.replaceAll("\\D", "");
-
-        String consultado = consulta == null || consulta.cnpj() == null
-                ? ""
-                : consulta.cnpj().replaceAll("\\D", "");
+        String solicitado = new Cnpj(cnpj).getCnpj();
+        String consultado;
+        try {
+            consultado = consulta == null || consulta.cnpj() == null
+                    ? ""
+                    : new Cnpj(consulta.cnpj()).getCnpj();
+        } catch (IllegalArgumentException erroCnpjExterno) {
+            consultado = "";
+        }
 
         if (!solicitado.equals(consultado)) {
             throw new ResponseStatusException(
@@ -436,13 +453,14 @@ public class OscService {
                         HttpStatus.NOT_FOUND,
                         "Organização não encontrada."));
 
-        exigirCargo(
-                osc,
-                usuario,
-                CargoOsc.CRIADOR,
-                CargoOsc.ADMINISTRADOR);
+        CargoOsc cargo = obterCargoUsuario(osc, usuario);
+        if (cargo != CargoOsc.CRIADOR && cargo != CargoOsc.ADMINISTRADOR) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Você não possui permissão para arquivar esta organização.");
+        }
 
-        limpezaService.excluirOscGerenciada(osc);
+        limpezaService.excluirOscGerenciada(osc, usuario, cargo.name());
     }
 
     // =====================================================
@@ -537,8 +555,8 @@ public class OscService {
                         HttpStatus.NOT_FOUND,
                         "Membro não encontrado nesta organização."));
 
-        if (osc.getUsuario().getId()
-                .equals(membroOsc.getUsuario().getId())) {
+        Integer criadorId = osc.getUsuario() == null ? null : osc.getUsuario().getId();
+        if (criadorId != null && criadorId.equals(membroOsc.getUsuario().getId())) {
 
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN,
@@ -622,7 +640,8 @@ public class OscService {
                         HttpStatus.FORBIDDEN,
                         "O vínculo do criador desta organização está inconsistente."));
 
-        if (!criadorAtual.getId().equals(osc.getUsuario().getId())
+        if (osc.getUsuario() == null
+                || !criadorAtual.getId().equals(osc.getUsuario().getId())
                 || vinculoAtual.getCargoOsc() != CargoOsc.CRIADOR) {
             log.warn("Tentativa de transferir uma OSC com vínculo de criador inconsistente: {}.", osc.getId());
             throw new ResponseStatusException(
@@ -651,12 +670,50 @@ public class OscService {
                         HttpStatus.NOT_FOUND,
                         "Organização não encontrada."));
 
+        if (osc.isArquivada() || osc.getStatus() != StatusOsc.ATIVA) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Organização não encontrada.");
+        }
+
         return OscPerfilDTO.de(osc);
     }
 
     @Transactional(readOnly = true)
+    public OscPerfilDTO buscarPerfilPrivado(Integer id, Usuario solicitante) {
+        Osc osc = oscRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Organização não encontrada."));
+
+        if (solicitante == null || solicitante.getId() == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Autenticação necessária.");
+        }
+
+        boolean administradorPlataforma = solicitante.getAuthorities().stream()
+                .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()))
+                && possuiSessaoAdministrativa();
+        if (administradorPlataforma) {
+            return OscPerfilDTO.dePrivado(osc, false, true);
+        }
+
+        CargoOsc cargo = obterCargoUsuario(osc, solicitante);
+        boolean podeAlterarStatus = cargo == CargoOsc.CRIADOR || cargo == CargoOsc.ADMINISTRADOR;
+        if (osc.isArquivada()) {
+            OrigemDesativacao origem = osc.getOrigemUltimaDesativacao();
+            podeAlterarStatus = podeAlterarStatus
+                    && (origem == null || origem == OrigemDesativacao.ONG);
+        }
+        return OscPerfilDTO.dePrivado(osc, podeAlterarStatus, false);
+    }
+
+    private boolean possuiSessaoAdministrativa() {
+        Authentication autenticacao = SecurityContextHolder.getContext().getAuthentication();
+        return autenticacao != null && autenticacao.getAuthorities().stream()
+                .anyMatch(authority -> "ADMIN_SESSION".equals(authority.getAuthority()));
+    }
+
+    @Transactional(readOnly = true)
     public Page<OscListagemDTO> viewAll(Pageable pageable) {
-        return oscRepository.findAll(pageable)
+        return oscRepository.findAllByStatusAndDataArquivamentoIsNull(StatusOsc.ATIVA, pageable)
                 .map(OscListagemDTO::de);
     }
 
@@ -675,7 +732,11 @@ public class OscService {
         for (OscMembros vinculo : vinculos) {
             Osc osc = vinculo.getOsc();
             if (osc.getUsuario() == null || osc.getUsuario().getId() == null) {
-                log.warn("A OSC {} não possui criador original válido.", osc.getId());
+                if (vinculo.getCargoOsc() == CargoOsc.CRIADOR) {
+                    log.warn("A OSC {} não possui criador, mas ainda tem vínculo CRIADOR.", osc.getId());
+                    continue;
+                }
+                oscsValidas.add(osc.getId());
                 continue;
             }
             boolean criadorOriginal = osc.getUsuario().getId().equals(usuario.getId());
@@ -707,7 +768,9 @@ public class OscService {
                         vinculo.getOsc().getId(),
                         vinculo.getOsc().getNome(),
                         vinculo.getOsc().getLogo(),
-                        vinculo.getCargoOsc()))
+                        vinculo.getCargoOsc(),
+                        vinculo.getOsc().getStatus(),
+                        vinculo.getOsc().isArquivada()))
                 .toList();
     }
 

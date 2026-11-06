@@ -26,7 +26,7 @@ import java.util.List;
 public class PostController {
     private final PostService postService;
 
-    @PreAuthorize("hasAnyRole('OSC', 'ADMIN')")
+    @PreAuthorize("hasRole('OSC')")
     @PostMapping(
             value = "/create",
             consumes = MediaType.APPLICATION_JSON_VALUE,
@@ -39,7 +39,7 @@ public class PostController {
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-    @PreAuthorize("hasAnyRole('OSC', 'ADMIN')")
+    @PreAuthorize("hasRole('OSC')")
     @PutMapping(
             value = "/put",
             consumes = MediaType.APPLICATION_JSON_VALUE,
@@ -52,7 +52,7 @@ public class PostController {
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-    @PreAuthorize("hasAnyRole('OSC', 'ADMIN')")
+    @PreAuthorize("hasRole('OSC')")
     @DeleteMapping(
             value = "/delete",
             consumes = MediaType.APPLICATION_JSON_VALUE,

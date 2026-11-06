@@ -118,7 +118,7 @@ async function buscarOngs() {
     } while (!ultimaPagina);
 
     return organizacoes
-        .filter(ong => ong && ong.ativo === true)
+        .filter(ong => ong && ong.status === "ATIVA")
         .map(converterOngDaAPI);
 }
 

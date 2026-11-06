@@ -9,6 +9,7 @@ import com.portoajuda.aplicacao_osc.entity.Usuario;
 import com.portoajuda.aplicacao_osc.entity.Osc;
 import com.portoajuda.aplicacao_osc.entity.OscMembros;
 import com.portoajuda.aplicacao_osc.enums.CargoOsc;
+import com.portoajuda.aplicacao_osc.enums.StatusOsc;
 import com.portoajuda.aplicacao_osc.enums.CausaSocial;
 import com.portoajuda.aplicacao_osc.repository.OscMembrosRepository;
 import com.portoajuda.aplicacao_osc.repository.OscRepository;
@@ -110,6 +111,33 @@ class OscServiceCreateTest {
         }
 
         @Test
+        void comparaRespostaExternaComCnpjAlfanumericoCanonico() {
+                String cnpjAlfanumerico = "12ABC34501DE35";
+                RequestOscDTO dados = dados(cnpjAlfanumerico);
+                Coordenadas coordenadas = new Coordenadas(-23.55, -46.63);
+
+                when(oscRepository.existsByCnpj(any())).thenReturn(false);
+                when(validacaoCnpjOscService.validar(cnpjAlfanumerico)).thenReturn(
+                                new ConsultaCnpjDTO(
+                                                "12.ABC.345/01DE-35", "Instituto Exemplo", null,
+                                                "2010-01-01", "Ativa", "Associação privada", true, null));
+                when(geocodingService.buscarCoordenadas(
+                                "Brasil", "São Paulo", "01000-000",
+                                "São Paulo", "Rua Exemplo", "10")).thenReturn(coordenadas);
+                when(persistenciaService.salvar(dados, 25, coordenadas, null))
+                                .thenReturn(new ResponseOscDTO(
+                                                82, cnpjAlfanumerico, "Instituto Exemplo",
+                                                CausaSocial.EDUCACAO, Set.of(),
+                                                Set.of(CausaSocial.EDUCACAO), Set.of(4)));
+
+                ResponseOscDTO resultado = service.create(dados, usuario, null);
+
+                assertEquals(82, resultado.id());
+                verify(validacaoCnpjOscService).validar(cnpjAlfanumerico);
+                verify(persistenciaService).salvar(dados, 25, coordenadas, null);
+        }
+
+        @Test
         void cnpjInelegivelNaoGeocodificaNemPersiste() {
                 RequestOscDTO dados = dados();
 
@@ -188,7 +216,9 @@ class OscServiceCreateTest {
                                                 81,
                                                 "Instituto Exemplo",
                                                 null,
-                                                CargoOsc.CRIADOR));
+                                                CargoOsc.CRIADOR,
+                                                StatusOsc.INATIVA,
+                                                false));
 
                 Osc osc = new Osc();
                 ReflectionTestUtils.setField(osc, "id", 81);
@@ -208,9 +238,37 @@ class OscServiceCreateTest {
                 verify(membrosRepository).findAllByUsuario_IdOrderByOsc_NomeAsc(25);
         }
 
+        @Test
+        void listaOscDoMembroQuandoContaCriadoraFoiExcluida() {
+                Osc osc = new Osc();
+                ReflectionTestUtils.setField(osc, "id", 82);
+                osc.setNome("Instituto sem titular");
+                osc.setUsuario(null);
+
+                OscMembros vinculo = new OscMembros();
+                vinculo.setOsc(osc);
+                vinculo.setUsuario(usuario);
+                vinculo.setCargoOsc(CargoOsc.ADMINISTRADOR);
+
+                when(membrosRepository.findAllByUsuario_IdOrderByOsc_NomeAsc(25))
+                                .thenReturn(List.of(vinculo));
+                when(oscRepository.findAllByUsuario_IdOrderByNomeAsc(25))
+                                .thenReturn(List.of());
+
+                List<OscUsuarioDTO> resultado = service.listarDoUsuario(usuario);
+
+                assertEquals(1, resultado.size());
+                assertEquals(82, resultado.get(0).id());
+                assertEquals(CargoOsc.ADMINISTRADOR, resultado.get(0).cargo());
+        }
+
         private RequestOscDTO dados() {
+                return dados(CNPJ);
+        }
+
+        private RequestOscDTO dados(String cnpj) {
                 return new RequestOscDTO(
-                                CNPJ,
+                                cnpj,
                                 CausaSocial.EDUCACAO,
                                 Set.of(),
                                 null,

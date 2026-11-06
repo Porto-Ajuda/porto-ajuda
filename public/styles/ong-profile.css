@@ -2634,6 +2634,22 @@ body {
 .perfil-publico .acoes-hero .btn-destaque { border-color: var(--perfil-dourado); background: var(--perfil-dourado); color: var(--perfil-noite); }
 .perfil-publico .acoes-hero :is(a, button):hover { border-color: var(--perfil-dourado-claro); background: rgba(249, 200, 107, .12); }
 .perfil-publico .acoes-hero .btn-destaque:hover { background: var(--perfil-dourado-claro); color: var(--perfil-noite); }
+.perfil-publico .estado-status-osc,
+.perfil-publico .gestao-status-osc {
+  margin: 18px auto;
+  padding: 18px 22px;
+  border: 1px solid rgba(239, 191, 87, .55);
+  border-radius: 12px;
+  color: #fff5dc;
+  background: rgba(75, 58, 25, .7);
+}
+.perfil-publico .estado-status-osc p,
+.perfil-publico .gestao-status-osc p { margin: 6px 0 0; }
+.perfil-publico .gestao-status-osc { display: grid; gap: 10px; background: rgba(37, 45, 76, .7); }
+.perfil-publico .gestao-status-osc h2 { margin: 0; }
+.perfil-publico .gestao-status-osc textarea { width: 100%; min-height: 68px; padding: 10px; border: 1px solid var(--perfil-linha); border-radius: 8px; color: #fff; background: rgba(0, 0, 0, .2); font: inherit; }
+.perfil-publico .gestao-status-osc button { justify-self: start; }
+.status-ong-inativa { color: #f5d58d; }
 .perfil-publico :is(a, button):focus-visible { outline: 3px solid var(--perfil-dourado-claro); outline-offset: 4px; }
 
 /* O corpo mantém um fundo escuro contínuo; divisores e texto criam hierarquia sem cartões. */

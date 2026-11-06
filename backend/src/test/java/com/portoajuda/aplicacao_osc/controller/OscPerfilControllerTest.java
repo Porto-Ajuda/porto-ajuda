@@ -6,7 +6,9 @@ import com.portoajuda.aplicacao_osc.entity.Osc;
 import com.portoajuda.aplicacao_osc.entity.Usuario;
 import com.portoajuda.aplicacao_osc.enums.CargoOsc;
 import com.portoajuda.aplicacao_osc.enums.CausaSocial;
+import com.portoajuda.aplicacao_osc.enums.StatusOsc;
 import com.portoajuda.aplicacao_osc.service.OscService;
+import com.portoajuda.aplicacao_osc.service.OscStatusService;
 import com.portoajuda.aplicacao_osc.service.ValidacaoCnpjOscService;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
@@ -32,6 +34,7 @@ class OscPerfilControllerTest {
 
                 OscController controller = new OscController(
                                 service,
+                                mock(OscStatusService.class),
                                 mock(ValidacaoCnpjOscService.class));
 
                 Osc osc = new Osc();
@@ -70,6 +73,7 @@ class OscPerfilControllerTest {
 
                 OscController controller = new OscController(
                                 service,
+                                mock(OscStatusService.class),
                                 mock(ValidacaoCnpjOscService.class));
 
                 Usuario autenticado = new Usuario();
@@ -80,7 +84,9 @@ class OscPerfilControllerTest {
                                                 81,
                                                 "Instituto Exemplo",
                                                 null,
-                                                CargoOsc.CRIADOR));
+                                                CargoOsc.CRIADOR,
+                                                StatusOsc.INATIVA,
+                                                false));
 
                 when(service.listarDoUsuario(autenticado)).thenReturn(oscs);
 

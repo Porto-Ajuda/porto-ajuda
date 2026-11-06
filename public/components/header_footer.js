@@ -140,7 +140,23 @@ script1.onload = () => {
 
 document.head.appendChild(script1);
 
+/* =========================================================
+   Login admin
+   ========================================================= */
 
+const scriptAcessoAdmin = document.createElement('script');
+scriptAcessoAdmin.type = 'module';
+scriptAcessoAdmin.src = '/components/acesso-admin.js';
+scriptAcessoAdmin.defer = true;
+
+document.head.appendChild(scriptAcessoAdmin);
+
+const cssAcessoAdmin = document.createElement('link');
+
+cssAcessoAdmin.rel = 'stylesheet';
+cssAcessoAdmin.href = '/styles/acesso-admin.css';
+
+document.head.appendChild(cssAcessoAdmin);
 /* =========================================================
    MODAL - CONTAINER
    ========================================================= */

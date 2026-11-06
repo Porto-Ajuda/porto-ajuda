@@ -37,6 +37,11 @@ public class CorsConfig {
                                 "X-XSRF-TOKEN",
                                 "X-CSRF-TOKEN"));
 
+                config.setExposedHeaders(List.of(
+                                "X-PA-ADMIN-SERVER-TIME",
+                                "X-PA-ADMIN-ABSOLUTE-EXPIRES-AT",
+                                "X-PA-ADMIN-IDLE-EXPIRES-AT"));
+
                 config.setAllowCredentials(true);
                 config.setMaxAge(3600L);
 

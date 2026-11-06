@@ -10,6 +10,7 @@ import com.portoajuda.aplicacao_osc.entity.Role;
 import com.portoajuda.aplicacao_osc.entity.Usuario;
 import com.portoajuda.aplicacao_osc.enums.CausaSocial;
 import com.portoajuda.aplicacao_osc.enums.CargoOsc;
+import com.portoajuda.aplicacao_osc.utils.Cnpj;
 import com.portoajuda.aplicacao_osc.repository.OscRepository;
 import com.portoajuda.aplicacao_osc.repository.OscMembrosRepository;
 import com.portoajuda.aplicacao_osc.repository.RoleRepository;
@@ -233,6 +234,24 @@ class OscPersistenciaServiceTest {
     }
 
     @Test
+    void cnpjComPontuacaoConflitaComORegistroNormalizadoExistente() {
+        when(oscRepository.existsByCnpj(any())).thenReturn(true);
+        RequestOscDTO dadosFormatados = dados(
+                Set.of(), CausaSocial.EDUCACAO, Set.of(CausaSocial.SAUDE), null,
+                "11.222.333/0001-81");
+
+        ResponseStatusException erro = assertThrows(ResponseStatusException.class,
+                () -> service.salvar(dadosFormatados, 7,
+                        new Coordenadas(-23.5, -46.6), null));
+
+        assertEquals(409, erro.getStatusCode().value());
+        ArgumentCaptor<Cnpj> cnpjConsultado = ArgumentCaptor.forClass(Cnpj.class);
+        verify(oscRepository).existsByCnpj(cnpjConsultado.capture());
+        assertEquals("11222333000181", cnpjConsultado.getValue().getCnpj());
+        verify(oscRepository, never()).save(any());
+    }
+
+    @Test
     void rejeitaCoordenadasAusentesOuInvalidas() {
         ResponseStatusException erro = assertThrows(
                 ResponseStatusException.class,
@@ -252,8 +271,17 @@ class OscPersistenciaServiceTest {
             CausaSocial causaPrincipal,
             Set<CausaSocial> causasSecundarias,
             Set<CausaSocial> causasLegadas) {
+        return dados(ods, causaPrincipal, causasSecundarias, causasLegadas, "11222333000181");
+    }
+
+    private RequestOscDTO dados(
+            Set<Integer> ods,
+            CausaSocial causaPrincipal,
+            Set<CausaSocial> causasSecundarias,
+            Set<CausaSocial> causasLegadas,
+            String cnpj) {
         return new RequestOscDTO(
-                "11222333000181",
+                cnpj,
                 causaPrincipal,
                 causasSecundarias,
                 causasLegadas,

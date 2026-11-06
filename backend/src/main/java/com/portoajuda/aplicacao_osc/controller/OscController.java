@@ -1,6 +1,7 @@
 package com.portoajuda.aplicacao_osc.controller;
 
 import com.portoajuda.aplicacao_osc.dto.request.RequestNewMembroDTO;
+import com.portoajuda.aplicacao_osc.dto.request.RequestAtualizarStatusOscDTO;
 import com.portoajuda.aplicacao_osc.dto.request.RequestCargoMembroDTO;
 import com.portoajuda.aplicacao_osc.dto.request.RequestOscDTO;
 import com.portoajuda.aplicacao_osc.dto.request.UpdateOscDTO;
@@ -16,6 +17,7 @@ import com.portoajuda.aplicacao_osc.dto.response.OscEdicaoDTO;
 import com.portoajuda.aplicacao_osc.entity.Usuario;
 
 import com.portoajuda.aplicacao_osc.service.OscService;
+import com.portoajuda.aplicacao_osc.service.OscStatusService;
 import com.portoajuda.aplicacao_osc.service.ValidacaoCnpjOscService;
 
 import com.portoajuda.aplicacao_osc.utils.Email;
@@ -45,6 +47,7 @@ import java.util.List;
 public class OscController {
 
     private final OscService oscService;
+    private final OscStatusService oscStatusService;
     private final ValidacaoCnpjOscService validacaoCnpjOscService;
 
     // =====================================================
@@ -100,6 +103,16 @@ public class OscController {
         return ResponseEntity
                 .status(HttpStatus.NO_CONTENT)
                 .build();
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @PatchMapping(value = "/{id}/status", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Void> atualizarStatus(
+            @PathVariable Integer id,
+            @Valid @RequestBody RequestAtualizarStatusOscDTO request,
+            @AuthenticationPrincipal Usuario usuario) {
+        oscStatusService.atualizarPorOrganizacao(id, request, usuario);
+        return ResponseEntity.noContent().build();
     }
 
     // =====================================================
@@ -216,6 +229,14 @@ public class OscController {
 
         return ResponseEntity.ok(
                 oscService.buscarPerfilPublico(id));
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping(value = "/{id}/privado", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<OscPerfilDTO> buscarPerfilPrivado(
+            @PathVariable Integer id,
+            @AuthenticationPrincipal Usuario usuario) {
+        return ResponseEntity.ok(oscService.buscarPerfilPrivado(id, usuario));
     }
 
     @PreAuthorize("isAuthenticated()")

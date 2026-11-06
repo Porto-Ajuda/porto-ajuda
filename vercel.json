@@ -47,6 +47,10 @@
       "destination": "/pages/perfil"
     },
     {
+      "source": "/admin",
+      "destination": "/admin/index"
+    },
+    {
       "source": "/oscs",
       "destination": "/pages/oscs-page"
     },

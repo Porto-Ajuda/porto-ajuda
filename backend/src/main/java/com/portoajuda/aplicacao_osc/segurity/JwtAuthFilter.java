@@ -53,6 +53,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         return ("GET".equalsIgnoreCase(metodo)
                 && ("/usuario/csrf".equals(caminho)
                         || "/usuario/confirmar-email".equals(caminho)))
+                || caminho.startsWith("/admin/")
                 || ("POST".equalsIgnoreCase(metodo)
                         && ROTAS_PUBLICAS_DE_AUTENTICACAO.contains(caminho));
     }

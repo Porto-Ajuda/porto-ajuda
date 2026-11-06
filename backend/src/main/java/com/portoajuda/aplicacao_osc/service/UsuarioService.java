@@ -9,6 +9,8 @@ import com.portoajuda.aplicacao_osc.entity.SessaoUsuario;
 import com.portoajuda.aplicacao_osc.entity.Usuario;
 import com.portoajuda.aplicacao_osc.enums.Genero;
 import com.portoajuda.aplicacao_osc.repository.RoleRepository;
+import com.portoajuda.aplicacao_osc.repository.AdminAuthChallengeRepository;
+import com.portoajuda.aplicacao_osc.repository.PhoneVerificationChallengeRepository;
 import com.portoajuda.aplicacao_osc.repository.UsuarioRepository;
 import com.portoajuda.aplicacao_osc.segurity.JwtService;
 import com.portoajuda.aplicacao_osc.utils.Cpf;
@@ -27,6 +29,7 @@ import java.time.LocalDateTime;
 import java.time.Period;
 import java.time.ZoneId;
 import java.util.Set;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -41,6 +44,10 @@ public class UsuarioService {
         private final EmailService emailService;
         private final SessaoUsuarioService sessaoUsuarioService;
         private final SupabaseStorageService supabaseStorageService;
+        private final AdminAuthChallengeRepository adminAuthChallengeRepository;
+        private final AdminAuthDeliveryQueueService adminAuthDeliveryQueueService;
+        private final AdminPrivilegedSessionService adminPrivilegedSessionService;
+        private final PhoneVerificationChallengeRepository phoneVerificationChallengeRepository;
 
         @Transactional
         public void signup(RequestUsuarioDTO usuarioDTO) {
@@ -248,8 +255,27 @@ public class UsuarioService {
                 Usuario usuarioAlterado = usuarioRepository.findById(usuario.getId())
                                 .orElseThrow(() -> new IllegalArgumentException("Usuário não existe"));
 
-                usuarioAlterado.setEmail(new Email(usuarioDTO.email()));
-                usuarioAlterado.setTelefone(usuarioDTO.telefone());
+                Email novoEmail = new Email(usuarioDTO.email());
+                String novoTelefone = usuarioDTO.telefone();
+                boolean emailAlterado = !java.util.Objects.equals(
+                                usuarioAlterado.getEmail() == null ? null : usuarioAlterado.getEmail().valor(),
+                                novoEmail.valor());
+                boolean telefoneAlterado = !java.util.Objects.equals(
+                                usuarioAlterado.getTelefone(), novoTelefone);
+
+                if (emailAlterado) {
+                        usuarioAlterado.setEmail(novoEmail);
+                        usuarioAlterado.setEmailVerificado(false);
+                }
+                if (telefoneAlterado) {
+                        usuarioAlterado.setTelefone(novoTelefone);
+                        usuarioAlterado.setTelefoneVerificado(false);
+                }
+                if (emailAlterado || telefoneAlterado) {
+                        invalidarDesafiosVerificacao(usuarioAlterado.getId());
+                        adminPrivilegedSessionService.revogarTodasDoUsuario(
+                                        usuarioAlterado.getId(), "CONTACT_CHANGED");
+                }
 
                 usuarioRepository.save(usuarioAlterado);
         }
@@ -265,6 +291,9 @@ public class UsuarioService {
                 }
 
                 usuario.setSenha(passwordEncoder.encode(senha));
+                invalidarDesafiosVerificacao(usuario.getId());
+                adminPrivilegedSessionService.revogarTodasDoUsuario(
+                                usuario.getId(), "PASSWORD_CHANGED");
         }
 
         public ResponseUsuarioDTO view(Usuario usuario) {
@@ -342,10 +371,17 @@ public class UsuarioService {
                                                 ? null
                                                 : nomeSocial);
 
-                usuario.setTelefone(
-                                telefone == null || telefone.isBlank()
-                                                ? null
-                                                : telefone);
+                String telefoneNormalizado = telefone == null || telefone.isBlank()
+                                ? null
+                                : telefone;
+                boolean telefoneAlterado = !java.util.Objects.equals(
+                                usuario.getTelefone(), telefoneNormalizado);
+                if (telefoneAlterado) {
+                        usuario.setTelefone(telefoneNormalizado);
+                        usuario.setTelefoneVerificado(false);
+                        invalidarDesafiosVerificacao(usuarioId);
+                        adminPrivilegedSessionService.revogarTodasDoUsuario(usuarioId, "CONTACT_CHANGED");
+                }
 
                 if (cep != null && !cep.isBlank() && !cep.matches("\\d{8}")) {
                         throw new IllegalArgumentException("Informe um CEP válido.");
@@ -357,5 +393,18 @@ public class UsuarioService {
                                                 : cep);
 
                 return usuarioRepository.save(usuario);
+        }
+
+        private void invalidarDesafiosVerificacao(Integer usuarioId) {
+                java.time.Instant agora = java.time.Instant.now();
+                adminAuthChallengeRepository.invalidatePendingForUser(
+                                usuarioId,
+                                agora,
+                                com.portoajuda.aplicacao_osc.entity.AdminAuthChallenge.State.INVALIDATED,
+                                List.of(
+                                                com.portoajuda.aplicacao_osc.entity.AdminAuthChallenge.State.ISSUING,
+                                                com.portoajuda.aplicacao_osc.entity.AdminAuthChallenge.State.PENDING));
+                adminAuthDeliveryQueueService.clearInvalidatedForUser(usuarioId);
+                phoneVerificationChallengeRepository.invalidatePendingForUser(usuarioId, agora);
         }
 }

@@ -258,7 +258,10 @@ public class UsuarioController {
                                         usuario.getFotoPerfilUrl(),
                                         usuario.getGenero() == null
                                                         ? null
-                                                        : usuario.getGenero().name());
+                                                        : usuario.getGenero().name(),
+                                        usuario.getAuthorities().stream().anyMatch(authority ->
+                                                        "ROLE_ADMIN".equals(authority.getAuthority())),
+                                        usuario.isTelefoneVerificado());
 
                         return ResponseEntity.ok()
                                         .cacheControl(org.springframework.http.CacheControl.noStore())
@@ -305,7 +308,10 @@ public class UsuarioController {
                                         usuario.getFotoPerfilUrl(),
                                         usuario.getGenero() == null
                                                         ? null
-                                                        : usuario.getGenero().name());
+                                                        : usuario.getGenero().name(),
+                                        usuario.getAuthorities().stream().anyMatch(authority ->
+                                                        "ROLE_ADMIN".equals(authority.getAuthority())),
+                                        usuario.isTelefoneVerificado());
 
                         return ResponseEntity.ok()
                                         .cacheControl(

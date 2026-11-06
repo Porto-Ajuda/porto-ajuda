@@ -52,6 +52,20 @@
 
       <div class="divider" aria-hidden="true"></div>
 
+      <section id="estado-status-osc" class="estado-status-osc" role="status" hidden>
+        <strong>Organização inativa</strong>
+        <p>Este perfil está disponível para seus membros, mas não aparece nas áreas públicas do Porto Ajuda.</p>
+      </section>
+
+      <section id="gestao-status-osc" class="gestao-status-osc" aria-labelledby="titulo-gestao-status" hidden>
+        <h2 id="titulo-gestao-status">Status da organização</h2>
+        <p>Alterar o status controla a visibilidade pública do perfil e das informações associadas.</p>
+        <label for="motivo-status-osc">Motivo (opcional)</label>
+        <textarea id="motivo-status-osc" rows="2" maxlength="2000"></textarea>
+        <button id="botao-status-osc" class="btn" type="button"></button>
+        <p id="feedback-status-osc" role="status" aria-live="polite"></p>
+      </section>
+
       <nav id="abas-osc" class="abas-osc" aria-label="Seções da organização" hidden>
         <button type="button" id="aba-publica" role="tab" aria-controls="painel-publico" aria-selected="true">Página da ONG</button>
         <button type="button" id="aba-membros" role="tab" aria-controls="painel-membros" aria-selected="false" tabindex="-1">Membros</button>

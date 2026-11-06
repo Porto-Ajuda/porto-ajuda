@@ -1,6 +1,7 @@
 
 package com.portoajuda.aplicacao_osc.service;
 
+import com.portoajuda.aplicacao_osc.utils.Cnpj;
 import tools.jackson.databind.JsonNode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
@@ -18,16 +19,11 @@ public class CnpjaService {
     }
 
     public JsonNode consultarCnpj(String cnpj) {
-        String cnpjLimpo = cnpj.replaceAll("\\D", "");
-
-        if (!cnpjLimpo.matches("\\d{14}")) {
-            throw new IllegalArgumentException(
-                    "O CNPJ deve conter 14 dígitos.");
-        }
+        String cnpjCanonico = new Cnpj(cnpj).getCnpj();
 
         try {
             JsonNode resposta = restClient.get()
-                    .uri(cnpjLimpo)
+                    .uri("{cnpj}", cnpjCanonico)
                     .retrieve()
                     .body(JsonNode.class);
 

@@ -19,6 +19,7 @@
     import org.springframework.transaction.annotation.Transactional;
     import org.springframework.web.server.ResponseStatusException;
     import com.portoajuda.aplicacao_osc.enums.CargoOsc;
+    import com.portoajuda.aplicacao_osc.enums.StatusOsc;
 
     import java.time.LocalDate;
     import java.time.LocalDateTime;
@@ -78,6 +79,7 @@
             osc.setCausasSociais(causas.principal(), causas.secundarias());
             osc.setOds(validarOds(dados.ods()));
             osc.setUsuario(usuario);
+            osc.setStatus(StatusOsc.INATIVA);
             osc.setNome(dados.nome().trim());
             osc.setDescricaoCurta(dados.descricaoCurta().trim());
             osc.setAnoFundacao(dados.anoFundacao());

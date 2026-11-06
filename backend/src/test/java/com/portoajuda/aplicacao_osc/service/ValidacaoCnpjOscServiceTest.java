@@ -39,7 +39,22 @@ class ValidacaoCnpjOscServiceTest {
         assertFalse(resultado.elegivel());
     }
 
+    @Test
+    void consultaCnpjAlfanumericoCanonicoSemRemoverLetras() throws Exception {
+        String cnpj = "12ABC34501DE35";
+        when(cnpjaService.consultarCnpj(cnpj)).thenReturn(resposta(cnpj, "3999"));
+
+        ConsultaCnpjDTO resultado = new ValidacaoCnpjOscService(cnpjaService).validar(cnpj);
+
+        assertTrue(resultado.elegivel());
+        org.mockito.Mockito.verify(cnpjaService).consultarCnpj(cnpj);
+    }
+
     private JsonNode resposta(String codigoNatureza) throws Exception {
+        return resposta(CNPJ, codigoNatureza);
+    }
+
+    private JsonNode resposta(String cnpj, String codigoNatureza) throws Exception {
         return JSON.readTree("""
                 {
                   "taxId": "%s",
@@ -50,6 +65,6 @@ class ValidacaoCnpjOscServiceTest {
                     "nature": { "id": "%s", "text": "Natureza de teste" }
                   }
                 }
-                """.formatted(CNPJ, codigoNatureza));
+                """.formatted(cnpj, codigoNatureza));
     }
 }
