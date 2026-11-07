@@ -12,6 +12,11 @@ import { getAPI_URL } from "./modoBack.js";
     function inicializarAcessoAdmin() {
 
         const API_URL = getAPI_URL();
+        // API_URL escolhe o padrão de rotas existente; a navegação usa a origem atual do frontend.
+        const ROTAS = API_URL === "http://localhost:8080"
+            || API_URL === "https://api.portoajuda.com.br"
+            ? { admin: "/admin" }
+            : { admin: "../admin/index.html" };
 
         /* =========================================
            1. CRIAÇÃO AUTOMÁTICA DO MODAL
@@ -347,39 +352,6 @@ import { getAPI_URL } from "./modoBack.js";
             throw new Error('session');
         }
 
-        async function obterUrlPainelAdmin(signal) {
-            const apiOrigin = new URL(API_URL, window.location.origin).origin;
-            let frontendOrigin = window.location.origin;
-
-            if (!frontendOrigin || frontendOrigin === 'null' || frontendOrigin === apiOrigin) {
-                const resposta = await fetch(`${API_URL}/api/config/frontend`, {
-                    method: 'GET', credentials: 'include', cache: 'no-store',
-                    headers: { Accept: 'application/json' }, signal
-                });
-                if (!resposta.ok) throw new Error('frontend-origin');
-
-                const configuracao = await resposta.json();
-                if (typeof configuracao?.origin !== 'string') throw new Error('frontend-origin');
-
-                const destinoConfigurado = new URL(configuracao.origin);
-                const hostname = destinoConfigurado.hostname.toLowerCase();
-                const httpLocalPermitido = destinoConfigurado.protocol === 'http:'
-                    && ['localhost', '127.0.0.1', '[::1]'].includes(hostname);
-                if ((!httpLocalPermitido && destinoConfigurado.protocol !== 'https:')
-                    || destinoConfigurado.username
-                    || destinoConfigurado.password
-                    || destinoConfigurado.pathname !== '/'
-                    || destinoConfigurado.search
-                    || destinoConfigurado.hash
-                    || destinoConfigurado.origin === apiOrigin) {
-                    throw new Error('frontend-origin');
-                }
-                frontendOrigin = destinoConfigurado.origin;
-            }
-
-            return new URL('/admin', frontendOrigin).href;
-        }
-
         async function mostrarSessaoSeValida(mensagemErro, generation, signal) {
             try {
                 const sessaoValida = await verificarSessaoAtual(signal);
@@ -559,9 +531,7 @@ import { getAPI_URL } from "./modoBack.js";
                 const sessaoValida = await verificarSessaoAtual(controller.signal);
                 if (generation !== flowGeneration) return;
                 if (sessaoValida) {
-                    const urlPainel = await obterUrlPainelAdmin(controller.signal);
-                    if (generation !== flowGeneration) return;
-                    window.location.assign(urlPainel);
+                    window.location.assign(ROTAS.admin);
                     return;
                 }
                 challengeId = null;
@@ -570,7 +540,7 @@ import { getAPI_URL } from "./modoBack.js";
                 mostrarMensagem(mensagemLogin, 'Sua sessão administrativa expirou. Autentique-se novamente.');
             } catch {
                 if (generation === flowGeneration) {
-                    mostrarMensagem(mensagemSessao, 'Não foi possível confirmar a sessão ou localizar o painel. Tente novamente antes de continuar.');
+                    mostrarMensagem(mensagemSessao, 'Não foi possível confirmar sua sessão. Tente novamente antes de continuar.');
                 }
             } finally {
                 encerrarRequisicao(controller);

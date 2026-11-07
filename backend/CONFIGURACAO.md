@@ -50,6 +50,12 @@ Após a validação dos dois canais, o backend emite uma credencial aleatória d
 Como os cookies são usados pelo frontend cross-site futuro, o cookie CSRF `XSRF-TOKEN` usa `SameSite=None` quando `APP_COOKIES_SECURE=true` e `Lax` no modo HTTP local; ele continua legível pelo cliente e não autentica. CSRF permanece habilitado em `/admin/**`, inclusive login MFA e logout. O frontend deve obter um token por `GET /usuario/csrf` e enviar o token no header indicado pela resposta (atualmente `X-XSRF-TOKEN`) em toda operação mutável. Não há exceção CSRF para rotas administrativas.
 
 `M4` é a migração manual `db/manual/20261106_admin_privileged_sessions.sql`. Ela depende de M3 e não deve ser executada automaticamente. Não foram adicionadas variáveis de ambiente novas para sessão; `ADMIN_AUTH_CODE_PEPPER` continua obrigatório para a emissão/verificação MFA. `PA_ADMIN_SESSION` exige HTTPS porque é sempre `Secure`; não desative essa flag para testes ou deploy.
+## Dashboard administrativo e hospedagem
+
+Na hospedagem Vercel, `/admin` e uma rota estatica reescrita para `/admin/index`. O HTML inicial contem somente estrutura e placeholders; o navegador consulta `GET /admin/auth/session` antes de solicitar indicadores em `GET /admin/dashboard/overview`. A pagina estatica nao pode devolver HTTP 401 com base no cookie HttpOnly mantido na origem separada da API. Sem uma sessao privilegiada, a tela de acesso negado e exibida e os endpoints da API recusam os dados; expiracao ou revogacao limpa os dados renderizados.
+
+Quando a navegacao e atendida pelo Spring Boot, `GET /admin` encaminha para `/admin/index.html`, e tanto essa pagina quanto o caminho direto `/admin/index.html` exigem a sessao privilegiada validada pelo filtro. Os assets do painel sao empacotados a partir de `public/`; CSS e JavaScript ficam acessiveis, mas nao contem dados administrativos.
+
 ## Inicializadores e limpeza automática
 
 - `DataInitializer` e `InitializeService` só criam os papéis `ADMIN`, `USUARIO` e `OSC` quando `APP_INITIALIZATION_SEED_ROLES=true`. A opção é falsa por padrão. O semeio consulta cada papel antes de inserir; habilite-a apenas de forma deliberada e em uma única instância.

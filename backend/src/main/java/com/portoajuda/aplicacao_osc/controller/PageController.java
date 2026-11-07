@@ -71,8 +71,13 @@ public class PageController {
         return "forward:/pages/ong-profile.html";
     }
 
-        @GetMapping("/cadastro-osc")
+    @GetMapping("/cadastro-osc")
     public String CadastroOng() {
         return "forward:/pages/cadastro-osc.html";
+    }
+
+    @GetMapping("/admin")
+    public String Admin() {
+        return "forward:/admin/index.html";
     }
 }

@@ -39,7 +39,7 @@ public class AdminSessionAuthFilter extends OncePerRequestFilter {
             return true;
         }
         String path = request.getServletPath();
-        if (!path.startsWith("/admin/")) {
+        if (!"/admin".equals(path) && !path.startsWith("/admin/")) {
             return true;
         }
         return "/admin/auth/logout".equals(path)

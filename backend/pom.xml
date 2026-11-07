@@ -173,6 +173,23 @@
 	</dependencies>
 
 	<build>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+			</resource>
+			<resource>
+				<directory>${project.basedir}/../public</directory>
+				<targetPath>static</targetPath>
+				<includes>
+					<include>admin/index.html</include>
+					<include>components/acesso-admin.js</include>
+					<include>components/admin.js</include>
+					<include>components/modoBack.js</include>
+					<include>styles/acesso-admin.css</include>
+					<include>styles/admin.css</include>
+				</includes>
+			</resource>
+		</resources>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>

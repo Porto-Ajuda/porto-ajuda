@@ -37,7 +37,7 @@ class DatabaseConfigurationContractTest {
                 properties.getProperty("spring.config.import"));
         assertEquals("require", properties.getProperty("spring.datasource.hikari.data-source-properties.sslmode"));
         assertNull(properties.getProperty("spring.profiles.active"));
-        assertEquals("SUPABASE", new ConfigController("https://frontend.example").database().get("status"));
+        assertEquals("SUPABASE", new ConfigController().database().get("status"));
         assertNull(getClass().getResource("/application-local.properties"));
         assertNull(getClass().getResource("/application-prod.properties"));
     }
@@ -79,32 +79,6 @@ class DatabaseConfigurationContractTest {
                 .filter(name -> name.startsWith("logging.level."))
                 .anyMatch(name -> name.toLowerCase().contains("password")
                         || name.toLowerCase().contains("credential")));
-    }
-
-    @Test
-    void configuracaoPublicaDoFrontendRetornaSomenteOrigemSemCache() {
-        var response = new ConfigController("https://frontend.example/admin-preview/").frontend();
-
-        assertEquals(200, response.getStatusCode().value());
-        assertEquals("https://frontend.example", response.getBody().get("origin"));
-        assertEquals("no-store", response.getHeaders().getCacheControl());
-    }
-
-    @Test
-    void configuracaoPublicaAceitaHttpSomenteParaDesenvolvimentoLocal() {
-        var response = new ConfigController("http://localhost:5500").frontend();
-
-        assertEquals("http://localhost:5500", response.getBody().get("origin"));
-    }
-
-    @Test
-    void configuracaoPublicaRejeitaOrigemInseguraOuComCredenciais() {
-        assertThrows(org.springframework.web.server.ResponseStatusException.class,
-                () -> new ConfigController("http://frontend.example").frontend());
-        assertThrows(org.springframework.web.server.ResponseStatusException.class,
-                () -> new ConfigController("https://user:password@frontend.example").frontend());
-        assertThrows(org.springframework.web.server.ResponseStatusException.class,
-                () -> new ConfigController("https://frontend.example:70000").frontend());
     }
 
     @Test
