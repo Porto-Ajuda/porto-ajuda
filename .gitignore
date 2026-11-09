@@ -29,3 +29,10 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# ==========================================
+# SCRIPTS OPERACIONAIS DE PRODUÇÃO
+# ==========================================
+
+# Bootstrap específico dos administradores 47 e 48
+/backend/src/main/resources/db/manual/20261108_supabase_sql_editor_bootstrap_super_admin_47_48.sql
