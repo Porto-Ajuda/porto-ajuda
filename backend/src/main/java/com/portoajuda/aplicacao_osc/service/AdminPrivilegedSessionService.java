@@ -1,5 +1,6 @@
 package com.portoajuda.aplicacao_osc.service;
 
+import com.portoajuda.aplicacao_osc.admin.AdminAuthorizationService;
 import com.portoajuda.aplicacao_osc.entity.AdminAuthChallenge;
 import com.portoajuda.aplicacao_osc.entity.AdminPrivilegedSession;
 import com.portoajuda.aplicacao_osc.entity.Usuario;
@@ -35,6 +36,7 @@ public class AdminPrivilegedSessionService {
     private final UsuarioRepository usuarioRepository;
     private final AdminAuthCodeSecurity codeSecurity;
     private final AdminAuthAuditService audit;
+    private final AdminAuthorizationService adminAuthorization;
     private final SecureRandom secureRandom = new SecureRandom();
 
     public AdminPrivilegedSessionService(
@@ -42,12 +44,14 @@ public class AdminPrivilegedSessionService {
             AdminAuthChallengeRepository challengeRepository,
             UsuarioRepository usuarioRepository,
             AdminAuthCodeSecurity codeSecurity,
-            AdminAuthAuditService audit) {
+            AdminAuthAuditService audit,
+            AdminAuthorizationService adminAuthorization) {
         this.sessionRepository = sessionRepository;
         this.challengeRepository = challengeRepository;
         this.usuarioRepository = usuarioRepository;
         this.codeSecurity = codeSecurity;
         this.audit = audit;
+        this.adminAuthorization = adminAuthorization;
     }
 
     /** Must be called in the same transaction that changes the MFA challenge to VERIFIED. */
@@ -170,10 +174,7 @@ public class AdminPrivilegedSessionService {
     }
 
     private boolean elegivel(Usuario usuario) {
-        return usuario != null && usuario.isEnabled()
-                && usuario.getAuthorities().stream()
-                        .map(GrantedAuthority::getAuthority)
-                        .anyMatch("ROLE_ADMIN"::equals);
+        return adminAuthorization.isEligibleForPrivilegedSession(usuario);
     }
 
     private void revogar(AdminPrivilegedSession session, String reason, Instant now, String remoteAddress) {

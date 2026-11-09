@@ -1,6 +1,8 @@
 package com.portoajuda.aplicacao_osc.service;
 
 import com.portoajuda.aplicacao_osc.entity.Osc;
+import com.portoajuda.aplicacao_osc.admin.AdminAssignmentService;
+import com.portoajuda.aplicacao_osc.admin.AdminRbacInvariantService;
 import com.portoajuda.aplicacao_osc.entity.HistoricoStatusOsc;
 import com.portoajuda.aplicacao_osc.entity.Usuario;
 import com.portoajuda.aplicacao_osc.enums.OrigemDesativacao;
@@ -19,6 +21,7 @@ import com.portoajuda.aplicacao_osc.repository.SessaoUsuarioRepository;
 import com.portoajuda.aplicacao_osc.repository.UsuarioRepository;
 import com.portoajuda.aplicacao_osc.repository.VagaRepository;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.InOrder;
@@ -52,9 +55,16 @@ class LimpezaServiceExclusaoTest {
     @Mock private PostCausasRepository postCausasRepository;
     @Mock private VagaRepository vagaRepository;
     @Mock private PreferenciasAcessibilidadeRepository preferenciasRepository;
+    @Mock private AdminAssignmentService adminAssignmentService;
+    @Mock private AdminRbacInvariantService adminRbacInvariantService;
 
     @InjectMocks
     private LimpezaService limpezaService;
+
+    @BeforeEach
+    void prepararDependenciasRbacDesabilitado() {
+        lenient().when(adminAssignmentService.prepareForScheduledCleanup(any())).thenReturn(true);
+    }
 
     @Test
     void contaElegivelRemoveDependenciasNaOrdemSemOngs() {

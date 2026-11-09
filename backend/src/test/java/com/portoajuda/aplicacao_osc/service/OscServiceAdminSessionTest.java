@@ -49,7 +49,8 @@ class OscServiceAdminSessionTest {
         OscService service = new OscService(
                 oscRepository, usuarioRepository, roleRepository, membrosRepository,
                 geocodingService, validacaoCnpjOscService, persistenciaService,
-                supabaseStorageService, limpezaService);
+                supabaseStorageService, limpezaService,
+                org.mockito.Mockito.mock(com.portoajuda.aplicacao_osc.admin.AdminAuthorizationService.class));
         Osc osc = new Osc();
         ReflectionTestUtils.setField(osc, "id", 91);
         Usuario admin = new Usuario();

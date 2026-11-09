@@ -1,5 +1,6 @@
 package com.portoajuda.aplicacao_osc.service;
 
+import com.portoajuda.aplicacao_osc.admin.AdminAuthorizationService;
 import com.portoajuda.aplicacao_osc.entity.AdminAuthChallenge;
 import com.portoajuda.aplicacao_osc.entity.AdminAuthDelivery;
 import com.portoajuda.aplicacao_osc.entity.AdminAuthDelivery.Channel;
@@ -26,6 +27,7 @@ public class AdminAuthDeliveryQueueService {
     private final AdminAuthChallengeRepository challengeRepository;
     private final AdminAuthCodeSecurity crypto;
     private final AdminAuthAuditService audit;
+    private final AdminAuthorizationService adminAuthorization;
 
     @Transactional
     public ClaimedDelivery claimNext() {
@@ -142,9 +144,8 @@ public class AdminAuthDeliveryQueueService {
                 || usuario.getTelefone().isBlank()) {
             return false;
         }
-        boolean isAdmin = usuario.getAuthorities().stream()
-                .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
-        if (!isAdmin || !crypto.accountKey(usuario.getEmail().valor()).equals(challenge.getEmailSnapshotHash())) {
+        if (!adminAuthorization.isEligibleForPrivilegedSession(usuario)
+                || !crypto.accountKey(usuario.getEmail().valor()).equals(challenge.getEmailSnapshotHash())) {
             return false;
         }
         try {

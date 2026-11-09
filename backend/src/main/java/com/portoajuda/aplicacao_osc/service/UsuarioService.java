@@ -1,6 +1,8 @@
 
 package com.portoajuda.aplicacao_osc.service;
 
+import com.portoajuda.aplicacao_osc.admin.AdminAssignmentService;
+import com.portoajuda.aplicacao_osc.admin.AdminRbacInvariantService;
 import com.portoajuda.aplicacao_osc.dto.request.RequestLoginDTO;
 import com.portoajuda.aplicacao_osc.dto.request.RequestUsuarioDTO;
 import com.portoajuda.aplicacao_osc.dto.response.ResponseUsuarioDTO;
@@ -47,6 +49,8 @@ public class UsuarioService {
         private final AdminAuthChallengeRepository adminAuthChallengeRepository;
         private final AdminAuthDeliveryQueueService adminAuthDeliveryQueueService;
         private final AdminPrivilegedSessionService adminPrivilegedSessionService;
+        private final AdminAssignmentService adminAssignmentService;
+        private final AdminRbacInvariantService adminRbacInvariantService;
         private final PhoneVerificationChallengeRepository phoneVerificationChallengeRepository;
 
         @Transactional
@@ -172,6 +176,7 @@ public class UsuarioService {
 
         @Transactional
         public LocalDateTime solicitarExclusao(Integer usuarioId) {
+                adminRbacInvariantService.lockEligibilityChanges();
                 Usuario usuario = usuarioRepository.findByIdForUpdate(usuarioId)
                                 .orElseThrow(() -> new IllegalArgumentException("Usuário não existe"));
 
@@ -202,6 +207,9 @@ public class UsuarioService {
                                         "Confirme o e-mail antes de solicitar a exclusão da conta.");
                 }
 
+                adminRbacInvariantService.assertMayRemoveEligibility(usuarioId);
+                adminAssignmentService.rejectSelfServiceDeletionWhenAssigned(usuarioId);
+
                 LocalDateTime solicitadaEm = LocalDateTime.now(ZONA_APLICACAO);
                 LocalDateTime agendadaPara = calcularDataExclusao(solicitadaEm);
 
@@ -210,6 +218,7 @@ public class UsuarioService {
                 usuario.setAtivo(false);
 
                 sessaoUsuarioService.revogarSessoesDoUsuario(usuarioId);
+                adminPrivilegedSessionService.revogarTodasDoUsuario(usuarioId, "ADMIN_REVOKED");
 
                 return agendadaPara;
         }
@@ -252,6 +261,8 @@ public class UsuarioService {
                         RequestUsuarioDTO usuarioDTO,
                         Usuario usuario) {
 
+                adminRbacInvariantService.lockEligibilityChanges();
+
                 Usuario usuarioAlterado = usuarioRepository.findById(usuario.getId())
                                 .orElseThrow(() -> new IllegalArgumentException("Usuário não existe"));
 
@@ -262,6 +273,10 @@ public class UsuarioService {
                                 novoEmail.valor());
                 boolean telefoneAlterado = !java.util.Objects.equals(
                                 usuarioAlterado.getTelefone(), novoTelefone);
+
+                if (emailAlterado || telefoneAlterado) {
+                        adminRbacInvariantService.assertMayRemoveEligibility(usuarioAlterado.getId());
+                }
 
                 if (emailAlterado) {
                         usuarioAlterado.setEmail(novoEmail);
@@ -347,6 +362,8 @@ public class UsuarioService {
                         Integer usuarioId,
                         RequestAtualizarPerfilDTO dados) {
 
+                adminRbacInvariantService.lockEligibilityChanges();
+
                 Usuario usuario = usuarioRepository.findById(usuarioId)
                                 .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado."));
 
@@ -377,6 +394,7 @@ public class UsuarioService {
                 boolean telefoneAlterado = !java.util.Objects.equals(
                                 usuario.getTelefone(), telefoneNormalizado);
                 if (telefoneAlterado) {
+                        adminRbacInvariantService.assertMayRemoveEligibility(usuarioId);
                         usuario.setTelefone(telefoneNormalizado);
                         usuario.setTelefoneVerificado(false);
                         invalidarDesafiosVerificacao(usuarioId);

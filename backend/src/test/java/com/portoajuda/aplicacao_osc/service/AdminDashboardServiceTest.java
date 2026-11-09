@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.portoajuda.aplicacao_osc.admin.AdminAuthorizationService;
 import com.portoajuda.aplicacao_osc.entity.AdminSecurityAuditEvent;
 import com.portoajuda.aplicacao_osc.enums.StatusOsc;
 import com.portoajuda.aplicacao_osc.repository.AdminSecurityAuditEventRepository;
@@ -34,13 +35,15 @@ class AdminDashboardServiceTest {
     @Mock private PostRepository postRepository;
     @Mock private VagaRepository vagaRepository;
     @Mock private AdminSecurityAuditEventRepository auditRepository;
+    @Mock private AdminAuthorizationService authorization;
 
     private AdminDashboardService service;
 
     @BeforeEach
     void setUp() {
         service = new AdminDashboardService(
-                usuarioRepository, oscRepository, postRepository, vagaRepository, auditRepository);
+                usuarioRepository, oscRepository, postRepository, vagaRepository, auditRepository,
+                authorization);
     }
 
     @Test

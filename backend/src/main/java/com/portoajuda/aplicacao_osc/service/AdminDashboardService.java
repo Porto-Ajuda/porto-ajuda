@@ -1,5 +1,7 @@
 package com.portoajuda.aplicacao_osc.service;
 
+import com.portoajuda.aplicacao_osc.admin.AdminAuthorizationService;
+import com.portoajuda.aplicacao_osc.admin.AdminPermission;
 import com.portoajuda.aplicacao_osc.dto.response.AdminDashboardActivityDTO;
 import com.portoajuda.aplicacao_osc.dto.response.AdminDashboardOverviewDTO;
 import com.portoajuda.aplicacao_osc.entity.AdminSecurityAuditEvent;
@@ -24,21 +26,25 @@ public class AdminDashboardService {
     private final PostRepository postRepository;
     private final VagaRepository vagaRepository;
     private final AdminSecurityAuditEventRepository auditRepository;
+    private final AdminAuthorizationService authorization;
 
     public AdminDashboardService(
             UsuarioRepository usuarioRepository,
             OscRepository oscRepository,
             PostRepository postRepository,
             VagaRepository vagaRepository,
-            AdminSecurityAuditEventRepository auditRepository) {
+            AdminSecurityAuditEventRepository auditRepository,
+            AdminAuthorizationService authorization) {
         this.usuarioRepository = usuarioRepository;
         this.oscRepository = oscRepository;
         this.postRepository = postRepository;
         this.vagaRepository = vagaRepository;
         this.auditRepository = auditRepository;
+        this.authorization = authorization;
     }
 
     public AdminDashboardOverviewDTO obterVisaoGeral() {
+        authorization.requirePermission(AdminPermission.DASHBOARD_READ);
         final long users;
         final long activeOrganizations;
         final long inactiveOrganizations;

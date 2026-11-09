@@ -18,6 +18,8 @@ import static org.mockito.Mockito.when;
 
 import com.portoajuda.aplicacao_osc.dto.request.AdminAuthStartRequest;
 import com.portoajuda.aplicacao_osc.dto.request.AdminAuthVerifyRequest;
+import com.portoajuda.aplicacao_osc.admin.AdminAssignmentRepository;
+import com.portoajuda.aplicacao_osc.admin.AdminAuthorizationService;
 import com.portoajuda.aplicacao_osc.entity.AdminAuthChallenge;
 import com.portoajuda.aplicacao_osc.entity.AdminAuthDelivery;
 import com.portoajuda.aplicacao_osc.entity.Role;
@@ -76,6 +78,7 @@ class AdminAuthenticationServiceTest {
                 passwordEncoder,
                 emailService,
                 adminSessionService,
+                new AdminAuthorizationService(org.mockito.Mockito.mock(AdminAssignmentRepository.class), false),
                 "dummy-password-hash");
         admin = usuario(21, "ADMIN");
         lenient().when(controls.isLocked(anyString(), anyString(), any(Instant.class))).thenReturn(false);

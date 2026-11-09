@@ -1,5 +1,6 @@
 package com.portoajuda.aplicacao_osc.service;
 
+import com.portoajuda.aplicacao_osc.admin.AdminAuthorizationService;
 import com.portoajuda.aplicacao_osc.dto.request.AdminAuthStartRequest;
 import com.portoajuda.aplicacao_osc.dto.request.AdminAuthVerifyRequest;
 import com.portoajuda.aplicacao_osc.entity.AdminAuthChallenge;
@@ -48,6 +49,7 @@ public class AdminAuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
     private final AdminPrivilegedSessionService adminSessionService;
+    private final AdminAuthorizationService adminAuthorization;
     private final String dummyPasswordHash;
 
     public AdminAuthenticationService(
@@ -60,6 +62,7 @@ public class AdminAuthenticationService {
             PasswordEncoder passwordEncoder,
             EmailService emailService,
             AdminPrivilegedSessionService adminSessionService,
+            AdminAuthorizationService adminAuthorization,
             @Value("${admin-auth.dummy-password-hash:}") String configuredDummyHash) {
         this.usuarioRepository = usuarioRepository;
         this.challengeRepository = challengeRepository;
@@ -70,6 +73,7 @@ public class AdminAuthenticationService {
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
         this.adminSessionService = adminSessionService;
+        this.adminAuthorization = adminAuthorization;
         this.dummyPasswordHash = configuredDummyHash == null || configuredDummyHash.isBlank()
                 ? passwordEncoder.encode(UUID.randomUUID().toString())
                 : configuredDummyHash;
@@ -117,10 +121,7 @@ public class AdminAuthenticationService {
             return decoyId;
         }
 
-        if (!usuario.isEnabled() || !temRoleAdmin(usuario)
-                || !usuario.isEmailVerificado() || !usuario.isTelefoneVerificado()
-                || usuario.getEmail() == null || usuario.getTelefone() == null
-                || usuario.getTelefone().isBlank()) {
+        if (!adminAuthorization.isEligibleForPrivilegedSession(usuario)) {
             audit.registrar("ADMIN_AUTH_INELIGIBLE", usuario.getId(), null, email, remoteAddress);
             return decoyId;
         }
@@ -395,10 +396,7 @@ public class AdminAuthenticationService {
     }
 
     private boolean elegivel(Usuario usuario) {
-        return usuario != null && usuario.isEnabled() && usuario.isEmailVerificado()
-                && usuario.isTelefoneVerificado() && usuario.getEmail() != null
-                && usuario.getTelefone() != null && !usuario.getTelefone().isBlank()
-                && temRoleAdmin(usuario);
+        return adminAuthorization.isEligibleForPrivilegedSession(usuario);
     }
 
     private boolean temRoleAdmin(Usuario usuario) {

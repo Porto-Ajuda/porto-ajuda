@@ -1,5 +1,8 @@
 package com.portoajuda.aplicacao_osc.controller;
 
+import com.portoajuda.aplicacao_osc.admin.AdminAuthorizationService;
+import com.portoajuda.aplicacao_osc.admin.AdminCapabilitiesDTO;
+import com.portoajuda.aplicacao_osc.admin.AdminPermission;
 import com.portoajuda.aplicacao_osc.dto.request.AdminAuthStartRequest;
 import com.portoajuda.aplicacao_osc.dto.request.AdminAuthVerifyRequest;
 import com.portoajuda.aplicacao_osc.service.AdminAuthenticationService;
@@ -39,8 +42,9 @@ public class AdminAuthController {
     private final ClientIpResolver clientIpResolver;
     private final AdminPrivilegedSessionService adminSessionService;
     private final AdminSessionCookie adminSessionCookie;
+    private final AdminAuthorizationService adminAuthorization;
 
-    @PreAuthorize("hasRole('ADMIN') and hasAuthority('ADMIN_SESSION')")
+    @PreAuthorize("@adminAuthorization.hasValidPrivilegedSession(authentication)")
     @GetMapping("/session")
     public ResponseEntity<Void> sessionStatus(
             jakarta.servlet.http.HttpServletRequest request) {
@@ -56,6 +60,14 @@ public class AdminAuthController {
                 .header(SESSION_IDLE_EXPIRY_HEADER, authenticated.idleExpiresAt().toString())
                 .cacheControl(CacheControl.noStore())
                 .build();
+    }
+
+    @PreAuthorize("@adminAuthorization.hasValidPrivilegedSession(authentication)")
+    @GetMapping("/capabilities")
+    public ResponseEntity<AdminCapabilitiesDTO> capabilities() {
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.noStore())
+                .body(adminAuthorization.capabilities());
     }
 
     @PostMapping("/challenges")
@@ -116,7 +128,7 @@ public class AdminAuthController {
                 .build();
     }
 
-    @PreAuthorize("hasRole('ADMIN') and hasAuthority('ADMIN_SESSION')")
+    @PreAuthorize("@adminAuthorization.hasPermission(authentication, T(com.portoajuda.aplicacao_osc.admin.AdminPermission).SESSION_REVOKE_SELF)")
     @PostMapping("/revoke-all")
     public ResponseEntity<Void> revokeAllOwnAdminSessions(
             @AuthenticationPrincipal com.portoajuda.aplicacao_osc.entity.Usuario administrator) {

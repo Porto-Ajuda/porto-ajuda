@@ -8,6 +8,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.portoajuda.aplicacao_osc.entity.Usuario;
+import com.portoajuda.aplicacao_osc.admin.AdminAssignmentService;
+import com.portoajuda.aplicacao_osc.admin.AdminRbacInvariantService;
 import com.portoajuda.aplicacao_osc.dto.request.RequestAtualizarPerfilDTO;
 import com.portoajuda.aplicacao_osc.repository.AdminAuthChallengeRepository;
 import com.portoajuda.aplicacao_osc.repository.PhoneVerificationChallengeRepository;
@@ -38,6 +40,8 @@ class UsuarioServiceAdminSessionRevocationTest {
     @Mock private AdminAuthDeliveryQueueService deliveryQueue;
     @Mock private AdminPrivilegedSessionService adminSessions;
     @Mock private PhoneVerificationChallengeRepository phoneChallenges;
+    @Mock private AdminAssignmentService adminAssignmentService;
+    @Mock private AdminRbacInvariantService adminRbacInvariantService;
 
     @InjectMocks private UsuarioService service;
 

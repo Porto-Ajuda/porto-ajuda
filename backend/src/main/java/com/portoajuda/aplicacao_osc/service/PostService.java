@@ -1,5 +1,9 @@
 package com.portoajuda.aplicacao_osc.service;
 
+import com.portoajuda.aplicacao_osc.admin.AdminActor;
+import com.portoajuda.aplicacao_osc.admin.AdminAuthorizationService;
+import com.portoajuda.aplicacao_osc.admin.AdminOperationAuditService;
+import com.portoajuda.aplicacao_osc.admin.AdminPermission;
 import com.portoajuda.aplicacao_osc.dto.request.RequestCreatePostDTO;
 import com.portoajuda.aplicacao_osc.dto.request.RequestPostDTO;
 import com.portoajuda.aplicacao_osc.dto.request.RequestUpdatePostDTO;
@@ -35,9 +39,16 @@ public class PostService {
     private final UsuarioRepository usuarioRepository;
     private final PostRepository postRepository;
     private final VagaRepository vagaRepository;
+    private final AdminAuthorizationService adminAuthorization;
+    private final AdminOperationAuditService operationAudit;
 
     @Transactional
     public void create(RequestCreatePostDTO request, Usuario usuarioAuth){
+        create(request, usuarioAuth, null);
+    }
+
+    @Transactional
+    public void create(RequestCreatePostDTO request, Usuario usuarioAuth, String adminReason){
         Usuario usuario = usuarioRepository.findByEmail(usuarioAuth.getEmail())
                 .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado"));
 
@@ -47,7 +58,12 @@ public class PostService {
                 .anyMatch(a -> a.getAuthority().equals("ROLE_OSC"));
 
         Post post = new Post();
-        if (isAdmin && request.post().tipo().equals("NOTICIA")){
+        if (isAdmin) {
+            AdminActor actor = adminAuthorization.requirePermission(AdminPermission.CONTENT_PUBLISH);
+            String reason = adminAuthorization.requireReason(adminReason);
+            if (!request.post().tipo().equals("NOTICIA")) {
+                throw new AccessDeniedException("A publicação administrativa deve ser uma notícia.");
+            }
             post.setUsuario(usuario);
             post.setTipo(TipoPost.valueOf(request.post().tipo()));
             post.setAtivo(request.post().ativo());
@@ -56,7 +72,12 @@ public class PostService {
             post.setImagemUrl(request.post().imagemUrl());
             post.setDataCriacao(LocalDateTime.now());
             postRepository.save(post);
-        } else if (isOsc) {
+            operationAudit.record(actor, AdminPermission.CONTENT_PUBLISH,
+                    "CONTENT_PUBLISHED", "POST", post.getId().toString(), reason,
+                    null, "type=NOTICIA;active=" + post.isAtivo());
+            return;
+        }
+        if (isOsc) {
             Osc osc = oscRepository.findByUsuarioIdAndDataArquivamentoIsNull(usuario.getId())
                     .orElseThrow(() -> new IllegalArgumentException("Erro ao encontrar OSC"));
             if(request.post().tipo().equals("DOACAO")){
@@ -111,11 +132,36 @@ public class PostService {
 
     @Transactional
     public void update(RequestUpdatePostDTO request, Usuario usuarioAuth){
+        update(request, usuarioAuth, null);
+    }
+
+    @Transactional
+    public void update(RequestUpdatePostDTO request, Usuario usuarioAuth, String adminReason){
         boolean isAdmin = isAdminSession(usuarioAuth);
+
+        if (isAdmin) {
+            AdminActor actor = adminAuthorization.requirePermission(AdminPermission.CONTENT_EDIT_NEWS);
+            String reason = adminAuthorization.requireReason(adminReason);
+            Post post = postRepository.findById(request.id())
+                    .orElseThrow(() -> new IllegalArgumentException("Erro ao buscar post"));
+            if (post.getTipo() != TipoPost.NOTICIA) {
+                throw new AccessDeniedException("Administradores só podem editar notícias nesta rota.");
+            }
+            boolean previousActive = post.isAtivo();
+            post.setAtivo(request.post().ativo());
+            post.setTitulo(request.post().titulo());
+            post.setConteudo(request.post().conteudo());
+            post.setImagemUrl(request.post().imagemUrl());
+            post.setDataAtualizacao(LocalDateTime.now());
+            postRepository.save(post);
+            operationAudit.record(actor, AdminPermission.CONTENT_EDIT_NEWS,
+                    "CONTENT_NEWS_EDITED", "POST", post.getId().toString(), reason,
+                    "active=" + previousActive, "active=" + post.isAtivo());
+            return;
+        }
 
         boolean isOsc = usuarioAuth.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_OSC"));
-
         Post post = postRepository.findById(request.id())
                 .orElseThrow(() -> new IllegalArgumentException("Erro ao buscar post"));
 
@@ -171,19 +217,6 @@ public class PostService {
                         "OSC não possui permissão para editar este tipo de post"
                 );
             }
-        } else if (isAdmin) {
-            if (post.getTipo() == TipoPost.NOTICIA) {
-                post.setAtivo(request.post().ativo());
-                post.setTitulo(request.post().titulo());
-                post.setConteudo(request.post().conteudo());
-                post.setImagemUrl(request.post().imagemUrl());
-                post.setDataAtualizacao(LocalDateTime.now());
-                postRepository.save(post);
-            }else {
-                throw new AccessDeniedException(
-                        "Admins só podem editar notícias"
-                );
-            }
         } else {
             throw new AccessDeniedException(
                     "Usuário não possui permissão para editar posts"
@@ -193,6 +226,11 @@ public class PostService {
 
     @Transactional
     public void delete(Integer id, Usuario usuarioAuth) {
+        delete(id, usuarioAuth, null);
+    }
+
+    @Transactional
+    public void delete(Integer id, Usuario usuarioAuth, String adminReason) {
         boolean isAdmin = isAdminSession(usuarioAuth);
 
         boolean isOsc = usuarioAuth.getAuthorities().stream()
@@ -210,10 +248,18 @@ public class PostService {
                 ));
 
         if (isAdmin) {
+            AdminActor actor = adminAuthorization.requirePermission(AdminPermission.CONTENT_DELETE);
+            String reason = adminAuthorization.requireReason(adminReason);
+            TipoPost previousType = post.getTipo();
+            boolean hadVolunteerOpportunity = vagaRepository.findByPost(post).isPresent();
             vagaRepository.findByPost(post)
                     .ifPresent(vagaRepository::delete);
 
             postRepository.delete(post);
+            operationAudit.record(actor, AdminPermission.CONTENT_DELETE,
+                    "CONTENT_PHYSICALLY_DELETED", "POST", id.toString(), reason,
+                    "type=" + previousType + ";volunteerOpportunity=" + hadVolunteerOpportunity,
+                    "deleted=true");
             return;
         }
 
@@ -251,6 +297,7 @@ public class PostService {
                 .anyMatch(a -> a.getAuthority().equals("ROLE_OSC"));
 
         if (isAdmin) {
+            adminAuthorization.requirePermission(AdminPermission.CONTENT_READ);
             return postRepository.findByTipo(TipoPost.NOTICIA)
                     .stream()
                     .map(ResponsePostDTO::from)
@@ -289,12 +336,13 @@ public class PostService {
     }
 
     private boolean isAdminSession(Usuario usuario) {
-        boolean hasAdminRole = usuario.getAuthorities().stream()
-                .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        boolean hasAdminSession = authentication != null
-                && authentication.getAuthorities().stream()
-                        .anyMatch(authority -> "ADMIN_SESSION".equals(authority.getAuthority()));
-        return hasAdminRole && hasAdminSession;
+        return usuario != null && authentication != null
+                && usuario.getId() != null
+                && usuario.getId().equals(
+                        authentication.getPrincipal() instanceof Usuario principal
+                                ? principal.getId()
+                                : null)
+                && adminAuthorization.hasValidPrivilegedSession(authentication);
     }
 }

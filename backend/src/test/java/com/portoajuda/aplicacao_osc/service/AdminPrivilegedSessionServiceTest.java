@@ -15,6 +15,8 @@ import static org.mockito.Mockito.when;
 
 import com.portoajuda.aplicacao_osc.entity.AdminAuthChallenge;
 import com.portoajuda.aplicacao_osc.entity.AdminPrivilegedSession;
+import com.portoajuda.aplicacao_osc.admin.AdminAssignmentRepository;
+import com.portoajuda.aplicacao_osc.admin.AdminAuthorizationService;
 import com.portoajuda.aplicacao_osc.entity.Role;
 import com.portoajuda.aplicacao_osc.entity.Usuario;
 import com.portoajuda.aplicacao_osc.repository.AdminAuthChallengeRepository;
@@ -52,10 +54,14 @@ class AdminPrivilegedSessionServiceTest {
     void setup() {
         crypto = new AdminAuthCodeSecurity("admin-session-test-pepper-at-least-thirty-two-bytes");
         service = new AdminPrivilegedSessionService(
-                sessionRepository, challengeRepository, usuarioRepository, crypto, audit);
+                sessionRepository, challengeRepository, usuarioRepository, crypto, audit,
+                new AdminAuthorizationService(org.mockito.Mockito.mock(AdminAssignmentRepository.class), false));
         admin = new Usuario();
         ReflectionTestUtils.setField(admin, "id", 42);
         admin.setEmail(new Email("admin@example.invalid"));
+        admin.setTelefone("5511912345678");
+        admin.setEmailVerificado(true);
+        admin.setTelefoneVerificado(true);
         Role role = new Role();
         role.setNome("ADMIN");
         admin.setRoles(new HashSet<>(Set.of(role)));

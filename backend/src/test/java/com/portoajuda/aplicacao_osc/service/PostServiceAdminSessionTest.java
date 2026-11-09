@@ -1,6 +1,7 @@
 package com.portoajuda.aplicacao_osc.service;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -8,6 +9,8 @@ import static org.mockito.Mockito.when;
 import com.portoajuda.aplicacao_osc.entity.Post;
 import com.portoajuda.aplicacao_osc.entity.Role;
 import com.portoajuda.aplicacao_osc.entity.Usuario;
+import com.portoajuda.aplicacao_osc.admin.AdminAuthorizationService;
+import com.portoajuda.aplicacao_osc.admin.AdminOperationAuditService;
 import com.portoajuda.aplicacao_osc.repository.OscRepository;
 import com.portoajuda.aplicacao_osc.repository.PostRepository;
 import com.portoajuda.aplicacao_osc.repository.UsuarioRepository;
@@ -23,6 +26,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -34,6 +38,8 @@ class PostServiceAdminSessionTest {
     @Mock private UsuarioRepository usuarioRepository;
     @Mock private PostRepository postRepository;
     @Mock private VagaRepository vagaRepository;
+    @Mock private AdminAuthorizationService adminAuthorization;
+    @Mock private AdminOperationAuditService operationAudit;
     @InjectMocks private PostService service;
 
     @AfterEach
@@ -44,6 +50,7 @@ class PostServiceAdminSessionTest {
     @Test
     void roleAdminComJwtComumNaoPodeExcluirPostAdministrativo() {
         Usuario usuario = usuarioAdmin();
+        ReflectionTestUtils.setField(usuario, "id", 5);
         autenticar(usuario, List.of(new SimpleGrantedAuthority("ROLE_ADMIN")));
 
         assertThrows(AccessDeniedException.class, () -> service.delete(5, usuario));
@@ -53,9 +60,11 @@ class PostServiceAdminSessionTest {
     @Test
     void operacaoAdministrativaExigeRoleAdminEAutoridadeAdminSession() {
         Usuario usuario = usuarioAdmin();
+        ReflectionTestUtils.setField(usuario, "id", 5);
         autenticar(usuario, List.of(
                 new SimpleGrantedAuthority("ROLE_ADMIN"),
                 new SimpleGrantedAuthority("ADMIN_SESSION")));
+        when(adminAuthorization.hasValidPrivilegedSession(any())).thenReturn(true);
         Post post = new Post();
         when(postRepository.findById(5)).thenReturn(Optional.of(post));
         when(vagaRepository.findByPost(post)).thenReturn(Optional.empty());

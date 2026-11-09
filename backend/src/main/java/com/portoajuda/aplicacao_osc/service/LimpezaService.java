@@ -1,6 +1,8 @@
 
 package com.portoajuda.aplicacao_osc.service;
 
+import com.portoajuda.aplicacao_osc.admin.AdminAssignmentService;
+import com.portoajuda.aplicacao_osc.admin.AdminRbacInvariantService;
 import com.portoajuda.aplicacao_osc.entity.Usuario;
 import com.portoajuda.aplicacao_osc.entity.Osc;
 import com.portoajuda.aplicacao_osc.entity.HistoricoStatusOsc;
@@ -52,11 +54,14 @@ public class LimpezaService {
     private final OscMembrosRepository oscMembrosRepository;
     private final PostRepository postRepository;
     private final PreferenciasAcessibilidadeRepository preferenciasRepository;
+    private final AdminAssignmentService adminAssignmentService;
+    private final AdminRbacInvariantService adminRbacInvariantService;
 
     private LocalDate ultimoAvisoDependenciasFinanceiras;
 
     @Transactional
     public int excluirCadastrosPendentes() {
+        adminRbacInvariantService.lockEligibilityChanges();
         LocalDateTime limite = LocalDateTime.now().minusHours(24);
 
         List<Usuario> pendentes =
@@ -66,6 +71,10 @@ public class LimpezaService {
 
         for (Usuario usuario : pendentes) {
             Integer usuarioId = usuario.getId();
+
+            if (!adminAssignmentService.prepareForScheduledCleanup(usuarioId)) {
+                continue;
+            }
 
             codigoAutenticacaoRepository.deleteByUsuarioId(usuarioId);
             usuarioRepository.removerAssociacoesRoles(usuarioId);
@@ -91,6 +100,7 @@ public class LimpezaService {
 
     @Transactional
     public int excluirContasComPrazoVencido() {
+        adminRbacInvariantService.lockEligibilityChanges();
         LocalDateTime agora = LocalDateTime.now(ZONA_APLICACAO);
         List<Usuario> candidatas = usuarioRepository
                 .findByAtivoFalseAndDataSolicitacaoExclusaoIsNotNullAndDataExclusaoAgendadaLessThanEqual(agora);
@@ -107,6 +117,9 @@ public class LimpezaService {
             }
 
             Integer usuarioId = usuario.getId();
+            if (!adminAssignmentService.prepareForScheduledCleanup(usuarioId)) {
+                continue;
+            }
             List<Osc> oscsDoUsuario = oscRepository.findAllByUsuario_Id(usuarioId);
 
             boolean possuiDoacaoComoDoador = doacaoRepository.existsByUsuario_Id(usuarioId);

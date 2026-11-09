@@ -1,6 +1,8 @@
 package com.portoajuda.aplicacao_osc.service;
 
 import com.portoajuda.aplicacao_osc.dto.request.RequestNewMembroDTO;
+import com.portoajuda.aplicacao_osc.admin.AdminAuthorizationService;
+import com.portoajuda.aplicacao_osc.admin.AdminPermission;
 import com.portoajuda.aplicacao_osc.dto.request.RequestOscDTO;
 import com.portoajuda.aplicacao_osc.dto.request.UpdateOscDTO;
 import com.portoajuda.aplicacao_osc.dto.response.Coordenadas;
@@ -62,6 +64,7 @@ public class OscService {
     private final OscPersistenciaService persistenciaService;
     private final SupabaseStorageService supabaseStorageService;
     private final LimpezaService limpezaService;
+    private final AdminAuthorizationService adminAuthorization;
 
     // =====================================================
     // PERMISSÕES
@@ -688,10 +691,11 @@ public class OscService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Autenticação necessária.");
         }
 
-        boolean administradorPlataforma = solicitante.getAuthorities().stream()
-                .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()))
-                && possuiSessaoAdministrativa();
-        if (administradorPlataforma) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        boolean hasPrivilegedSession = adminAuthorization.hasValidPrivilegedSession(authentication);
+        boolean canReadPrivateAsPlatformAdmin = hasPrivilegedSession
+                && adminAuthorization.hasPermission(authentication, AdminPermission.ORG_READ_PRIVATE);
+        if (canReadPrivateAsPlatformAdmin) {
             return OscPerfilDTO.dePrivado(osc, false, true);
         }
 
@@ -703,12 +707,6 @@ public class OscService {
                     && (origem == null || origem == OrigemDesativacao.ONG);
         }
         return OscPerfilDTO.dePrivado(osc, podeAlterarStatus, false);
-    }
-
-    private boolean possuiSessaoAdministrativa() {
-        Authentication autenticacao = SecurityContextHolder.getContext().getAuthentication();
-        return autenticacao != null && autenticacao.getAuthorities().stream()
-                .anyMatch(authority -> "ADMIN_SESSION".equals(authority.getAuthority()));
     }
 
     @Transactional(readOnly = true)

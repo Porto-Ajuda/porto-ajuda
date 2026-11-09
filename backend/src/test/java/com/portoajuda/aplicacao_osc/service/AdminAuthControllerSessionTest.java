@@ -12,6 +12,7 @@ import static org.mockito.Mockito.when;
 
 import com.portoajuda.aplicacao_osc.controller.AdminAuthController;
 import com.portoajuda.aplicacao_osc.controller.AdminSessionCookie;
+import com.portoajuda.aplicacao_osc.admin.AdminAuthorizationService;
 import com.portoajuda.aplicacao_osc.entity.Usuario;
 import com.portoajuda.aplicacao_osc.segurity.AdminSessionAuthFilter;
 import com.portoajuda.aplicacao_osc.dto.request.AdminAuthVerifyRequest;
@@ -34,7 +35,8 @@ class AdminAuthControllerSessionTest {
     @Test
     void consultaDaSessaoNaoRetornaDadosPessoaisEExigeSessaoAdmin() throws Exception {
         AdminAuthController controller = new AdminAuthController(
-                authenticationService, clientIpResolver, sessionService, new AdminSessionCookie(true));
+                authenticationService, clientIpResolver, sessionService, new AdminSessionCookie(true),
+                adminAuthorization);
 
         Instant serverTime = Instant.parse("2026-11-06T12:00:00Z");
         Instant absoluteExpiry = serverTime.plusSeconds(7200);
@@ -58,7 +60,7 @@ class AdminAuthControllerSessionTest {
                 .getMethod("sessionStatus", jakarta.servlet.http.HttpServletRequest.class)
                 .getAnnotation(PreAuthorize.class);
         assertNotNull(authorization);
-        assertEquals("hasRole('ADMIN') and hasAuthority('ADMIN_SESSION')", authorization.value());
+        assertEquals("@adminAuthorization.hasValidPrivilegedSession(authentication)", authorization.value());
         GetMapping mapping = AdminAuthController.class
                 .getMethod("sessionStatus", jakarta.servlet.http.HttpServletRequest.class)
                 .getAnnotation(GetMapping.class);
@@ -69,6 +71,7 @@ class AdminAuthControllerSessionTest {
     @Mock private AdminAuthenticationService authenticationService;
     @Mock private ClientIpResolver clientIpResolver;
     @Mock private AdminPrivilegedSessionService sessionService;
+    @Mock private AdminAuthorizationService adminAuthorization;
 
     @Test
     void verificacaoCompletaEntregaCredencialSomenteNoHttpOnlyCookie() {
@@ -81,7 +84,8 @@ class AdminAuthControllerSessionTest {
                         new AdminPrivilegedSessionService.IssuedCredential(
                                 rawCredential, Instant.now().plusSeconds(7100))));
         AdminAuthController controller = new AdminAuthController(
-                authenticationService, clientIpResolver, sessionService, new AdminSessionCookie(true));
+                authenticationService, clientIpResolver, sessionService, new AdminSessionCookie(true),
+                adminAuthorization);
 
         var response = controller.verificar(challengeId,
                 new AdminAuthVerifyRequest("email-code", "sms-code"), new MockHttpServletRequest());
@@ -104,7 +108,8 @@ class AdminAuthControllerSessionTest {
                 .thenReturn(new AdminAuthenticationService.VerificationOutcome(
                         AdminAuthenticationService.VerificationResult.PENDING, null));
         AdminAuthController controller = new AdminAuthController(
-                authenticationService, clientIpResolver, sessionService, new AdminSessionCookie(true));
+                authenticationService, clientIpResolver, sessionService, new AdminSessionCookie(true),
+                adminAuthorization);
 
         var response = controller.verificar(challengeId,
                 new AdminAuthVerifyRequest("email-code", null), new MockHttpServletRequest());
@@ -117,7 +122,8 @@ class AdminAuthControllerSessionTest {
     @Test
     void logoutRevogaSessaoEApagaCookieDoMesmoPath() {
         AdminAuthController controller = new AdminAuthController(
-                authenticationService, clientIpResolver, sessionService, new AdminSessionCookie(true));
+                authenticationService, clientIpResolver, sessionService, new AdminSessionCookie(true),
+                adminAuthorization);
         MockHttpServletRequest request = new MockHttpServletRequest("POST", "/admin/auth/logout");
         request.setCookies(new jakarta.servlet.http.Cookie(AdminSessionCookie.NAME, "credential-to-revoke"));
         when(clientIpResolver.resolve(request)).thenReturn("192.0.2.73");

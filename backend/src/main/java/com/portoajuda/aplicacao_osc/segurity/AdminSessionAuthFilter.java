@@ -1,5 +1,6 @@
 package com.portoajuda.aplicacao_osc.segurity;
 
+import com.portoajuda.aplicacao_osc.admin.AdminAuthenticationDetails;
 import com.portoajuda.aplicacao_osc.controller.AdminSessionCookie;
 import com.portoajuda.aplicacao_osc.service.AdminPrivilegedSessionService;
 import com.portoajuda.aplicacao_osc.service.AdminPrivilegedSessionService.AuthenticatedAdmin;
@@ -17,7 +18,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -42,9 +42,14 @@ public class AdminSessionAuthFilter extends OncePerRequestFilter {
         if (!"/admin".equals(path) && !path.startsWith("/admin/")) {
             return true;
         }
-        return "/admin/auth/logout".equals(path)
-                || "/admin/auth/challenges".equals(path)
-                || path.startsWith("/admin/auth/challenges/");
+        if ("/admin/auth/logout".equals(path)) {
+            return true;
+        }
+        if (!"POST".equalsIgnoreCase(request.getMethod())) {
+            return false;
+        }
+        return "/admin/auth/challenges".equals(path)
+                || path.matches("^/admin/auth/challenges/[0-9a-fA-F-]{36}/verify$");
     }
 
     @Override
@@ -72,7 +77,7 @@ public class AdminSessionAuthFilter extends OncePerRequestFilter {
             authorities.add(new SimpleGrantedAuthority(ADMIN_SESSION_AUTHORITY));
             UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                     authenticated.usuario(), null, authorities);
-            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            authentication.setDetails(new AdminAuthenticationDetails(authenticated.sessionId()));
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
 

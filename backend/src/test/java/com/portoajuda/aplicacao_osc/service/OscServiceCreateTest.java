@@ -69,7 +69,8 @@ class OscServiceCreateTest {
                                 validacaoCnpjOscService,
                                 persistenciaService,
                                 supabaseStorageService,
-                                limpezaService);
+                                limpezaService,
+                                org.mockito.Mockito.mock(com.portoajuda.aplicacao_osc.admin.AdminAuthorizationService.class));
 
                 usuario = new Usuario();
                 ReflectionTestUtils.setField(usuario, "id", 25);

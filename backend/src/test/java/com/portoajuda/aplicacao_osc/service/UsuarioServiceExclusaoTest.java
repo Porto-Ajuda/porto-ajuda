@@ -1,6 +1,8 @@
 package com.portoajuda.aplicacao_osc.service;
 
 import com.portoajuda.aplicacao_osc.entity.Usuario;
+import com.portoajuda.aplicacao_osc.admin.AdminAssignmentService;
+import com.portoajuda.aplicacao_osc.admin.AdminRbacInvariantService;
 import com.portoajuda.aplicacao_osc.repository.RoleRepository;
 import com.portoajuda.aplicacao_osc.repository.UsuarioRepository;
 import com.portoajuda.aplicacao_osc.segurity.JwtService;
@@ -29,7 +31,10 @@ class UsuarioServiceExclusaoTest {
     @Mock private RoleRepository roleRepository;
     @Mock private EmailService emailService;
     @Mock private SessaoUsuarioService sessaoUsuarioService;
+    @Mock private AdminPrivilegedSessionService adminPrivilegedSessionService;
     @Mock private SupabaseStorageService supabaseStorageService;
+    @Mock private AdminAssignmentService adminAssignmentService;
+    @Mock private AdminRbacInvariantService adminRbacInvariantService;
 
     @InjectMocks
     private UsuarioService usuarioService;
@@ -69,6 +74,7 @@ class UsuarioServiceExclusaoTest {
         verify(usuario).setDataExclusaoAgendada(prazo);
         verify(usuario).setAtivo(false);
         verify(sessaoUsuarioService).revogarSessoesDoUsuario(42);
+        verify(adminPrivilegedSessionService).revogarTodasDoUsuario(42, "ADMIN_REVOKED");
     }
 
     @Test

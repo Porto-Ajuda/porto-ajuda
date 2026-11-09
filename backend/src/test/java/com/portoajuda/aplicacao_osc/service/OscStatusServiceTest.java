@@ -1,6 +1,9 @@
 package com.portoajuda.aplicacao_osc.service;
 
 import com.portoajuda.aplicacao_osc.dto.request.RequestAtualizarStatusOscDTO;
+import com.portoajuda.aplicacao_osc.admin.AdminAssignmentRepository;
+import com.portoajuda.aplicacao_osc.admin.AdminAuthorizationService;
+import com.portoajuda.aplicacao_osc.admin.AdminOperationAuditService;
 import com.portoajuda.aplicacao_osc.entity.HistoricoStatusOsc;
 import com.portoajuda.aplicacao_osc.entity.Osc;
 import com.portoajuda.aplicacao_osc.entity.Role;
@@ -20,6 +23,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.server.ResponseStatusException;
@@ -48,6 +52,8 @@ class OscStatusServiceTest {
     @Mock private OscRepository oscRepository;
     @Mock private HistoricoStatusOscRepository historicoRepository;
     @Mock private OscService oscService;
+    @Mock private AdminAssignmentRepository assignmentRepository;
+    @Mock private AdminOperationAuditService operationAudit;
 
     private OscStatusService service;
     private Osc osc;
@@ -55,7 +61,8 @@ class OscStatusServiceTest {
 
     @BeforeEach
     void configurar() {
-        service = new OscStatusService(oscRepository, historicoRepository, oscService);
+        service = new OscStatusService(oscRepository, historicoRepository, oscService,
+                new AdminAuthorizationService(assignmentRepository, false), operationAudit);
         osc = new Osc();
         ReflectionTestUtils.setField(osc, "id", OSC_ID);
         osc.setStatus(StatusOsc.INATIVA);
@@ -175,12 +182,11 @@ class OscStatusServiceTest {
     }
 
     @Test
-    void apenasRoleAdminUsaTransicaoDaPlataforma() {
-        ResponseStatusException erro = assertThrows(ResponseStatusException.class,
+    void usuarioSemRoleAdminNaoUsaTransicaoDaPlataforma() {
+        AccessDeniedException erro = assertThrows(AccessDeniedException.class,
                 () -> service.atualizarPelaPlataforma(OSC_ID,
                         new RequestAtualizarStatusOscDTO(StatusOsc.ATIVA, null), criador));
 
-        assertEquals(403, erro.getStatusCode().value());
         verify(oscRepository, never()).save(osc);
         verifyNoInteractions(historicoRepository);
     }
@@ -192,11 +198,10 @@ class OscStatusServiceTest {
         roleAdmin.setNome("ADMIN");
         admin.setRoles(new HashSet<>(Set.of(roleAdmin)));
 
-        ResponseStatusException erro = assertThrows(ResponseStatusException.class,
+        AccessDeniedException erro = assertThrows(AccessDeniedException.class,
                 () -> service.atualizarPelaPlataforma(OSC_ID,
                         new RequestAtualizarStatusOscDTO(StatusOsc.ATIVA, null), admin));
 
-        assertEquals(403, erro.getStatusCode().value());
         verifyNoInteractions(oscRepository, historicoRepository);
     }
 

@@ -7,6 +7,7 @@ import com.portoajuda.aplicacao_osc.service.OscService;
 import com.portoajuda.aplicacao_osc.dto.response.OscPerfilDTO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -25,7 +26,7 @@ public class AdminOscController {
     private final OscStatusService oscStatusService;
     private final OscService oscService;
 
-    @PreAuthorize("hasRole('ADMIN') and hasAuthority('ADMIN_SESSION')")
+    @PreAuthorize("@adminAuthorization.hasAnyPermission(authentication, T(com.portoajuda.aplicacao_osc.admin.AdminPermission).ORG_DEACTIVATE, T(com.portoajuda.aplicacao_osc.admin.AdminPermission).ORG_REACTIVATE, T(com.portoajuda.aplicacao_osc.admin.AdminPermission).ORG_RESTORE_ARCHIVED)")
     @PatchMapping("/{id}/status")
     public ResponseEntity<Void> atualizarStatus(
             @PathVariable Integer id,
@@ -35,10 +36,11 @@ public class AdminOscController {
         return ResponseEntity.noContent().build();
     }
 
-    @PreAuthorize("hasRole('ADMIN') and hasAuthority('ADMIN_SESSION')")
+    @PreAuthorize("@adminAuthorization.hasPermission(authentication, T(com.portoajuda.aplicacao_osc.admin.AdminPermission).ORG_READ_PRIVATE)")
     @GetMapping("/{id}/perfil-privado")
     public ResponseEntity<OscPerfilDTO> obterPerfilPrivado(@PathVariable Integer id,
             @AuthenticationPrincipal Usuario administrador) {
-        return ResponseEntity.ok(oscService.buscarPerfilPrivado(id, administrador));
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore())
+                .body(oscService.buscarPerfilPrivado(id, administrador));
     }
 }

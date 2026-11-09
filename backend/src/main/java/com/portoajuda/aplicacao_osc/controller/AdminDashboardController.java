@@ -18,7 +18,7 @@ public class AdminDashboardController {
     private final AdminDashboardService dashboardService;
 
     @GetMapping("/overview")
-    @PreAuthorize("hasRole('ADMIN') and hasAuthority('ADMIN_SESSION')")
+    @PreAuthorize("@adminAuthorization.hasPermission(authentication, T(com.portoajuda.aplicacao_osc.admin.AdminPermission).DASHBOARD_READ)")
     public ResponseEntity<AdminDashboardOverviewDTO> obterVisaoGeral() {
         return ResponseEntity.ok()
                 .cacheControl(CacheControl.noStore())

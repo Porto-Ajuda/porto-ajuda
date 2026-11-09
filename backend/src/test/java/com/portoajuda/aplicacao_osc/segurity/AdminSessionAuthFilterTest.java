@@ -1,6 +1,7 @@
 package com.portoajuda.aplicacao_osc.segurity;
 
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
@@ -94,14 +95,18 @@ class AdminSessionAuthFilterTest {
         MockHttpServletRequest startMfa = new MockHttpServletRequest("POST", "/admin/auth/challenges");
         startMfa.setServletPath("/admin/auth/challenges");
         MockHttpServletRequest verifyMfa = new MockHttpServletRequest(
+                "POST", "/admin/auth/challenges/550e8400-e29b-41d4-a716-446655440000/verify");
+        verifyMfa.setServletPath("/admin/auth/challenges/550e8400-e29b-41d4-a716-446655440000/verify");
+        MockHttpServletRequest malformedVerify = new MockHttpServletRequest(
                 "POST", "/admin/auth/challenges/abc/verify");
-        verifyMfa.setServletPath("/admin/auth/challenges/abc/verify");
+        malformedVerify.setServletPath("/admin/auth/challenges/abc/verify");
         MockHttpServletRequest logout = new MockHttpServletRequest("POST", "/admin/auth/logout");
         logout.setServletPath("/admin/auth/logout");
 
         assertTrue(filter.shouldNotFilter(normal));
         assertTrue(filter.shouldNotFilter(startMfa));
         assertTrue(filter.shouldNotFilter(verifyMfa));
+        assertFalse(filter.shouldNotFilter(malformedVerify));
         assertTrue(filter.shouldNotFilter(logout));
     }
 

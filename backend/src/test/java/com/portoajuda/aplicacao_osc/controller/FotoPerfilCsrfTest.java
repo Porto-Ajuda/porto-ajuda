@@ -17,6 +17,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.portoajuda.aplicacao_osc.admin.AdminAssignmentRepository;
+import com.portoajuda.aplicacao_osc.admin.AdminAuthorizationService;
 import com.portoajuda.aplicacao_osc.entity.Usuario;
 import com.portoajuda.aplicacao_osc.controller.PhoneVerificationController;
 import com.portoajuda.aplicacao_osc.controller.AdminDashboardController;
@@ -59,7 +61,8 @@ import org.springframework.test.web.servlet.MvcResult;
 @WebMvcTest(controllers = { AuthController.class, UsuarioController.class, AdminAuthController.class,
                 PhoneVerificationController.class, AdminDashboardController.class })
 @Import({ SecurityConfiguration.class, CorsConfig.class, JwtAuthFilter.class,
-                AdminSessionAuthFilter.class, AdminSessionCookie.class })
+                AdminSessionAuthFilter.class, AdminSessionCookie.class,
+                AdminAuthorizationService.class })
 @TestPropertySource(properties = {
                 "ALLOWED_ORIGINS=http://localhost:5500",
                 "app.frontend-url=http://localhost:5500",
@@ -105,6 +108,9 @@ class FotoPerfilCsrfTest {
 
         @MockitoBean
         private AdminDashboardService adminDashboardService;
+
+        @MockitoBean
+        private AdminAssignmentRepository adminAssignmentRepository;
 
         @MockitoBean
         private ClientIpResolver clientIpResolver;
