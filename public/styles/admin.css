@@ -147,6 +147,8 @@ a { color: inherit; }
 .admin-breadcrumb { display: flex; align-items: center; gap: 11px; color: var(--admin-muted); font-size: 0.76rem; }
 .admin-breadcrumb strong { color: var(--admin-text); font-weight: 500; }
 .admin-breadcrumb span:nth-child(2) { color: var(--admin-gold); }
+.admin-profile-indicator { margin: 0; padding: 7px 10px; color: var(--admin-muted); background: rgba(255, 255, 255, 0.035); border: 1px solid var(--admin-border); border-radius: 8px; font-size: 0.68rem; white-space: nowrap; }
+.admin-profile-indicator strong { margin-left: 4px; color: var(--admin-gold-soft); font-weight: 600; }
 .admin-session-indicator { margin: 0; color: var(--admin-muted); font-size: 0.7rem; }
 .admin-menu-toggle { display: none; width: 42px; }
 
@@ -286,9 +288,10 @@ body.alto-contraste .admin-secondary-button {
     .admin-sidebar { width: min(82vw, 290px); transform: translateX(-105%); transition: transform 180ms ease; box-shadow: 18px 0 38px rgba(0, 0, 0, 0.35); }
     .admin-sidebar.is-open { transform: translateX(0); }
     .admin-main { margin-left: 0; }
-    .admin-topbar { justify-content: flex-start; min-height: 64px; padding: 0 17px; }
+    .admin-topbar { justify-content: flex-start; flex-wrap: wrap; min-height: 64px; padding: 10px 17px; }
     .admin-menu-toggle { display: inline-grid; flex: 0 0 42px; place-items: center; }
-    .admin-session-indicator { margin-left: auto; max-width: 37vw; text-align: right; }
+    .admin-profile-indicator { order: 3; flex-basis: 100%; width: fit-content; }
+    .admin-session-indicator { order: 4; margin-left: auto; max-width: 60vw; text-align: right; }
     .admin-content { padding: 29px 17px 40px; }
 }
 
@@ -306,4 +309,59 @@ body.alto-contraste .admin-secondary-button {
 
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}
+
+.admin-assignment-toolbar,
+.admin-pagination,
+.admin-dialog__actions { display: flex; align-items: center; gap: 10px; }
+.admin-assignment-toolbar { flex-wrap: wrap; justify-content: flex-end; }
+.admin-inline-status { margin: 0 0 14px; color: var(--admin-muted); font-size: 0.78rem; }
+.admin-assignment-table-wrap { overflow-x: auto; background: rgba(32, 27, 56, 0.78); border: 1px solid var(--admin-border); border-radius: 14px; }
+.admin-assignment-table { width: 100%; min-width: 780px; border-collapse: collapse; text-align: left; }
+.admin-assignment-table caption { padding: 15px 18px; color: var(--admin-muted); font-size: 0.75rem; text-align: left; }
+.admin-assignment-table th,
+.admin-assignment-table td { padding: 14px 16px; border-top: 1px solid rgba(255, 255, 255, 0.07); vertical-align: middle; }
+.admin-assignment-table th { color: var(--admin-gold-soft); font-size: 0.7rem; font-weight: 600; }
+.admin-assignment-table td { color: var(--admin-text); font-size: 0.76rem; }
+.admin-assignment-table tbody tr:hover { background: rgba(255, 255, 255, 0.025); }
+.admin-assignment-actions { display: flex; justify-content: flex-end; gap: 7px; }
+.admin-assignment-actions button { min-height: 36px; padding: 0 10px; font-size: 0.68rem; }
+.admin-status-pill { display: inline-flex; padding: 4px 8px; border: 1px solid var(--admin-border); border-radius: 999px; font-size: 0.65rem; }
+.admin-status-pill--active { color: #9ce3b9; border-color: rgba(121, 214, 161, 0.4); }
+.admin-status-pill--revoked { color: var(--admin-muted); }
+.admin-pagination { justify-content: center; margin-top: 18px; }
+.admin-pagination span { min-width: 130px; color: var(--admin-muted); font-size: 0.72rem; text-align: center; }
+.admin-primary-button:disabled,
+.admin-secondary-button:disabled { cursor: not-allowed; opacity: 0.55; }
+.admin-dialog { width: min(600px, calc(100vw - 28px)); max-height: min(88vh, 780px); padding: 0; overflow: auto; color: var(--admin-text); background: var(--admin-surface); border: 1px solid var(--admin-border); border-radius: 16px; }
+.admin-dialog::backdrop { background: rgba(7, 8, 15, 0.76); backdrop-filter: blur(3px); }
+.admin-dialog__card { padding: clamp(22px, 5vw, 34px); }
+.admin-dialog__card h2 { margin: 0; font-family: "Cormorant Garamond", serif; font-size: 1.9rem; }
+.admin-dialog__description { margin: 8px 0 22px; color: var(--admin-muted); font-size: 0.78rem; line-height: 1.6; }
+.admin-form-field { display: grid; gap: 7px; margin: 16px 0; }
+.admin-form-field label { font-size: 0.74rem; font-weight: 600; }
+.admin-form-field input,
+.admin-form-field select,
+.admin-form-field textarea { width: 100%; min-height: 44px; padding: 10px 12px; color: var(--admin-text); background: rgba(0, 0, 0, 0.18); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; font: inherit; font-size: 0.78rem; }
+.admin-form-field select option { color: #17121e; background: #fff; }
+.admin-form-field textarea { min-height: 110px; resize: vertical; }
+.admin-form-field small { color: var(--admin-muted); font-size: 0.67rem; line-height: 1.5; }
+.admin-current-assignment { padding: 10px 12px; color: var(--admin-gold-soft); background: rgba(242, 170, 26, 0.08); border-radius: 8px; font-size: 0.75rem; }
+.admin-operation-review { margin: 14px 0; padding: 16px; background: rgba(0, 0, 0, 0.16); border: 1px solid var(--admin-border); border-radius: 10px; }
+.admin-operation-review h3 { margin: 0 0 10px; font-size: 0.88rem; }
+.admin-operation-review p { color: var(--admin-muted); font-size: 0.76rem; line-height: 1.6; overflow-wrap: anywhere; }
+.admin-operation-warning { padding: 10px; color: var(--admin-gold-soft) !important; background: rgba(242, 170, 26, 0.08); border-radius: 7px; }
+.admin-dialog__error { padding: 10px 12px; color: var(--admin-danger); background: rgba(255, 178, 167, 0.08); border-radius: 8px; font-size: 0.75rem; }
+.admin-dialog__actions { justify-content: flex-end; flex-wrap: wrap; margin-top: 22px; }
+.admin-dialog__actions button { min-height: 42px; padding: 0 14px; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+
+@media (max-width: 760px) {
+    .admin-assignment-toolbar { justify-content: flex-start; }
+    .admin-pagination { flex-wrap: wrap; }
+}
+
+@media (max-width: 520px) {
+    .admin-dialog__actions { align-items: stretch; flex-direction: column-reverse; }
+    .admin-dialog__actions button { width: 100%; }
 }

@@ -346,21 +346,29 @@ import { getAPI_URL } from "./modoBack.js";
                 method: 'GET', credentials: 'include', cache: 'no-store',
                 headers: { Accept: 'application/json' }, signal
             });
-            if (resposta.status === 401 || resposta.status === 403) return false;
+            if (resposta.status === 401) return 'unauthenticated';
+            if (resposta.status === 403) return 'forbidden';
             // Keep the existing 204 contract; expiry metadata is exposed in safe headers.
-            if (resposta.status === 204) return true;
+            if (resposta.status === 204) return 'authenticated';
             throw new Error('session');
         }
 
         async function mostrarSessaoSeValida(mensagemErro, generation, signal) {
             try {
-                const sessaoValida = await verificarSessaoAtual(signal);
+                const resultado = await verificarSessaoAtual(signal);
                 if (generation !== flowGeneration) return false;
-                if (sessaoValida) {
+                if (resultado === 'authenticated') {
                     mostrarEtapa(etapaSessao, '#continuar-painel-admin');
                     return true;
                 }
-                mostrarMensagem(mensagemErro, 'Não foi possível confirmar a sessão neste navegador. Inicie a autenticação novamente.');
+                if (resultado === 'forbidden') {
+                    mostrarEtapa(etapaLogin, '#email-login-admin');
+                    mostrarMensagem(mensagemLogin, 'O acesso foi recusado por autorização. Nenhuma solicitação de logout foi enviada.');
+                    return false;
+                }
+                challengeId = null;
+                mostrarEtapa(etapaLogin, '#email-login-admin');
+                mostrarMensagem(mensagemLogin, 'Nenhuma sessão administrativa válida foi confirmada. Inicie a autenticação novamente.');
             } catch {
                 if (generation !== flowGeneration) return false;
                 mostrarMensagem(mensagemErro, 'Não foi possível confirmar a sessão por falha de conexão. Verifique a rede e tente novamente.');
@@ -376,10 +384,16 @@ import { getAPI_URL } from "./modoBack.js";
             const generation = flowGeneration;
             botaoContinuar.disabled = true;
             try {
-                const sessaoValida = await verificarSessaoAtual(controller.signal);
+                const resultado = await verificarSessaoAtual(controller.signal);
                 if (generation !== flowGeneration) return;
-                if (sessaoValida) mostrarEtapa(etapaSessao, '#continuar-painel-admin');
-                else mostrarEtapa(etapaLogin, '#email-login-admin');
+                if (resultado === 'authenticated') mostrarEtapa(etapaSessao, '#continuar-painel-admin');
+                else if (resultado === 'forbidden') {
+                    mostrarEtapa(etapaLogin, '#email-login-admin');
+                    mostrarMensagem(mensagemLogin, 'O acesso foi recusado por autorização. Nenhuma solicitação de logout foi enviada.');
+                } else {
+                    mostrarEtapa(etapaLogin, '#email-login-admin');
+                    mostrarMensagem(mensagemLogin, 'Nenhuma sessão administrativa válida foi confirmada. Autentique-se para continuar.');
+                }
             } catch {
                 if (generation !== flowGeneration) return;
                 mostrarEtapa(etapaLogin, '#email-login-admin');
@@ -528,10 +542,14 @@ import { getAPI_URL } from "./modoBack.js";
             botaoContinuarPainel.disabled = true;
             limparMensagem(mensagemSessao);
             try {
-                const sessaoValida = await verificarSessaoAtual(controller.signal);
+                const resultado = await verificarSessaoAtual(controller.signal);
                 if (generation !== flowGeneration) return;
-                if (sessaoValida) {
+                if (resultado === 'authenticated') {
                     window.location.assign(ROTAS.admin);
+                    return;
+                }
+                if (resultado === 'forbidden') {
+                    mostrarMensagem(mensagemSessao, 'O acesso ao painel foi recusado por autorização. Nenhuma solicitação de logout foi enviada.');
                     return;
                 }
                 challengeId = null;
@@ -560,6 +578,7 @@ import { getAPI_URL } from "./modoBack.js";
                 if (resposta.status === 204) {
                     challengeId = null;
                     formularioLogin.reset();
+                    window.dispatchEvent(new Event('porto-ajuda:admin-session-ended'));
                     mostrarEtapa(etapaLogin, '#email-login-admin');
                 } else mostrarMensagem(mensagemSessao, mensagemDeFalha(resposta.status));
             } catch {
