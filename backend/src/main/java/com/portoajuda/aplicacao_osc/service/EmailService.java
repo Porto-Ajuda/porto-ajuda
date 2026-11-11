@@ -77,6 +77,14 @@ public class EmailService {
                                 texto);
         }
 
+        /** Link de recuperação com credencial de uso único; o conteúdo nunca é registrado. */
+        public void enviarRecuperacaoSenha(String emailUsuario, String link) {
+                String texto = "Recebemos uma solicitação para redefinir a senha da sua conta Porto Ajuda.\n\n"
+                                + "Para escolher uma nova senha, acesse o link seguro abaixo. Ele expira em 20 minutos e só pode ser usado uma vez:\n\n"
+                                + link + "\n\nSe você não solicitou a recuperação, ignore esta mensagem.";
+                enviar(emailUsuario, "Recuperação de senha - Porto Ajuda", texto);
+        }
+
         /** Envia somente o OTP já gerado pelo backend; não registre o conteúdo da mensagem. */
         public void enviarCodigoAutenticacaoAdministrativa(String emailUsuario, String codigo) {
                 String texto = "Seu código de verificação administrativa do Porto Ajuda é "

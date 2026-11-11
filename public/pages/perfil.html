@@ -14,6 +14,7 @@
 
     <link rel="stylesheet" href="../styles/geral.css">
     <link rel="stylesheet" href="../styles/perfil.css">
+    <link rel="stylesheet" href="../styles/candidaturas.css">
 
     <script type="module" src="../components/header_footer.js" defer></script>
     <script type="module" src="../components/perfil.js" defer></script>
@@ -23,6 +24,8 @@
     <script type="module" src="../components/acessibilidade.js" defer></script>
     <script type="module" src="../components/avatar.js" defer></script>
     <script type="module" src="../components/tour.js" defer></script>
+    <script type="module" src="../components/minhas-candidaturas.js" defer></script>
+    <script type="module" src="../components/alterar-senha.js" defer></script>
 </head>
 
 <body>
@@ -149,6 +152,11 @@
                             <button class="aba" role="tab" id="aba-registro" aria-controls="painel-registro"
                                 aria-selected="true" type="button">
                                 Registro
+                            </button>
+
+                            <button class="aba" role="tab" id="aba-candidaturas" aria-controls="painel-candidaturas"
+                                aria-selected="false" type="button">
+                                Minhas candidaturas
                             </button>
 
                             <button class="aba" role="tab" id="aba-acss" aria-controls="painel-acss"
@@ -555,6 +563,20 @@
                         <!-- ====================================================== -->
 
 
+                        <div class="painel painel-aba painel-candidaturas" role="tabpanel" id="painel-candidaturas"
+                            aria-labelledby="aba-candidaturas" tabindex="0" hidden>
+                            <div class="candidaturas-usuario__cabecalho">
+                                <div><p class="sobre-label">VOLUNTARIADO</p><h2 class="candidaturas-usuario__titulo">Minhas candidaturas</h2><p class="candidaturas-usuario__descricao">Acompanhe as inscrições que você enviou para oportunidades.</p></div>
+                                <p id="candidaturas-usuario-status" role="status" aria-live="polite" tabindex="-1"></p>
+                            </div>
+                            <div id="candidaturas-usuario-lista" class="candidaturas-usuario__lista" aria-live="polite"></div>
+                            <nav class="candidaturas-paginacao" aria-label="Páginas das minhas candidaturas">
+                                <button type="button" id="candidaturas-usuario-anterior" disabled>Anterior</button>
+                                <span id="candidaturas-usuario-pagina" aria-live="polite"></span>
+                                <button type="button" id="candidaturas-usuario-proximo" disabled>Próxima</button>
+                            </nav>
+                        </div>
+
                         <div class="painel painel-aba" role="tabpanel" id="painel-acss" aria-labelledby="aba-acss"
                             tabindex="0" hidden>
 
@@ -930,6 +952,45 @@
                                 <p id="estado-edicao-perfil" role="status" aria-live="polite" hidden></p>
 
                             </div>
+
+                            <section class="configuracao seguranca-conta" aria-labelledby="titulo-seguranca-conta">
+                                <div>
+                                    <h3 id="titulo-seguranca-conta">Segurança da conta</h3>
+                                    <p>Atualize sua senha para proteger o acesso à sua conta.</p>
+                                </div>
+                                <div class="grupo-botoes">
+                                    <button class="botao botao-secundario" type="button" id="abrir-alterar-senha">Alterar senha</button>
+                                </div>
+                            </section>
+
+                            <dialog id="dialog-alterar-senha" class="dialogo-verificacao-telefone"
+                                aria-labelledby="titulo-dialog-alterar-senha" aria-describedby="estado-alterar-senha">
+                                <div class="dialogo-verificacao-telefone__conteudo">
+                                    <button class="dialogo-verificacao-telefone__fechar" type="button" id="fechar-dialog-alterar-senha" aria-label="Fechar alteração de senha">×</button>
+                                    <h2 id="titulo-dialog-alterar-senha">Alterar senha</h2>
+                                    <p>Informe sua senha atual e escolha uma nova senha.</p>
+                                    <p id="estado-alterar-senha" role="status" aria-live="polite"></p>
+                                    <form id="form-alterar-senha" autocomplete="off">
+                                        <label for="senha-atual-conta">Senha atual</label>
+                                        <div class="campo-senha-conta"><input id="senha-atual-conta" type="password" autocomplete="current-password" maxlength="128" required>
+                                            <button type="button" class="alternar-visibilidade-senha" aria-label="Mostrar senha atual" aria-controls="senha-atual-conta" aria-pressed="false"><i class="fa-regular fa-eye" aria-hidden="true"></i></button></div>
+                                        <label for="nova-senha-conta">Nova senha</label>
+                                        <div class="campo-senha-conta"><input id="nova-senha-conta" type="password" autocomplete="new-password" minlength="8" maxlength="128" required>
+                                            <button type="button" class="alternar-visibilidade-senha" aria-label="Mostrar nova senha" aria-controls="nova-senha-conta" aria-pressed="false"><i class="fa-regular fa-eye" aria-hidden="true"></i></button></div>
+                                        <label for="confirmar-nova-senha-conta">Confirmar nova senha</label>
+                                        <div class="campo-senha-conta"><input id="confirmar-nova-senha-conta" type="password" autocomplete="new-password" minlength="8" maxlength="128" required>
+                                            <button type="button" class="alternar-visibilidade-senha" aria-label="Mostrar confirmação da nova senha" aria-controls="confirmar-nova-senha-conta" aria-pressed="false"><i class="fa-regular fa-eye" aria-hidden="true"></i></button></div>
+                                        <label class="preferencia-sessao-senha" for="desconectar-outros-dispositivos">
+                                            <input id="desconectar-outros-dispositivos" type="checkbox" name="desconectarOutrosDispositivos" checked>
+                                            Desconectar outros dispositivos
+                                        </label>
+                                        <div class="grupo-botoes">
+                                            <button class="botao botao-secundario" type="button" id="cancelar-alterar-senha">Cancelar</button>
+                                            <button class="botao botao-secundario" type="submit" id="confirmar-alterar-senha">Salvar nova senha</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </dialog>
 
                             <section id="seguranca-administrativa" class="configuracao seguranca-administrativa" aria-labelledby="titulo-seguranca-administrativa" hidden>
                                 <div>

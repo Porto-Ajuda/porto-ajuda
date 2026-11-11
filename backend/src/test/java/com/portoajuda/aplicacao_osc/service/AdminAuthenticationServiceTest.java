@@ -89,10 +89,12 @@ class AdminAuthenticationServiceTest {
 
     @Test
     void credenciaisAdminEmitemDoisCodigosIndependentesNoMesmoDesafio() {
-        when(usuarioRepository.findByEmail(any(Email.class))).thenReturn(Optional.of(admin));
+        when(usuarioRepository.findByEmailForUpdate(any(Email.class))).thenReturn(Optional.of(admin));
         when(passwordEncoder.matches("correct-password", admin.getSenha())).thenReturn(true);
         UUID challengeId = service.iniciar(
                 new AdminAuthStartRequest(EMAIL, "correct-password"), "192.0.2.10");
+
+        verify(usuarioRepository).findByEmailForUpdate(new Email(EMAIL));
 
         ArgumentCaptor<AdminAuthChallenge> captor = ArgumentCaptor.forClass(AdminAuthChallenge.class);
         verify(challengeRepository).saveAndFlush(captor.capture());
@@ -119,7 +121,7 @@ class AdminAuthenticationServiceTest {
     @Test
     void usuariosSemRoleAdminRecebemRespostaGenericaSemEnvioDeFatores() {
         Usuario regular = usuario(22, "USUARIO");
-        when(usuarioRepository.findByEmail(any(Email.class))).thenReturn(Optional.of(regular));
+        when(usuarioRepository.findByEmailForUpdate(any(Email.class))).thenReturn(Optional.of(regular));
         when(passwordEncoder.matches("correct-password", regular.getSenha())).thenReturn(true);
 
         UUID challengeId = service.iniciar(
@@ -134,7 +136,7 @@ class AdminAuthenticationServiceTest {
     @Test
     void telefoneArmazenadoMasNaoVerificadoNaoPermiteIniciarAutenticacaoAdmin() {
         admin.setTelefoneVerificado(false);
-        when(usuarioRepository.findByEmail(any(Email.class))).thenReturn(Optional.of(admin));
+        when(usuarioRepository.findByEmailForUpdate(any(Email.class))).thenReturn(Optional.of(admin));
         when(passwordEncoder.matches("correct-password", admin.getSenha())).thenReturn(true);
 
         UUID challengeId = service.iniciar(
@@ -245,7 +247,7 @@ class AdminAuthenticationServiceTest {
 
     @Test
     void senhaIncorretaNaoEmiteCodigosNemPersisteDesafio() {
-        when(usuarioRepository.findByEmail(any(Email.class))).thenReturn(Optional.of(admin));
+        when(usuarioRepository.findByEmailForUpdate(any(Email.class))).thenReturn(Optional.of(admin));
         when(passwordEncoder.matches("wrong-password", admin.getSenha())).thenReturn(false);
 
         UUID response = service.iniciar(
@@ -278,7 +280,7 @@ class AdminAuthenticationServiceTest {
 
     @Test
     void desafioEOutboxSaoPersistidosAntesDeQualquerEntregaExterna() {
-        when(usuarioRepository.findByEmail(any(Email.class))).thenReturn(Optional.of(admin));
+        when(usuarioRepository.findByEmailForUpdate(any(Email.class))).thenReturn(Optional.of(admin));
         when(passwordEncoder.matches("correct-password", admin.getSenha())).thenReturn(true);
         UUID challengeId = service.iniciar(
                 new AdminAuthStartRequest(EMAIL, "correct-password"), "192.0.2.14");
@@ -294,7 +296,7 @@ class AdminAuthenticationServiceTest {
 
     @Test
     void credenciaisValidasNaoEsperamRespostaDoProvedorSms() {
-        when(usuarioRepository.findByEmail(any(Email.class))).thenReturn(Optional.of(admin));
+        when(usuarioRepository.findByEmailForUpdate(any(Email.class))).thenReturn(Optional.of(admin));
         when(passwordEncoder.matches("correct-password", admin.getSenha())).thenReturn(true);
         UUID challengeId = service.iniciar(
                 new AdminAuthStartRequest(EMAIL, "correct-password"), "192.0.2.15");

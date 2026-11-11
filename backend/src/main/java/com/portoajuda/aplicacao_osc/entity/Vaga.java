@@ -3,10 +3,12 @@ package com.portoajuda.aplicacao_osc.entity;
 import com.portoajuda.aplicacao_osc.enums.ModalidadeVoluntariado;
 import com.portoajuda.aplicacao_osc.enums.StatusVaga;
 import jakarta.persistence.*;
+import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
 @Setter
+@Getter
 @Entity
 @Table(name = "vagas_voluntariado")
 public class Vaga {

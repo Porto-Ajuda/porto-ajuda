@@ -1,4 +1,13 @@
+# ==========================================
+# VARIÁVEIS DE AMBIENTE E SEGREDOS
+# ==========================================
 .env
+.env.*
+!.env.example
+
+# ==========================================
+# JAVA / MAVEN
+# ==========================================
 target/
 .mvn/wrapper/maven-wrapper.jar
 
@@ -12,7 +21,7 @@ target/
 .sts4-cache
 
 ### IntelliJ IDEA ###
-.idea
+.idea/
 *.iws
 *.iml
 *.ipr

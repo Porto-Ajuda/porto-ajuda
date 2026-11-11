@@ -4,9 +4,11 @@ import com.portoajuda.aplicacao_osc.dto.response.Coordenadas;
 import com.portoajuda.aplicacao_osc.dto.response.NominatimResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Duration;
@@ -15,7 +17,11 @@ import java.util.Locale;
 import java.util.Map;
 
 import static org.springframework.http.HttpStatus.BAD_GATEWAY;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.CONFLICT;
+import static org.springframework.http.HttpStatus.GATEWAY_TIMEOUT;
 import static org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE;
+import static org.springframework.http.HttpStatus.TOO_MANY_REQUESTS;
 import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
 
 @Service
@@ -24,6 +30,10 @@ public class GeocodingService {
     private static final long INTERVALO_MINIMO_MS = 1_000;
     private static final long CACHE_TTL_MS = Duration.ofHours(24).toMillis();
     private static final int LIMITE_CACHE = 1_000;
+    private static final java.util.Set<String> ESTADOS_BRASIL = java.util.Set.of(
+            "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS",
+            "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC",
+            "SP", "SE", "TO");
 
     private final RestClient restClient;
     private final Map<String, CoordenadasCacheadas> cache = new HashMap<>();
@@ -31,8 +41,12 @@ public class GeocodingService {
 
     public GeocodingService(
             @Value("${app.geocoding.base-url:https://nominatim.openstreetmap.org}") String baseUrl) {
+        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+        requestFactory.setConnectTimeout(Duration.ofSeconds(3));
+        requestFactory.setReadTimeout(Duration.ofSeconds(5));
         this.restClient = RestClient.builder()
                 .baseUrl(baseUrl)
+                .requestFactory(requestFactory)
                 .defaultHeader(
                         HttpHeaders.USER_AGENT,
                         "PortoAjuda/1.0 (+https://www.portoajuda.com.br)")
@@ -106,6 +120,63 @@ public class GeocodingService {
                     BAD_GATEWAY,
                     "Não foi possível localizar o endereço agora. Tente novamente mais tarde.",
                     erro);
+        }
+    }
+
+    /** Geocodifica um local escolhido pelo visitante sem persistir a posição. */
+    public synchronized Coordenadas buscarCoordenadasBusca(String cidade, String estado, String cep) {
+        if (cidade == null || cidade.isBlank() || cidade.length() > 100
+                || cidade.chars().anyMatch(Character::isISOControl)
+                || (estado != null && !estado.isBlank() && !ESTADOS_BRASIL.contains(estado.trim().toUpperCase(Locale.ROOT)))
+                || (cep != null && !cep.isBlank() && !cep.replaceAll("\\D", "").matches("\\d{8}"))) {
+            throw new ResponseStatusException(BAD_REQUEST, "Informe uma cidade, sigla de estado ou CEP válido.");
+        }
+        String cidadeNormalizada = cidade.trim();
+        String estadoNormalizado = estado == null ? "" : estado.trim();
+        String cepNormalizado = cep == null ? "" : cep.replaceAll("\\D", "");
+        String chave = chaveCache("busca", cidadeNormalizada, estadoNormalizado, cepNormalizado);
+        long agora = System.currentTimeMillis();
+        removerCacheExpirado(agora);
+        CoordenadasCacheadas resultadoCacheado = cache.get(chave);
+        if (resultadoCacheado != null) return resultadoCacheado.coordenadas();
+        aguardarIntervalo(agora);
+        inicioUltimaConsulta = System.currentTimeMillis();
+        try {
+            NominatimResponse[] resposta = restClient.get().uri(uriBuilder -> {
+                var builder = uriBuilder.path("/search")
+                        .queryParam("city", cidadeNormalizada)
+                        .queryParam("country", "Brasil")
+                        .queryParam("countrycodes", "br")
+                        .queryParam("format", "jsonv2")
+                        .queryParam("limit", estadoNormalizado.isBlank() && cepNormalizado.isBlank() ? 2 : 1);
+                if (!estadoNormalizado.isBlank()) builder.queryParam("state", estadoNormalizado);
+                if (!cepNormalizado.isBlank()) builder.queryParam("postalcode", cepNormalizado);
+                return builder.build();
+            }).retrieve().body(NominatimResponse[].class);
+            if (resposta == null || resposta.length == 0) {
+                throw new ResponseStatusException(UNPROCESSABLE_ENTITY, "Não foi possível localizar essa cidade.");
+            }
+            if (estadoNormalizado.isBlank() && cepNormalizado.isBlank() && resposta.length > 1) {
+                throw new ResponseStatusException(CONFLICT, "Há mais de uma cidade com esse nome. Informe a sigla do estado.");
+            }
+            Coordenadas coordenadas = new Coordenadas(
+                    Double.parseDouble(resposta[0].lat()), Double.parseDouble(resposta[0].lon()));
+            if (!coordenadasValidas(coordenadas)) {
+                throw new ResponseStatusException(BAD_GATEWAY, "O serviço de localização retornou coordenadas inválidas.");
+            }
+            guardarCache(chave, coordenadas, System.currentTimeMillis());
+            return coordenadas;
+        } catch (ResponseStatusException erro) {
+            throw erro;
+        } catch (RestClientResponseException erro) {
+            if (erro.getStatusCode().value() == 429) {
+                throw new ResponseStatusException(TOO_MANY_REQUESTS, "O serviço de localização está ocupado. Aguarde e tente novamente.");
+            }
+            throw new ResponseStatusException(BAD_GATEWAY, "O serviço de localização não respondeu corretamente.");
+        } catch (org.springframework.web.client.ResourceAccessException erro) {
+            throw new ResponseStatusException(GATEWAY_TIMEOUT, "A consulta de localização expirou. Tente novamente.");
+        } catch (RestClientException | NumberFormatException erro) {
+            throw new ResponseStatusException(BAD_GATEWAY, "Não foi possível localizar a cidade agora.", erro);
         }
     }
 

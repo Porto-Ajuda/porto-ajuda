@@ -26,6 +26,11 @@ public class PageController {
         return "forward:/pages/login.html";
     }
 
+    @GetMapping("/catalogo")
+    public String catalogo() {
+        return "forward:/pages/catalogo.html";
+    }
+
     @GetMapping("/sobre")
     public String sobre() {
         return "forward:/pages/sobre.html";

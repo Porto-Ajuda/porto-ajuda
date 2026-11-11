@@ -12,7 +12,9 @@ import com.portoajuda.aplicacao_osc.entity.Usuario;
 import com.portoajuda.aplicacao_osc.enums.Genero;
 import com.portoajuda.aplicacao_osc.repository.RoleRepository;
 import com.portoajuda.aplicacao_osc.repository.AdminAuthChallengeRepository;
+import com.portoajuda.aplicacao_osc.repository.CodigoAutenticacaoRepository;
 import com.portoajuda.aplicacao_osc.repository.PhoneVerificationChallengeRepository;
+import com.portoajuda.aplicacao_osc.repository.RecuperacaoSenhaRepository;
 import com.portoajuda.aplicacao_osc.repository.UsuarioRepository;
 import com.portoajuda.aplicacao_osc.segurity.JwtService;
 import com.portoajuda.aplicacao_osc.utils.Cpf;
@@ -52,6 +54,8 @@ public class UsuarioService {
         private final AdminAssignmentService adminAssignmentService;
         private final AdminRbacInvariantService adminRbacInvariantService;
         private final PhoneVerificationChallengeRepository phoneVerificationChallengeRepository;
+        private final CodigoAutenticacaoRepository codigoAutenticacaoRepository;
+        private final RecuperacaoSenhaRepository recuperacaoSenhaRepository;
 
         @Transactional
         public void signup(RequestUsuarioDTO usuarioDTO) {
@@ -129,7 +133,8 @@ public class UsuarioService {
         @Transactional
         public LoginResultado login(RequestLoginDTO loginDTO) {
 
-                Usuario usuario = usuarioRepository.findByEmail(
+                // Serialize credential validation/session creation with password changes.
+                Usuario usuario = usuarioRepository.findByEmailForUpdate(
                                 new Email(loginDTO.email()))
                                 .orElseThrow(() -> new BadCredentialsException("Email ou senha incorretos"));
 
@@ -296,19 +301,77 @@ public class UsuarioService {
         }
 
         @Transactional
-        public void changePassword(String senha, Integer id) {
+        public void changePassword(
+                        String senhaAtual,
+                        String senha,
+                        String confirmacao,
+                        Integer id,
+                        Long sessaoRegularAutenticadaId,
+                        boolean desconectarOutrosDispositivos) {
 
-                Usuario usuario = usuarioRepository.findById(id)
-                                .orElseThrow(() -> new IllegalArgumentException("Usuário não existe"));
-
-                if (senha == null || senha.isBlank()) {
-                        throw new BadCredentialsException("Senha não pode ser vazia");
+                if (sessaoRegularAutenticadaId == null) {
+                        throw new BadCredentialsException("Sessão regular autenticada necessária.");
                 }
 
+                Usuario usuario = usuarioRepository.findByIdForUpdate(id)
+                                .orElseThrow(() -> new IllegalArgumentException("Usuário não existe"));
+                if (!usuario.isEnabled()) {
+                        throw new BadCredentialsException("A conta não está disponível para alteração de senha.");
+                }
+                if (senhaAtual == null || !passwordEncoder.matches(senhaAtual, usuario.getSenha())) {
+                        throw new BadCredentialsException("A senha atual está incorreta.");
+                }
+                if (senha == null || !senha.equals(confirmacao)) {
+                        throw new IllegalArgumentException("As senhas informadas não coincidem.");
+                }
+                atualizarSenha(usuario, senha, sessaoRegularAutenticadaId, desconectarOutrosDispositivos);
+        }
+
+        @Transactional
+        public void redefinirSenha(Usuario usuario, String senha) {
+                Usuario bloqueado = usuarioRepository.findByIdForUpdate(usuario.getId())
+                                .orElseThrow(() -> new IllegalArgumentException("Link inválido ou expirado."));
+                if (!bloqueado.isEnabled()) throw new IllegalArgumentException("Link inválido ou expirado.");
+                // Token recovery deliberately keeps the full-revocation policy and requires login again.
+                atualizarSenha(bloqueado, senha, null, true);
+        }
+
+        public void validarNovaSenha(Usuario usuario, String senha) {
+                validarSenha(senha);
+                if (passwordEncoder.matches(senha, usuario.getSenha())) {
+                        throw new IllegalArgumentException("A nova senha deve ser diferente da senha atual.");
+                }
+        }
+
+        private void atualizarSenha(
+                        Usuario usuario,
+                        String senha,
+                        Long sessaoRegularAutenticadaId,
+                        boolean desconectarOutrosDispositivos) {
+                validarNovaSenha(usuario, senha);
                 usuario.setSenha(passwordEncoder.encode(senha));
+                usuarioRepository.save(usuario);
+                if (sessaoRegularAutenticadaId == null) {
+                        sessaoUsuarioService.revogarSessoesDoUsuario(usuario.getId());
+                } else {
+                        sessaoUsuarioService.preservarSessaoAtualDuranteTrocaSenha(
+                                        usuario.getId(), sessaoRegularAutenticadaId,
+                                        desconectarOutrosDispositivos);
+                }
                 invalidarDesafiosVerificacao(usuario.getId());
-                adminPrivilegedSessionService.revogarTodasDoUsuario(
-                                usuario.getId(), "PASSWORD_CHANGED");
+                recuperacaoSenhaRepository.invalidateForUser(usuario.getId(), Instant.now());
+                adminPrivilegedSessionService.revogarTodasDoUsuario(usuario.getId(), "PASSWORD_CHANGED");
+        }
+
+        private void validarSenha(String senha) {
+                if (senha == null || senha.length() < 8 || senha.length() > 128
+                                || !senha.matches("(?s).*[A-Z].*")
+                                || !senha.matches("(?s).*[a-z].*")
+                                || !senha.matches("(?s).*[0-9].*")
+                                || !senha.matches("(?s).*[^A-Za-z0-9].*")) {
+                        throw new IllegalArgumentException(
+                                        "A senha deve ter ao menos 8 caracteres, incluindo maiúscula, minúscula, número e caractere especial.");
+                }
         }
 
         public ResponseUsuarioDTO view(Usuario usuario) {
@@ -415,13 +478,15 @@ public class UsuarioService {
 
         private void invalidarDesafiosVerificacao(Integer usuarioId) {
                 java.time.Instant agora = java.time.Instant.now();
+                codigoAutenticacaoRepository.deleteByUsuarioId(usuarioId);
                 adminAuthChallengeRepository.invalidatePendingForUser(
                                 usuarioId,
                                 agora,
                                 com.portoajuda.aplicacao_osc.entity.AdminAuthChallenge.State.INVALIDATED,
                                 List.of(
                                                 com.portoajuda.aplicacao_osc.entity.AdminAuthChallenge.State.ISSUING,
-                                                com.portoajuda.aplicacao_osc.entity.AdminAuthChallenge.State.PENDING));
+                                                        com.portoajuda.aplicacao_osc.entity.AdminAuthChallenge.State.PENDING,
+                                                        com.portoajuda.aplicacao_osc.entity.AdminAuthChallenge.State.VERIFIED));
                 adminAuthDeliveryQueueService.clearInvalidatedForUser(usuarioId);
                 phoneVerificationChallengeRepository.invalidatePendingForUser(usuarioId, agora);
         }

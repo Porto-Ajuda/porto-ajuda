@@ -27,10 +27,28 @@ import {
     const lembrarDeMim = document.getElementById("lembrarDeMim");
     const formCancelarExclusao = document.getElementById("form-cancelar-exclusao");
     const linkCancelarExclusao = document.getElementById("link-cancelar-exclusao");
+    const linkEsqueciSenha = document.getElementById("link-esqueci-senha");
     const linkCadastro = document.getElementById("link-cadastro");
     const mostrarFormularioCancelamento = document.getElementById("mostrar-cancelamento-exclusao");
     const voltarLoginCancelamento = document.getElementById("voltar-login-cancelamento");
     const estadoCancelarExclusao = document.getElementById("estado-cancelar-exclusao");
+
+    function destinoSeguroAposLogin() {
+        const solicitado = new URLSearchParams(window.location.search).get("retorno");
+        if (!solicitado || !solicitado.startsWith("/") || solicitado.startsWith("//") || solicitado.includes("\\")) return "/";
+        try {
+            const destino = new URL(solicitado, window.location.origin);
+            const rotasPermitidas = new Set([
+                "/", "/pages/Porto-Ajuda.html", "/catalogo", "/pages/catalogo.html",
+                "/pages/ong-profile.html", "/ong-profile"
+            ]);
+            return destino.origin === window.location.origin && rotasPermitidas.has(destino.pathname)
+                ? `${destino.pathname}${destino.search}${destino.hash}`
+                : "/";
+        } catch {
+            return "/";
+        }
+    }
 
     const avisoExclusao = new URLSearchParams(window.location.search)
         .get("exclusao");
@@ -61,6 +79,7 @@ import {
         if (introLogin) introLogin.hidden = recuperacaoAtiva;
         if (formLogin) formLogin.hidden = recuperacaoAtiva;
         if (linkCancelarExclusao) linkCancelarExclusao.hidden = recuperacaoAtiva;
+        if (linkEsqueciSenha) linkEsqueciSenha.hidden = recuperacaoAtiva;
         if (linkCadastro) linkCadastro.hidden = recuperacaoAtiva;
         if (formCancelarExclusao) formCancelarExclusao.hidden = !recuperacaoAtiva;
         if (avisoExclusao === "solicitada" && alertaLogin) alertaLogin.hidden = recuperacaoAtiva;
@@ -200,6 +219,164 @@ import {
         });
     });
 
+    // ---------- RECUPERAÇÃO DE SENHA ----------
+    const dialogoRecuperacao = document.getElementById("dialog-recuperacao-senha");
+    const linkRecuperacao = document.getElementById("abrir-recuperacao-senha");
+    const formularioSolicitacaoSenha = document.getElementById("form-solicitar-recuperacao-senha");
+    const formularioRedefinicaoSenha = document.getElementById("form-redefinir-senha");
+    const botaoNovoLinkRecuperacao = document.getElementById("solicitar-novo-link-recuperacao");
+    const estadoRecuperacaoSenha = document.getElementById("estado-recuperacao-senha");
+    let tokenRecuperacao = "";
+    let recuperacaoEmAndamento = false;
+    let focoAnteriorRecuperacao = null;
+
+    function atualizarDialogoRecuperacao() {
+        const redefinir = Boolean(tokenRecuperacao);
+        formularioSolicitacaoSenha.hidden = redefinir;
+        formularioRedefinicaoSenha.hidden = !redefinir;
+        document.getElementById("titulo-dialog-recuperacao-senha").textContent = redefinir
+            ? "Definir nova senha" : "Recuperar senha";
+        document.getElementById("descricao-dialog-recuperacao-senha").textContent = redefinir
+            ? "Escolha uma senha forte para voltar a acessar sua conta."
+            : "Informe seu e-mail e enviaremos um link seguro para redefinir sua senha.";
+    }
+
+    function abrirDialogoRecuperacao(token = "") {
+        if (!dialogoRecuperacao || !formularioSolicitacaoSenha || !formularioRedefinicaoSenha
+                || !estadoRecuperacaoSenha || !botaoNovoLinkRecuperacao) return;
+        tokenRecuperacao = token;
+        botaoNovoLinkRecuperacao.hidden = true;
+        atualizarDialogoRecuperacao();
+        estadoRecuperacaoSenha.textContent = token
+            ? "Link de recuperação carregado. O link é válido por tempo limitado."
+            : "";
+        focoAnteriorRecuperacao = document.activeElement;
+        if (!dialogoRecuperacao.open) dialogoRecuperacao.showModal();
+        (token ? document.getElementById("nova-senha-recuperacao")
+            : document.getElementById("email-recuperacao-senha")).focus();
+    }
+
+    function fecharDialogoRecuperacao() {
+        if (dialogoRecuperacao.open) dialogoRecuperacao.close();
+        if (focoAnteriorRecuperacao?.isConnected) focoAnteriorRecuperacao.focus();
+        tokenRecuperacao = "";
+        formularioRedefinicaoSenha.reset();
+    }
+
+    botaoNovoLinkRecuperacao?.addEventListener("click", () => {
+        tokenRecuperacao = "";
+        formularioRedefinicaoSenha.reset();
+        formularioSolicitacaoSenha.reset();
+        formularioSolicitacaoSenha.hidden = false;
+        formularioRedefinicaoSenha.hidden = true;
+        botaoNovoLinkRecuperacao.hidden = true;
+        history.replaceState(null, "", `${location.pathname}${location.search}#recuperacao-senha`);
+        atualizarDialogoRecuperacao();
+        estadoRecuperacaoSenha.textContent = "Informe o e-mail para solicitar um novo link.";
+        document.getElementById("email-recuperacao-senha").focus();
+    });
+
+    linkRecuperacao?.addEventListener("click", (event) => {
+        event.preventDefault();
+        const emailLogin = document.getElementById("email-login");
+        if (emailLogin?.value) document.getElementById("email-recuperacao-senha").value = emailLogin.value.trim();
+        abrirDialogoRecuperacao();
+    });
+    document.getElementById("fechar-recuperacao-senha")?.addEventListener("click", fecharDialogoRecuperacao);
+    document.getElementById("voltar-login-recuperacao")?.addEventListener("click", fecharDialogoRecuperacao);
+    dialogoRecuperacao?.addEventListener("click", (event) => {
+        if (event.target === dialogoRecuperacao) fecharDialogoRecuperacao();
+    });
+    dialogoRecuperacao?.addEventListener("close", () => {
+        if (focoAnteriorRecuperacao?.isConnected) focoAnteriorRecuperacao.focus();
+    });
+
+    formularioSolicitacaoSenha?.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        if (recuperacaoEmAndamento) return;
+        const botao = document.getElementById("enviar-recuperacao-senha");
+        recuperacaoEmAndamento = true;
+        botao.disabled = true;
+        botao.setAttribute("aria-busy", "true");
+        estadoRecuperacaoSenha.textContent = "Enviando solicitação...";
+        try {
+            const csrf = await obterTokenCSRF();
+            const api = (await getAPI_URL()).replace(/\/+$/, "");
+            const resposta = await fetch(`${api}/usuario/recuperacao-senha/solicitar`, {
+                method: "POST", credentials: "include", cache: "no-store",
+                headers: { "Content-Type": "application/json", [csrf.headerName]: csrf.token },
+                body: JSON.stringify({ email: document.getElementById("email-recuperacao-senha").value.trim() })
+            });
+            if (!resposta.ok) throw new Error();
+            estadoRecuperacaoSenha.textContent = "Solicitação recebida. Se houver uma conta elegível, as instruções podem ser encaminhadas. Se não receber uma mensagem, tente novamente mais tarde.";
+            formularioSolicitacaoSenha.reset();
+        } catch {
+            estadoRecuperacaoSenha.textContent = "Não foi possível enviar a solicitação agora. Tente novamente em instantes.";
+        } finally {
+            recuperacaoEmAndamento = false;
+            botao.disabled = false;
+            botao.removeAttribute("aria-busy");
+        }
+    });
+
+    formularioRedefinicaoSenha?.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        if (recuperacaoEmAndamento) return;
+        const novaSenha = document.getElementById("nova-senha-recuperacao").value;
+        const confirmacao = document.getElementById("confirmar-senha-recuperacao").value;
+        const requisitos = novaSenha.length >= 8 && novaSenha.length <= 128
+            && /[A-Z]/.test(novaSenha) && /[a-z]/.test(novaSenha)
+            && /[0-9]/.test(novaSenha) && /[^A-Za-z0-9]/.test(novaSenha);
+        if (!requisitos || novaSenha !== confirmacao) {
+            estadoRecuperacaoSenha.textContent = novaSenha !== confirmacao
+                ? "As senhas informadas não coincidem."
+                : "Use ao menos 8 caracteres, com maiúscula, minúscula, número e caractere especial.";
+            return;
+        }
+        const botao = document.getElementById("confirmar-recuperacao-senha");
+        recuperacaoEmAndamento = true;
+        botao.disabled = true;
+        botao.setAttribute("aria-busy", "true");
+        estadoRecuperacaoSenha.textContent = "Atualizando senha...";
+        try {
+            const csrf = await obterTokenCSRF();
+            const api = (await getAPI_URL()).replace(/\/+$/, "");
+            const resposta = await fetch(`${api}/usuario/recuperacao-senha/redefinir`, {
+                method: "POST", credentials: "include", cache: "no-store",
+                headers: { "Content-Type": "application/json", [csrf.headerName]: csrf.token },
+                body: JSON.stringify({ token: tokenRecuperacao, novaSenha, confirmarSenha: confirmacao })
+            });
+            const corpo = await resposta.json().catch(() => ({}));
+            if (!resposta.ok) {
+                const erro = new Error(corpo.mensagem || "Não foi possível redefinir a senha.");
+                erro.status = resposta.status;
+                throw erro;
+            }
+            estadoRecuperacaoSenha.textContent = corpo.mensagem || "Senha redefinida. Entre novamente.";
+            formularioRedefinicaoSenha.reset();
+            tokenRecuperacao = "";
+            history.replaceState(null, "", `${location.pathname}${location.search}#login`);
+            setTimeout(fecharDialogoRecuperacao, 1200);
+        } catch (erro) {
+            estadoRecuperacaoSenha.textContent = erro.message || "Não foi possível redefinir a senha. Solicite um novo link.";
+            if (erro.status === 400) {
+                formularioRedefinicaoSenha.reset();
+                botaoNovoLinkRecuperacao.hidden = false;
+            }
+        } finally {
+            recuperacaoEmAndamento = false;
+            botao.disabled = false;
+            botao.removeAttribute("aria-busy");
+        }
+    });
+
+    const fragmentoRecuperacao = window.location.hash.match(/^#redefinir-senha\/([A-Za-z0-9_-]{30,128})$/);
+    if (fragmentoRecuperacao) {
+        const token = decodeURIComponent(fragmentoRecuperacao[1]);
+        history.replaceState(null, "", `${location.pathname}${location.search}#recuperacao-senha`);
+        abrirDialogoRecuperacao(token);
+    }
+
     // ---------- LOGIN ----------
 
     if (formLogin) {
@@ -275,7 +452,7 @@ import {
                 // Não armazenamos JWTs ou dados da sessão no localStorage.
                 // O redirecionamento é para o frontend, não para a API.
                 marcarSessaoAutenticada({ novaSessao: true });
-                window.location.href = "/";
+                window.location.replace(destinoSeguroAposLogin());
                 return;
             }
 

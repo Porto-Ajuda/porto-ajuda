@@ -4,8 +4,11 @@ package com.portoajuda.aplicacao_osc.controller;
 import com.portoajuda.aplicacao_osc.entity.Usuario;
 import com.portoajuda.aplicacao_osc.repository.UsuarioRepository;
 import com.portoajuda.aplicacao_osc.segurity.JwtService;
+import com.portoajuda.aplicacao_osc.segurity.ClientIpResolver;
+import com.portoajuda.aplicacao_osc.segurity.UserAuthenticationDetails;
 import com.portoajuda.aplicacao_osc.service.CodigoAutenticacaoService;
 import com.portoajuda.aplicacao_osc.service.CodigoAutenticacaoService.LoginPorCodigo;
+import com.portoajuda.aplicacao_osc.service.RecuperacaoSenhaService;
 import com.portoajuda.aplicacao_osc.service.UsuarioService;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,6 +29,9 @@ import org.springframework.security.authentication.AnonymousAuthenticationToken;
 // import com.portoajuda.aplicacao_osc.dto.response.ResponsePerfilUsuarioDTO;
 
 import com.portoajuda.aplicacao_osc.dto.request.RequestAtualizarPerfilDTO;
+import com.portoajuda.aplicacao_osc.dto.request.RequestAlterarSenhaDTO;
+import com.portoajuda.aplicacao_osc.dto.request.RequestRedefinirSenhaDTO;
+import com.portoajuda.aplicacao_osc.dto.request.RequestSolicitarRecuperacaoSenhaDTO;
 import jakarta.validation.Valid;
 
 import java.net.URI;
@@ -55,6 +61,8 @@ public class UsuarioController {
         private final JwtService jwtService;
         private final CodigoAutenticacaoService codigoAutenticacaoService;
         private final UsuarioService usuarioService;
+        private final RecuperacaoSenhaService recuperacaoSenhaService;
+        private final ClientIpResolver clientIpResolver;
         private final PreferenciasAcessibilidadeRepository preferenciasAcessibilidadeRepository;
 
         @Value("${app.frontend-url}")
@@ -89,6 +97,77 @@ public class UsuarioController {
                                                 "Se houver uma conta pendente de confirmação, as instruções serão enviadas."));
         }
 
+        @PostMapping("/recuperacao-senha/solicitar")
+        public ResponseEntity<Map<String, String>> solicitarRecuperacaoSenha(
+                        @Valid @RequestBody RequestSolicitarRecuperacaoSenhaDTO dados,
+                        HttpServletRequest request) {
+                try {
+                        recuperacaoSenhaService.solicitar(dados.email(), clientIpResolver.resolve(request));
+                } catch (IllegalStateException ignored) {
+                        // Resposta genérica para não revelar cadastro ou configuração de envio.
+                } catch (org.springframework.core.task.TaskRejectedException ignored) {
+                        // Queue saturation has the same public response as every other address.
+                }
+                return ResponseEntity.accepted().cacheControl(org.springframework.http.CacheControl.noStore())
+                                .body(Map.of("mensagem", "Solicitação recebida. Se houver uma conta elegível, as instruções podem ser encaminhadas. Se não receber uma mensagem, tente novamente mais tarde."));
+        }
+
+        @PostMapping("/recuperacao-senha/redefinir")
+        public ResponseEntity<?> redefinirSenha(
+                        @Valid @RequestBody RequestRedefinirSenhaDTO dados,
+                        HttpServletRequest request) {
+                boolean redefinida = recuperacaoSenhaService.redefinir(
+                                dados.token(), dados.novaSenha(), dados.confirmarSenha(), clientIpResolver.resolve(request));
+                if (!redefinida) {
+                        return ResponseEntity.badRequest().cacheControl(org.springframework.http.CacheControl.noStore())
+                                        .body(Map.of("mensagem", "Não foi possível redefinir a senha. Confira o link e os dados informados ou solicite um novo link."));
+                }
+                return ResponseEntity.ok()
+                                .header(HttpHeaders.SET_COOKIE, apagarCookie(ACCESS_COOKIE, "/").toString())
+                                .header(HttpHeaders.SET_COOKIE, apagarCookie(REFRESH_COOKIE, "/").toString())
+                                .header(HttpHeaders.SET_COOKIE, apagarCookie("PA_ADMIN_SESSION", "/admin").toString())
+                                .cacheControl(org.springframework.http.CacheControl.noStore())
+                                .body(Map.of("mensagem", "Senha redefinida. Entre novamente com a nova senha."));
+        }
+
+        @PostMapping("/alterar-senha")
+        public ResponseEntity<?> alterarSenha(
+                        @Valid @RequestBody RequestAlterarSenhaDTO dados,
+                        Authentication authentication) {
+                if (authentication == null || !authentication.isAuthenticated()
+                                || authentication instanceof AnonymousAuthenticationToken) {
+                        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("mensagem", "Autenticação necessária."));
+                }
+                if (!(authentication.getDetails() instanceof UserAuthenticationDetails details)
+                                || details.sessionId() == null) {
+                        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                        .body(Map.of("mensagem", "Sessão autenticada inválida."));
+                }
+                try {
+                        int usuarioId = Integer.parseInt(authentication.getName());
+                        boolean desconectarOutros = dados.desconectarOutrosDispositivos() == null
+                                        || dados.desconectarOutrosDispositivos();
+                        usuarioService.changePassword(dados.senhaAtual(), dados.novaSenha(),
+                                        dados.confirmarSenha(), usuarioId, details.sessionId(), desconectarOutros);
+                        return ResponseEntity.ok()
+                                        .cacheControl(org.springframework.http.CacheControl.noStore())
+                                        .body(Map.of("mensagem", desconectarOutros
+                                                        ? "Senha alterada. Esta sessão permanece ativa; as demais sessões comuns foram desconectadas."
+                                                        : "Senha alterada. Esta sessão permanece ativa; as demais sessões comuns foram mantidas."));
+                } catch (NumberFormatException e) {
+                        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("mensagem", "Sessão inválida."));
+                } catch (org.springframework.security.authentication.BadCredentialsException e) {
+                        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("mensagem", e.getMessage()));
+                } catch (IllegalArgumentException e) {
+                        return ResponseEntity.badRequest().body(Map.of("mensagem", e.getMessage()));
+                }
+        }
+
+        private ResponseCookie apagarCookie(String nome, String path) {
+                return ResponseCookie.from(nome, "").httpOnly(true).secure(secureCookies)
+                                .sameSite(secureCookies ? "None" : "Lax").path(path).maxAge(Duration.ZERO).build();
+        }
+
         @GetMapping("/confirmar-email")
         @Transactional
         public ResponseEntity<Void> confirmarEmail(
@@ -98,12 +177,18 @@ public class UsuarioController {
                         String subject = jwtService.extractSubject(token);
                         Integer usuarioId = Integer.valueOf(subject);
 
-                        Usuario usuario = usuarioRepository.findById(usuarioId)
+                        Usuario usuario = usuarioRepository.findByIdForUpdate(usuarioId)
                                         .orElse(null);
 
                         if (usuario == null
                                         || !jwtService.validateEmailVerificationToken(token, usuario)) {
                                 return redirecionar("erro", null);
+                        }
+
+                        // A code is issued only on the first transition. Replayed verification
+                        // links must not mint a fresh passwordless login credential.
+                        if (usuario.isEmailVerificado()) {
+                                return redirecionar("sucesso", null);
                         }
 
                         usuario.setEmailVerificado(true);

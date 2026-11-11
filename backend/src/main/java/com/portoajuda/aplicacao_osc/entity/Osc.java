@@ -35,6 +35,7 @@ public class Osc {
 
         @Getter(AccessLevel.NONE)
         @Setter(AccessLevel.NONE)
+        @BatchSize(size = 100)
         @ElementCollection
         @CollectionTable(name = "osc_causas", joinColumns = @JoinColumn(name = "id_osc"))
         private Set<CausaOscRegistro> registrosCausas = new HashSet<>();

@@ -1452,6 +1452,31 @@ body {
     outline-offset: 3px;
 }
 
+.dialogo-verificacao-telefone__conteudo .preferencia-sessao-senha {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.dialogo-verificacao-telefone__conteudo .preferencia-sessao-senha input[type="checkbox"] {
+    flex: 0 0 18px;
+    width: 18px;
+    min-height: 18px;
+    height: 18px;
+    margin: 0;
+    padding: 0;
+    accent-color: var(--gold);
+}
+
+.campo-senha-conta { position: relative; }
+.campo-senha-conta input { padding-right: 48px !important; }
+.alternar-visibilidade-senha {
+    position: absolute; top: 50%; right: 8px; transform: translateY(-50%);
+    width: 36px; height: 36px; color: var(--text); background: transparent;
+    border: 0; border-radius: 50%; cursor: pointer;
+}
+.alternar-visibilidade-senha:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+
 #codigo-verificacao-telefone {
     text-align: center;
     font-size: 1.35rem;

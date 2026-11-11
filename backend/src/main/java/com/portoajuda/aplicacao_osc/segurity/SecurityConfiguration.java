@@ -82,6 +82,7 @@ public class SecurityConfiguration {
                                                                 "/apoie",
                                                                 "/contato",
                                                                 "/login",
+                                                                "/catalogo",
                                                                 "/sobre",
                                                                 "/iniciativas",
                                                                 "/contribuicao",
@@ -120,6 +121,8 @@ public class SecurityConfiguration {
                                                                 "/usuario/confirmar-email",
                                                                 "/usuario/trocar-codigo",
                                                                 "/usuario/reenviar-confirmacao",
+                                                                "/usuario/recuperacao-senha/solicitar",
+                                                                "/usuario/recuperacao-senha/redefinir",
                                                                 "/usuario/cancelar-exclusao",
                                                                 "/usuario/refresh")
                                                 .permitAll()
@@ -153,8 +156,21 @@ public class SecurityConfiguration {
 
                                                 .requestMatchers(
                                                                 HttpMethod.GET,
+                                                                "/voluntariado/vagas/*/disponibilidade",
+                                                                "/geocoding/location",
                                                                 "/osc/consultar-cnpj/**",
                                                                 "/osc/{id}")
+                                                .permitAll()
+
+                                                // Conteúdo público da ONG; as rotas de gestão permanecem autenticadas.
+                                                .requestMatchers(
+                                                                HttpMethod.GET,
+                                                                "/post/publicos",
+                                                                "/post/voluntariados",
+                                                                "/post/catalogo/publicacoes",
+                                                                "/post/catalogo/voluntariados",
+                                                                "/post/osc/*/publicos",
+                                                                "/post/osc/*/publicos/*")
                                                 .permitAll()
 
                                                 // Demais rotas exigem autenticação

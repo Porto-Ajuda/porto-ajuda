@@ -2,10 +2,14 @@ package com.portoajuda.aplicacao_osc.entity;
 
 import com.portoajuda.aplicacao_osc.enums.StatusCandidatura;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDate;
 
 @Entity
+@Getter
+@Setter
 @Table(name = "candidaturas_voluntariado")
 public class CandidaturasVoluntariado {
     @Id

@@ -35,6 +35,10 @@
       "destination": "/pages/login"
     },
     {
+      "source": "/catalogo",
+      "destination": "/pages/catalogo"
+    },
+    {
       "source": "/contribuicao",
       "destination": "/pages/contribuicao"
     },

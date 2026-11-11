@@ -3,10 +3,15 @@ package com.portoajuda.aplicacao_osc.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 import com.portoajuda.aplicacao_osc.entity.Osc;
 import com.portoajuda.aplicacao_osc.entity.Role;
 import com.portoajuda.aplicacao_osc.entity.Usuario;
+import com.portoajuda.aplicacao_osc.admin.AdminAuthorizationService;
+import com.portoajuda.aplicacao_osc.admin.AdminPermission;
+import com.portoajuda.aplicacao_osc.enums.StatusOsc;
 import com.portoajuda.aplicacao_osc.repository.OscMembrosRepository;
 import com.portoajuda.aplicacao_osc.repository.OscRepository;
 import com.portoajuda.aplicacao_osc.repository.RoleRepository;
@@ -68,5 +73,35 @@ class OscServiceAdminSessionTest {
                 () -> service.buscarPerfilPrivado(91, admin));
 
         assertEquals(403, erro.getStatusCode().value());
+    }
+
+    @Test
+    void platformReadOnlyPermissionDoesNotExposeStatusMutationControl() {
+        AdminAuthorizationService authorization = mock(AdminAuthorizationService.class);
+        OscService service = new OscService(
+                oscRepository, usuarioRepository, roleRepository, membrosRepository,
+                geocodingService, validacaoCnpjOscService, persistenciaService,
+                supabaseStorageService, limpezaService, authorization);
+        Osc osc = new Osc();
+        ReflectionTestUtils.setField(osc, "id", 91);
+        osc.setStatus(StatusOsc.ATIVA);
+        Usuario admin = new Usuario();
+        ReflectionTestUtils.setField(admin, "id", 41);
+        Role role = new Role();
+        role.setNome("ADMIN");
+        admin.setRoles(new HashSet<>(Set.of(role)));
+        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                admin, null, List.of(new SimpleGrantedAuthority("ROLE_ADMIN"),
+                        new SimpleGrantedAuthority("ADMIN_SESSION")));
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        when(oscRepository.findById(91)).thenReturn(Optional.of(osc));
+        when(authorization.hasValidPrivilegedSession(authentication)).thenReturn(true);
+        when(authorization.hasPermission(authentication, AdminPermission.ORG_READ_PRIVATE)).thenReturn(true);
+        when(authorization.hasPermission(authentication, AdminPermission.ORG_DEACTIVATE)).thenReturn(false);
+
+        var profile = service.buscarPerfilPrivado(91, admin);
+
+        assertEquals(false, profile.podeAdministrarStatusPlataforma());
+        verify(authorization).hasPermission(authentication, AdminPermission.ORG_DEACTIVATE);
     }
 }

@@ -104,7 +104,8 @@ public class AdminAuthenticationService {
             return decoyId;
         }
 
-        Usuario usuario = usuarioRepository.findByEmail(new Email(email)).orElse(null);
+        // Serialize password validation and challenge creation with password changes.
+        Usuario usuario = usuarioRepository.findByEmailForUpdate(new Email(email)).orElse(null);
         boolean passwordMatches = usuario == null
                 ? passwordEncoder.matches(request.senha(), dummyPasswordHash)
                 : passwordEncoder.matches(request.senha(), usuario.getSenha());

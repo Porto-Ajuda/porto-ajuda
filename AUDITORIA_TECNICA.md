@@ -22,8 +22,8 @@ O sistema não pode ser declarado validado de ponta a ponta. O ambiente acessív
 | URL padrão de confirmação | `backend/src/main/resources/application.properties` | O padrão de `APP_FRONTEND_URL` usa `https://www.portoajuda.com.br`; confirme no painel/DNS se `www` e o domínio raiz estão ambos configurados. |
 | URL da API no frontend | `public/components/modoBack.js` | `localhost` usa `http://localhost:8080`; os demais hosts usam `https://api.portoajuda.com.br`. |
 | Backend | `backend/pom.xml` | Java 21; Spring Boot atualizado nesta auditoria de 4.0.6 para 4.0.9. |
-| Banco | `backend/src/main/resources/application.properties` e [backend/CONFIGURACAO.md](backend/CONFIGURACAO.md) | Uma única conexão Supabase via `DB_REMOTE_*`; sem fallback local ou seleção por perfil. |
-| Configuração local | `.env` ignorado pelo Git e variáveis do processo | `application.properties` importa o `.env` opcionalmente; o backend usa somente `DB_REMOTE_*`. |
+| Banco | `backend/src/main/resources/application.properties` e [backend/CONFIGURACAO.md](backend/CONFIGURACAO.md) | Uma única conexão Supabase via `DB_URL`, `DB_USER` e `DB_PASSWORD`; sem fallback local ou seleção por perfil. |
+| Configuração local | `.env` ignorado pelo Git e variáveis do processo | `application.properties` importa o `.env` opcionalmente; o backend usa somente `DB_URL`, `DB_USER` e `DB_PASSWORD`. |
 | Homologação | Configuração versionada | Não encontrei perfil, URL ou configuração que identifique uma homologação separada. |
 | Hospedagem do backend | Configuração versionada | Não encontrei configuração de Railway ou de outro provedor nem logs de implantação no repositório. |
 | Migrações | `backend/src/main/resources/db/manual` | Scripts SQL manuais; `spring.jpa.hibernate.ddl-auto=validate`. Não há Flyway ou Liquibase. |
@@ -88,7 +88,7 @@ O padrão de autorização exige autenticação para as demais rotas, com endpoi
 
 ### AUD-05 — Configuração unificada do banco (atualização)
 
-- **Decisão:** execução local e Railway usam as mesmas propriedades `spring.datasource.*`, preenchidas por `DB_REMOTE_URL`, `DB_REMOTE_USER` e `DB_REMOTE_PASSWORD`.
+- **Decisão:** execução local e Railway usam as mesmas propriedades `spring.datasource.*`, preenchidas por `DB_URL`, `DB_USER` e `DB_PASSWORD`. A configuração atual não lê as antigas variáveis `DB_REMOTE_*`.
 - **Correção:** removido o `DataSource` customizado com fallback local. Arquivos de perfil local e produção não existem. O Spring Boot falha se faltar uma variável obrigatória; não há seleção implícita de banco.
 - **Inicialização:** semeio de papéis exige `APP_INITIALIZATION_SEED_ROLES=true`; limpeza agendada exige cron explícito em `APP_MAINTENANCE_CLEANUP_CRON`. Ambos ficam desativados por padrão.
 - **Esquema e logs:** `ddl-auto=validate`; SQL e loggers de conexão Hibernate/Hikari não são exibidos.
@@ -148,7 +148,7 @@ O padrão de autorização exige autenticação para as demais rotas, com endpoi
 | `PageAccessSecurityTest#cadastroOscTambemEUmaPaginaPublica` | MockMvc | Antes da correção: 401. Depois da correção: 200 e forward para `pages/cadastro-osc.html`. |
 | `GET http://127.0.0.1:8080/api/config/database` | API local, somente leitura | Respondeu `REMOTO`; nenhuma outra chamada à API foi realizada. |
 
-Não executei `AplicacaoOscApplicationTests`: o teste sobe o contexto completo, que pode conectar ao banco remoto e executar `DataInitializer`. Também não executei `OscPostgresPersistenceTest`: é opt-in e usa `DB_REMOTE_URL`/porta 6543. Os testes CNPJA, Nominatim, Resend, Supabase, pagamentos e registros reais não foram chamados.
+Não executei `AplicacaoOscApplicationTests`: o teste sobe o contexto completo e pode conectar ao banco definido na configuração local. Também não executei `OscPostgresPersistenceTest`: é opt-in por `PORTO_AJUDA_POSTGRES_TEST=true`, exige um PostgreSQL local descartável na porta 6543 e recebe `DB_URL`, `DB_USER` e `DB_PASSWORD`. Os testes CNPJA, Nominatim, Resend, Supabase, pagamentos e registros reais não foram chamados.
 
 O Maven emitiu um aviso de classe duplicada `org.json.JSONObject` no classpath de teste (`org.json` e `android-json`). Não foi observado erro nos 59 testes, mas a combinação deve ser revisada se algum teste passar a depender dessa classe.
 
@@ -169,7 +169,7 @@ Ao iniciar, `main` estava um commit atrás de `origin/main`, com 22 arquivos ras
 
 ## Pendências e plano de ação
 
-1. Cadastrar as mesmas variáveis `DB_REMOTE_URL`, `DB_REMOTE_USER` e `DB_REMOTE_PASSWORD` no ambiente local e no Railway, sem adicionar variáveis de banco local. Guardar segredos fora do Git.
+1. Cadastrar `DB_URL`, `DB_USER` e `DB_PASSWORD` no ambiente local e no Railway, sem adicionar variáveis de banco local. `DB_REMOTE_URL`, `DB_REMOTE_USER` e `DB_REMOTE_PASSWORD` não são lidas pela configuração atual. Guardar segredos fora do Git.
 2. Validar `20261027_reestruturar_osc_causas.sql` em uma cópia isolada do PostgreSQL, revisar o preflight e obter backup antes de qualquer aplicação remota.
 3. Definir e implementar autenticação e recuperação de senha para OSCs; atualmente o formulário não cria sessão.
 4. Adicionar limites de taxa e controles antiabuso para login, reenvio de confirmação, consulta de CNPJ e contato.

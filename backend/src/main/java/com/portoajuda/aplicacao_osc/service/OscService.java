@@ -29,6 +29,8 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -696,12 +698,18 @@ public class OscService {
         boolean canReadPrivateAsPlatformAdmin = hasPrivilegedSession
                 && adminAuthorization.hasPermission(authentication, AdminPermission.ORG_READ_PRIVATE);
         if (canReadPrivateAsPlatformAdmin) {
-            return OscPerfilDTO.dePrivado(osc, false, true);
+            AdminPermission statusPermission = osc.isArquivada()
+                    ? AdminPermission.ORG_RESTORE_ARCHIVED
+                    : osc.getStatus() == StatusOsc.ATIVA
+                            ? AdminPermission.ORG_DEACTIVATE
+                            : AdminPermission.ORG_REACTIVATE;
+            boolean podeAdministrarStatus = adminAuthorization.hasPermission(authentication, statusPermission);
+            return OscPerfilDTO.dePrivado(osc, false, podeAdministrarStatus);
         }
 
         CargoOsc cargo = obterCargoUsuario(osc, solicitante);
         boolean podeAlterarStatus = cargo == CargoOsc.CRIADOR || cargo == CargoOsc.ADMINISTRADOR;
-        if (osc.isArquivada()) {
+        if (osc.isArquivada() || osc.getStatus() == StatusOsc.INATIVA) {
             OrigemDesativacao origem = osc.getOrigemUltimaDesativacao();
             podeAlterarStatus = podeAlterarStatus
                     && (origem == null || origem == OrigemDesativacao.ONG);
@@ -711,7 +719,10 @@ public class OscService {
 
     @Transactional(readOnly = true)
     public Page<OscListagemDTO> viewAll(Pageable pageable) {
-        return oscRepository.findAllByStatusAndDataArquivamentoIsNull(StatusOsc.ATIVA, pageable)
+        int page = pageable == null ? 0 : Math.max(0, pageable.getPageNumber());
+        int size = pageable == null ? 24 : Math.min(Math.max(1, pageable.getPageSize()), 24);
+        Pageable boundedPage = PageRequest.of(page, size, Sort.by(Sort.Order.desc("dataCriacao"), Sort.Order.desc("id")));
+        return oscRepository.findAllByStatusAndDataArquivamentoIsNull(StatusOsc.ATIVA, boundedPage)
                 .map(OscListagemDTO::de);
     }
 

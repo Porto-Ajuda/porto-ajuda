@@ -40,6 +40,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 
 @ExtendWith(MockitoExtension.class)
 class OscServiceMembroTest {
@@ -85,6 +86,19 @@ class OscServiceMembroTest {
 
     @InjectMocks
     private OscService service;
+
+    @Test
+    void perfilPublicoNaoExpoeOscInativa() {
+        when(oscRepository.findById(8)).thenReturn(Optional.of(osc));
+        when(osc.isArquivada()).thenReturn(false);
+        when(osc.getStatus()).thenReturn(com.portoajuda.aplicacao_osc.enums.StatusOsc.INATIVA);
+
+        ResponseStatusException erro = assertThrows(ResponseStatusException.class,
+                () -> service.buscarPerfilPublico(8));
+
+        assertEquals(HttpStatus.NOT_FOUND, erro.getStatusCode());
+        verify(oscRepository).findById(8);
+    }
 
     @Test
     void permiteAdicionarUsuarioMesmoQueParticipeDeOutraOsc() {

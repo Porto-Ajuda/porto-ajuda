@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Explore organizações, publicações e oportunidades públicas do Porto Ajuda.">
+  <title>Explorar | Porto Ajuda</title>
+  <link rel="stylesheet" href="../styles/geral.css">
+  <link rel="stylesheet" href="../styles/Porto-Ajuda.css">
+  <link rel="stylesheet" href="../styles/catalogo.css">
+  <script type="module" src="../components/header_footer.js" defer></script>
+  <script src="../components/crud.js" defer></script>
+  <script type="module" src="../components/catalogo.js" defer></script>
+  <script type="module" src="../components/candidaturas.js" defer></script>
+  <link rel="stylesheet" href="../styles/candidaturas.css">
+</head>
+<body class="catalogo-page">
+  <div class="stars" aria-hidden="true"></div>
+  <header class="navbar"></header>
+  <main class="catalogo-shell">
+    <a class="catalogo-voltar" href="/">← Página inicial</a>
+    <header class="catalogo-heading">
+      <p class="catalogo-kicker">DESCUBRA O PORTO AJUDA</p>
+      <h1 id="catalogo-titulo">Explorar</h1>
+      <p id="catalogo-descricao"></p>
+    </header>
+    <form id="catalogo-filtros" class="catalogo-filtros" role="search">
+      <div class="catalogo-search-row">
+        <label class="catalogo-busca" for="catalogo-termo">Buscar
+          <input id="catalogo-termo" name="q" type="search" maxlength="100" autocomplete="off" placeholder="O que você está procurando?">
+        </label>
+        <button type="submit" class="catalogo-aplicar">Buscar</button>
+      </div>
+      <div class="catalogo-filter-row" aria-label="Filtros principais">
+        <button type="button" id="catalogo-local-toggle" class="catalogo-filter-trigger" aria-expanded="false" aria-controls="catalogo-localizacao">
+          <span>Localização</span><span id="catalogo-local-indicador">Qualquer lugar</span>
+        </button>
+        <label id="catalogo-filtro-a-label" class="catalogo-select-filter">Filtro
+          <select id="catalogo-filtro-a"><option value="">Todas as opções</option></select>
+        </label>
+        <label id="catalogo-ordem-label" class="catalogo-select-filter">Ordenar
+          <select id="catalogo-ordem"><option value="recentes">Mais recentes</option><option value="relevancia">Relevância</option></select>
+        </label>
+        <details id="catalogo-avancados" class="catalogo-advanced">
+          <summary>Mais filtros</summary>
+          <div class="catalogo-advanced-panel">
+            <label id="catalogo-ong-label" hidden>ONG
+              <select id="catalogo-ong"><option value="">Todas as ONGs</option></select>
+            </label>
+            <label id="catalogo-ods-label" hidden>ODS
+              <select id="catalogo-ods"><option value="">Todas as ODS</option></select>
+            </label>
+            <label id="catalogo-vagas-label" hidden>Vagas disponíveis
+              <select id="catalogo-vagas"><option value="0">Qualquer quantidade</option><option value="1">1 ou mais</option><option value="5">5 ou mais</option><option value="10">10 ou mais</option></select>
+            </label>
+            <label id="catalogo-data-inicio-label" hidden>De
+              <input id="catalogo-data-inicio" type="date">
+            </label>
+            <label id="catalogo-data-fim-label" hidden>Até
+              <input id="catalogo-data-fim" type="date">
+            </label>
+          </div>
+        </details>
+        <button type="button" id="catalogo-limpar" class="catalogo-limpar">Limpar</button>
+      </div>
+      <section id="catalogo-localizacao" class="catalogo-localizacao" aria-labelledby="catalogo-local-titulo" hidden>
+        <div class="catalogo-location-heading"><h2 id="catalogo-local-titulo">Escolha uma localização</h2><button type="button" id="catalogo-local-fechar" class="catalogo-popover-close" aria-label="Fechar localização">×</button></div>
+        <label for="catalogo-local">Cidade ou CEP
+          <input id="catalogo-local" maxlength="100" autocomplete="address-level2" placeholder="Ex.: Praia Grande, SP ou 11700-000">
+        </label>
+        <label id="catalogo-estado-label" for="catalogo-estado">Estado
+          <select id="catalogo-estado"><option value="">Selecione se necessário</option></select>
+        </label>
+        <div class="catalogo-location-actions">
+          <button type="button" id="catalogo-local-aplicar" class="catalogo-aplicar">Aplicar localização</button>
+          <button type="button" id="catalogo-usar-localizacao">Usar minha localização</button>
+          <button type="button" id="catalogo-usar-cep">Usar CEP do meu perfil</button>
+        </div>
+        <label id="catalogo-distancia-label" for="catalogo-distancia">Distância máxima
+          <select id="catalogo-distancia"><option value="10">10 km</option><option value="25">25 km</option><option value="50">50 km</option><option value="100">100 km</option></select>
+        </label>
+        <div class="catalogo-location-footer"><button type="button" id="catalogo-remover-localizacao" hidden>Remover localização</button><p id="catalogo-local-status" role="status" aria-live="polite"></p></div>
+      </section>
+    </form>
+    <p id="catalogo-status" class="catalogo-status" role="status" aria-live="polite">Carregando conteúdo…</p>
+    <button id="catalogo-repetir" class="catalogo-aplicar" type="button" hidden>Tentar novamente</button>
+    <section id="catalogo-resultados" aria-label="Resultados da busca" hidden>
+      <h2 id="catalogo-resultados-titulo">Resultados</h2>
+      <div id="catalogo-grade" class="catalogo-grade" role="list"></div>
+      <nav class="catalogo-paginacao" aria-label="Páginas de resultados">
+        <button type="button" id="catalogo-anterior" aria-label="Página anterior" disabled>‹</button>
+        <span id="catalogo-pagina" aria-live="polite"></span>
+        <button type="button" id="catalogo-proximo" aria-label="Próxima página" disabled>›</button>
+      </nav>
+      <button type="button" id="catalogo-carregar-mais" class="catalogo-aplicar" hidden>Carregar mais resultados</button>
+    </section>
+    <section id="catalogo-descobertas" class="catalogo-descobertas" aria-label="Sugestões para explorar"></section>
+    <section id="catalogo-doacoes-vazio" class="catalogo-doacoes-vazio" hidden>
+      <h2>Campanhas verificadas em breve</h2>
+      <p>O sistema ainda não possui um catálogo público de campanhas com metas e valores verificados. Nenhum valor de arrecadação será estimado ou exibido sem uma fonte oficial.</p>
+    </section>
+  </main>
+  <footer class="footer"></footer>
+  <div class="modal-overlay" id="modal-card-overlay" aria-hidden="true" onclick="fecharModalCard(event)">
+    <div class="modal-card-container" id="modal-card-container" role="dialog" aria-modal="true" aria-labelledby="modal-card-titulo">
+      <button class="modal-fechar" id="fechar-modal-card" type="button" aria-label="Fechar publicação" onclick="fecharModalCardDireto()">×</button>
+      <div class="modal-card-imagem-wrap"><img class="modal-card-imagem" id="modal-card-imagem" src="" alt=""><div class="modal-card-imagem-placeholder" id="modal-card-imagem-placeholder"></div></div>
+      <div class="modal-card-info"><span class="modal-card-tag" id="modal-card-tag"></span><h2 class="modal-card-titulo" id="modal-card-titulo"></h2><p class="modal-card-osc" id="modal-card-osc"></p><p class="modal-card-conteudo" id="modal-card-conteudo"></p><dl class="modal-card-vaga-detalhes" id="modal-card-vaga-detalhes" hidden></dl><button type="button" id="btn-modal-candidatar" class="botao botao-primario" hidden>Quero participar</button><p id="estado-candidatura-modal" role="status" aria-live="polite" hidden></p><div class="modal-card-rodape"><span class="modal-card-usuario" id="modal-card-usuario" hidden></span><span class="modal-card-data" id="modal-card-data"></span></div></div>
+    </div>
+  </div>
+  <dialog class="dialogo-candidatura" id="dialogo-candidatura" aria-labelledby="titulo-dialogo-candidatura">
+    <form method="dialog" class="dialogo-candidatura__conteudo">
+      <button type="submit" class="dialogo-candidatura__fechar" aria-label="Fechar confirmação">×</button>
+      <p class="showcase-card-kicker">VOLUNTARIADO</p>
+      <h2 id="titulo-dialogo-candidatura">Enviar candidatura?</h2>
+      <p id="texto-dialogo-candidatura">Confirme que deseja se candidatar a esta oportunidade.</p>
+      <p id="estado-dialogo-candidatura" role="status" aria-live="polite"></p>
+      <div class="dialogo-candidatura__acoes"><button type="submit" class="botao botao-secundario">Voltar</button><button type="button" id="confirmar-candidatura" class="botao botao-primario">Confirmar candidatura</button></div>
+    </form>
+  </dialog>
+</body>
+</html>

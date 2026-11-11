@@ -54,6 +54,31 @@ main {
     width: 25%;
 }
 
+/* Mantém na página de apoio o estilo dos seletores de valor que antes só
+   aparecia por acidente quando o CSS de perfil da ONG era carregado. */
+.valor-pix,
+#botao-outro {
+    min-height: 38px;
+    border: 1px solid rgba(242, 170, 26, .35);
+    border-radius: 10px;
+    background: rgba(74, 84, 146, .35);
+    color: var(--text);
+    font-family: "Poppins", sans-serif;
+    font-size: .78rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: .2s ease;
+}
+
+.valor-pix:hover,
+#botao-outro:hover,
+.valor-pix.ativo {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: #211a3e;
+    transform: translateY(-1px);
+}
+
 .divider {
     position: relative;
     width: 100%;

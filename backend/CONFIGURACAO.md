@@ -26,6 +26,12 @@ O `.env` usa exclusivamente `DB_URL`, `DB_USER` e `DB_PASSWORD` para o datasourc
 
 O repositorio nao contem arquivo versionado de configuracao Railway. Cadastre `DB_URL`, `DB_USER` e `DB_PASSWORD` no painel de variaveis do servico. A execucao local e o deploy usam a mesma configuracao PostgreSQL, sem alternancia por perfil.
 
+### Comandos de build e inicializacao
+
+Configure o Root Directory do servico como `backend`. Com Java 21, use `./mvnw -B -DskipTests package` como build command e `java -jar target/aplicacao-osc-0.0.1-SNAPSHOT.jar` como start command. Se o Root Directory permanecer na raiz do repositorio, ajuste os caminhos para incluir `backend/`.
+
+O JAR executavel e produzido pelo `spring-boot-maven-plugin`; o build tambem gera `aplicacao-osc-0.0.1-SNAPSHOT.jar.original`, que nao e executavel. O padrao atual `target/*jar` nao corresponde ao arquivo `.jar.original`, mas o caminho explicito evita ambiguidade se outros JARs forem adicionados. O Spring Boot le a porta dinamica de `PORT` por `server.port=${PORT:8080}`, sem precisar duplicar a porta no comando. O POM define Java 21 e nao declara um perfil Maven `production`; `-Pproduction` gera apenas um aviso e nao ativa um perfil Spring.
+
 As outras variáveis obrigatórias da aplicação são `ALLOWED_ORIGINS`, `APP_FRONTEND_URL`, `APP_BACKEND_URL`, `RESEND_API_KEY`, `MAIL_FROM`, `SUPABASE_URL`, `SUPABASE_SECRET_KEY` e `SUPABASE_BUCKET_PUBLICO`. `PORT` e `APP_COOKIES_SECURE` têm valores padrão; `MAIL_TO` é opcional.
 
 ## SMS Mais
