@@ -19,7 +19,7 @@ public record ResponsePostDTO(
     public static ResponsePostDTO from(Post post) {
         return new ResponsePostDTO(
                 post.getId(),
-                post.getOsc().getNome(),
+                post.getOsc() == null ? null : post.getOsc().getNome(),
                 post.getTitulo(),
                 post.getConteudo(),
                 post.getImagemUrl(),

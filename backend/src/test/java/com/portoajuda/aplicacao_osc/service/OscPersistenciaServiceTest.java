@@ -4,19 +4,26 @@ import com.portoajuda.aplicacao_osc.dto.request.RequestOscDTO;
 import com.portoajuda.aplicacao_osc.dto.response.Coordenadas;
 import com.portoajuda.aplicacao_osc.dto.response.ResponseOscDTO;
 import com.portoajuda.aplicacao_osc.entity.Osc;
+import com.portoajuda.aplicacao_osc.entity.OscMembroId;
+import com.portoajuda.aplicacao_osc.entity.OscMembros;
 import com.portoajuda.aplicacao_osc.entity.Role;
 import com.portoajuda.aplicacao_osc.entity.Usuario;
 import com.portoajuda.aplicacao_osc.enums.CausaSocial;
+import com.portoajuda.aplicacao_osc.enums.CargoOsc;
+import com.portoajuda.aplicacao_osc.utils.Cnpj;
 import com.portoajuda.aplicacao_osc.repository.OscRepository;
+import com.portoajuda.aplicacao_osc.repository.OscMembrosRepository;
 import com.portoajuda.aplicacao_osc.repository.RoleRepository;
 import com.portoajuda.aplicacao_osc.repository.UsuarioRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
@@ -30,6 +37,7 @@ import static org.mockito.Mockito.*;
 class OscPersistenciaServiceTest {
 
     @Mock private OscRepository oscRepository;
+    @Mock private OscMembrosRepository membrosRepository;
     @Mock private UsuarioRepository usuarioRepository;
     @Mock private RoleRepository roleRepository;
 
@@ -37,15 +45,43 @@ class OscPersistenciaServiceTest {
     private Usuario usuario;
     private Role role;
 
+    @Test
+    void persistenciaDaOscEDeMembrosEstaNaMesmaTransacao() throws Exception {
+        assertNotNull(OscPersistenciaService.class
+                .getMethod("salvar", RequestOscDTO.class, Integer.class, Coordenadas.class, String.class)
+                .getAnnotation(Transactional.class));
+    }
+
+    @Test
+    void erroAoSalvarVinculoPropagaFalhaDepoisDeSalvarOscNaMesmaTransacao() {
+        when(oscRepository.existsByCnpj(any())).thenReturn(false);
+        when(usuarioRepository.findById(7)).thenReturn(Optional.of(usuario));
+        when(roleRepository.findByNome("OSC")).thenReturn(Optional.of(role));
+        when(membrosRepository.save(any(OscMembros.class)))
+                .thenThrow(new DataIntegrityViolationException("Falha simulada no vínculo"));
+
+        assertThrows(DataIntegrityViolationException.class,
+                () -> service.salvar(dados(Set.of()), 7,
+                        new Coordenadas(-23.5, -46.6), null));
+
+        verify(oscRepository).save(any(Osc.class));
+        verify(membrosRepository).save(any(OscMembros.class));
+    }
+
     @BeforeEach
     void configurar() {
-        service = new OscPersistenciaService(oscRepository, usuarioRepository, roleRepository);
+        service = new OscPersistenciaService(oscRepository, membrosRepository, usuarioRepository, roleRepository);
         usuario = new Usuario();
         ReflectionTestUtils.setField(usuario, "id", 7);
         ReflectionTestUtils.setField(usuario, "ativo", true);
         ReflectionTestUtils.setField(usuario, "emailVerificado", true);
         role = new Role();
         role.setNome("OSC");
+        lenient().when(oscRepository.save(any(Osc.class))).thenAnswer(invocacao -> {
+            Osc osc = invocacao.getArgument(0);
+            ReflectionTestUtils.setField(osc, "id", 81);
+            return osc;
+        });
 
     }
 
@@ -56,7 +92,6 @@ class OscPersistenciaServiceTest {
         when(oscRepository.existsByCnpj(any())).thenReturn(false);
         when(usuarioRepository.findById(7)).thenReturn(Optional.of(usuario));
         when(roleRepository.findByNome("OSC")).thenReturn(Optional.of(role));
-        when(oscRepository.save(any(Osc.class))).thenAnswer(invocacao -> invocacao.getArgument(0));
 
         ResponseOscDTO resposta = service.salvar(dados, 7, coordenadas, null);
 
@@ -69,6 +104,14 @@ class OscPersistenciaServiceTest {
         assertEquals(Set.of(CausaSocial.EDUCACAO, CausaSocial.SAUDE), salva.getCausas());
         assertEquals(Set.of(3, 4, 17), salva.getOds());
         assertSame(usuario, salva.getUsuario());
+        ArgumentCaptor<OscMembros> membroCaptor = ArgumentCaptor.forClass(OscMembros.class);
+        verify(membrosRepository).save(membroCaptor.capture());
+        OscMembros membro = membroCaptor.getValue();
+        assertEquals(new OscMembroId(81, 7), membro.getId());
+        assertSame(salva, membro.getOsc());
+        assertSame(usuario, membro.getUsuario());
+        assertEquals(CargoOsc.CRIADOR, membro.getCargoOsc());
+        assertNotNull(membro.getDataCriacao());
         assertEquals("São Paulo", salva.getEstado());
         assertEquals(-23.5, salva.getLatitude());
         assertEquals("Apoio à educação", salva.getDescricaoCurta());
@@ -110,7 +153,11 @@ class OscPersistenciaServiceTest {
         when(oscRepository.existsByCnpj(any())).thenReturn(false);
         when(usuarioRepository.findById(7)).thenReturn(Optional.of(usuario));
         when(roleRepository.findByNome("OSC")).thenReturn(Optional.of(role));
-        when(oscRepository.save(any(Osc.class))).thenAnswer(invocacao -> invocacao.getArgument(0));
+        when(oscRepository.save(any(Osc.class))).thenAnswer(invocacao -> {
+            Osc osc = invocacao.getArgument(0);
+            ReflectionTestUtils.setField(osc, "id", 81);
+            return osc;
+        });
 
         service.salvar(pedido, 7, new Coordenadas(-23.5, -46.6), null);
 
@@ -138,7 +185,11 @@ class OscPersistenciaServiceTest {
         when(oscRepository.existsByCnpj(any())).thenReturn(false);
         when(usuarioRepository.findById(7)).thenReturn(Optional.of(usuario));
         when(roleRepository.findByNome("OSC")).thenReturn(Optional.of(role));
-        when(oscRepository.save(any(Osc.class))).thenAnswer(invocacao -> invocacao.getArgument(0));
+        when(oscRepository.save(any(Osc.class))).thenAnswer(invocacao -> {
+            Osc osc = invocacao.getArgument(0);
+            ReflectionTestUtils.setField(osc, "id", 81);
+            return osc;
+        });
 
         ResponseOscDTO resposta = service.salvar(
                 dados(null), 7, new Coordenadas(-23.5, -46.6), null);
@@ -155,7 +206,11 @@ class OscPersistenciaServiceTest {
         when(oscRepository.existsByCnpj(any())).thenReturn(false);
         when(usuarioRepository.findById(7)).thenReturn(Optional.of(usuario));
         when(roleRepository.findByNome("OSC")).thenReturn(Optional.of(role));
-        when(oscRepository.save(any(Osc.class))).thenAnswer(invocacao -> invocacao.getArgument(0));
+        when(oscRepository.save(any(Osc.class))).thenAnswer(invocacao -> {
+            Osc osc = invocacao.getArgument(0);
+            ReflectionTestUtils.setField(osc, "id", 81);
+            return osc;
+        });
 
         ResponseOscDTO respostaVazia = service.salvar(
                 dados(Set.of()), 7, new Coordenadas(-23.5, -46.6), null);
@@ -179,6 +234,24 @@ class OscPersistenciaServiceTest {
     }
 
     @Test
+    void cnpjComPontuacaoConflitaComORegistroNormalizadoExistente() {
+        when(oscRepository.existsByCnpj(any())).thenReturn(true);
+        RequestOscDTO dadosFormatados = dados(
+                Set.of(), CausaSocial.EDUCACAO, Set.of(CausaSocial.SAUDE), null,
+                "11.222.333/0001-81");
+
+        ResponseStatusException erro = assertThrows(ResponseStatusException.class,
+                () -> service.salvar(dadosFormatados, 7,
+                        new Coordenadas(-23.5, -46.6), null));
+
+        assertEquals(409, erro.getStatusCode().value());
+        ArgumentCaptor<Cnpj> cnpjConsultado = ArgumentCaptor.forClass(Cnpj.class);
+        verify(oscRepository).existsByCnpj(cnpjConsultado.capture());
+        assertEquals("11222333000181", cnpjConsultado.getValue().getCnpj());
+        verify(oscRepository, never()).save(any());
+    }
+
+    @Test
     void rejeitaCoordenadasAusentesOuInvalidas() {
         ResponseStatusException erro = assertThrows(
                 ResponseStatusException.class,
@@ -198,8 +271,17 @@ class OscPersistenciaServiceTest {
             CausaSocial causaPrincipal,
             Set<CausaSocial> causasSecundarias,
             Set<CausaSocial> causasLegadas) {
+        return dados(ods, causaPrincipal, causasSecundarias, causasLegadas, "11222333000181");
+    }
+
+    private RequestOscDTO dados(
+            Set<Integer> ods,
+            CausaSocial causaPrincipal,
+            Set<CausaSocial> causasSecundarias,
+            Set<CausaSocial> causasLegadas,
+            String cnpj) {
         return new RequestOscDTO(
-                "11222333000181",
+                cnpj,
                 causaPrincipal,
                 causasSecundarias,
                 causasLegadas,

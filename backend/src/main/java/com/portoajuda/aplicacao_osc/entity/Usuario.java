@@ -82,6 +82,9 @@ public class Usuario implements UserDetails {
     @Column(name = "email_verificado", nullable = false)
     private boolean emailVerificado = false;
 
+    @Column(name = "telefone_verificado", nullable = false)
+    private boolean telefoneVerificado = false;
+
     @Setter(AccessLevel.NONE)
     @CreationTimestamp
     @Column(name = "data_criacao", nullable = false, updatable = false)

@@ -14,16 +14,18 @@
 
     <link rel="stylesheet" href="../styles/geral.css">
     <link rel="stylesheet" href="../styles/perfil.css">
+    <link rel="stylesheet" href="../styles/candidaturas.css">
 
     <script type="module" src="../components/header_footer.js" defer></script>
     <script type="module" src="../components/perfil.js" defer></script>
     <script type="module" src="../components/logout.js" defer></script>
-     <script type="module" src="../components/abas-perfil.js" defer></script>
-      <script type="module" src="../components/filtros-perfil.js" defer></script>
-       <script type="module" src="../components/acessibilidade.js" defer></script>
-        <script type="module" src="../components/temas.js" defer></script>
-         <script type="module" src="../components/avatar.js" defer></script>
-          <script type="module" src="../components/tour.js" defer></script>
+    <script type="module" src="../components/abas-perfil.js" defer></script>
+    <script type="module" src="../components/filtros-perfil.js" defer></script>
+    <script type="module" src="../components/acessibilidade.js" defer></script>
+    <script type="module" src="../components/avatar.js" defer></script>
+    <script type="module" src="../components/tour.js" defer></script>
+    <script type="module" src="../components/minhas-candidaturas.js" defer></script>
+    <script type="module" src="../components/alterar-senha.js" defer></script>
 </head>
 
 <body>
@@ -144,30 +146,35 @@
                         <!-- ABAS -->
                         <!-- ========================= -->
 
-                      
-<div class="abas-perfil" role="tablist" aria-label="Seções do perfil">
- 
-    <button class="aba" role="tab" id="aba-registro" aria-controls="painel-registro"
-        aria-selected="true" type="button">
-        Registro
-    </button>
- 
-    <button class="aba" role="tab" id="aba-acss" aria-controls="painel-acss"
-        aria-selected="false" type="button">
-        Acessibilidade
-    </button>
- 
-    <button class="aba" role="tab" id="aba-configuracoes" aria-controls="painel-configuracoes"
-        aria-selected="false" type="button">
-        Configurações
-    </button>
- 
-    <!-- Linha dourada que desliza entre as abas -->
-    <span class="aba-indicador" aria-hidden="true"></span>
- 
-</div>
- 
- 
+
+                        <div class="abas-perfil" role="tablist" aria-label="Seções do perfil">
+
+                            <button class="aba" role="tab" id="aba-registro" aria-controls="painel-registro"
+                                aria-selected="true" type="button">
+                                Registro
+                            </button>
+
+                            <button class="aba" role="tab" id="aba-candidaturas" aria-controls="painel-candidaturas"
+                                aria-selected="false" type="button">
+                                Minhas candidaturas
+                            </button>
+
+                            <button class="aba" role="tab" id="aba-acss" aria-controls="painel-acss"
+                                aria-selected="false" type="button">
+                                Acessibilidade
+                            </button>
+
+                            <button class="aba" role="tab" id="aba-configuracoes" aria-controls="painel-configuracoes"
+                                aria-selected="false" type="button">
+                                Configurações
+                            </button>
+
+                            <!-- Linha dourada que desliza entre as abas -->
+                            <span class="aba-indicador" aria-hidden="true"></span>
+
+                        </div>
+
+
 
 
                         <!-- ====================================================== -->
@@ -241,79 +248,80 @@
 
                             <!-- FILTROS DO REGISTRO -->
 
-                       
-<div class="barra-registro">
- 
-    <div class="filtros-registro" role="group" aria-label="Filtrar registro por tipo">
- 
-        <button class="filtro" type="button" aria-pressed="true" data-filtro="tudo">
-            Tudo
-        </button>
- 
-        <button class="filtro" type="button" aria-pressed="false" data-filtro="doacao">
-            Doações
-        </button>
- 
-        <button class="filtro" type="button" aria-pressed="false" data-filtro="voluntariado">
-            Voluntariado
-        </button>
- 
-    </div>
- 
-    <button class="botao-filtro-data" type="button" id="botao-filtro-data"
-        aria-expanded="false" aria-controls="painel-filtro-data">
-        <i class="fa-solid fa-filter" aria-hidden="true"></i>
-        Filtrar por data
-        <span class="filtro-badge" id="filtro-badge" hidden>0</span>
-        <i class="fa-solid fa-chevron-down filtro-seta" aria-hidden="true"></i>
-    </button>
- 
-</div>
- 
- 
-<!-- PAINEL DE FILTRO POR ANO / MÊS / DIA (abre e fecha com animação) -->
- 
-<div class="filtro-data" id="painel-filtro-data" inert>
-    <div class="filtro-data__interno">
-        <div class="filtro-data__campos">
- 
-            <div class="filtro-data__campo">
-                <label for="filtro-ano">Ano</label>
-                <select id="filtro-ano">
-                    <option value="">Todos</option>
-                </select>
-            </div>
- 
-            <div class="filtro-data__campo">
-                <label for="filtro-mes">Mês</label>
-                <select id="filtro-mes">
-                    <option value="">Todos</option>
-                </select>
-            </div>
- 
-            <div class="filtro-data__campo">
-                <label for="filtro-dia">Dia</label>
-                <select id="filtro-dia">
-                    <option value="">Todos</option>
-                </select>
-            </div>
- 
-            <button class="botao-limpar-data" type="button" id="limpar-filtro-data">
-                Limpar
-            </button>
- 
-        </div>
-    </div>
-</div>
- 
-<p class="contador-registros" id="contador-registros" role="status" aria-live="polite"></p>
- 
-<!-- ANO DO REGISTRO (o JS atualiza conforme o filtro) -->
- 
-<p class="ano-registro">
-    2026
-</p>
-<ul class="linha-tempo">
+
+                            <div class="barra-registro">
+
+                                <div class="filtros-registro" role="group" aria-label="Filtrar registro por tipo">
+
+                                    <button class="filtro" type="button" aria-pressed="true" data-filtro="tudo">
+                                        Tudo
+                                    </button>
+
+                                    <button class="filtro" type="button" aria-pressed="false" data-filtro="doacao">
+                                        Doações
+                                    </button>
+
+                                    <button class="filtro" type="button" aria-pressed="false"
+                                        data-filtro="voluntariado">
+                                        Voluntariado
+                                    </button>
+
+                                </div>
+
+                                <button class="botao-filtro-data" type="button" id="botao-filtro-data"
+                                    aria-expanded="false" aria-controls="painel-filtro-data">
+                                    <i class="fa-solid fa-filter" aria-hidden="true"></i>
+                                    Filtrar por data
+                                    <span class="filtro-badge" id="filtro-badge" hidden>0</span>
+                                    <i class="fa-solid fa-chevron-down filtro-seta" aria-hidden="true"></i>
+                                </button>
+
+                            </div>
+
+
+                            <!-- PAINEL DE FILTRO POR ANO / MÊS / DIA (abre e fecha com animação) -->
+
+                            <div class="filtro-data" id="painel-filtro-data" inert>
+                                <div class="filtro-data__interno">
+                                    <div class="filtro-data__campos">
+
+                                        <div class="filtro-data__campo">
+                                            <label for="filtro-ano">Ano</label>
+                                            <select id="filtro-ano">
+                                                <option value="">Todos</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="filtro-data__campo">
+                                            <label for="filtro-mes">Mês</label>
+                                            <select id="filtro-mes">
+                                                <option value="">Todos</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="filtro-data__campo">
+                                            <label for="filtro-dia">Dia</label>
+                                            <select id="filtro-dia">
+                                                <option value="">Todos</option>
+                                            </select>
+                                        </div>
+
+                                        <button class="botao-limpar-data" type="button" id="limpar-filtro-data">
+                                            Limpar
+                                        </button>
+
+                                    </div>
+                                </div>
+                            </div>
+
+                            <p class="contador-registros" id="contador-registros" role="status" aria-live="polite"></p>
+
+                            <!-- ANO DO REGISTRO (o JS atualiza conforme o filtro) -->
+
+                            <p class="ano-registro">
+                                2026
+                            </p>
+                            <ul class="linha-tempo">
 
 
                                 <!-- Registro de doação -->
@@ -554,211 +562,249 @@
                         <!-- PAINEL 2 — ACSS -->
                         <!-- ====================================================== -->
 
-                      
-<div class="painel painel-aba" role="tabpanel" id="painel-acss" aria-labelledby="aba-acss"
-    tabindex="0" hidden>
- 
-    <!-- LIBRAS -->
- 
-    <div class="acss-configuracao">
- 
-        <div>
-            <h3 class="VLB">VLibras</h3>
-            <p>Ativa o recurso de tradução de conteúdos para Libras.</p>
-        </div>
- 
-        <label class="acss-interruptor">
-            <input type="checkbox" id="acss-libras">
-            <span></span>
-        </label>
- 
-    </div>
- 
- 
-    <!-- TAMANHO DA LETRA — NÍVEIS -->
- 
-    <div class="acss-grupo">
- 
-        <h3 id="titulo-tamanho-letra">Tamanho da letra</h3>
-        <p>Escolha o nível de tamanho dos textos exibidos no site.</p>
- 
-        <div class="acss-niveis" role="radiogroup" aria-labelledby="titulo-tamanho-letra">
- 
-            <label class="acss-nivel">
-                <input type="radio" name="acss-tamanho-letra" value="pequeno">
-                <span class="acss-nivel__cartao">
-                    <span class="acss-nivel__letra" aria-hidden="true">Aa</span>
-                    <span class="acss-nivel__nome">Pequeno</span>
-                    <span class="acss-nivel__perc">90%</span>
-                </span>
-            </label>
- 
-            <label class="acss-nivel">
-                <input type="radio" name="acss-tamanho-letra" value="medio" checked>
-                <span class="acss-nivel__cartao">
-                    <span class="acss-nivel__letra" aria-hidden="true">Aa</span>
-                    <span class="acss-nivel__nome">Médio</span>
-                    <span class="acss-nivel__perc">100%</span>
-                </span>
-            </label>
- 
-            <label class="acss-nivel">
-                <input type="radio" name="acss-tamanho-letra" value="grande">
-                <span class="acss-nivel__cartao">
-                    <span class="acss-nivel__letra" aria-hidden="true">Aa</span>
-                    <span class="acss-nivel__nome">Grande</span>
-                    <span class="acss-nivel__perc">120%</span>
-                </span>
-            </label>
- 
-            <label class="acss-nivel">
-                <input type="radio" name="acss-tamanho-letra" value="extra-grande">
-                <span class="acss-nivel__cartao">
-                    <span class="acss-nivel__letra" aria-hidden="true">Aa</span>
-                    <span class="acss-nivel__nome">Extra grande</span>
-                    <span class="acss-nivel__perc">140%</span>
-                </span>
-            </label>
- 
-        </div>
- 
-    </div>
- 
- 
-    <!-- MODO DE EXIBIÇÃO — TEMAS COM ÍCONE -->
- 
-    <div class="acss-grupo">
- 
-        <h3 id="titulo-modo-exibicao">Modo de exibição</h3>
-        <p>Escolha a aparência da página.</p>
- 
-      <div class="acss-temas" role="radiogroup" aria-labelledby="titulo-modo-exibicao">
 
-    <label class="acss-tema acss-tema--claro">
-        <input type="radio" name="acss-modo-exibicao" value="claro">
-        <span class="acss-tema__cartao">
-            <span class="acss-tema__icone">
-                <img src="../assets/logo-day.png" alt="Tema claro">
-            </span>
-            <span class="acss-tema__nome">Tema claro</span>
-        </span>
-    </label>
+                        <div class="painel painel-aba painel-candidaturas" role="tabpanel" id="painel-candidaturas"
+                            aria-labelledby="aba-candidaturas" tabindex="0" hidden>
+                            <div class="candidaturas-usuario__cabecalho">
+                                <div><p class="sobre-label">VOLUNTARIADO</p><h2 class="candidaturas-usuario__titulo">Minhas candidaturas</h2><p class="candidaturas-usuario__descricao">Acompanhe as inscrições que você enviou para oportunidades.</p></div>
+                                <p id="candidaturas-usuario-status" role="status" aria-live="polite" tabindex="-1"></p>
+                            </div>
+                            <div id="candidaturas-usuario-lista" class="candidaturas-usuario__lista" aria-live="polite"></div>
+                            <nav class="candidaturas-paginacao" aria-label="Páginas das minhas candidaturas">
+                                <button type="button" id="candidaturas-usuario-anterior" disabled>Anterior</button>
+                                <span id="candidaturas-usuario-pagina" aria-live="polite"></span>
+                                <button type="button" id="candidaturas-usuario-proximo" disabled>Próxima</button>
+                            </nav>
+                        </div>
 
-    <label class="acss-tema acss-tema--escuro">
-        <input type="radio" name="acss-modo-exibicao" value="escuro" checked>
-        <span class="acss-tema__cartao">
-            <span class="acss-tema__icone">
-                <img src="../assets/logo-night.png" alt="">
-            </span>
-            <span class="acss-tema__nome">Tema escuro</span>
-        </span>
-    </label>
+                        <div class="painel painel-aba" role="tabpanel" id="painel-acss" aria-labelledby="aba-acss"
+                            tabindex="0" hidden>
 
-    <label class="acss-tema acss-tema--contraste">
-        <input type="radio" name="acss-modo-exibicao" value="alto-contraste">
-        <span class="acss-tema__cartao">
-            <span class="acss-tema__icone">
-                <img src="../assets/tema-contraste.png" alt="">
-            </span>
-            <span class="acss-tema__nome">Alto contraste</span>
-        </span>
-    </label>
+                            <!-- LIBRAS -->
 
-</div>
-    
- 
-    </div>
- 
- 
-    <!-- CHECKLIST — TIPOS DE ONGs DE PREFERÊNCIA -->
- 
-    <div class="acss-grupo">
- 
-        <h3 id="titulo-tipos-ong">Tipos de ONGs de preferência</h3>
-        <p>Marque as causas que você mais gostaria de apoiar.</p>
- 
-        <div class="acss-chips" role="group" aria-labelledby="titulo-tipos-ong">
- 
-            <label class="acss-chip">
-                <input type="checkbox" name="acss-tipos-ong" value="alimentacao">
-                <span class="acss-chip__rotulo"><span class="acss-chip__caixa" aria-hidden="true"></span><i class="fa-solid fa-bowl-food" aria-hidden="true"></i>Alimentação</span>
-            </label>
- 
-            <label class="acss-chip">
-                <input type="checkbox" name="acss-tipos-ong" value="criancas-adolescentes">
-                <span class="acss-chip__rotulo"><span class="acss-chip__caixa" aria-hidden="true"></span><i class="fa-solid fa-child" aria-hidden="true"></i>Crianças e adolescentes</span>
-            </label>
- 
-            <label class="acss-chip">
-                <input type="checkbox" name="acss-tipos-ong" value="idosos">
-                <span class="acss-chip__rotulo"><span class="acss-chip__caixa" aria-hidden="true"></span><i class="fa-solid fa-person-cane" aria-hidden="true"></i>Idosos</span>
-            </label>
- 
-            <label class="acss-chip">
-                <input type="checkbox" name="acss-tipos-ong" value="saude">
-                <span class="acss-chip__rotulo"><span class="acss-chip__caixa" aria-hidden="true"></span><i class="fa-solid fa-heart-pulse" aria-hidden="true"></i>Saúde</span>
-            </label>
- 
-            <label class="acss-chip">
-                <input type="checkbox" name="acss-tipos-ong" value="educacao">
-                <span class="acss-chip__rotulo"><span class="acss-chip__caixa" aria-hidden="true"></span><i class="fa-solid fa-graduation-cap" aria-hidden="true"></i>Educação</span>
-            </label>
- 
-            <label class="acss-chip">
-                <input type="checkbox" name="acss-tipos-ong" value="animais">
-                <span class="acss-chip__rotulo"><span class="acss-chip__caixa" aria-hidden="true"></span><i class="fa-solid fa-paw" aria-hidden="true"></i>Animais</span>
-            </label>
- 
-            <label class="acss-chip">
-                <input type="checkbox" name="acss-tipos-ong" value="meio-ambiente">
-                <span class="acss-chip__rotulo"><span class="acss-chip__caixa" aria-hidden="true"></span><i class="fa-solid fa-leaf" aria-hidden="true"></i>Meio ambiente</span>
-            </label>
- 
-            <label class="acss-chip">
-                <input type="checkbox" name="acss-tipos-ong" value="moradia">
-                <span class="acss-chip__rotulo"><span class="acss-chip__caixa" aria-hidden="true"></span><i class="fa-solid fa-house" aria-hidden="true"></i>Moradia</span>
-            </label>
- 
-            <label class="acss-chip">
-                <input type="checkbox" name="acss-tipos-ong" value="pessoas-com-deficiencia">
-                <span class="acss-chip__rotulo"><span class="acss-chip__caixa" aria-hidden="true"></span><i class="fa-solid fa-wheelchair" aria-hidden="true"></i>Pessoas com deficiência</span>
-            </label>
- 
-            <label class="acss-chip">
-                <input type="checkbox" name="acss-tipos-ong" value="mulheres">
-                <span class="acss-chip__rotulo"><span class="acss-chip__caixa" aria-hidden="true"></span><i class="fa-solid fa-venus" aria-hidden="true"></i>Mulheres</span>
-            </label>
- 
-            <label class="acss-chip">
-                <input type="checkbox" name="acss-tipos-ong" value="cultura-esporte">
-                <span class="acss-chip__rotulo"><span class="acss-chip__caixa" aria-hidden="true"></span><i class="fa-solid fa-masks-theater" aria-hidden="true"></i>Cultura e esporte</span>
-            </label>
- 
-            <label class="acss-chip">
-                <input type="checkbox" name="acss-tipos-ong" value="emergencias">
-                <span class="acss-chip__rotulo"><span class="acss-chip__caixa" aria-hidden="true"></span><i class="fa-solid fa-life-ring" aria-hidden="true"></i>Emergências</span>
-            </label>
- 
-        </div>
- 
-        <div class="acss-chips-rodape">
-            <span id="acss-contador-ong" role="status" aria-live="polite">Nenhum tipo selecionado</span>
-            <button type="button" class="acss-link" id="acss-limpar-ong">Limpar seleção</button>
-        </div>
- 
-    </div>
- 
- 
-    <div class="grupo-botoes">
-        <button class="botao botao-secundario" type="button" id="salvar-preferencias-acss">
-            Salvar preferências
-        </button>
-    </div>
- 
-    <p id="estado-preferencias-acss" role="status" aria-live="polite" hidden></p>
- 
-</div>
- 
+                            <div class="acss-configuracao">
+
+                                <div>
+                                    <h3 class="VLB">VLibras</h3>
+                                    <p>Ativa o recurso de tradução de conteúdos para Libras.</p>
+                                </div>
+
+                                <label class="acss-interruptor">
+                                    <input type="checkbox" id="acss-libras">
+                                    <span></span>
+                                </label>
+
+                            </div>
+
+
+                            <!-- TAMANHO DA LETRA — NÍVEIS -->
+
+                            <div class="acss-grupo">
+
+                                <h3 id="titulo-tamanho-letra">Tamanho da letra</h3>
+                                <p>Escolha o nível de tamanho dos textos exibidos no site.</p>
+
+                                <div class="acss-niveis" role="radiogroup" aria-labelledby="titulo-tamanho-letra">
+
+                                    <label class="acss-nivel">
+                                        <input type="radio" name="acss-tamanho-letra" value="pequeno">
+                                        <span class="acss-nivel__cartao">
+                                            <span class="acss-nivel__letra" aria-hidden="true">Aa</span>
+                                            <span class="acss-nivel__nome">Pequeno</span>
+                                            <span class="acss-nivel__perc">90%</span>
+                                        </span>
+                                    </label>
+
+                                    <label class="acss-nivel">
+                                        <input type="radio" name="acss-tamanho-letra" value="medio" checked>
+                                        <span class="acss-nivel__cartao">
+                                            <span class="acss-nivel__letra" aria-hidden="true">Aa</span>
+                                            <span class="acss-nivel__nome">Médio</span>
+                                            <span class="acss-nivel__perc">100%</span>
+                                        </span>
+                                    </label>
+
+                                    <label class="acss-nivel">
+                                        <input type="radio" name="acss-tamanho-letra" value="grande">
+                                        <span class="acss-nivel__cartao">
+                                            <span class="acss-nivel__letra" aria-hidden="true">Aa</span>
+                                            <span class="acss-nivel__nome">Grande</span>
+                                            <span class="acss-nivel__perc">120%</span>
+                                        </span>
+                                    </label>
+
+                                    <label class="acss-nivel">
+                                        <input type="radio" name="acss-tamanho-letra" value="extra-grande">
+                                        <span class="acss-nivel__cartao">
+                                            <span class="acss-nivel__letra" aria-hidden="true">Aa</span>
+                                            <span class="acss-nivel__nome">Extra grande</span>
+                                            <span class="acss-nivel__perc">140%</span>
+                                        </span>
+                                    </label>
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- MODO DE EXIBIÇÃO — TEMAS COM ÍCONE -->
+
+                            <div class="acss-grupo">
+
+                                <h3 id="titulo-modo-exibicao">Modo de exibição</h3>
+                                <p>Escolha a aparência da página.</p>
+
+                                <div class="acss-temas" role="radiogroup" aria-labelledby="titulo-modo-exibicao">
+
+                                    <label class="acss-tema acss-tema--claro">
+                                        <input type="radio" name="acss-modo-exibicao" value="claro">
+                                        <span class="acss-tema__cartao">
+                                            <span class="acss-tema__icone">
+                                                <img src="../assets/logo-day.png" alt="Tema claro">
+                                            </span>
+                                            <span class="acss-tema__nome">Tema claro</span>
+                                        </span>
+                                    </label>
+
+                                    <label class="acss-tema acss-tema--escuro">
+                                        <input type="radio" name="acss-modo-exibicao" value="escuro" checked>
+                                        <span class="acss-tema__cartao">
+                                            <span class="acss-tema__icone">
+                                                <img src="../assets/logo-night.png" alt="">
+                                            </span>
+                                            <span class="acss-tema__nome">Tema escuro</span>
+                                        </span>
+                                    </label>
+
+                                    <label class="acss-tema acss-tema--contraste">
+                                        <input type="radio" name="acss-modo-exibicao" value="alto-contraste">
+                                        <span class="acss-tema__cartao">
+                                            <span class="acss-tema__icone">
+                                            </span>
+                                            <span class="acss-tema__nome">Alto contraste</span>
+                                        </span>
+                                    </label>
+
+                                </div>
+
+
+                            </div>
+
+
+                            <!-- CHECKLIST — TIPOS DE ONGs DE PREFERÊNCIA -->
+
+                            <div class="acss-grupo">
+
+                                <h3 id="titulo-tipos-ong">Tipos de ONGs de preferência</h3>
+                                <p>Marque as causas que você mais gostaria de apoiar.</p>
+
+                                <div class="acss-chips" role="group" aria-labelledby="titulo-tipos-ong">
+
+                                    <label class="acss-chip">
+                                        <input type="checkbox" name="acss-tipos-ong" value="alimentacao">
+                                        <span class="acss-chip__rotulo"><span class="acss-chip__caixa"
+                                                aria-hidden="true"></span><i class="fa-solid fa-bowl-food"
+                                                aria-hidden="true"></i>Alimentação</span>
+                                    </label>
+
+                                    <label class="acss-chip">
+                                        <input type="checkbox" name="acss-tipos-ong" value="criancas-adolescentes">
+                                        <span class="acss-chip__rotulo"><span class="acss-chip__caixa"
+                                                aria-hidden="true"></span><i class="fa-solid fa-child"
+                                                aria-hidden="true"></i>Crianças e adolescentes</span>
+                                    </label>
+
+                                    <label class="acss-chip">
+                                        <input type="checkbox" name="acss-tipos-ong" value="idosos">
+                                        <span class="acss-chip__rotulo"><span class="acss-chip__caixa"
+                                                aria-hidden="true"></span><i class="fa-solid fa-person-cane"
+                                                aria-hidden="true"></i>Idosos</span>
+                                    </label>
+
+                                    <label class="acss-chip">
+                                        <input type="checkbox" name="acss-tipos-ong" value="saude">
+                                        <span class="acss-chip__rotulo"><span class="acss-chip__caixa"
+                                                aria-hidden="true"></span><i class="fa-solid fa-heart-pulse"
+                                                aria-hidden="true"></i>Saúde</span>
+                                    </label>
+
+                                    <label class="acss-chip">
+                                        <input type="checkbox" name="acss-tipos-ong" value="educacao">
+                                        <span class="acss-chip__rotulo"><span class="acss-chip__caixa"
+                                                aria-hidden="true"></span><i class="fa-solid fa-graduation-cap"
+                                                aria-hidden="true"></i>Educação</span>
+                                    </label>
+
+                                    <label class="acss-chip">
+                                        <input type="checkbox" name="acss-tipos-ong" value="animais">
+                                        <span class="acss-chip__rotulo"><span class="acss-chip__caixa"
+                                                aria-hidden="true"></span><i class="fa-solid fa-paw"
+                                                aria-hidden="true"></i>Animais</span>
+                                    </label>
+
+                                    <label class="acss-chip">
+                                        <input type="checkbox" name="acss-tipos-ong" value="meio-ambiente">
+                                        <span class="acss-chip__rotulo"><span class="acss-chip__caixa"
+                                                aria-hidden="true"></span><i class="fa-solid fa-leaf"
+                                                aria-hidden="true"></i>Meio ambiente</span>
+                                    </label>
+
+                                    <label class="acss-chip">
+                                        <input type="checkbox" name="acss-tipos-ong" value="moradia">
+                                        <span class="acss-chip__rotulo"><span class="acss-chip__caixa"
+                                                aria-hidden="true"></span><i class="fa-solid fa-house"
+                                                aria-hidden="true"></i>Moradia</span>
+                                    </label>
+
+                                    <label class="acss-chip">
+                                        <input type="checkbox" name="acss-tipos-ong" value="pessoas-com-deficiencia">
+                                        <span class="acss-chip__rotulo"><span class="acss-chip__caixa"
+                                                aria-hidden="true"></span><i class="fa-solid fa-wheelchair"
+                                                aria-hidden="true"></i>Pessoas com deficiência</span>
+                                    </label>
+
+                                    <label class="acss-chip">
+                                        <input type="checkbox" name="acss-tipos-ong" value="mulheres">
+                                        <span class="acss-chip__rotulo"><span class="acss-chip__caixa"
+                                                aria-hidden="true"></span><i class="fa-solid fa-venus"
+                                                aria-hidden="true"></i>Mulheres</span>
+                                    </label>
+
+                                    <label class="acss-chip">
+                                        <input type="checkbox" name="acss-tipos-ong" value="cultura-esporte">
+                                        <span class="acss-chip__rotulo"><span class="acss-chip__caixa"
+                                                aria-hidden="true"></span><i class="fa-solid fa-masks-theater"
+                                                aria-hidden="true"></i>Cultura e esporte</span>
+                                    </label>
+
+                                    <label class="acss-chip">
+                                        <input type="checkbox" name="acss-tipos-ong" value="emergencias">
+                                        <span class="acss-chip__rotulo"><span class="acss-chip__caixa"
+                                                aria-hidden="true"></span><i class="fa-solid fa-life-ring"
+                                                aria-hidden="true"></i>Emergências</span>
+                                    </label>
+
+                                </div>
+
+                                <div class="acss-chips-rodape">
+                                    <span id="acss-contador-ong" role="status" aria-live="polite">Nenhum tipo
+                                        selecionado</span>
+                                    <button type="button" class="acss-link" id="acss-limpar-ong">Limpar seleção</button>
+                                </div>
+
+                            </div>
+
+
+                            <div class="grupo-botoes">
+                                <button class="botao botao-secundario" type="button" id="salvar-preferencias-acss">
+                                    Salvar preferências
+                                </button>
+                            </div>
+
+                            <p id="estado-preferencias-acss" role="status" aria-live="polite" hidden></p>
+
+                        </div>
+
 
 
 
@@ -906,6 +952,96 @@
                                 <p id="estado-edicao-perfil" role="status" aria-live="polite" hidden></p>
 
                             </div>
+
+                            <section class="configuracao seguranca-conta" aria-labelledby="titulo-seguranca-conta">
+                                <div>
+                                    <h3 id="titulo-seguranca-conta">Segurança da conta</h3>
+                                    <p>Atualize sua senha para proteger o acesso à sua conta.</p>
+                                </div>
+                                <div class="grupo-botoes">
+                                    <button class="botao botao-secundario" type="button" id="abrir-alterar-senha">Alterar senha</button>
+                                </div>
+                            </section>
+
+                            <dialog id="dialog-alterar-senha" class="dialogo-verificacao-telefone"
+                                aria-labelledby="titulo-dialog-alterar-senha" aria-describedby="estado-alterar-senha">
+                                <div class="dialogo-verificacao-telefone__conteudo">
+                                    <button class="dialogo-verificacao-telefone__fechar" type="button" id="fechar-dialog-alterar-senha" aria-label="Fechar alteração de senha">×</button>
+                                    <h2 id="titulo-dialog-alterar-senha">Alterar senha</h2>
+                                    <p>Informe sua senha atual e escolha uma nova senha.</p>
+                                    <p id="estado-alterar-senha" role="status" aria-live="polite"></p>
+                                    <form id="form-alterar-senha" autocomplete="off">
+                                        <label for="senha-atual-conta">Senha atual</label>
+                                        <div class="campo-senha-conta"><input id="senha-atual-conta" type="password" autocomplete="current-password" maxlength="128" required>
+                                            <button type="button" class="alternar-visibilidade-senha" aria-label="Mostrar senha atual" aria-controls="senha-atual-conta" aria-pressed="false"><i class="fa-regular fa-eye" aria-hidden="true"></i></button></div>
+                                        <label for="nova-senha-conta">Nova senha</label>
+                                        <div class="campo-senha-conta"><input id="nova-senha-conta" type="password" autocomplete="new-password" minlength="8" maxlength="128" required>
+                                            <button type="button" class="alternar-visibilidade-senha" aria-label="Mostrar nova senha" aria-controls="nova-senha-conta" aria-pressed="false"><i class="fa-regular fa-eye" aria-hidden="true"></i></button></div>
+                                        <label for="confirmar-nova-senha-conta">Confirmar nova senha</label>
+                                        <div class="campo-senha-conta"><input id="confirmar-nova-senha-conta" type="password" autocomplete="new-password" minlength="8" maxlength="128" required>
+                                            <button type="button" class="alternar-visibilidade-senha" aria-label="Mostrar confirmação da nova senha" aria-controls="confirmar-nova-senha-conta" aria-pressed="false"><i class="fa-regular fa-eye" aria-hidden="true"></i></button></div>
+                                        <label class="preferencia-sessao-senha" for="desconectar-outros-dispositivos">
+                                            <input id="desconectar-outros-dispositivos" type="checkbox" name="desconectarOutrosDispositivos" checked>
+                                            Desconectar outros dispositivos
+                                        </label>
+                                        <div class="grupo-botoes">
+                                            <button class="botao botao-secundario" type="button" id="cancelar-alterar-senha">Cancelar</button>
+                                            <button class="botao botao-secundario" type="submit" id="confirmar-alterar-senha">Salvar nova senha</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </dialog>
+
+                            <section id="seguranca-administrativa" class="configuracao seguranca-administrativa" aria-labelledby="titulo-seguranca-administrativa" hidden>
+                                <div>
+                                    <h3 id="titulo-seguranca-administrativa">Segurança administrativa</h3>
+                                    <p>Confirme seu telefone para proteger o acesso administrativo.</p>
+                                    <p class="telefone-seguranca">Telefone cadastrado: <span id="telefone-seguranca-mascarado"></span></p>
+                                    <p id="estado-seguranca-administrativa" role="status" aria-live="polite"></p>
+                                </div>
+                                <div class="grupo-botoes">
+                                    <button class="botao botao-secundario" type="button" id="iniciar-verificacao-telefone">
+                                        Verificar telefone
+                                    </button>
+                                </div>
+                            </section>
+
+                            <dialog id="dialog-verificacao-telefone" class="dialogo-verificacao-telefone"
+                                aria-labelledby="titulo-dialog-verificacao-telefone"
+                                aria-describedby="descricao-dialog-verificacao-telefone">
+                                <div class="dialogo-verificacao-telefone__conteudo">
+                                    <button class="dialogo-verificacao-telefone__fechar" type="button"
+                                        id="fechar-dialog-verificacao-telefone" aria-label="Fechar verificação">×</button>
+                                    <h2 id="titulo-dialog-verificacao-telefone">Verificar telefone</h2>
+                                    <p id="descricao-dialog-verificacao-telefone">
+                                        A confirmação será enviada por SMS ao telefone cadastrado.
+                                    </p>
+                                    <p id="estado-dialog-verificacao-telefone" role="status" aria-live="polite"></p>
+
+                                    <form id="form-solicitar-codigo-telefone" autocomplete="on">
+                                        <label for="senha-verificacao-telefone">Confirme sua senha</label>
+                                        <input id="senha-verificacao-telefone" name="senha" type="password"
+                                            autocomplete="current-password" required maxlength="255">
+                                        <button class="botao botao-secundario" type="submit" id="enviar-codigo-telefone">
+                                            Enviar código por SMS
+                                        </button>
+                                    </form>
+
+                                    <form id="form-confirmar-codigo-telefone" autocomplete="off" hidden>
+                                        <label for="codigo-verificacao-telefone">Código de seis dígitos</label>
+                                        <input id="codigo-verificacao-telefone" name="codigo" type="text"
+                                            inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}"
+                                            minlength="6" maxlength="6" required aria-describedby="expiracao-codigo-telefone">
+                                        <p id="expiracao-codigo-telefone" role="timer" aria-live="off"></p>
+                                        <button class="botao botao-secundario" type="submit" id="confirmar-codigo-telefone">
+                                            Confirmar telefone
+                                        </button>
+                                        <button class="botao botao-secundario" type="button" id="reenviar-codigo-telefone">
+                                            Solicitar outro código
+                                        </button>
+                                    </form>
+                                </div>
+                            </dialog>
 
 
 
@@ -1082,6 +1218,29 @@
         </div>
     </div>
 
+    <!-- MODAL DE SELEÇÃO DE OSC -->
+    <div class="modal-overlay" id="modal-trocar-osc" role="dialog" aria-modal="true"
+        aria-labelledby="titulo-modal-trocar-osc" hidden>
+        <div class="modal-conteudo modal-selecao-osc">
+
+            <button type="button" class="modal-fechar" id="fechar-modal-trocar-osc" aria-label="Fechar">
+                &times;
+            </button>
+
+            <h2 id="titulo-modal-trocar-osc">
+                Selecionar organização
+            </h2>
+
+            <p>
+                Escolha a Organização da Sociedade Civil que deseja acessar.
+            </p>
+
+            <div id="lista-oscs-usuario" class="lista-oscs-usuario"></div>
+
+            <p id="estado-trocar-osc" class="estado-trocar-osc" role="status" aria-live="polite"></p>
+
+        </div>
+    </div>
 
     <footer id="footer"></footer>
 

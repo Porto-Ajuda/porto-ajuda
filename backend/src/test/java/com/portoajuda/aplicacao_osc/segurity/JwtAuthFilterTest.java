@@ -46,7 +46,8 @@ class JwtAuthFilterTest {
                                 mock(UsuarioRepository.class),
                                 mock(JwtService.class),
                                 mock(SessaoUsuarioService.class));
-                SecurityConfiguration configuration = new SecurityConfiguration(filter);
+                SecurityConfiguration configuration = new SecurityConfiguration(
+                                filter, mock(AdminSessionAuthFilter.class));
 
                 FilterRegistrationBean<JwtAuthFilter> registration = configuration.jwtAuthFilterServletRegistration();
 
@@ -64,15 +65,23 @@ class JwtAuthFilterTest {
                 MockHttpServletRequest confirmarEmail = new MockHttpServletRequest(
                                 "GET", "/usuario/confirmar-email");
                 MockHttpServletRequest refresh = new MockHttpServletRequest("POST", "/usuario/refresh");
+                MockHttpServletRequest adminChallenge = new MockHttpServletRequest(
+                                "POST", "/admin/auth/challenges");
+                MockHttpServletRequest adminPrivileged = new MockHttpServletRequest(
+                                "PATCH", "/admin/oscs/77/status");
                 MockHttpServletRequest perfil = new MockHttpServletRequest("GET", "/usuario/perfil");
                 csrf.setServletPath("/usuario/csrf");
                 confirmarEmail.setServletPath("/usuario/confirmar-email");
                 refresh.setServletPath("/usuario/refresh");
+                adminChallenge.setServletPath("/admin/auth/challenges");
+                adminPrivileged.setServletPath("/admin/oscs/77/status");
                 perfil.setServletPath("/usuario/perfil");
 
                 assertTrue(filter.shouldNotFilter(csrf));
                 assertTrue(filter.shouldNotFilter(confirmarEmail));
                 assertTrue(filter.shouldNotFilter(refresh));
+                assertTrue(filter.shouldNotFilter(adminChallenge));
+                assertTrue(filter.shouldNotFilter(adminPrivileged));
                 assertFalse(filter.shouldNotFilter(perfil));
         }
 

@@ -1,6 +1,26 @@
 ﻿import { getAPI_URL } from "./modoBack.js";
+import { fetchAutenticado, sessaoInvalidaConfirmada } from "./api.js";
+import { obterEstadoSessao } from "./auth.js";
+import { confirmarPorDigitacao, notificar as notificarSistema } from "./confirm-modal.js";
+import { respostaConteudoOscValida, separarConteudoOsc, separarConteudoPublicoOsc, urlImagemSegura, validarArquivoImagem, validarConteudoOsc } from "./ong-content.js";
 import { obterTokenCSRF } from "./auth.js";
 const API_URL = getAPI_URL();
+let oscAtual = null;
+let cargoAtual = null;
+let conteudoOscAtual = [];
+let edicaoPostOsc = null;
+let edicaoOportunidadeOsc = null;
+const imagensConteudoOsc = {
+    post: { arquivo: null, urlPreview: null, urlAtual: null },
+    oportunidade: { arquivo: null, urlPreview: null, urlAtual: null }
+};
+let origemVisualizadorConteudo = null;
+let overflowAnteriorVisualizador = null;
+let requisicaoConteudoPublicoAtual = 0;
+let membroOscConfirmado = false;
+let verificacaoMembroOscConcluida = false;
+let verificacaoConteudoPublicoConcluida = false;
+let hashInicialPerfil = window.location.hash.slice(1);
 
 // ========================================
 // DADOS DAS ODS
@@ -577,6 +597,14 @@ function configurarCompartilhamento(osc) {
 
 function renderizarPerfil(osc) {
     document.title = `${textoLimpo(osc.nome) || "Organização"} | Porto Ajuda`;
+    const avisoStatus = document.getElementById("estado-status-osc");
+    avisoStatus.hidden = osc.status !== "INATIVA" && !osc.arquivada;
+    avisoStatus.querySelector("strong").textContent = osc.arquivada
+        ? "Organização arquivada"
+        : "Organização inativa";
+    avisoStatus.querySelector("p").textContent = osc.arquivada
+        ? "O registro e o histórico foram preservados. A organização não aparece nas áreas públicas."
+        : "Este perfil está disponível para seus membros, mas não aparece nas áreas públicas do Porto Ajuda.";
     document.getElementById("nome-ong").textContent = textoLimpo(osc.nome) || "Organização da sociedade civil";
     const descricaoCurta = document.getElementById("descricao-texto");
     descricaoCurta.textContent = textoLimpo(osc.descricaoCurta);
@@ -629,9 +657,1366 @@ function renderizarPerfil(osc) {
     renderizarVoluntariado(osc);
     renderizarODS(osc);
     configurarCompartilhamento(osc);
+    configurarControleStatus(osc);
+    renderizarResumoConfiguracoes(osc);
+    configurarNavegacaoPerfil();
+    configurarVisualizadorConteudoPublico();
+}
+
+function renderizarResumoConfiguracoes(osc) {
+    const valor = (id, texto) => { document.getElementById(id).textContent = texto || "Não informado"; };
+    const causas = Object.entries(NOMES_CAUSAS);
+    valor("resumo-nome-osc", textoLimpo(osc.nome));
+    valor("resumo-status-osc", osc.arquivada ? "Arquivada" : osc.status === "ATIVA" ? "Ativa" : "Inativa");
+    valor("resumo-causa-osc", causas.find(([chave]) => chave === osc.causaPrincipal)?.[1] || osc.causaPrincipal);
+    valor("resumo-localizacao-osc", [textoLimpo(osc.cidade), textoLimpo(osc.estado), textoLimpo(osc.pais)].filter(Boolean).join(", "));
+    valor("resumo-descricao-osc", textoLimpo(osc.descricaoCurta) || textoLimpo(osc.descricao));
+}
+
+function configurarControleStatus(osc) {
+    const botao = document.getElementById("botao-status-osc");
+    const dialogo = document.getElementById("dialogo-status-osc");
+    const tituloDialogo = document.getElementById("titulo-dialogo-status-osc");
+    const descricaoDialogo = document.getElementById("descricao-dialogo-status-osc");
+    const estadoAtual = document.getElementById("estado-atual-status-osc");
+    const motivo = document.getElementById("motivo-status-osc");
+    const rotuloMotivo = document.getElementById("rotulo-motivo-status-osc");
+    const feedback = document.getElementById("feedback-status-osc");
+    const botaoCancelar = document.getElementById("cancelar-status-osc");
+    const botaoConfirmar = document.getElementById("confirmar-status-osc");
+    const podeAdministrar = Boolean(osc.podeAlterarStatus || osc.podeAdministrarStatusPlataforma);
+    const justificativaObrigatoria = Boolean(osc.podeAdministrarStatusPlataforma);
+    motivo.required = justificativaObrigatoria;
+    rotuloMotivo.textContent = justificativaObrigatoria
+        ? "Justificativa obrigatória"
+        : "Justificativa (opcional)";
+    botao.hidden = !podeAdministrar;
+    botao.textContent = obterAcaoStatusOsc(osc).rotulo;
+    atualizarZonaPerigo();
+    if (botao.dataset.inicializado) return;
+
+    botao.addEventListener("click", () => {
+        const acao = obterAcaoStatusOsc(oscAtual);
+        tituloDialogo.textContent = acao.titulo;
+        descricaoDialogo.textContent = acao.descricao;
+        estadoAtual.textContent = `Status atual: ${acao.estadoAtual}`;
+        botaoConfirmar.textContent = acao.rotulo;
+        motivo.value = "";
+        feedback.textContent = "";
+        dialogo.showModal();
+        botaoCancelar.focus();
+    });
+
+    botaoCancelar.addEventListener("click", () => dialogo.close("cancelar"));
+    botaoConfirmar.addEventListener("click", async () => {
+        if (botaoConfirmar.disabled) return;
+        if (motivo.required && !motivo.value.trim()) {
+            motivo.setCustomValidity("Informe a justificativa para continuar.");
+            motivo.reportValidity();
+            feedback.textContent = "A justificativa é obrigatória para esta ação.";
+            return;
+        }
+        motivo.setCustomValidity("");
+        const acao = obterAcaoStatusOsc(oscAtual);
+        const novoStatus = oscAtual.arquivada || oscAtual.status === "INATIVA"
+            ? "ATIVA"
+            : "INATIVA";
+        const rota = oscAtual.podeAdministrarStatusPlataforma
+            ? `/admin/oscs/${oscAtual.id}/status`
+            : `/osc/${oscAtual.id}/status`;
+        botaoConfirmar.disabled = true;
+        botaoCancelar.disabled = true;
+        dialogo.setAttribute("aria-busy", "true");
+        feedback.textContent = "Atualizando status…";
+        try {
+            const resposta = await requisicaoAutenticada(rota, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    status: novoStatus,
+                    motivo: motivo.value.trim() || null
+                })
+            });
+            if (!resposta?.ok) throw new Error(await mensagemErroApi(resposta, "alterar status"));
+            oscAtual.status = novoStatus;
+            oscAtual.arquivada = false;
+            dialogo.close("salvo");
+            renderizarPerfil(oscAtual);
+            void carregarConteudoPublico(oscAtual.id);
+            atualizarZonaPerigo();
+            notificar(null, novoStatus === "ATIVA"
+                ? "Organização ativada com sucesso."
+                : "Organização desativada com sucesso.");
+        } catch (erro) {
+            feedback.textContent = erro.message || "Não foi possível alterar o status da organização.";
+            notificar(null, feedback.textContent, "erro");
+        } finally {
+            botaoConfirmar.disabled = false;
+            botaoCancelar.disabled = false;
+            dialogo.removeAttribute("aria-busy");
+        }
+    });
+
+    dialogo.addEventListener("click", (evento) => {
+        if (evento.target === dialogo && !botaoConfirmar.disabled) dialogo.close("fora");
+    });
+    dialogo.addEventListener("keydown", (evento) => {
+        if (evento.key !== "Escape" || botaoConfirmar.disabled) return;
+        evento.preventDefault();
+        dialogo.close("escape");
+    });
+    dialogo.addEventListener("cancel", (evento) => {
+        if (botaoConfirmar.disabled) evento.preventDefault();
+    });
+    dialogo.addEventListener("close", () => {
+        motivo.value = "";
+        motivo.setCustomValidity("");
+        feedback.textContent = "";
+        if (!botao.hidden) botao.focus();
+    });
+    botao.dataset.inicializado = "true";
+}
+
+function obterAcaoStatusOsc(osc) {
+    const restaurando = Boolean(osc.arquivada);
+    const ativando = restaurando || osc.status === "INATIVA";
+    const estadoAtual = restaurando ? "Arquivada" : osc.status === "ATIVA" ? "Ativa" : "Inativa";
+    const rotulo = restaurando ? "Restaurar ONG" : ativando ? "Ativar ONG" : "Desativar ONG";
+    const titulo = restaurando ? "Restaurar ONG?" : ativando ? "Ativar ONG?" : "Desativar ONG?";
+    const descricao = restaurando || ativando
+        ? "A organização voltará a ficar ativa. A visibilidade pública continuará respeitando as regras do perfil e de cada publicação."
+        : "A organização deixará de aparecer nas áreas públicas. Seus membros continuarão com acesso de gestão conforme suas permissões.";
+    return { rotulo, titulo, descricao, estadoAtual };
+}
+
+function atualizarZonaPerigo() {
+    const zona = document.getElementById("zona-perigo");
+    const botaoStatus = document.getElementById("botao-status-osc");
+    const botaoExcluir = document.getElementById("excluir-osc");
+    const grupoExcluir = document.getElementById("grupo-excluir-osc");
+    if (!zona || !botaoStatus || !botaoExcluir || !grupoExcluir || !oscAtual) return;
+
+    const podeAlterarStatus = Boolean(oscAtual.podeAlterarStatus || oscAtual.podeAdministrarStatusPlataforma);
+    const podeExcluir = !oscAtual.arquivada && ["CRIADOR", "ADMINISTRADOR"].includes(cargoAtual);
+    botaoStatus.hidden = !podeAlterarStatus;
+    botaoExcluir.hidden = !podeExcluir;
+    grupoExcluir.hidden = !podeExcluir;
+    zona.hidden = !podeAlterarStatus && !podeExcluir;
+}
+
+function rotuloCargo(cargo) {
+    return ({ CRIADOR: "Criador", ADMINISTRADOR: "Administrador", EDITOR: "Editor", MEMBRO: "Membro" })[cargo] || cargo;
+}
+
+function notificar(elemento, mensagem, tipoInformado = null) {
+    const tipo = tipoInformado || (/mas n[aã]o foi poss[ií]vel atualizar/i.test(mensagem) ? "aviso"
+        : /n[aã]o foi|inv[aá]lido|permiss[aã]o|erro|falha|n[aã]o encontramos|j[aá] faz parte/i.test(mensagem) ? "erro" : "sucesso");
+    if (elemento) {
+        clearTimeout(elemento._timerNotificacao);
+        elemento.textContent = mensagem;
+        elemento._timerNotificacao = setTimeout(() => { elemento.textContent = ""; }, 6000);
+    }
+    notificarSistema(mensagem, tipo);
+}
+
+async function mensagemErroApi(resposta, acao = "concluir a operação") {
+    if (resposta?.status === 403 && acao !== "alterar status") return "Você não possui permissão para realizar esta ação.";
+    if (resposta?.status === 404 && acao === "adicionar") return "Não encontramos uma conta cadastrada com esse e-mail. Verifique o endereço ou solicite que a pessoa crie uma conta.";
+    if (resposta?.status === 409 && acao === "adicionar") return "Essa pessoa já faz parte desta organização.";
+    if (resposta?.status === 409 && acao === "excluir organização") return "Esta organização possui histórico de doações e não pode ser excluída.";
+    if (resposta?.status === 400 && acao === "adicionar") return "Informe um endereço de e-mail válido e selecione um cargo.";
+    if (acao === "carregar dados") return "Não foi possível carregar os dados da organização. Tente novamente em instantes.";
+    if (acao === "carregar membros") return "Não foi possível carregar a lista de membros. Tente novamente em instantes.";
+    try {
+        const body = await resposta.clone().json();
+        const detalhe = body?.detail || body?.message || body?.mensagem;
+        if (typeof detalhe === "string" && detalhe.trim()) return detalhe;
+    } catch { /* Respostas sem corpo JSON usam a mensagem amigável padrão. */ }
+    return "Não foi possível concluir a operação. Tente novamente.";
+}
+
+const causasOsc = [
+    ["EDUCACAO", "Educação"], ["SAUDE", "Saúde"], ["MEIO_AMBIENTE", "Meio ambiente"],
+    ["ANIMAIS", "Proteção animal"], ["INCLUSAO_SOCIAL", "Inclusão social"],
+    ["ESPORTE", "Esporte"], ["CULTURA", "Cultura"], ["COMBATE_POBREZA", "Combate à pobreza"]
+];
+const diasOsc = [["segunda", "Segunda-feira"], ["terca", "Terça-feira"], ["quarta", "Quarta-feira"], ["quinta", "Quinta-feira"], ["sexta", "Sexta-feira"], ["sabado", "Sábado"], ["domingo", "Domingo"]];
+const nomesOds = ["Erradicação da pobreza", "Fome zero e agricultura sustentável", "Saúde e bem-estar", "Educação de qualidade", "Igualdade de gênero", "Água potável e saneamento", "Energia limpa e acessível", "Trabalho decente e crescimento econômico", "Indústria, inovação e infraestrutura", "Redução das desigualdades", "Cidades e comunidades sustentáveis", "Consumo e produção responsáveis", "Ação contra a mudança global do clima", "Vida na água", "Vida terrestre", "Paz, justiça e instituições eficazes", "Parcerias e meios de implementação"];
+let causasEdicao = new Set();
+let odsEdicao = new Set();
+let snapshotEdicao = null;
+let snapshotDadosEdicao = null;
+
+function prepararOpcoesCausas() {
+    const causaPrincipal = oscAtual?.causaPrincipal;
+    document.getElementById("edicao-causa-principal").textContent = causasOsc.find(([v]) => v === causaPrincipal)?.[1] || causaPrincipal || "Não informado";
+    const opcoesCausas = document.getElementById("edicao-opcoes-causas");
+    if (!opcoesCausas.childElementCount) causasOsc.forEach(([valor, rotulo]) => {
+        const botao = document.createElement("button"); botao.type = "button"; botao.dataset.valor = valor; botao.textContent = rotulo;
+        botao.addEventListener("click", () => { if (valor === causaPrincipal || causasEdicao.has(valor)) return; causasEdicao.add(valor); renderizarCausasEdicao(); sincronizarOpcoesSelecao(); atualizarEstadoEdicao(); });
+        opcoesCausas.append(botao);
+    });
+    const opcoesOds = document.getElementById("edicao-opcoes-ods");
+    if (!opcoesOds.childElementCount) nomesOds.forEach((nome, indice) => {
+        const numero = String(indice + 1); const botao = document.createElement("button"); botao.type = "button"; botao.dataset.valor = numero;
+        botao.innerHTML = `<span class="ods-numero">ODS ${numero}</span> ${nome}`;
+        botao.addEventListener("click", () => { if (odsEdicao.has(numero)) return; odsEdicao.add(numero); renderizarOdsEdicao(); sincronizarOpcoesSelecao(); atualizarEstadoEdicao(); }); opcoesOds.append(botao);
+    });
+    const dias = document.getElementById("edicao-dias-semana");
+    if (!dias.childElementCount) diasOsc.forEach(([valor, rotulo]) => { const label = document.createElement("label"); const input = document.createElement("input"); input.type = "checkbox"; input.value = valor; input.dataset.dia = "true"; input.addEventListener("change", atualizarEstadoEdicao); label.append(input, document.createTextNode(` ${rotulo}`)); dias.append(label); });
+    const botaoCausas = document.getElementById("edicao-adicionar-causa");
+    const botaoOds = document.getElementById("edicao-adicionar-ods");
+    if (!botaoCausas.dataset.inicializado) { botaoCausas.addEventListener("click", () => alternarDropdown("edicao-dropdown-causas")); botaoCausas.dataset.inicializado = "true"; }
+    if (!botaoOds.dataset.inicializado) { botaoOds.addEventListener("click", () => alternarDropdown("edicao-dropdown-ods")); botaoOds.dataset.inicializado = "true"; }
+}
+
+function alternarDropdown(id) { const atual = document.getElementById(id); const lista = atual.querySelector(".dropdown-opcoes"); const visivel = lista.classList.toggle("aberto"); sincronizarOpcoesSelecao(); if (visivel) lista.querySelector("button:not([hidden])")?.focus(); }
+function sincronizarOpcoesSelecao() {
+    document.querySelectorAll("#edicao-opcoes-causas button").forEach(botao => { botao.hidden = causasEdicao.has(botao.dataset.valor) || botao.dataset.valor === oscAtual?.causaPrincipal; });
+    document.querySelectorAll("#edicao-opcoes-ods button").forEach(botao => { botao.hidden = odsEdicao.has(botao.dataset.valor); });
+}
+function renderizarCausasEdicao() { const area = document.getElementById("edicao-causas-selecionadas"); area.replaceChildren(); for (const valor of causasEdicao) { const item = document.createElement("span"); item.className = "area-selecionada"; item.textContent = causasOsc.find(([v]) => v === valor)?.[1] || valor; const btn = document.createElement("button"); btn.type = "button"; btn.setAttribute("aria-label", `Remover ${item.textContent}`); btn.textContent = "×"; btn.addEventListener("click", () => { causasEdicao.delete(valor); renderizarCausasEdicao(); sincronizarOpcoesSelecao(); atualizarEstadoEdicao(); }); item.append(btn); area.append(item); } }
+function renderizarOdsEdicao() { const area = document.getElementById("edicao-ods-selecionadas"); area.replaceChildren(); for (const valor of odsEdicao) { const item = document.createElement("span"); item.className = "ods-selecionada"; const numero = document.createElement("strong"); numero.className = "ods-numero"; numero.textContent = `ODS ${valor}`; const titulo = document.createElement("span"); titulo.textContent = nomesOds[Number(valor)-1]; item.append(numero, titulo); const btn = document.createElement("button"); btn.type = "button"; btn.setAttribute("aria-label", `Remover ODS ${valor}`); btn.textContent = "×"; btn.addEventListener("click", () => { odsEdicao.delete(valor); renderizarOdsEdicao(); sincronizarOpcoesSelecao(); atualizarEstadoEdicao(); }); item.append(btn); area.append(item); } }
+function capturarEdicao() { const campos = [...document.querySelectorAll("#form-edicao-osc input:not([data-dia]), #form-edicao-osc select, #form-edicao-osc textarea")].map(el => [el.id, el.value]); const dias = [...document.querySelectorAll("#edicao-dias-semana input:checked")].map(el => el.value).sort(); return JSON.stringify({ campos, causas: [...causasEdicao].sort(), ods: [...odsEdicao].sort((a,b)=>Number(a)-Number(b)), dias }); }
+function atualizarEstadoEdicao() { if (!snapshotEdicao) return; document.getElementById("edicao-descartar").disabled = capturarEdicao() === snapshotEdicao; }
+function definirSnapshotEdicao() { snapshotEdicao = capturarEdicao(); atualizarEstadoEdicao(); }
+
+function definirSelectBooleano(id, valor) {
+    document.getElementById(id).value = typeof valor === "boolean" ? String(valor) : "";
+}
+
+function valorBooleano(id) {
+    const valor = document.getElementById(id).value;
+    return valor === "" ? null : valor === "true";
+}
+
+function preencherCamposEdicao(dados) {
+    prepararOpcoesCausas();
+    const campos = {
+        "edicao-descricao-curta": dados.descricaoCurta, "edicao-descricao": dados.descricao,
+        "edicao-pais": dados.pais, "edicao-estado": dados.estado,
+        "edicao-cidade": dados.cidade, "edicao-cep": dados.cep, "edicao-bairro": dados.bairro,
+        "edicao-rua": dados.rua, "edicao-numero": dados.numero, "edicao-complemento": dados.complemento,
+        "edicao-area-geografica": dados.areaGeografica, "edicao-email": dados.email,
+        "edicao-telefone": dados.telefone, "edicao-whatsapp": dados.whatsapp, "edicao-site": dados.site,
+        "edicao-instagram": dados.instagram, "edicao-linkedin": dados.linkedin, "edicao-youtube": dados.youtube,
+        "edicao-horario-abertura": dados.horarioAbertura,
+        "edicao-horario-fechamento": dados.horarioFechamento, "edicao-frequencia": dados.frequenciaVoluntariado,
+        "edicao-idade-minima": dados.idadeMinimaVoluntario, "edicao-atividades": dados.atividadesVoluntariado
+    };
+    for (const [id, valor] of Object.entries(campos)) document.getElementById(id).value = valor ?? "";
+    document.getElementById("edicao-cnpj").textContent = dados.cnpj || "Não informado";
+    document.getElementById("edicao-nome").textContent = dados.nome || "Não informado";
+    document.getElementById("edicao-ano").textContent = dados.anoFundacao ?? "Não informado";
+    document.getElementById("edicao-causa-principal").textContent = causasOsc.find(([v]) => v === dados.causaPrincipal)?.[1] || dados.causaPrincipal || "Não informado";
+    causasEdicao = new Set(dados.causasSecundarias || []); renderizarCausasEdicao();
+    odsEdicao = new Set((dados.ods || []).map(String)); renderizarOdsEdicao();
+    sincronizarOpcoesSelecao();
+    const parseDias = (dados.diasHorariosFuncionamento || "").toLocaleLowerCase("pt-BR");
+    const diasCadastrados = new Set(diasOsc.filter(([valor, nome]) => parseDias.includes(valor) || parseDias.includes(nome.toLocaleLowerCase("pt-BR"))).map(([valor]) => valor));
+    document.querySelectorAll("#edicao-dias-semana input").forEach(input => { input.checked = diasCadastrados.has(input.value); });
+    definirSelectBooleano("edicao-presencial", dados.atendimentoPresencial);
+    definirSelectBooleano("edicao-online", dados.atendimentoOnline);
+    definirSelectBooleano("edicao-agendamento", dados.necessitaAgendamento);
+    definirSelectBooleano("edicao-aceita-voluntarios", dados.aceitaVoluntarios);
+    definirSelectBooleano("edicao-processo-seletivo", dados.processoSeletivoVoluntario);
+    definirSelectBooleano("edicao-certificado", dados.emiteCertificadoVoluntario);
+    atualizarCamposVoluntariado();
+}
+function atualizarCamposVoluntariado() { const sim = document.getElementById("edicao-aceita-voluntarios").value === "true"; const grupo = document.getElementById("edicao-campos-voluntariado"); grupo.hidden = !sim; grupo.querySelectorAll("input,select,textarea").forEach(el => { el.disabled = !sim; }); }
+
+async function requisicaoAutenticada(caminho, opcoes = {}) {
+    const resposta = await fetchAutenticado(caminho, opcoes);
+    return await sessaoInvalidaConfirmada(resposta) ? null : resposta;
+}
+
+function dataConteudo(valor) {
+    if (!valor) return "Data não informada";
+    const data = new Date(valor);
+    return Number.isNaN(data.valueOf()) ? "Data não informada" : data.toLocaleDateString("pt-BR");
+}
+
+function criarCartaoConteudo(item, oportunidade, gerenciavel) {
+    const cartao = document.createElement("article");
+    cartao.className = "cartao-conteudo-osc";
+    const cabecalho = document.createElement("div");
+    cabecalho.className = "cartao-conteudo-osc-cabecalho";
+    const titulo = document.createElement("h3");
+    titulo.textContent = item.titulo;
+    const tipo = document.createElement("span");
+    tipo.className = "estado-conteudo-osc";
+    tipo.textContent = oportunidade
+        ? `${item.vaga?.status || "Dados de vaga incompletos"}${item.ativo ? "" : " · Post não publicado"}`
+        : (item.ativo ? "Publicado" : "Não publicado");
+    cabecalho.append(titulo, tipo);
+    cartao.append(cabecalho);
+
+    if (item.imagemUrl && urlImagemSegura(item.imagemUrl)) {
+        const imagem = document.createElement("img");
+        imagem.src = item.imagemUrl;
+        imagem.alt = `Imagem de ${item.titulo}`;
+        imagem.loading = "lazy";
+        imagem.referrerPolicy = "no-referrer";
+        cartao.append(imagem);
+    }
+
+    const texto = document.createElement("p");
+    texto.className = "cartao-conteudo-osc-texto";
+    texto.textContent = item.conteudo;
+    cartao.append(texto);
+
+    if (oportunidade && item.vaga) {
+        const detalhes = document.createElement("dl");
+        detalhes.className = "detalhes-vaga-osc";
+        const dados = [
+            ["Modalidade", item.vaga.modalidadeVoluntariado],
+            ["Vagas", Number.isInteger(item.vaga.quantidadeVagas) ? String(item.vaga.quantidadeVagas) : "Não informada"],
+            ["Carga horária", item.vaga.cargaHoraria],
+            ["Requisitos", item.vaga.requisitos],
+            ["Local", [item.vaga.bairro, item.vaga.cidade].filter(Boolean).join(" · ")],
+            ["Período", `${dataConteudo(item.vaga.dataInicio)} a ${dataConteudo(item.vaga.dataFim)}`]
+        ];
+        for (const [rotulo, valor] of dados) {
+            const termo = document.createElement("dt");
+            const descricao = document.createElement("dd");
+            termo.textContent = rotulo;
+            descricao.textContent = valor || "Não informado";
+            detalhes.append(termo, descricao);
+        }
+        cartao.append(detalhes);
+    }
+
+    const rodape = document.createElement("div");
+    rodape.className = "cartao-conteudo-osc-rodape";
+    const atualizado = document.createElement("small");
+    atualizado.textContent = `Atualizado em ${dataConteudo(item.dataAtualizacao || item.dataCriacao)}`;
+    rodape.append(atualizado);
+    if (gerenciavel && item.podeEditar) {
+        const editar = document.createElement("button");
+        editar.type = "button";
+        editar.className = "btn btn-secundario";
+        editar.textContent = oportunidade ? "Editar oportunidade" : "Editar post";
+        editar.addEventListener("click", () => oportunidade
+            ? abrirDialogoOportunidade(item)
+            : abrirDialogoPost(item));
+        rodape.append(editar);
+    }
+    cartao.append(rodape);
+    return cartao;
+}
+
+function criarPreviewSemImagem(item, oportunidade) {
+    const preview = document.createElement("div");
+    preview.className = "miniatura-texto-osc";
+    const categoria = document.createElement("span");
+    categoria.className = "miniatura-categoria-osc";
+    categoria.textContent = oportunidade ? "VOLUNTARIADO" : "PUBLICAÇÃO";
+    const titulo = document.createElement("strong");
+    titulo.textContent = item.titulo;
+    const trecho = document.createElement("span");
+    trecho.className = "miniatura-trecho-osc";
+    trecho.textContent = item.conteudo.trim().slice(0, 115);
+    preview.append(categoria, titulo, trecho);
+    return preview;
+}
+
+function criarMiniaturaPublica(item, oportunidade) {
+    const botao = document.createElement("button");
+    botao.type = "button";
+    botao.className = "miniatura-publica-osc";
+    botao.setAttribute("aria-haspopup", "dialog");
+    botao.setAttribute("aria-label", `Abrir ${oportunidade ? "oportunidade" : "publicação"}: ${item.titulo}`);
+    if (item.imagemUrl && urlImagemSegura(item.imagemUrl)) {
+        const imagem = document.createElement("img");
+        imagem.src = item.imagemUrl;
+        imagem.alt = "";
+        imagem.loading = "lazy";
+        imagem.referrerPolicy = "no-referrer";
+        imagem.addEventListener("error", () => {
+            botao.replaceChildren(criarPreviewSemImagem(item, oportunidade));
+        }, { once: true });
+        botao.append(imagem);
+        const legenda = document.createElement("span");
+        legenda.className = "miniatura-legenda-osc";
+        legenda.textContent = item.titulo;
+        botao.append(legenda);
+    } else {
+        botao.append(criarPreviewSemImagem(item, oportunidade));
+    }
+    botao.addEventListener("click", () => abrirVisualizadorConteudo(item, oportunidade, botao));
+    return botao;
+}
+
+function renderizarListaPublica(lista, items, oportunidade) {
+    lista.replaceChildren(...items.map(item => criarMiniaturaPublica(item, oportunidade)));
+}
+
+function adicionarDetalheVisualizador(lista, rotulo, valor) {
+    if (valor == null || String(valor).trim() === "") return;
+    const termo = document.createElement("dt");
+    termo.textContent = rotulo;
+    const descricao = document.createElement("dd");
+    descricao.textContent = String(valor);
+    lista.append(termo, descricao);
+}
+
+function preencherVisualizadorOportunidade(item) {
+    const detalhes = document.getElementById("detalhes-visualizador-vaga");
+    detalhes.replaceChildren();
+    const vaga = item.vaga;
+    if (!vaga) {
+        detalhes.hidden = true;
+        return;
+    }
+    const modalidades = { PRESENCIAL: "Presencial", REMOTO: "Remoto", HIBRIDO: "Híbrido" };
+    const status = { ABERTA: "Aberta", ENCERRADA: "Encerrada", CANCELADA: "Cancelada" };
+    const local = [vaga.rua, vaga.numero, vaga.bairro, vaga.cidade].filter(Boolean).join(", ");
+    adicionarDetalheVisualizador(detalhes, "Modalidade", modalidades[vaga.modalidadeVoluntariado] || vaga.modalidadeVoluntariado);
+    adicionarDetalheVisualizador(detalhes, "Local", local);
+    adicionarDetalheVisualizador(detalhes, "Requisitos", vaga.requisitos);
+    adicionarDetalheVisualizador(detalhes, "Quantidade de vagas", vaga.quantidadeVagas);
+    adicionarDetalheVisualizador(detalhes, "Carga horária", vaga.cargaHoraria);
+    adicionarDetalheVisualizador(detalhes, "Início", dataConteudo(vaga.dataInicio));
+    adicionarDetalheVisualizador(detalhes, "Encerramento", dataConteudo(vaga.dataFim));
+    adicionarDetalheVisualizador(detalhes, "Status", status[vaga.status] || vaga.status);
+    detalhes.hidden = detalhes.childElementCount === 0;
+}
+
+function abrirVisualizadorConteudo(item, oportunidade, origem) {
+    const dialogo = document.getElementById("dialogo-conteudo-publico");
+    if (dialogo.open) return;
+    origemVisualizadorConteudo = origem;
+    overflowAnteriorVisualizador = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const media = document.getElementById("visualizador-midia-conteudo");
+    media.replaceChildren();
+    if (item.imagemUrl && urlImagemSegura(item.imagemUrl)) {
+        const imagem = document.createElement("img");
+        imagem.src = item.imagemUrl;
+        imagem.alt = `Imagem de ${item.titulo}`;
+        imagem.referrerPolicy = "no-referrer";
+        imagem.addEventListener("error", () => {
+            media.replaceChildren(criarPreviewSemImagem(item, oportunidade));
+        }, { once: true });
+        media.append(imagem);
+    } else {
+        media.append(criarPreviewSemImagem(item, oportunidade));
+    }
+
+    document.getElementById("visualizador-ong-nome").textContent = textoLimpo(oscAtual?.nome) || "Organização";
+    document.getElementById("visualizador-tipo-conteudo").textContent = oportunidade
+        ? "Oportunidade de voluntariado"
+        : item.tipo === "NOTICIA" ? "Notícia" : "Publicação";
+    document.getElementById("titulo-visualizador-conteudo").textContent = item.titulo;
+    document.getElementById("texto-visualizador-conteudo").textContent = item.conteudo;
+    preencherVisualizadorOportunidade(oportunidade ? item : { vaga: null });
+    const data = item.dataAtualizacao || item.dataCriacao;
+    const dataElemento = document.getElementById("data-visualizador-conteudo");
+    dataElemento.textContent = `${item.dataAtualizacao ? "Atualizado" : "Publicado"} em ${dataConteudo(data)}`;
+    dataElemento.dateTime = data || "";
+
+    dialogo.showModal();
+    document.getElementById("fechar-visualizador-conteudo").focus();
+}
+
+function configurarVisualizadorConteudoPublico() {
+    const dialogo = document.getElementById("dialogo-conteudo-publico");
+    if (dialogo.dataset.inicializado === "true") return;
+    document.getElementById("fechar-visualizador-conteudo").addEventListener("click", () => dialogo.close("botao"));
+    dialogo.addEventListener("keydown", evento => {
+        if (evento.key !== "Escape") return;
+        evento.preventDefault();
+        dialogo.close("escape");
+    });
+    dialogo.addEventListener("click", evento => {
+        if (evento.target === dialogo) dialogo.close("fora");
+    });
+    dialogo.addEventListener("close", () => {
+        document.body.style.overflow = overflowAnteriorVisualizador ?? "";
+        if (origemVisualizadorConteudo?.isConnected) origemVisualizadorConteudo.focus();
+        origemVisualizadorConteudo = null;
+        overflowAnteriorVisualizador = null;
+    });
+    dialogo.dataset.inicializado = "true";
+}
+
+function abaPerfilPorHash(hash) {
+    const normalizado = hash === "conteudo" ? "gestao-conteudo"
+        : hash === "dados" ? "configuracoes" : hash;
+    return [...document.querySelectorAll("#abas-perfil-osc [role=tab]")]
+        .find(aba => aba.dataset.hash === normalizado) || null;
+}
+
+function ativarAbaPerfil(abaSelecionada, atualizarHash = true) {
+    if (!abaSelecionada || abaSelecionada.hidden) return false;
+    const abaPrivada = ["aba-conteudo", "aba-membros", "aba-dados"].includes(abaSelecionada.id);
+    if (abaPrivada && !membroOscConfirmado) return false;
+
+    const navegacao = document.getElementById("abas-perfil-osc");
+    const abas = [...navegacao.querySelectorAll('[role="tab"]')];
+    const wrapperGestao = document.getElementById("gestao-osc");
+    const paineis = abas.map(aba => document.getElementById(aba.getAttribute("aria-controls")));
+    for (let i = 0; i < abas.length; i += 1) {
+        const ativa = abas[i] === abaSelecionada;
+        abas[i].setAttribute("aria-selected", String(ativa));
+        abas[i].tabIndex = ativa ? 0 : -1;
+        paineis[i].hidden = !ativa;
+    }
+    wrapperGestao.hidden = !abaPrivada;
+    if (atualizarHash) {
+        history.replaceState(null, "", `${location.pathname}${location.search}#${abaSelecionada.dataset.hash}`);
+    }
+    return true;
+}
+
+function resolverHashInicialPerfil() {
+    if (!hashInicialPerfil) return;
+    const abaSolicitada = abaPerfilPorHash(hashInicialPerfil);
+    if (!abaSolicitada) return;
+    const privada = ["aba-conteudo", "aba-membros", "aba-dados"].includes(abaSolicitada.id);
+    if (privada && !verificacaoMembroOscConcluida) return;
+    if (!privada && abaSolicitada.id !== "aba-informacoes" && !verificacaoConteudoPublicoConcluida) return;
+    if (abaSolicitada.hidden || (privada && !membroOscConfirmado)) {
+        ativarAbaPerfil(document.getElementById("aba-informacoes"));
+        history.replaceState(null, "", `${location.pathname}${location.search}#informacoes`);
+        hashInicialPerfil = "informacoes";
+        return;
+    }
+    ativarAbaPerfil(abaSolicitada, false);
+}
+
+function configurarNavegacaoPerfil() {
+    const navegacao = document.getElementById("abas-perfil-osc");
+    if (navegacao.dataset.inicializada === "true") return;
+    const abas = [...navegacao.querySelectorAll('[role="tab"]')];
+    for (const aba of abas) {
+        aba.addEventListener("click", () => {
+            hashInicialPerfil = aba.dataset.hash;
+            ativarAbaPerfil(aba);
+        });
+        aba.addEventListener("keydown", evento => {
+            if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(evento.key)) return;
+            const visiveis = abas.filter(item => !item.hidden);
+            const posicao = visiveis.indexOf(aba);
+            if (posicao < 0) return;
+            evento.preventDefault();
+            const proximaPosicao = evento.key === "Home" ? 0
+                : evento.key === "End" ? visiveis.length - 1
+                    : (posicao + (evento.key === "ArrowRight" ? 1 : visiveis.length - 1)) % visiveis.length;
+            const proxima = visiveis[proximaPosicao];
+            proxima.focus();
+            hashInicialPerfil = proxima.dataset.hash;
+            ativarAbaPerfil(proxima);
+        });
+    }
+    navegacao.hidden = false;
+    navegacao.dataset.inicializada = "true";
+    ativarAbaPerfil(document.getElementById("aba-informacoes"), false);
+    resolverHashInicialPerfil();
+}
+
+function definirAcessoAbasPrivadas(permitido) {
+    membroOscConfirmado = permitido;
+    verificacaoMembroOscConcluida = true;
+    const abasPrivadas = ["aba-conteudo", "aba-membros", "aba-dados"]
+        .map(id => document.getElementById(id));
+    abasPrivadas.forEach(aba => { aba.hidden = !permitido; });
+    if (!permitido && abasPrivadas.some(aba => aba.getAttribute("aria-selected") === "true")) {
+        ativarAbaPerfil(document.getElementById("aba-informacoes"));
+    }
+    resolverHashInicialPerfil();
+}
+
+function atualizarAbasPublicas(posts, oportunidades) {
+    document.getElementById("aba-publicacoes").hidden = posts.length === 0;
+    document.getElementById("aba-voluntariado-publico").hidden = oportunidades.length === 0;
+    resolverHashInicialPerfil();
+    const ativa = document.querySelector('#abas-perfil-osc [aria-selected="true"]');
+    if (ativa?.hidden) {
+        ativarAbaPerfil(document.getElementById("aba-informacoes"));
+    }
+}
+
+function resetarConteudoPublico() {
+    requisicaoConteudoPublicoAtual += 1;
+    verificacaoConteudoPublicoConcluida = false;
+    membroOscConfirmado = false;
+    verificacaoMembroOscConcluida = false;
+    for (const id of ["aba-conteudo", "aba-membros", "aba-dados"]) {
+        const aba = document.getElementById(id);
+        aba.hidden = true;
+        aba.setAttribute("aria-selected", "false");
+        aba.tabIndex = -1;
+    }
+    document.getElementById("gestao-osc").hidden = true;
+    const info = document.getElementById("aba-informacoes");
+    const publicTabs = [document.getElementById("aba-publicacoes"), document.getElementById("aba-voluntariado-publico")];
+    for (const aba of publicTabs) {
+        aba.hidden = true;
+        aba.setAttribute("aria-selected", "false");
+        aba.tabIndex = -1;
+    }
+    if (info) {
+        info.setAttribute("aria-selected", "true");
+        info.tabIndex = 0;
+    }
+    document.getElementById("painel-publico").hidden = false;
+    document.getElementById("painel-publicacoes").hidden = true;
+    document.getElementById("painel-voluntariado-publico").hidden = true;
+    for (const id of ["painel-conteudo", "painel-membros", "painel-dados"]) {
+        document.getElementById(id).hidden = true;
+    }
+    document.getElementById("posts-publicos-lista").replaceChildren();
+    document.getElementById("oportunidades-publicas-lista").replaceChildren();
+    const status = document.getElementById("conteudo-publico-status");
+    status.hidden = true;
+    status.textContent = "";
+}
+
+function renderizarListaConteudo(lista, vazio, items, oportunidade, gerenciavel) {
+    lista.replaceChildren(...items.map(item => criarCartaoConteudo(item, oportunidade, gerenciavel)));
+    vazio.hidden = items.length > 0;
+}
+
+async function carregarConteudoPublico(id) {
+    const requisicaoId = ++requisicaoConteudoPublicoAtual;
+    const status = document.getElementById("conteudo-publico-status");
+    const abaPosts = document.getElementById("aba-publicacoes");
+    const abaOportunidades = document.getElementById("aba-voluntariado-publico");
+    const painelPosts = document.getElementById("painel-publicacoes");
+    const painelOportunidades = document.getElementById("painel-voluntariado-publico");
+    abaPosts.hidden = true;
+    abaOportunidades.hidden = true;
+    painelPosts.hidden = true;
+    painelOportunidades.hidden = true;
+    const abaSelecionada = document.querySelector('#abas-perfil-osc [aria-selected="true"]');
+    if (!abaSelecionada || abaSelecionada.hidden) {
+        ativarAbaPerfil(document.getElementById("aba-informacoes"));
+    }
+    document.getElementById("posts-publicos-lista").replaceChildren();
+    document.getElementById("oportunidades-publicas-lista").replaceChildren();
+    status.hidden = false;
+    status.textContent = "Carregando publicações e oportunidades públicas…";
+    try {
+        const resposta = await fetch(`${API_URL}/post/osc/${encodeURIComponent(id)}/publicos`, {
+            headers: { Accept: "application/json" },
+            cache: "no-store"
+        });
+        if (requisicaoId !== requisicaoConteudoPublicoAtual || Number(id) !== Number(oscAtual?.id)) return;
+        if (resposta.status === 404 && oscAtual?.status !== "ATIVA") {
+            verificacaoConteudoPublicoConcluida = true;
+            status.textContent = "O conteúdo público fica oculto enquanto a organização está inativa.";
+            resolverHashInicialPerfil();
+            return;
+        }
+        if (!resposta.ok) throw new Error("Conteúdo público indisponível.");
+        const items = await resposta.json();
+        if (requisicaoId !== requisicaoConteudoPublicoAtual || Number(id) !== Number(oscAtual?.id)) return;
+        if (!Array.isArray(items) || items.some(item => !respostaConteudoOscValida(item, id))) {
+            throw new Error("Resposta inválida.");
+        }
+        const separado = separarConteudoPublicoOsc(
+            items, id, oscAtual?.status, oscAtual?.arquivada);
+        verificacaoConteudoPublicoConcluida = true;
+        renderizarListaPublica(document.getElementById("posts-publicos-lista"), separado.posts, false);
+        renderizarListaPublica(document.getElementById("oportunidades-publicas-lista"), separado.oportunidades, true);
+        atualizarAbasPublicas(separado.posts, separado.oportunidades);
+        status.hidden = true;
+    } catch {
+        if (requisicaoId !== requisicaoConteudoPublicoAtual || Number(id) !== Number(oscAtual?.id)) return;
+        verificacaoConteudoPublicoConcluida = true;
+        resolverHashInicialPerfil();
+        status.textContent = "Não foi possível verificar as publicações e oportunidades públicas.";
+        status.hidden = false;
+    }
+}
+
+async function carregarConteudoGestao() {
+    const postsStatus = document.getElementById("posts-gestao-status");
+    const oportunidadesStatus = document.getElementById("oportunidades-gestao-status");
+    const postsErro = document.getElementById("posts-gestao-erro");
+    const oportunidadesErro = document.getElementById("oportunidades-gestao-erro");
+    postsStatus.hidden = false;
+    oportunidadesStatus.hidden = false;
+    postsErro.hidden = true;
+    oportunidadesErro.hidden = true;
+    try {
+        const resposta = await requisicaoAutenticada(`/post/osc/${encodeURIComponent(oscAtual.id)}/gestao`);
+        if (!resposta?.ok) throw new Error(await mensagemErroApi(resposta, "carregar conteudo"));
+        const items = await resposta.json();
+        if (!Array.isArray(items) || items.some(item => !respostaConteudoOscValida(item, oscAtual.id))) {
+            throw new Error("Resposta de conteudo invalida.");
+        }
+        conteudoOscAtual = items;
+        const separado = separarConteudoOsc(items);
+        renderizarListaConteudo(document.getElementById("posts-gestao-lista"),
+            document.getElementById("posts-gestao-vazio"), separado.posts, false, true);
+        renderizarListaConteudo(document.getElementById("oportunidades-gestao-lista"),
+            document.getElementById("oportunidades-gestao-vazio"), separado.oportunidades, true, true);
+    } catch (erro) {
+        postsErro.textContent = erro.message || "Não foi possível carregar os posts.";
+        oportunidadesErro.textContent = erro.message || "Não foi possível carregar as oportunidades.";
+        postsErro.hidden = false;
+        oportunidadesErro.hidden = false;
+    } finally {
+        postsStatus.hidden = true;
+        oportunidadesStatus.hidden = true;
+    }
+}
+
+function abrirDialogoPost(item = null) {
+    edicaoPostOsc = item;
+    const dialogo = document.getElementById("dialogo-post-osc");
+    const form = document.getElementById("form-post-osc");
+    form.reset();
+    document.getElementById("titulo-dialogo-post-osc").textContent = item ? "Editar post" : "Criar post";
+    document.getElementById("post-titulo-osc").value = item?.titulo || "";
+    document.getElementById("post-conteudo-osc").value = item?.conteudo || "";
+    resetarImagemConteudo("post", item?.imagemUrl || null);
+    document.getElementById("post-ativo-osc").checked = item ? item.ativo : true;
+    document.getElementById("post-form-feedback-osc").textContent = "";
+    dialogo.showModal();
+    document.getElementById("post-titulo-osc").focus();
+}
+
+function preencherVagaForm(vaga = null) {
+    const campos = {
+        "vaga-quantidade-osc": vaga?.quantidadeVagas ?? 0,
+        "vaga-modalidade-osc": vaga?.modalidadeVoluntariado || "",
+        "vaga-requisitos-osc": vaga?.requisitos || "",
+        "vaga-carga-osc": vaga?.cargaHoraria || "",
+        "vaga-cidade-osc": vaga?.cidade || "",
+        "vaga-bairro-osc": vaga?.bairro || "",
+        "vaga-rua-osc": vaga?.rua || "",
+        "vaga-numero-osc": vaga?.numero || "",
+        "vaga-complemento-osc": vaga?.complemento || "",
+        "vaga-inicio-osc": vaga?.dataInicio || "",
+        "vaga-fim-osc": vaga?.dataFim || "",
+        "vaga-status-osc": vaga?.status || "ABERTA"
+    };
+    for (const [id, value] of Object.entries(campos)) document.getElementById(id).value = value;
+}
+
+function abrirDialogoOportunidade(item = null) {
+    edicaoOportunidadeOsc = item;
+    const dialogo = document.getElementById("dialogo-oportunidade-osc");
+    const form = document.getElementById("form-oportunidade-osc");
+    form.reset();
+    document.getElementById("titulo-dialogo-oportunidade-osc").textContent = item
+        ? "Editar oportunidade" : "Criar oportunidade";
+    document.getElementById("oportunidade-titulo-osc").value = item?.titulo || "";
+    document.getElementById("oportunidade-conteudo-osc").value = item?.conteudo || "";
+    resetarImagemConteudo("oportunidade", item?.imagemUrl || null);
+    document.getElementById("oportunidade-ativo-osc").checked = item ? item.ativo : true;
+    preencherVagaForm(item?.vaga || null);
+    document.getElementById("oportunidade-form-feedback-osc").textContent = "";
+    dialogo.showModal();
+    document.getElementById("oportunidade-titulo-osc").focus();
+}
+
+function criarPayloadPost(tipo, ativo, titulo, conteudo) {
+    return {
+        post: { tipo, ativo, titulo: titulo.trim(), conteudo: conteudo.trim(), imagemUrl: null },
+        vaga: null
+    };
+}
+
+function criarPayloadOportunidade(item = null) {
+    return {
+        post: {
+            tipo: "VOLUNTARIADO",
+            ativo: document.getElementById("oportunidade-ativo-osc").checked,
+            titulo: document.getElementById("oportunidade-titulo-osc").value.trim(),
+            conteudo: document.getElementById("oportunidade-conteudo-osc").value.trim(),
+            imagemUrl: null
+        },
+        vaga: {
+            quantidadeVagas: Number(document.getElementById("vaga-quantidade-osc").value),
+            modalidadeVoluntariado: document.getElementById("vaga-modalidade-osc").value,
+            requisitos: document.getElementById("vaga-requisitos-osc").value.trim(),
+            cargaHoraria: document.getElementById("vaga-carga-osc").value.trim(),
+            cidade: document.getElementById("vaga-cidade-osc").value.trim(),
+            bairro: document.getElementById("vaga-bairro-osc").value.trim(),
+            rua: document.getElementById("vaga-rua-osc").value.trim() || null,
+            numero: document.getElementById("vaga-numero-osc").value.trim() || null,
+            complemento: document.getElementById("vaga-complemento-osc").value.trim() || null,
+            dataInicio: document.getElementById("vaga-inicio-osc").value,
+            dataFim: document.getElementById("vaga-fim-osc").value,
+            status: item?.vaga?.status || "ABERTA"
+        }
+    };
+}
+
+function resetarImagemConteudo(tipo, urlAtual = null) {
+    const estado = imagensConteudoOsc[tipo];
+    if (estado.urlPreview) URL.revokeObjectURL(estado.urlPreview);
+    estado.arquivo = null;
+    estado.urlPreview = null;
+    estado.urlAtual = urlImagemSegura(urlAtual) ? urlAtual : null;
+    const prefixo = tipo === "post" ? "post" : "oportunidade";
+    const input = document.getElementById(`${prefixo}-imagem-arquivo-osc`);
+    input.value = "";
+    document.getElementById(`${prefixo}-imagem-feedback-osc`).textContent = "";
+    renderizarPreviewImagemConteudo(tipo);
+}
+
+function renderizarPreviewImagemConteudo(tipo) {
+    const estado = imagensConteudoOsc[tipo];
+    const prefixo = tipo === "post" ? "post" : "oportunidade";
+    const figura = document.getElementById(`${prefixo}-imagem-preview-osc`);
+    const imagem = figura.querySelector("img");
+    const nome = figura.querySelector("figcaption span");
+    const remover = figura.querySelector("figcaption button");
+    const fonte = estado.urlPreview || estado.urlAtual;
+    figura.hidden = !fonte;
+    if (!fonte) {
+        imagem.removeAttribute("src");
+        nome.textContent = "";
+        remover.hidden = true;
+        return;
+    }
+    imagem.src = fonte;
+    nome.textContent = estado.arquivo
+        ? estado.arquivo.name
+        : "Imagem atual — será mantida se nenhuma imagem nova for selecionada.";
+    remover.hidden = !estado.arquivo;
+}
+
+function liberarImagemConteudo(tipo) {
+    resetarImagemConteudo(tipo, null);
+}
+
+function mensagemErroConteudo(resposta) {
+    if (!resposta) return "Não foi possível confirmar a sessão. Entre novamente e tente de novo.";
+    if (resposta.status === 400) return "Revise os campos e as datas informadas.";
+    if (resposta.status === 401) return "Sua sessão expirou. Entre novamente para continuar.";
+    if (resposta.status === 403) return "Seu vínculo ou cargo não permite esta operação.";
+    if (resposta.status === 404) return "A organização ou o conteúdo não está disponível.";
+    if (resposta.status === 409) return "A operação conflita com o estado atual. Atualize a lista e revise as candidaturas antes de tentar novamente.";
+    if (resposta.status === 413) return "O arquivo enviado excede o limite permitido de 10 MB.";
+    return "Não foi possível salvar o conteúdo. Tente novamente.";
+}
+
+async function salvarConteudo(form, operation) {
+    if (form.dataset.salvando === "true" || !form.reportValidity()) return;
+    const isOpportunity = operation === "opportunity";
+    const button = form.querySelector("button[type=submit]");
+    const feedback = document.getElementById(isOpportunity ? "oportunidade-form-feedback-osc" : "post-form-feedback-osc");
+    const item = isOpportunity ? edicaoOportunidadeOsc : edicaoPostOsc;
+    const payload = isOpportunity
+        ? criarPayloadOportunidade(item)
+        : criarPayloadPost("DOACAO", document.getElementById("post-ativo-osc").checked,
+            document.getElementById("post-titulo-osc").value,
+            document.getElementById("post-conteudo-osc").value);
+    const validacao = validarConteudoOsc(payload);
+    if (!validacao.valido) {
+        feedback.textContent = "Revise o tipo, os campos obrigatórios e as datas informadas.";
+        return;
+    }
+    const tipoImagem = isOpportunity ? "oportunidade" : "post";
+    const arquivoImagem = imagensConteudoOsc[tipoImagem].arquivo;
+    if (arquivoImagem) {
+        const validacaoImagem = validarArquivoImagem(arquivoImagem);
+        if (!validacaoImagem.valido) {
+            document.getElementById(`${tipoImagem === "post" ? "post" : "oportunidade"}-imagem-feedback-osc`).textContent = validacaoImagem.mensagem;
+            return;
+        }
+    }
+    form.dataset.salvando = "true";
+    button.disabled = true;
+    feedback.textContent = "Salvando…";
+    const id = encodeURIComponent(oscAtual.id);
+    const caminho = item
+        ? `/post/osc/${id}/put-com-imagem`
+        : `/post/osc/${id}/create-com-imagem`;
+    const method = item ? "PUT" : "POST";
+    if (item) payload.id = item.id;
+    const dados = new FormData();
+    dados.append("dados", new Blob([JSON.stringify(payload)], { type: "application/json" }));
+    if (arquivoImagem) dados.append("imagem", arquivoImagem, arquivoImagem.name);
+    try {
+        const resposta = await requisicaoAutenticada(caminho, {
+            method,
+            body: dados
+        });
+        if (!resposta?.ok) throw new Error(mensagemErroConteudo(resposta));
+        await resposta.json();
+        document.getElementById(isOpportunity ? "dialogo-oportunidade-osc" : "dialogo-post-osc").close();
+        notificar(document.getElementById("notificacao-osc"),
+            isOpportunity ? "Oportunidade salva com sucesso." : "Post salvo com sucesso.");
+        await carregarConteudoGestao();
+        await carregarConteudoPublico(oscAtual.id);
+    } catch (erro) {
+        feedback.textContent = erro.message || "Não foi possível salvar. Atualize a lista e tente novamente.";
+    } finally {
+        form.dataset.salvando = "false";
+        button.disabled = false;
+    }
+}
+
+function configurarConteudo() {
+    if (document.getElementById("painel-conteudo").dataset.inicializado === "true") return;
+    document.getElementById("criar-post-osc").addEventListener("click", () => abrirDialogoPost());
+    document.getElementById("criar-oportunidade-osc").addEventListener("click", () => abrirDialogoOportunidade());
+    document.getElementById("cancelar-post-osc").addEventListener("click", () => document.getElementById("dialogo-post-osc").close());
+    document.getElementById("cancelar-oportunidade-osc").addEventListener("click", () => document.getElementById("dialogo-oportunidade-osc").close());
+    for (const tipo of ["post", "oportunidade"]) {
+        const prefixo = tipo === "post" ? "post" : "oportunidade";
+        const input = document.getElementById(`${prefixo}-imagem-arquivo-osc`);
+        const feedbackImagem = document.getElementById(`${prefixo}-imagem-feedback-osc`);
+        input.addEventListener("change", () => {
+            const estado = imagensConteudoOsc[tipo];
+            if (estado.urlPreview) URL.revokeObjectURL(estado.urlPreview);
+            estado.arquivo = null;
+            estado.urlPreview = null;
+            const arquivo = input.files?.[0];
+            if (!arquivo) {
+                feedbackImagem.textContent = "";
+                renderizarPreviewImagemConteudo(tipo);
+                return;
+            }
+            const validacao = validarArquivoImagem(arquivo);
+            if (!validacao.valido) {
+                input.value = "";
+                feedbackImagem.textContent = validacao.mensagem;
+                renderizarPreviewImagemConteudo(tipo);
+                return;
+            }
+            estado.arquivo = arquivo;
+            estado.urlPreview = URL.createObjectURL(arquivo);
+            feedbackImagem.textContent = "";
+            renderizarPreviewImagemConteudo(tipo);
+        });
+        document.querySelector(`#${prefixo}-imagem-preview-osc figcaption button`).addEventListener("click", () => {
+            const estado = imagensConteudoOsc[tipo];
+            if (estado.urlPreview) URL.revokeObjectURL(estado.urlPreview);
+            estado.arquivo = null;
+            estado.urlPreview = null;
+            input.value = "";
+            feedbackImagem.textContent = "Seleção removida. A imagem atual será mantida.";
+            renderizarPreviewImagemConteudo(tipo);
+        });
+    }
+    document.getElementById("form-post-osc").addEventListener("submit", event => {
+        event.preventDefault();
+        void salvarConteudo(event.currentTarget, "post");
+    });
+    document.getElementById("form-oportunidade-osc").addEventListener("submit", event => {
+        event.preventDefault();
+        const inicio = document.getElementById("vaga-inicio-osc");
+        const fim = document.getElementById("vaga-fim-osc");
+        fim.setCustomValidity(fim.value && inicio.value && fim.value < inicio.value
+            ? "A data final deve ser igual ou posterior à data inicial." : "");
+        void salvarConteudo(event.currentTarget, "opportunity");
+    });
+    for (const id of ["dialogo-post-osc", "dialogo-oportunidade-osc"]) {
+        const dialogo = document.getElementById(id);
+        dialogo.addEventListener("close", () => {
+            liberarImagemConteudo(id === "dialogo-post-osc" ? "post" : "oportunidade");
+        });
+        const form = dialogo.querySelector("form");
+        dialogo.addEventListener("click", event => {
+            if (event.target === dialogo && form.dataset.salvando !== "true") dialogo.close("fora");
+        });
+        dialogo.addEventListener("keydown", event => {
+            if (event.key !== "Escape") return;
+            event.preventDefault();
+            if (form.dataset.salvando !== "true") dialogo.close("escape");
+        });
+        dialogo.addEventListener("cancel", event => {
+            if (form.dataset.salvando === "true") event.preventDefault();
+        });
+    }
+    document.getElementById("painel-conteudo").dataset.inicializado = "true";
+}
+
+async function carregarMembros() {
+    const resposta = await requisicaoAutenticada(`/osc/${oscAtual.id}/membros`);
+    if (!resposta?.ok) throw new Error(await mensagemErroApi(resposta, "carregar membros"));
+    const membros = await resposta.json();
+    const lista = document.getElementById("lista-membros");
+    lista.replaceChildren();
+
+    for (const membro of membros) {
+        const item = document.createElement("li");
+        const dados = document.createElement("div");
+        const nome = document.createElement("strong");
+        const email = document.createElement("span");
+        nome.textContent = membro.nome;
+        email.textContent = membro.email;
+        dados.append(nome, email);
+
+        const podeGerir = ["CRIADOR", "ADMINISTRADOR"].includes(cargoAtual);
+        const podeAlterarEsteCargo = podeGerir && membro.cargo !== "CRIADOR" && (membro.cargo !== "ADMINISTRADOR" || cargoAtual === "CRIADOR");
+        if (podeAlterarEsteCargo) {
+            const cargo = document.createElement("select");
+            cargo.setAttribute("aria-label", `Cargo de ${membro.nome}`);
+            const opcoes = ["MEMBRO", "EDITOR", "ADMINISTRADOR"];
+            if (cargoAtual === "CRIADOR") opcoes.push("CRIADOR");
+            for (const valor of opcoes) {
+                const opcao = document.createElement("option");
+                opcao.value = valor;
+                opcao.textContent = rotuloCargo(valor);
+                cargo.append(opcao);
+            }
+            cargo.value = membro.cargo;
+            cargo.addEventListener("change", async () => {
+                const cargoAnterior = membro.cargo;
+                const cargoSolicitado = cargo.value;
+                cargo.disabled = true;
+                try {
+                    if (cargoSolicitado === "CRIADOR") {
+                        const confirmado = await confirmarPorDigitacao({
+                            titulo: "Transferir cargo de criador",
+                            descricao: "Você está prestes a transferir o cargo de criador desta organização. O novo criador assumirá essa responsabilidade e você passará a ser administrador.",
+                            identificacao: membro.nome,
+                            instrucao: "Para confirmar, digite:",
+                            frase: `TORNAR ${membro.nome} CRIADOR`,
+                            textoConfirmar: "Transferir criador",
+                            tipo: "Transferência de titularidade",
+                            estilo: "destrutivo",
+                            mensagemSucesso: "Cargo de criador transferido com sucesso.",
+                            origem: cargo,
+                            aoConfirmar: async () => {
+                                const respostaCargo = await requisicaoAutenticada(`/osc/${oscAtual.id}/membros/${membro.usuarioId}/cargo`, {
+                                    method: "PATCH",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({ cargo: "CRIADOR" })
+                                });
+                                if (!respostaCargo?.ok) throw new Error(await mensagemErroApi(respostaCargo, "transferir criador"));
+                                await atualizarCargoAtual();
+                                await carregarMembros();
+                            }
+                        });
+                        if (!confirmado) cargo.value = cargoAnterior;
+                        return;
+                    }
+                    const respostaCargo = await requisicaoAutenticada(`/osc/${oscAtual.id}/membros/${membro.usuarioId}/cargo`, {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ cargo: cargoSolicitado })
+                    });
+                    if (!respostaCargo?.ok) throw new Error(await mensagemErroApi(respostaCargo, "alterar cargo"));
+                    await atualizarCargoAtual();
+                    await carregarMembros();
+                    notificar(document.getElementById("membros-feedback"), "Cargo do membro atualizado com sucesso.");
+                } catch (erro) {
+                    notificar(document.getElementById("membros-feedback"), erro.message || "Não foi possível concluir a operação. Tente novamente.", "erro");
+                    cargo.value = cargoAnterior;
+                } finally {
+                    if (cargo.isConnected) cargo.disabled = false;
+                }
+            });
+            item.append(dados, cargo);
+        } else {
+            const cargoRotulo = document.createElement("span");
+            cargoRotulo.className = "cargo-membro-rotulo";
+            cargoRotulo.textContent = rotuloCargo(membro.cargo);
+            item.append(dados, cargoRotulo);
+        }
+
+        if (podeGerir && membro.cargo !== "CRIADOR" && (membro.cargo !== "ADMINISTRADOR" || cargoAtual === "CRIADOR")) {
+            const remover = document.createElement("button");
+            remover.type = "button";
+            remover.className = "btn btn-secundario";
+            remover.textContent = "Remover";
+            remover.addEventListener("click", async () => {
+                const feedback = document.getElementById("membros-feedback");
+                try {
+                    await confirmarPorDigitacao({
+                        titulo: "Confirmar remoção de membro",
+                        descricao: "Você está prestes a remover esta pessoa da organização. Ela perderá seu vínculo com esta ONG.",
+                        identificacao: membro.nome,
+                        instrucao: "Para confirmar, digite o texto abaixo:",
+                        frase: `REMOVER ${membro.nome}`,
+                        textoConfirmar: "Remover membro",
+                        tipo: "Remoção de membro",
+                        estilo: "destrutivo",
+                        mensagemSucesso: "Membro removido com sucesso.",
+                        origem: remover,
+                        aoConfirmar: async () => {
+                            const respostaRemocao = await requisicaoAutenticada(
+                                `/osc/${oscAtual.id}/membros?email=${encodeURIComponent(membro.email)}`,
+                                { method: "DELETE" }
+                            );
+                            if (!respostaRemocao?.ok) throw new Error(await mensagemErroApi(respostaRemocao, "remover membro"));
+                            await carregarMembros();
+                        }
+                    });
+                } catch (erro) {
+                    notificar(feedback, erro.message || "Não foi possível concluir a operação. Tente novamente.", "erro");
+                }
+            });
+            item.append(remover);
+        }
+        lista.append(item);
+    }
+}
+
+async function configurarGestao() {
+    const admin = ["CRIADOR", "ADMINISTRADOR"].includes(cargoAtual);
+    const gestao = document.getElementById("gestao-osc");
+    const painelMembros = document.getElementById("painel-membros");
+    const painelDados = document.getElementById("painel-dados");
+    const botaoExcluir = document.getElementById("excluir-osc");
+    const painelEdicao = document.getElementById("edicao-osc");
+    const resumoDados = document.getElementById("resumo-dados-osc");
+    const botaoEditarDados = document.getElementById("alterar-dados-osc");
+    const formularioEdicao = document.getElementById("form-edicao-osc");
+    const feedbackEdicao = document.getElementById("edicao-feedback");
+    const feedbackMembros = document.getElementById("membros-feedback");
+    if (oscAtual.arquivada) {
+        gestao.hidden = true;
+        painelMembros.hidden = true;
+        painelDados.hidden = true;
+        atualizarZonaPerigo();
+        return;
+    }
+    configurarConteudo();
+    void carregarConteudoGestao();
+    document.getElementById("form-adicionar-membro").hidden = !admin;
+    const podeEditarDados = ["CRIADOR", "ADMINISTRADOR", "EDITOR"].includes(cargoAtual);
+    renderizarResumoConfiguracoes(oscAtual);
+    painelEdicao.hidden = true;
+    botaoEditarDados.hidden = !podeEditarDados;
+    document.getElementById("aviso-somente-leitura").hidden = podeEditarDados;
+    document.getElementById("campos-edicao-osc").disabled = !podeEditarDados;
+    document.querySelector("#form-edicao-osc button[type=submit]").hidden = !podeEditarDados;
+    botaoExcluir.hidden = !admin;
+    atualizarZonaPerigo();
+    if (!botaoEditarDados.dataset.inicializado) {
+        botaoEditarDados.addEventListener("click", () => {
+            if (!podeEditarDados || formularioEdicao.dataset.carregado !== "true") return;
+            resumoDados.hidden = true;
+            painelEdicao.hidden = false;
+            document.querySelector("#form-edicao-osc input:not([disabled])")?.focus();
+        });
+        document.getElementById("cancelar-edicao-dados").addEventListener("click", async () => {
+            if (formularioEdicao.dataset.salvando === "true") return;
+            if (snapshotEdicao && capturarEdicao() !== snapshotEdicao) {
+                const dialogo = document.getElementById("dialogo-descartar");
+                dialogo.showModal();
+                const escolha = await new Promise(resolve => dialogo.addEventListener("close", () => resolve(dialogo.returnValue), { once: true }));
+                if (escolha !== "descartar") return;
+                if (snapshotDadosEdicao) preencherCamposEdicao(structuredClone(snapshotDadosEdicao));
+                definirSnapshotEdicao();
+            }
+            painelEdicao.hidden = true;
+            resumoDados.hidden = false;
+            botaoEditarDados.focus();
+        });
+        botaoEditarDados.dataset.inicializado = "true";
+    }
+    if (!formularioEdicao.dataset.inicializado) {
+        if (podeEditarDados) {
+            preencherCamposEdicao(oscAtual);
+            try {
+                const resposta = await requisicaoAutenticada(`/osc/${oscAtual.id}/edicao`);
+                if (!resposta?.ok) throw new Error(await mensagemErroApi(resposta, "carregar dados"));
+                const dados = await resposta.json();
+                preencherCamposEdicao(dados);
+                snapshotDadosEdicao = structuredClone(dados);
+                formularioEdicao.dataset.carregado = "true";
+            } catch (erro) {
+                notificar(feedbackEdicao, erro.message || "Não foi possível carregar os dados da organização. Tente novamente.", "erro");
+            }
+        }
+        formularioEdicao.addEventListener("submit", async (evento) => {
+            evento.preventDefault();
+            if (formularioEdicao.dataset.salvando === "true") return;
+            if (!formularioEdicao.reportValidity()) return;
+            formularioEdicao.dataset.salvando = "true";
+            const botaoSalvar = formularioEdicao.querySelector("button[type=submit]");
+            botaoSalvar.disabled = true;
+            notificar(feedbackEdicao, "Salvando…");
+            try {
+                const opcionais = (id) => document.getElementById(id).value.trim() || null;
+                const numeroOpcional = (id) => document.getElementById(id).value === "" ? null : Number(document.getElementById(id).value);
+                const resposta = await requisicaoAutenticada("/osc/put", {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        cnpj: snapshotDadosEdicao?.cnpj || oscAtual.cnpj,
+                        descricaoCurta: document.getElementById("edicao-descricao-curta").value.trim(),
+                        descricao: document.getElementById("edicao-descricao").value,
+                        email: document.getElementById("edicao-email").value,
+                        telefone: opcionais("edicao-telefone"), whatsapp: opcionais("edicao-whatsapp"),
+                        site: opcionais("edicao-site"), instagram: opcionais("edicao-instagram"),
+                        linkedin: opcionais("edicao-linkedin"), youtube: opcionais("edicao-youtube"),
+                        areaGeografica: document.getElementById("edicao-area-geografica").value,
+                        pais: document.getElementById("edicao-pais").value.trim(),
+                        estado: opcionais("edicao-estado"), cidade: document.getElementById("edicao-cidade").value.trim(),
+                        cep: document.getElementById("edicao-cep").value.trim(), bairro: document.getElementById("edicao-bairro").value.trim(),
+                        rua: document.getElementById("edicao-rua").value.trim(), numero: opcionais("edicao-numero"),
+                        complemento: opcionais("edicao-complemento"),
+                        diasHorariosFuncionamento: [...document.querySelectorAll("#edicao-dias-semana input:checked")].map(el => el.value).join(", ") || null,
+                        horarioAbertura: opcionais("edicao-horario-abertura"), horarioFechamento: opcionais("edicao-horario-fechamento"),
+                        atendimentoPresencial: valorBooleano("edicao-presencial"), atendimentoOnline: valorBooleano("edicao-online"),
+                        necessitaAgendamento: valorBooleano("edicao-agendamento"), aceitaVoluntarios,
+                        frequenciaVoluntariado: opcionais("edicao-frequencia"), idadeMinimaVoluntario: numeroOpcional("edicao-idade-minima"),
+                        processoSeletivoVoluntario: valorBooleano("edicao-processo-seletivo"), emiteCertificadoVoluntario: valorBooleano("edicao-certificado"),
+                        atividadesVoluntariado: opcionais("edicao-atividades"),
+                        causasSecundarias: [...causasEdicao], ods: [...odsEdicao].map(Number)
+                    })
+                });
+                if (!resposta?.ok) throw new Error(await mensagemErroApi(resposta, "salvar dados"));
+                const respostaEdicao = resposta.clone();
+                const dadosSalvos = await respostaEdicao.json().catch(() => null);
+                notificar(feedbackEdicao, "Informações da organização atualizadas com sucesso.");
+                const perfil = await fetch(`${API_URL}/osc/${oscAtual.id}`, { cache: "no-store" });
+                if (perfil.ok) { oscAtual = await perfil.json(); renderizarPerfil(oscAtual); }
+                renderizarResumoConfiguracoes(oscAtual);
+                const edicao = dadosSalvos || await (async () => { const r = await requisicaoAutenticada(`/osc/${oscAtual.id}/edicao`); return r?.ok ? r.json() : null; })();
+                if (edicao) { snapshotDadosEdicao = structuredClone(edicao); preencherCamposEdicao(edicao); }
+                else snapshotDadosEdicao = structuredClone({
+                    ...snapshotDadosEdicao,
+                    causasSecundarias: [...causasEdicao], ods: [...odsEdicao].map(Number),
+                    diasHorariosFuncionamento: [...document.querySelectorAll("#edicao-dias-semana input:checked")].map(el => el.value).join(", ") || null,
+                    aceitaVoluntarios: valorBooleano("edicao-aceita-voluntarios"),
+                    frequenciaVoluntariado: opcionais("edicao-frequencia"), idadeMinimaVoluntario: numeroOpcional("edicao-idade-minima"),
+                    processoSeletivoVoluntario: valorBooleano("edicao-processo-seletivo"), emiteCertificadoVoluntario: valorBooleano("edicao-certificado"),
+                    atividadesVoluntariado: opcionais("edicao-atividades")
+                });
+                definirSnapshotEdicao();
+                painelEdicao.hidden = true;
+                resumoDados.hidden = false;
+                botaoEditarDados.focus();
+            } catch (erro) {
+                notificar(feedbackEdicao, erro.message || "Não foi possível salvar as informações.", "erro");
+            } finally {
+                formularioEdicao.dataset.salvando = "false";
+                botaoSalvar.disabled = false;
+            }
+        });
+        formularioEdicao.addEventListener("input", atualizarEstadoEdicao);
+        formularioEdicao.addEventListener("change", (evento) => { if (evento.target.id === "edicao-aceita-voluntarios") atualizarCamposVoluntariado(); atualizarEstadoEdicao(); });
+        const dialogoDescartar = document.getElementById("dialogo-descartar");
+        dialogoDescartar.addEventListener("click", (evento) => {
+            if (evento.target === dialogoDescartar) dialogoDescartar.close("cancelar");
+        });
+        document.getElementById("edicao-descartar").addEventListener("click", async () => {
+            const dialogo = dialogoDescartar;
+            dialogo.showModal();
+            const escolha = await new Promise(resolve => dialogo.addEventListener("close", () => resolve(dialogo.returnValue), { once: true }));
+            if (escolha !== "descartar") return;
+            if (!snapshotDadosEdicao) return;
+            preencherCamposEdicao(structuredClone(snapshotDadosEdicao)); definirSnapshotEdicao();
+        });
+        formularioEdicao.dataset.inicializado = "true";
+        if (formularioEdicao.dataset.carregado === "true") definirSnapshotEdicao();
+    }
+
+    if (admin && !document.getElementById("form-adicionar-membro").dataset.inicializado) {
+        document.getElementById("form-adicionar-membro").addEventListener("submit", async (evento) => {
+            evento.preventDefault();
+            const formulario = evento.currentTarget;
+            if (!formulario.reportValidity()) return;
+            const emailInput = document.getElementById("novo-membro-email");
+            const botaoAdicionar = formulario.querySelector("button[type=submit]");
+            const email = emailInput.value.trim();
+            if (!emailInput.validity.valid || !email) {
+                emailInput.setCustomValidity("Informe um endereço de e-mail válido.");
+                emailInput.reportValidity();
+                emailInput.addEventListener("input", () => emailInput.setCustomValidity(""), { once: true });
+                return;
+            }
+            botaoAdicionar.disabled = true;
+            try {
+                const resposta = await requisicaoAutenticada(`/osc/${oscAtual.id}/membros`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        email,
+                        cargo: document.getElementById("novo-membro-cargo").value
+                    })
+                });
+                if (!resposta?.ok) throw new Error(await mensagemErroApi(resposta, "adicionar"));
+                let listaAtualizada = true;
+                try {
+                    await carregarMembros();
+                } catch {
+                    listaAtualizada = false;
+                }
+                formulario.reset();
+                notificar(feedbackMembros, listaAtualizada
+                    ? "Membro adicionado à organização com sucesso."
+                    : "Membro adicionado à organização, mas não foi possível atualizar a lista. Tente atualizar a lista em instantes.");
+            } catch (erro) {
+                notificar(feedbackMembros, erro.message || "Não foi possível concluir a operação. Tente novamente.", "erro");
+            } finally {
+                botaoAdicionar.disabled = false;
+            }
+        });
+        document.getElementById("form-adicionar-membro").dataset.inicializado = "true";
+    }
+
+    try { await carregarMembros(); }
+    catch (erro) { notificar(feedbackMembros, erro.message || "Não foi possível carregar a lista de membros.", "erro"); }
+
+    if (!botaoExcluir.dataset.inicializado) {
+        botaoExcluir.addEventListener("click", async () => {
+            try {
+                await confirmarPorDigitacao({
+                    titulo: "Excluir organização",
+                    descricao: "Esta ação excluirá a organização e poderá remover permanentemente suas informações e vínculos. Essa operação não deve ser realizada por engano.",
+                    identificacao: oscAtual.nome,
+                    instrucao: "Para confirmar, digite exatamente:",
+                    frase: "EXCLUIR ONG",
+                    textoConfirmar: "Excluir organização",
+                    tipo: "Exclusão permanente",
+                    estilo: "destrutivo",
+                    mensagemSucesso: "Organização excluída com sucesso.",
+                    origem: botaoExcluir,
+                    aoConfirmar: async () => {
+                        const resposta = await requisicaoAutenticada(`/osc/${oscAtual.id}`, { method: "DELETE" });
+                        if (!resposta?.ok) throw new Error(await mensagemErroApi(resposta, "excluir organização"));
+                        window.location.assign("/pages/oscs-page.html");
+                    }
+                });
+            } catch (erro) {
+                notificar(feedbackMembros, erro.message || "Não foi possível concluir a operação. Tente novamente.", "erro");
+            }
+        });
+        botaoExcluir.dataset.inicializado = "true";
+    }
+}
+
+async function carregarPermissoes(id) {
+    if (obterEstadoSessao() === "anonymous") {
+        definirAcessoAbasPrivadas(false);
+        return;
+    }
+    try {
+        const resposta = await requisicaoAutenticada("/osc/minhas");
+        if (!resposta?.ok) {
+            definirAcessoAbasPrivadas(false);
+            return;
+        }
+        const organizacoes = await resposta.json();
+        const vinculo = organizacoes.find((osc) => Number(osc.id) === Number(id));
+        if (!vinculo?.cargo || oscAtual?.arquivada) {
+            definirAcessoAbasPrivadas(false);
+            if (vinculo && oscAtual?.arquivada) await configurarGestao();
+            return;
+        }
+        cargoAtual = vinculo.cargo;
+        definirAcessoAbasPrivadas(true);
+        await configurarGestao();
+    } catch {
+        definirAcessoAbasPrivadas(false);
+    }
+}
+
+async function atualizarCargoAtual() {
+    const resposta = await requisicaoAutenticada("/osc/minhas");
+    if (!resposta?.ok) return;
+    const organizacoes = await resposta.json();
+    cargoAtual = organizacoes.find((osc) => Number(osc.id) === Number(oscAtual.id))?.cargo || null;
 }
 
 async function carregarPerfil() {
+    resetarConteudoPublico();
     const carregamento = document.getElementById("perfil-carregamento");
     const erro = document.getElementById("perfil-erro");
     const conteudo = document.getElementById("perfil-conteudo");
@@ -652,10 +2037,13 @@ async function carregarPerfil() {
     }
 
     try {
-        const resposta = await fetch(`${API_URL}/osc/${encodeURIComponent(id)}`, {
-            headers: { Accept: "application/json" },
-            cache: "no-store"
-        });
+        const privada = await fetchAutenticado(`/osc/${encodeURIComponent(id)}/privado`);
+        const resposta = [401, 403, 404].includes(privada.status)
+            ? await fetch(`${API_URL}/osc/${encodeURIComponent(id)}`, {
+                headers: { Accept: "application/json" },
+                cache: "no-store"
+            })
+            : privada;
         if (resposta.status === 404) {
             tituloErro.textContent = "Organização não encontrada";
             mensagemErro.textContent = "Este perfil não está disponível. Confira o link ou volte à lista de organizações.";
@@ -664,9 +2052,12 @@ async function carregarPerfil() {
         if (!resposta.ok) throw new Error("api-indisponivel");
         const osc = await resposta.json();
         if (!osc || Number(osc.id) !== id || typeof osc.nome !== "string") throw new Error("resposta-invalida");
+        oscAtual = osc;
         renderizarPerfil(osc);
         carregamento.hidden = true;
         conteudo.hidden = false;
+        void carregarConteudoPublico(id);
+        void carregarPermissoes(id);
         return;
     } catch (falha) {
         carregamento.hidden = true;

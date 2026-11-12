@@ -1,4 +1,13 @@
+# ==========================================
+# VARIÁVEIS DE AMBIENTE E SEGREDOS
+# ==========================================
 .env
+.env.*
+!.env.example
+
+# ==========================================
+# JAVA / MAVEN
+# ==========================================
 target/
 .mvn/wrapper/maven-wrapper.jar
 
@@ -12,7 +21,7 @@ target/
 .sts4-cache
 
 ### IntelliJ IDEA ###
-.idea
+.idea/
 *.iws
 *.iml
 *.ipr
@@ -29,3 +38,10 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# ==========================================
+# SCRIPTS OPERACIONAIS DE PRODUÇÃO
+# ==========================================
+
+# Bootstrap específico dos administradores 47 e 48
+/backend/src/main/resources/db/manual/20261108_supabase_sql_editor_bootstrap_super_admin_47_48.sql

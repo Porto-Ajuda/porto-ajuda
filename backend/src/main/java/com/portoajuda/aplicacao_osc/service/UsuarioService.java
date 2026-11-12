@@ -1,6 +1,8 @@
 
 package com.portoajuda.aplicacao_osc.service;
 
+import com.portoajuda.aplicacao_osc.admin.AdminAssignmentService;
+import com.portoajuda.aplicacao_osc.admin.AdminRbacInvariantService;
 import com.portoajuda.aplicacao_osc.dto.request.RequestLoginDTO;
 import com.portoajuda.aplicacao_osc.dto.request.RequestUsuarioDTO;
 import com.portoajuda.aplicacao_osc.dto.response.ResponseUsuarioDTO;
@@ -9,6 +11,10 @@ import com.portoajuda.aplicacao_osc.entity.SessaoUsuario;
 import com.portoajuda.aplicacao_osc.entity.Usuario;
 import com.portoajuda.aplicacao_osc.enums.Genero;
 import com.portoajuda.aplicacao_osc.repository.RoleRepository;
+import com.portoajuda.aplicacao_osc.repository.AdminAuthChallengeRepository;
+import com.portoajuda.aplicacao_osc.repository.CodigoAutenticacaoRepository;
+import com.portoajuda.aplicacao_osc.repository.PhoneVerificationChallengeRepository;
+import com.portoajuda.aplicacao_osc.repository.RecuperacaoSenhaRepository;
 import com.portoajuda.aplicacao_osc.repository.UsuarioRepository;
 import com.portoajuda.aplicacao_osc.segurity.JwtService;
 import com.portoajuda.aplicacao_osc.utils.Cpf;
@@ -27,6 +33,7 @@ import java.time.LocalDateTime;
 import java.time.Period;
 import java.time.ZoneId;
 import java.util.Set;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -41,6 +48,14 @@ public class UsuarioService {
         private final EmailService emailService;
         private final SessaoUsuarioService sessaoUsuarioService;
         private final SupabaseStorageService supabaseStorageService;
+        private final AdminAuthChallengeRepository adminAuthChallengeRepository;
+        private final AdminAuthDeliveryQueueService adminAuthDeliveryQueueService;
+        private final AdminPrivilegedSessionService adminPrivilegedSessionService;
+        private final AdminAssignmentService adminAssignmentService;
+        private final AdminRbacInvariantService adminRbacInvariantService;
+        private final PhoneVerificationChallengeRepository phoneVerificationChallengeRepository;
+        private final CodigoAutenticacaoRepository codigoAutenticacaoRepository;
+        private final RecuperacaoSenhaRepository recuperacaoSenhaRepository;
 
         @Transactional
         public void signup(RequestUsuarioDTO usuarioDTO) {
@@ -118,7 +133,8 @@ public class UsuarioService {
         @Transactional
         public LoginResultado login(RequestLoginDTO loginDTO) {
 
-                Usuario usuario = usuarioRepository.findByEmail(
+                // Serialize credential validation/session creation with password changes.
+                Usuario usuario = usuarioRepository.findByEmailForUpdate(
                                 new Email(loginDTO.email()))
                                 .orElseThrow(() -> new BadCredentialsException("Email ou senha incorretos"));
 
@@ -165,6 +181,7 @@ public class UsuarioService {
 
         @Transactional
         public LocalDateTime solicitarExclusao(Integer usuarioId) {
+                adminRbacInvariantService.lockEligibilityChanges();
                 Usuario usuario = usuarioRepository.findByIdForUpdate(usuarioId)
                                 .orElseThrow(() -> new IllegalArgumentException("Usuário não existe"));
 
@@ -195,6 +212,9 @@ public class UsuarioService {
                                         "Confirme o e-mail antes de solicitar a exclusão da conta.");
                 }
 
+                adminRbacInvariantService.assertMayRemoveEligibility(usuarioId);
+                adminAssignmentService.rejectSelfServiceDeletionWhenAssigned(usuarioId);
+
                 LocalDateTime solicitadaEm = LocalDateTime.now(ZONA_APLICACAO);
                 LocalDateTime agendadaPara = calcularDataExclusao(solicitadaEm);
 
@@ -203,6 +223,7 @@ public class UsuarioService {
                 usuario.setAtivo(false);
 
                 sessaoUsuarioService.revogarSessoesDoUsuario(usuarioId);
+                adminPrivilegedSessionService.revogarTodasDoUsuario(usuarioId, "ADMIN_REVOKED");
 
                 return agendadaPara;
         }
@@ -245,26 +266,112 @@ public class UsuarioService {
                         RequestUsuarioDTO usuarioDTO,
                         Usuario usuario) {
 
+                adminRbacInvariantService.lockEligibilityChanges();
+
                 Usuario usuarioAlterado = usuarioRepository.findById(usuario.getId())
                                 .orElseThrow(() -> new IllegalArgumentException("Usuário não existe"));
 
-                usuarioAlterado.setEmail(new Email(usuarioDTO.email()));
-                usuarioAlterado.setTelefone(usuarioDTO.telefone());
+                Email novoEmail = new Email(usuarioDTO.email());
+                String novoTelefone = usuarioDTO.telefone();
+                boolean emailAlterado = !java.util.Objects.equals(
+                                usuarioAlterado.getEmail() == null ? null : usuarioAlterado.getEmail().valor(),
+                                novoEmail.valor());
+                boolean telefoneAlterado = !java.util.Objects.equals(
+                                usuarioAlterado.getTelefone(), novoTelefone);
+
+                if (emailAlterado || telefoneAlterado) {
+                        adminRbacInvariantService.assertMayRemoveEligibility(usuarioAlterado.getId());
+                }
+
+                if (emailAlterado) {
+                        usuarioAlterado.setEmail(novoEmail);
+                        usuarioAlterado.setEmailVerificado(false);
+                }
+                if (telefoneAlterado) {
+                        usuarioAlterado.setTelefone(novoTelefone);
+                        usuarioAlterado.setTelefoneVerificado(false);
+                }
+                if (emailAlterado || telefoneAlterado) {
+                        invalidarDesafiosVerificacao(usuarioAlterado.getId());
+                        adminPrivilegedSessionService.revogarTodasDoUsuario(
+                                        usuarioAlterado.getId(), "CONTACT_CHANGED");
+                }
 
                 usuarioRepository.save(usuarioAlterado);
         }
 
         @Transactional
-        public void changePassword(String senha, Integer id) {
+        public void changePassword(
+                        String senhaAtual,
+                        String senha,
+                        String confirmacao,
+                        Integer id,
+                        Long sessaoRegularAutenticadaId,
+                        boolean desconectarOutrosDispositivos) {
 
-                Usuario usuario = usuarioRepository.findById(id)
-                                .orElseThrow(() -> new IllegalArgumentException("Usuário não existe"));
-
-                if (senha == null || senha.isBlank()) {
-                        throw new BadCredentialsException("Senha não pode ser vazia");
+                if (sessaoRegularAutenticadaId == null) {
+                        throw new BadCredentialsException("Sessão regular autenticada necessária.");
                 }
 
+                Usuario usuario = usuarioRepository.findByIdForUpdate(id)
+                                .orElseThrow(() -> new IllegalArgumentException("Usuário não existe"));
+                if (!usuario.isEnabled()) {
+                        throw new BadCredentialsException("A conta não está disponível para alteração de senha.");
+                }
+                if (senhaAtual == null || !passwordEncoder.matches(senhaAtual, usuario.getSenha())) {
+                        throw new BadCredentialsException("A senha atual está incorreta.");
+                }
+                if (senha == null || !senha.equals(confirmacao)) {
+                        throw new IllegalArgumentException("As senhas informadas não coincidem.");
+                }
+                atualizarSenha(usuario, senha, sessaoRegularAutenticadaId, desconectarOutrosDispositivos);
+        }
+
+        @Transactional
+        public void redefinirSenha(Usuario usuario, String senha) {
+                Usuario bloqueado = usuarioRepository.findByIdForUpdate(usuario.getId())
+                                .orElseThrow(() -> new IllegalArgumentException("Link inválido ou expirado."));
+                if (!bloqueado.isEnabled()) throw new IllegalArgumentException("Link inválido ou expirado.");
+                // Token recovery deliberately keeps the full-revocation policy and requires login again.
+                atualizarSenha(bloqueado, senha, null, true);
+        }
+
+        public void validarNovaSenha(Usuario usuario, String senha) {
+                validarSenha(senha);
+                if (passwordEncoder.matches(senha, usuario.getSenha())) {
+                        throw new IllegalArgumentException("A nova senha deve ser diferente da senha atual.");
+                }
+        }
+
+        private void atualizarSenha(
+                        Usuario usuario,
+                        String senha,
+                        Long sessaoRegularAutenticadaId,
+                        boolean desconectarOutrosDispositivos) {
+                validarNovaSenha(usuario, senha);
                 usuario.setSenha(passwordEncoder.encode(senha));
+                usuarioRepository.save(usuario);
+                if (sessaoRegularAutenticadaId == null) {
+                        sessaoUsuarioService.revogarSessoesDoUsuario(usuario.getId());
+                } else {
+                        sessaoUsuarioService.preservarSessaoAtualDuranteTrocaSenha(
+                                        usuario.getId(), sessaoRegularAutenticadaId,
+                                        desconectarOutrosDispositivos);
+                }
+                invalidarDesafiosVerificacao(usuario.getId());
+                recuperacaoSenhaRepository.invalidateForUser(usuario.getId(), Instant.now());
+                adminPrivilegedSessionService.revogarTodasDoUsuario(usuario.getId(), "PASSWORD_CHANGED");
+        }
+
+        private void validarSenha(String senha) {
+                if (senha == null || senha.length() < 8 || senha.length() > 128
+                                || !senha.matches("(?s).*[A-Z].*")
+                                || !senha.matches("(?s).*[a-z].*")
+                                || !senha.matches("(?s).*[0-9].*")
+                                || !senha.matches("(?s).*[^A-Za-z0-9].*")) {
+                        throw new IllegalArgumentException(
+                                        "A senha deve ter ao menos 8 caracteres, incluindo maiúscula, minúscula, número e caractere especial.");
+                }
         }
 
         public ResponseUsuarioDTO view(Usuario usuario) {
@@ -318,6 +425,8 @@ public class UsuarioService {
                         Integer usuarioId,
                         RequestAtualizarPerfilDTO dados) {
 
+                adminRbacInvariantService.lockEligibilityChanges();
+
                 Usuario usuario = usuarioRepository.findById(usuarioId)
                                 .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado."));
 
@@ -342,10 +451,18 @@ public class UsuarioService {
                                                 ? null
                                                 : nomeSocial);
 
-                usuario.setTelefone(
-                                telefone == null || telefone.isBlank()
-                                                ? null
-                                                : telefone);
+                String telefoneNormalizado = telefone == null || telefone.isBlank()
+                                ? null
+                                : telefone;
+                boolean telefoneAlterado = !java.util.Objects.equals(
+                                usuario.getTelefone(), telefoneNormalizado);
+                if (telefoneAlterado) {
+                        adminRbacInvariantService.assertMayRemoveEligibility(usuarioId);
+                        usuario.setTelefone(telefoneNormalizado);
+                        usuario.setTelefoneVerificado(false);
+                        invalidarDesafiosVerificacao(usuarioId);
+                        adminPrivilegedSessionService.revogarTodasDoUsuario(usuarioId, "CONTACT_CHANGED");
+                }
 
                 if (cep != null && !cep.isBlank() && !cep.matches("\\d{8}")) {
                         throw new IllegalArgumentException("Informe um CEP válido.");
@@ -357,5 +474,20 @@ public class UsuarioService {
                                                 : cep);
 
                 return usuarioRepository.save(usuario);
+        }
+
+        private void invalidarDesafiosVerificacao(Integer usuarioId) {
+                java.time.Instant agora = java.time.Instant.now();
+                codigoAutenticacaoRepository.deleteByUsuarioId(usuarioId);
+                adminAuthChallengeRepository.invalidatePendingForUser(
+                                usuarioId,
+                                agora,
+                                com.portoajuda.aplicacao_osc.entity.AdminAuthChallenge.State.INVALIDATED,
+                                List.of(
+                                                com.portoajuda.aplicacao_osc.entity.AdminAuthChallenge.State.ISSUING,
+                                                        com.portoajuda.aplicacao_osc.entity.AdminAuthChallenge.State.PENDING,
+                                                        com.portoajuda.aplicacao_osc.entity.AdminAuthChallenge.State.VERIFIED));
+                adminAuthDeliveryQueueService.clearInvalidatedForUser(usuarioId);
+                phoneVerificationChallengeRepository.invalidatePendingForUser(usuarioId, agora);
         }
 }

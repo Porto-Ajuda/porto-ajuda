@@ -1,19 +1,20 @@
+
 package com.portoajuda.aplicacao_osc.entity;
 
+import com.portoajuda.aplicacao_osc.enums.CargoOsc;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
-// import java.util.List;
-// import java.util.Set;
 
 @Setter
 @Getter
 @Entity
 @Table(name = "osc_membros")
 public class OscMembros {
+
     @Setter(AccessLevel.NONE)
     @EmbeddedId
     private OscMembroId id;
@@ -28,9 +29,21 @@ public class OscMembros {
     @JoinColumn(name = "id_usuario", nullable = false)
     private Usuario usuario;
 
-    @Column(name = "cargo_osc", length = 100)
-    private String cargoOsc;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "cargo_osc", length = 100, nullable = false)
+    private CargoOsc cargoOsc;
 
     @Column(name = "data_criacao")
     private LocalDateTime dataCriacao;
+
+    public void inicializarId() {
+        if (osc == null || osc.getId() == null
+                || usuario == null || usuario.getId() == null) {
+            throw new IllegalStateException(
+                    "OSC e usuário devem estar identificados antes de criar o vínculo."
+            );
+        }
+
+        this.id = new OscMembroId(osc.getId(), usuario.getId());
+    }
 }

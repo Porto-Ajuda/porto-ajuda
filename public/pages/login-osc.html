@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="../styles/login-osc.css">
     <link rel="stylesheet" href="../styles/geral.css">
 
-    <script src="../components/login-osc.js" defer></script>
+    <script type="module" src="../components/login-osc.js"></script>
     <script type="module" src="../components/header_footer.js" defer></script>
 </head>
 
@@ -38,7 +38,7 @@
 
                 <div class="campo">
                     <label for="login-cnpj">CNPJ</label>
-                    <input type="text" id="login-cnpj" name="cnpj" placeholder="00.000.000/0000-00" maxlength="18" inputmode="numeric" autocomplete="username" required>
+                    <input type="text" id="login-cnpj" name="cnpj" placeholder="00.AAA.AAA/AAAA-00" maxlength="18" inputmode="text" autocomplete="username" required>
                 </div>
 
                 <div class="campo">
@@ -52,7 +52,7 @@
                 </div>
 
                 <div class="links-login links-login-direita">
-                    <a href="recuperar-senha.html">Esqueci minha senha</a>
+                    <a href="contato.html">Precisa de ajuda com acesso?</a>
                 </div>
 
                 <p class="msg-error msg-login" id="erro-login" role="alert" hidden></p>

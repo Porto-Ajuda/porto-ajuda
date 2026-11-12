@@ -8,15 +8,15 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import com.portoajuda.aplicacao_osc.utils.CnpjValido;
 import org.hibernate.validator.constraints.URL;
-import org.hibernate.validator.constraints.br.CNPJ;
 
 import java.time.LocalTime;
 import java.util.Set;
 
 public record RequestOscDTO(
         @NotBlank(message = "CNPJ é obrigatório")
-        @CNPJ(message = "CNPJ inválido")
+        @CnpjValido(message = "CNPJ inválido")
         String cnpj,
 
         CausaSocial causaPrincipal,

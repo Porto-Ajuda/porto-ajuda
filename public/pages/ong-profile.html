@@ -11,15 +11,15 @@
 
   <link rel="stylesheet" href="../styles/ong-profile.css" />
   <link rel="stylesheet" href="../styles/geral.css">
-  <link rel="stylesheet" href="../styles/ong-profile.css">
   <script type="module" src="../components/header_footer.js" defer></script>
   <script type="module" src="../components/ong-profile.js" defer></script>
+  <link rel="stylesheet" href="../styles/candidaturas.css">
 </head>
 <body>
   <header class="navbar"></header>
   <div class="stars" aria-hidden="true"></div>
 
-  <main class="perfil-publico">
+  <main id="perfil-pagina-ong" class="perfil-publico">
     <p id="perfil-carregamento" class="estado-perfil" role="status" aria-live="polite">Carregando perfil da organização…</p>
     <section id="perfil-erro" class="estado-perfil estado-perfil-erro" role="alert" hidden>
       <h1 id="perfil-erro-titulo">Não foi possível carregar o perfil</h1>
@@ -28,6 +28,7 @@
     </section>
 
     <div id="perfil-conteudo" hidden>
+      <div id="notificacao-osc" class="notificacao-osc" role="status" aria-live="polite" hidden></div>
       <section class="hero-container" aria-labelledby="nome-ong">
         <div class="infos-ong">
           <p class="sobre-label"><span id="causa-principal"></span></p>
@@ -52,6 +53,21 @@
 
       <div class="divider" aria-hidden="true"></div>
 
+      <nav id="abas-perfil-osc" class="abas-osc abas-perfil-osc" role="tablist" aria-label="Navegação do perfil da organização" hidden>
+        <button type="button" id="aba-informacoes" role="tab" aria-controls="painel-publico" aria-selected="true" data-hash="informacoes">Informações</button>
+        <button type="button" id="aba-publicacoes" role="tab" aria-controls="painel-publicacoes" aria-selected="false" tabindex="-1" data-hash="publicacoes" hidden>Publicações</button>
+        <button type="button" id="aba-voluntariado-publico" role="tab" aria-controls="painel-voluntariado-publico" aria-selected="false" tabindex="-1" data-hash="voluntariado" hidden>Voluntariado</button>
+        <button type="button" id="aba-conteudo" role="tab" aria-controls="painel-conteudo" aria-selected="false" tabindex="-1" data-hash="gestao-conteudo" hidden>Posts e voluntariado</button>
+        <button type="button" id="aba-membros" role="tab" aria-controls="painel-membros" aria-selected="false" tabindex="-1" data-hash="membros" hidden>Membros</button>
+        <button type="button" id="aba-dados" role="tab" aria-controls="painel-dados" aria-selected="false" data-hash="configuracoes" hidden>Configurações</button>
+      </nav>
+
+      <section id="estado-status-osc" class="estado-status-osc" role="status" hidden>
+        <strong>Organização inativa</strong>
+        <p>Este perfil está disponível para seus membros, mas não aparece nas áreas públicas do Porto Ajuda.</p>
+      </section>
+
+      <section id="painel-publico" class="painel-aba painel-publico-informacoes" role="tabpanel" aria-labelledby="aba-informacoes" tabindex="0">
       <div class="conteudo-perfil">
         <section class="bloco-perfil bloco-editorial" id="apresentacao">
           <h2>Sobre a organização</h2>
@@ -110,8 +126,233 @@
           <div class="ods" id="ods-container"></div>
         </section>
       </div>
+      </section>
+      <section id="painel-publicacoes" class="painel-aba painel-publicacoes-osc" role="tabpanel" aria-labelledby="aba-publicacoes" tabindex="0" hidden>
+        <h2>Publicações</h2>
+        <p id="posts-publicos-status" class="texto-ausente" role="status" aria-live="polite" hidden></p>
+        <div id="posts-publicos-lista" class="grade-publicacoes-osc"></div>
+        <p id="posts-publicos-vazio" class="texto-ausente" hidden>Esta organização ainda não possui publicações públicas.</p>
+        <p id="posts-publicos-erro" class="feedback-perfil" role="alert" hidden>Não foi possível carregar as publicações.</p>
+      </section>
+      <section id="painel-voluntariado-publico" class="painel-aba painel-publicacoes-osc" role="tabpanel" aria-labelledby="aba-voluntariado-publico" tabindex="0" hidden>
+        <h2>Voluntariado</h2>
+        <p id="oportunidades-publicas-status" class="texto-ausente" role="status" aria-live="polite" hidden></p>
+        <div id="oportunidades-publicas-lista" class="grade-publicacoes-osc grade-voluntariado-osc"></div>
+        <p id="oportunidades-publicas-vazio" class="texto-ausente" hidden>Não há oportunidades abertas e disponíveis para esta organização.</p>
+        <p id="oportunidades-publicas-erro" class="feedback-perfil" role="alert" hidden>Não foi possível carregar as oportunidades.</p>
+      </section>
+      <p id="conteudo-publico-status" class="feedback-perfil estado-conteudo-publico" role="status" aria-live="polite" hidden></p>
+
+      <section id="gestao-osc" class="gestao-osc" hidden>
+      <section id="painel-conteudo" class="painel-aba painel-gestao-osc painel-conteudo-gestao" role="tabpanel" aria-labelledby="aba-conteudo" tabindex="0" hidden>
+        <h2>Conteúdo da organização</h2>
+        <p>As alterações são autorizadas pelo vínculo e cargo atual do membro nesta organização.</p>
+        <section class="bloco-perfil" aria-labelledby="titulo-gestao-posts">
+          <div class="cabecalho-conteudo-osc"><div><h3 id="titulo-gestao-posts">Posts</h3><p>Crie e edite publicações de doação. Notícias são gerenciadas pela plataforma.</p></div><button id="criar-post-osc" class="btn" type="button">Criar post</button></div>
+          <p id="posts-gestao-status" role="status" aria-live="polite">Carregando posts…</p><div id="posts-gestao-lista" class="grade-conteudo-osc"></div>
+          <p id="posts-gestao-vazio" class="texto-ausente" hidden>Nenhum post cadastrado nesta organização.</p><p id="posts-gestao-erro" class="feedback-perfil" role="alert" hidden></p>
+        </section>
+        <section class="bloco-perfil" aria-labelledby="titulo-gestao-oportunidades">
+          <div class="cabecalho-conteudo-osc"><div><h3 id="titulo-gestao-oportunidades">Voluntariado</h3><p>Gerencie oportunidades ligadas a posts de voluntariado.</p></div><button id="criar-oportunidade-osc" class="btn" type="button">Criar oportunidade</button></div>
+          <p id="oportunidades-gestao-status" role="status" aria-live="polite">Carregando oportunidades…</p><div id="oportunidades-gestao-lista" class="grade-conteudo-osc"></div>
+          <p id="oportunidades-gestao-vazio" class="texto-ausente" hidden>Nenhuma oportunidade cadastrada nesta organização.</p><p id="oportunidades-gestao-erro" class="feedback-perfil" role="alert" hidden></p>
+        </section>
+      </section>
+
+      <section id="painel-membros" class="painel-aba painel-gestao-osc" role="tabpanel" aria-labelledby="aba-membros" tabindex="0" hidden>
+        <h2>Membros</h2>
+        <p class="texto-ausente">Pessoas vinculadas a esta organização e seus cargos.</p>
+        <form id="form-adicionar-membro" class="form-gestao-osc">
+          <label for="novo-membro-email">E-mail da conta cadastrada</label>
+          <input id="novo-membro-email" type="email" required>
+          <label for="novo-membro-cargo">Cargo</label>
+          <select id="novo-membro-cargo" required>
+            <option value="MEMBRO">Membro</option>
+            <option value="EDITOR">Editor</option>
+            <option value="ADMINISTRADOR">Administrador</option>
+          </select>
+          <button class="btn" type="submit">Adicionar membro</button>
+          <p id="membros-feedback" role="status" aria-live="polite"></p>
+        </form>
+        <ul id="lista-membros" class="lista-membros-osc"></ul>
+      </section>
+      <section id="painel-dados" class="painel-aba painel-gestao-osc" role="tabpanel" aria-labelledby="aba-dados" tabindex="0" hidden>
+        <section id="resumo-dados-osc" class="bloco-perfil resumo-dados-osc" aria-labelledby="titulo-resumo-dados-osc">
+          <h2 id="titulo-resumo-dados-osc">Dados da organização</h2>
+          <dl class="grade-resumo-dados-osc">
+            <div><dt>Nome</dt><dd id="resumo-nome-osc"></dd></div>
+            <div><dt>Status</dt><dd id="resumo-status-osc"></dd></div>
+            <div><dt>Causa principal</dt><dd id="resumo-causa-osc"></dd></div>
+            <div><dt>Localização</dt><dd id="resumo-localizacao-osc"></dd></div>
+            <div class="resumo-descricao"><dt>Descrição</dt><dd id="resumo-descricao-osc"></dd></div>
+          </dl>
+          <p id="aviso-somente-leitura" class="aviso-permissao" hidden>Você não possui permissão para editar as informações desta organização. Entre em contato com um administrador ou com o criador da ONG para solicitar alterações.</p>
+          <button id="alterar-dados-osc" class="btn" type="button" hidden>Alterar dados</button>
+        </section>
+        <section id="edicao-osc" class="bloco-perfil painel-gestao-osc" hidden>
+          <form id="form-edicao-osc" class="form-gestao-osc">
+            <fieldset id="campos-edicao-osc" class="campos-edicao-osc">
+              <section class="secao-form-osc">
+                <h2>Identificação</h2>
+                <div class="grade-form-osc">
+                  <div class="informacao-fixa"><span>CNPJ</span><output id="edicao-cnpj"></output><small>Informação não editável</small></div>
+                  <div class="informacao-fixa"><span>Nome da organização</span><output id="edicao-nome"></output><small>Informação não editável</small></div>
+                  <div class="informacao-fixa"><span>Ano de fundação</span><output id="edicao-ano"></output><small>Informação não editável</small></div>
+                  <div class="informacao-fixa"><span>Causa principal</span><output id="edicao-causa-principal"></output><small>Informação não editável</small></div>
+                  <div class="campo-edicao"><span>Outras causas</span><div id="edicao-causas-selecionadas" class="areas-selecionadas"></div><button type="button" class="botao-adicionar-area" id="edicao-adicionar-causa"><span>+</span> Adicionar causa</button><div class="dropdown-secundario dropdown-edicao" id="edicao-dropdown-causas"><div class="dropdown-opcoes" id="edicao-opcoes-causas"></div></div></div>
+                  <div class="campo-edicao campo-largo"><span>ODS relacionadas</span><div id="edicao-ods-selecionadas" class="ods-selecionadas"></div><button type="button" class="botao-adicionar-ods" id="edicao-adicionar-ods"><span>+</span> Adicionar ODS</button><div class="dropdown-ods dropdown-edicao" id="edicao-dropdown-ods"><div class="dropdown-opcoes" id="edicao-opcoes-ods"></div></div></div>
+                </div>
+              </section>
+              <section class="secao-form-osc">
+                <h2>Apresentação</h2>
+                <div class="grade-form-osc">
+                  <label class="campo-largo">Descrição curta<input id="edicao-descricao-curta" maxlength="200" required></label>
+                  <label class="campo-largo">Descrição completa<textarea id="edicao-descricao" rows="5" maxlength="10000" required></textarea></label>
+                  <p class="campo-ajuda campo-largo">História, objetivos, projetos e campanhas não possuem campos próprios no cadastro atual.</p>
+                </div>
+              </section>
+              <section class="secao-form-osc">
+                <h2>Localização</h2>
+                <div class="grade-form-osc">
+                  <label>País<input id="edicao-pais" required></label>
+                  <label>Estado<input id="edicao-estado"></label>
+                  <label>Cidade<input id="edicao-cidade" required></label>
+                  <label>CEP<input id="edicao-cep" required maxlength="9"></label>
+                  <label>Bairro<input id="edicao-bairro" required></label>
+                  <label>Rua<input id="edicao-rua" required></label>
+                  <label>Número<input id="edicao-numero"></label>
+                  <label>Complemento<input id="edicao-complemento" maxlength="100"></label>
+                  <label>Área geográfica<select id="edicao-area-geografica" required><option value="">Selecione</option><option value="bairro">Bairro</option><option value="cidade">Cidade</option><option value="municipal">Municipal</option><option value="regional">Regional</option><option value="estadual">Estadual</option><option value="nacional">Nacional</option><option value="internacional">Internacional</option></select></label>
+                </div>
+              </section>
+              <section class="secao-form-osc">
+                <h2>Contato</h2>
+                <div class="grade-form-osc">
+                  <label>E-mail institucional<input id="edicao-email" type="email" maxlength="255" required></label>
+                  <label>Telefone<input id="edicao-telefone" type="tel" maxlength="15"></label>
+                  <label>WhatsApp<input id="edicao-whatsapp" type="tel" maxlength="20"></label>
+                  <label>Site<input id="edicao-site" type="url" maxlength="255"></label>
+                  <label>Instagram<input id="edicao-instagram" type="url" maxlength="500"></label>
+                  <label>LinkedIn<input id="edicao-linkedin" type="url" maxlength="500"></label>
+                  <label>YouTube<input id="edicao-youtube" type="url" maxlength="500"></label>
+                </div>
+              </section>
+              <section class="secao-form-osc">
+                <h2>Funcionamento</h2>
+                <div class="grade-form-osc">
+                  <div class="campo-edicao campo-largo"><span>Dias de funcionamento</span><div class="dias-semana dias-semana-edicao" id="edicao-dias-semana"></div></div>
+                  <label>Abre às<input id="edicao-horario-abertura" type="time"></label>
+                  <label>Fecha às<input id="edicao-horario-fechamento" type="time"></label>
+                  <label>Atendimento presencial<select id="edicao-presencial"><option value="">Não informado</option><option value="true">Sim</option><option value="false">Não</option></select></label>
+                  <label>Atendimento online<select id="edicao-online"><option value="">Não informado</option><option value="true">Sim</option><option value="false">Não</option></select></label>
+                  <label>Precisa agendar?<select id="edicao-agendamento"><option value="">Não informado</option><option value="true">Sim</option><option value="false">Não</option></select></label>
+                </div>
+              </section>
+              <section class="secao-form-osc">
+                <h2>Voluntariado e atividades</h2>
+                <div class="grade-form-osc">
+                  <label>Aceita voluntários?<select id="edicao-aceita-voluntarios"><option value="">Não informado</option><option value="true">Sim</option><option value="false">Não</option></select></label>
+                  <div class="grupo-voluntariado campo-largo" id="edicao-campos-voluntariado"><div class="grade-form-osc"><label>Frequência<input id="edicao-frequencia" maxlength="30"></label>
+                  <label>Idade mínima<input id="edicao-idade-minima" type="number" min="0" max="99"></label>
+                  <label>Processo seletivo?<select id="edicao-processo-seletivo"><option value="">Não informado</option><option value="true">Sim</option><option value="false">Não</option></select></label>
+                  <label>Emite certificado?<select id="edicao-certificado"><option value="">Não informado</option><option value="true">Sim</option><option value="false">Não</option></select></label>
+                  <label class="campo-largo">Atividades<textarea id="edicao-atividades" rows="4" maxlength="10000"></textarea></label></div></div>
+                </div>
+              </section>
+              <p class="campo-ajuda">O perfil ainda não tem campos de história, objetivos, galeria de atividades, doações ou imagem de capa. O logotipo é gerenciado no cadastro e não possui fluxo de troca.</p>
+              <div class="acoes-edicao"><button class="btn btn-secundario" id="cancelar-edicao-dados" type="button">Cancelar edição</button><button class="btn btn-secundario" id="edicao-descartar" type="button" disabled>Descartar alterações</button><button class="btn" type="submit">Salvar informações</button></div>
+            </fieldset>
+            <p id="edicao-feedback" role="status" aria-live="polite"></p>
+          </form>
+        </section>
+        <dialog id="dialogo-descartar" class="dialogo-descartar"><form method="dialog"><h2>Descartar alterações?</h2><p>As informações preenchidas voltarão aos valores carregados anteriormente.</p><div><button class="btn btn-secundario" value="cancelar">Continuar editando</button><button class="btn" value="descartar">Descartar alterações</button></div></form></dialog>
+        <section id="zona-perigo" class="zona-perigo" aria-labelledby="titulo-zona-perigo" hidden>
+          <h2 id="titulo-zona-perigo">Ações administrativas</h2>
+          <p>As ações abaixo alteram a visibilidade ou removem dados da organização.</p>
+          <button id="botao-status-osc" class="btn botao-status-osc" type="button" aria-haspopup="dialog" aria-controls="dialogo-status-osc" hidden></button>
+          <div id="grupo-excluir-osc" class="grupo-excluir-osc" hidden>
+            <h3>Excluir organização</h3>
+            <p>Excluir a organização remove seu perfil e os dados associados.</p>
+            <button id="excluir-osc" class="btn btn-secundario" type="button">Excluir ONG</button>
+          </div>
+        </section>
+      </section>
+      </section>
     </div>
   </main>
+
+  <dialog id="dialogo-conteudo-publico" class="visualizador-conteudo-osc" aria-labelledby="titulo-visualizador-conteudo" aria-describedby="texto-visualizador-conteudo">
+    <div class="visualizador-conteudo-layout">
+      <div id="visualizador-midia-conteudo" class="visualizador-midia-conteudo"></div>
+      <section class="visualizador-painel-conteudo">
+        <header class="visualizador-cabecalho-conteudo">
+          <div><strong id="visualizador-ong-nome"></strong><span id="visualizador-tipo-conteudo"></span></div>
+          <button id="fechar-visualizador-conteudo" class="btn btn-secundario" type="button" aria-label="Fechar visualizador">×</button>
+        </header>
+        <div class="visualizador-texto-conteudo">
+          <h2 id="titulo-visualizador-conteudo"></h2>
+          <p id="texto-visualizador-conteudo"></p>
+          <dl id="detalhes-visualizador-vaga" class="visualizador-detalhes-vaga" hidden></dl>
+        </div>
+        <footer class="visualizador-rodape-conteudo"><time id="data-visualizador-conteudo"></time></footer>
+      </section>
+    </div>
+  </dialog>
+
+  <dialog id="dialogo-status-osc" class="dialogo-status-osc" aria-labelledby="titulo-dialogo-status-osc" aria-describedby="descricao-dialogo-status-osc">
+    <div class="cartao-dialogo-status-osc">
+      <h2 id="titulo-dialogo-status-osc">Alterar status da ONG</h2>
+      <p id="descricao-dialogo-status-osc"></p>
+      <p id="estado-atual-status-osc" class="estado-atual-status-osc"></p>
+      <label id="rotulo-motivo-status-osc" for="motivo-status-osc">Justificativa (opcional)</label>
+      <textarea id="motivo-status-osc" rows="3" maxlength="2000" aria-describedby="descricao-dialogo-status-osc"></textarea>
+      <p id="feedback-status-osc" role="status" aria-live="polite"></p>
+      <div class="acoes-dialogo-status-osc">
+        <button id="cancelar-status-osc" class="btn btn-secundario" type="button">Cancelar</button>
+        <button id="confirmar-status-osc" class="btn" type="button"></button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="dialogo-post-osc" class="dialogo-conteudo-osc" aria-labelledby="titulo-dialogo-post-osc" aria-describedby="descricao-dialogo-post-osc">
+    <form id="form-post-osc" class="form-dialogo-conteudo-osc">
+      <h2 id="titulo-dialogo-post-osc">Criar post</h2><p id="descricao-dialogo-post-osc">Posts são associados a esta organização e autorizados no servidor.</p>
+      <label for="post-titulo-osc">Título</label><input id="post-titulo-osc" maxlength="255" required>
+      <label for="post-conteudo-osc">Conteúdo</label><textarea id="post-conteudo-osc" rows="6" maxlength="10000" required></textarea>
+      <label for="post-imagem-arquivo-osc">Imagem (opcional)</label><input id="post-imagem-arquivo-osc" type="file" accept="image/jpeg,image/png" aria-describedby="post-imagem-ajuda-osc post-imagem-feedback-osc"><small id="post-imagem-ajuda-osc" class="campo-ajuda">JPEG ou PNG, até 10 MB.</small>
+      <figure id="post-imagem-preview-osc" class="imagem-conteudo-preview" hidden><img alt="Pré-visualização da imagem do post"><figcaption><span></span><button type="button" aria-label="Remover imagem selecionada">Remover seleção</button></figcaption></figure>
+      <p id="post-imagem-feedback-osc" class="feedback-imagem-conteudo" role="status" aria-live="polite"></p>
+      <label class="controle-ativo-conteudo"><input id="post-ativo-osc" type="checkbox" checked> Publicar quando salvar</label>
+      <p id="post-form-feedback-osc" role="status" aria-live="polite"></p>
+      <div class="acoes-dialogo-conteudo-osc"><button id="cancelar-post-osc" class="btn btn-secundario" type="button">Cancelar</button><button id="salvar-post-osc" class="btn" type="submit">Salvar post</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="dialogo-oportunidade-osc" class="dialogo-conteudo-osc" aria-labelledby="titulo-dialogo-oportunidade-osc" aria-describedby="descricao-dialogo-oportunidade-osc">
+    <form id="form-oportunidade-osc" class="form-dialogo-conteudo-osc">
+      <h2 id="titulo-dialogo-oportunidade-osc">Criar oportunidade</h2><p id="descricao-dialogo-oportunidade-osc">O post e a vaga serão salvos juntos.</p>
+      <label for="oportunidade-titulo-osc">Título</label><input id="oportunidade-titulo-osc" maxlength="255" required>
+      <label for="oportunidade-conteudo-osc">Descrição</label><textarea id="oportunidade-conteudo-osc" rows="5" maxlength="10000" required></textarea>
+      <label for="oportunidade-imagem-arquivo-osc">Imagem (opcional)</label><input id="oportunidade-imagem-arquivo-osc" type="file" accept="image/jpeg,image/png" aria-describedby="oportunidade-imagem-ajuda-osc oportunidade-imagem-feedback-osc"><small id="oportunidade-imagem-ajuda-osc" class="campo-ajuda">JPEG ou PNG, até 10 MB.</small>
+      <figure id="oportunidade-imagem-preview-osc" class="imagem-conteudo-preview" hidden><img alt="Pré-visualização da imagem da oportunidade"><figcaption><span></span><button type="button" aria-label="Remover imagem selecionada">Remover seleção</button></figcaption></figure>
+      <p id="oportunidade-imagem-feedback-osc" class="feedback-imagem-conteudo" role="status" aria-live="polite"></p>
+      <label class="controle-ativo-conteudo"><input id="oportunidade-ativo-osc" type="checkbox" checked> Publicar quando salvar</label>
+      <label for="vaga-quantidade-osc">Quantidade de vagas</label><input id="vaga-quantidade-osc" type="number" min="1" step="1" required>
+      <label for="vaga-modalidade-osc">Modalidade</label><select id="vaga-modalidade-osc" required><option value="">Selecione</option><option value="PRESENCIAL">Presencial</option><option value="REMOTO">Remoto</option><option value="HIBRIDO">Híbrido</option></select>
+      <label for="vaga-requisitos-osc">Requisitos</label><textarea id="vaga-requisitos-osc" rows="3" required></textarea>
+      <label for="vaga-carga-osc">Carga horária</label><input id="vaga-carga-osc" maxlength="100" required>
+      <label for="vaga-cidade-osc">Cidade</label><input id="vaga-cidade-osc" maxlength="100" required>
+      <label for="vaga-bairro-osc">Bairro</label><input id="vaga-bairro-osc" maxlength="100" required>
+      <label for="vaga-rua-osc">Rua (opcional)</label><input id="vaga-rua-osc" maxlength="100">
+      <label for="vaga-numero-osc">Número (opcional)</label><input id="vaga-numero-osc" maxlength="100">
+      <label for="vaga-complemento-osc">Complemento (opcional)</label><input id="vaga-complemento-osc" maxlength="100">
+      <label for="vaga-inicio-osc">Data de início</label><input id="vaga-inicio-osc" type="date" required>
+      <label for="vaga-fim-osc">Data de fim</label><input id="vaga-fim-osc" type="date" required>
+      <label for="vaga-status-osc">Status</label><select id="vaga-status-osc" required><option value="ABERTA">Aberta</option><option value="ENCERRADA">Encerrada</option><option value="CANCELADA">Cancelada</option></select>
+      <p id="oportunidade-form-feedback-osc" role="status" aria-live="polite"></p>
+      <div class="acoes-dialogo-conteudo-osc"><button id="cancelar-oportunidade-osc" class="btn btn-secundario" type="button">Cancelar</button><button id="salvar-oportunidade-osc" class="btn" type="submit">Salvar oportunidade</button></div>
+    </form>
+  </dialog>
 
   <footer id="footer"></footer>
   <div id="modal-doacao-perfil" class="modal-doacao-perfil" role="dialog" aria-modal="true" aria-labelledby="modal-doacao-titulo" hidden>
@@ -129,5 +370,7 @@
       </div>
     </form>
   </div>
+
+  <script type="module" src="../components/candidaturas-ong.js" defer></script>
 </body>
 </html>

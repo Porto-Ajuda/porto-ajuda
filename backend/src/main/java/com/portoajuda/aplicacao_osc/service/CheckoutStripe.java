@@ -1,5 +1,12 @@
 package com.portoajuda.aplicacao_osc.service;
 
+import java.math.BigDecimal;
+
+import javax.management.InvalidAttributeValueException;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
 import com.portoajuda.aplicacao_osc.entity.Osc;
 import com.portoajuda.aplicacao_osc.entity.Usuario;
 import com.portoajuda.aplicacao_osc.repository.OscRepository;
@@ -8,14 +15,9 @@ import com.portoajuda.aplicacao_osc.repository.UsuarioRepository;
 import com.stripe.StripeClient;
 import com.stripe.model.checkout.Session;
 import com.stripe.net.RequestOptions;
-import com.stripe.param.PriceCreateParams;
 import com.stripe.param.checkout.SessionCreateParams;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
 
-import javax.management.InvalidAttributeValueException;
-import java.math.BigDecimal;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +29,7 @@ public class CheckoutStripe {
     @Value("${APP_BACKEND_URL}")
     private String urlBackend;
     private final StripeAccountRepository stripeAccountRepository;
+    private final StripeClient stripeClient;
 
     public Session createCheckoutSession(Usuario usuario, Integer oscId, BigDecimal valor) throws Exception {
         usuarioRepository.findById(usuario.getId())
@@ -55,10 +58,13 @@ public class CheckoutStripe {
         }
 
         SessionCreateParams params = SessionCreateParams.builder()
+            .addAllowedPaymentMethodType(SessionCreateParams.AllowedPaymentMethodType.PIX)   
+            .addAllowedPaymentMethodType(SessionCreateParams.AllowedPaymentMethodType.CARD)   
+            .addAllowedPaymentMethodType(SessionCreateParams.AllowedPaymentMethodType.BOLETO)  
             .setMode(SessionCreateParams.Mode.PAYMENT)
             .setSubmitType(SessionCreateParams.SubmitType.DONATE)
-            .setSuccessUrl(urlSite + "stripe/success")
-            .setCancelUrl(urlSite + "stripe/cancel")
+            .setSuccessUrl(urlSite + "/stripe/stripe-success.html")
+            .setCancelUrl(urlSite + "/stripe/stripe-cancel.html")
             .putMetadata("oscId", String.valueOf(oscId))
             .setPaymentIntentData(
                     SessionCreateParams.PaymentIntentData.builder()
@@ -87,7 +93,10 @@ public class CheckoutStripe {
                 .setStripeAccount(stripeAccountId)
                 .build();
 
-        return Session.create(params, requestOptions);
+        return stripeClient.v1()
+                .checkout()
+                .sessions()
+                .create(params, requestOptions);
 
     }
 }

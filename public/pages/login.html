@@ -4,6 +4,7 @@
 <head>
 
     <meta charset="UTF-8">
+    <meta name="referrer" content="no-referrer">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Porto Ajuda</title>
@@ -121,6 +122,10 @@
                         <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
                     </button>
                 </form>
+
+                <p class="sw" id="link-esqueci-senha">
+                    <a href="#recuperacao-senha" id="abrir-recuperacao-senha">Esqueci minha senha?</a>
+                </p>
 
                 <p class="sw" id="link-cancelar-exclusao">
                     <a href="#cancelar-exclusao" id="mostrar-cancelamento-exclusao">
@@ -325,6 +330,33 @@
             </div>
         </section>
     </div>
+
+    <dialog id="dialog-recuperacao-senha" class="dialogo-recuperacao-senha"
+        aria-labelledby="titulo-dialog-recuperacao-senha" aria-describedby="descricao-dialog-recuperacao-senha">
+        <div class="dialogo-recuperacao-senha__conteudo">
+            <button type="button" class="dialogo-recuperacao-senha__fechar" id="fechar-recuperacao-senha" aria-label="Fechar">×</button>
+            <h2 id="titulo-dialog-recuperacao-senha">Recuperar senha</h2>
+            <p id="descricao-dialog-recuperacao-senha">Informe seu e-mail e enviaremos um link seguro para redefinir sua senha.</p>
+            <p id="estado-recuperacao-senha" role="status" aria-live="polite"></p>
+            <form id="form-solicitar-recuperacao-senha">
+                <label for="email-recuperacao-senha">E-mail cadastrado</label>
+                <input class="inp" type="email" id="email-recuperacao-senha" autocomplete="email" maxlength="255" required>
+                <button class="btn" type="submit" id="enviar-recuperacao-senha">Enviar link seguro</button>
+            </form>
+            <form id="form-redefinir-senha" hidden>
+                <label class="campo-label" for="nova-senha-recuperacao">Nova senha</label>
+                <div class="campo-senha"><input class="inp senha" type="password" id="nova-senha-recuperacao" autocomplete="new-password" minlength="8" maxlength="128" required>
+                    <button type="button" class="mostrar-senha" aria-label="Mostrar senha" aria-controls="nova-senha-recuperacao" aria-pressed="false"><i class="fa-regular fa-eye" aria-hidden="true"></i></button></div>
+                <label class="campo-label" for="confirmar-senha-recuperacao">Confirmar nova senha</label>
+                <input class="inp" type="password" id="confirmar-senha-recuperacao" autocomplete="new-password" minlength="8" maxlength="128" required>
+                <button class="btn" type="submit" id="confirmar-recuperacao-senha">Redefinir senha</button>
+            </form>
+            <button class="btn-secundario-recuperacao" type="button" id="solicitar-novo-link-recuperacao" hidden>
+                Solicitar novo link
+            </button>
+            <button class="btn-secundario-recuperacao" type="button" id="voltar-login-recuperacao">Voltar ao login</button>
+        </div>
+    </dialog>
 
     <div class="requisitos-senha">
 

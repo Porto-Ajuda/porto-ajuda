@@ -1,6 +1,7 @@
 package com.portoajuda.aplicacao_osc.dto.request;
 
 import com.portoajuda.aplicacao_osc.enums.CausaSocial;
+import com.portoajuda.aplicacao_osc.utils.CnpjValido;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import org.junit.jupiter.api.Test;
@@ -46,6 +47,16 @@ class RequestOscDTOTest {
         assertTrue(camposInvalidos.contains("descricaoCurta"));
         assertTrue(camposInvalidos.contains("email"));
     }
+
+    @Test
+    void validacaoDoDtoAceitaCnpjsNumericosEAlfanumericosValidos() {
+        assertTrue(validator.validate(new CnpjPayload("11222333000181")).isEmpty());
+        assertTrue(validator.validate(new CnpjPayload("12ABC34501DE35")).isEmpty());
+        assertTrue(validator.validate(new CnpjPayload("12ABC34501DE34")).stream()
+                .anyMatch(violacao -> violacao.getPropertyPath().toString().equals("cnpj")));
+    }
+
+    private record CnpjPayload(@CnpjValido String cnpj) {}
 
     @Test
     void rejeitaCausaSocialForaDoEnumNoContratoJson() {

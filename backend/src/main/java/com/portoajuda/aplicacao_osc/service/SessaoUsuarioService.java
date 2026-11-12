@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.authentication.BadCredentialsException;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -194,6 +195,37 @@ public class SessaoUsuarioService {
         return sessaoRepository.revogarSessoesPorUsuarioId(
                 usuarioId,
                 Instant.now());
+    }
+
+    /**
+     * Validates the caller's already-authenticated regular session under a row lock,
+     * then optionally revokes every other regular session for password-change policy.
+     */
+    @Transactional
+    public int preservarSessaoAtualDuranteTrocaSenha(
+            Integer usuarioId,
+            Long sessaoAtualId,
+            boolean desconectarOutrosDispositivos) {
+        if (usuarioId == null || sessaoAtualId == null) {
+            throw new BadCredentialsException("Sessão autenticada inválida.");
+        }
+
+        SessaoUsuario atual = sessaoRepository.findByIdForUpdate(sessaoAtualId)
+                .orElseThrow(() -> new BadCredentialsException("Sessão autenticada inválida."));
+        Instant agora = Instant.now();
+        boolean inativa = atual.isLembrarDeMim()
+                && !atual.getUltimaAtividadeEm().plus(DURACAO_INATIVIDADE).isAfter(agora);
+        if (!atual.getUsuario().getId().equals(usuarioId)
+                || atual.isRevogada()
+                || !atual.getExpiraEm().isAfter(agora)
+                || inativa
+                || !atual.getUsuario().isEnabled()) {
+            throw new BadCredentialsException("Sessão autenticada inválida.");
+        }
+
+        return desconectarOutrosDispositivos
+                ? sessaoRepository.revogarOutrasSessoesPorUsuarioId(usuarioId, sessaoAtualId, agora)
+                : 0;
     }
 
     private String gerarTokenAleatorio() {

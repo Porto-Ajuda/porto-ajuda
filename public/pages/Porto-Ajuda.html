@@ -15,7 +15,8 @@
   <link rel="stylesheet" href="../styles/carrossel-amostra.css">
 
   <script type="module" src="../components/header_footer.js" defer></script>
-  <script type="module" src="../components/carrossel-amostra.js"></script>
+  <script type="module" src="../components/home-showcases.js"></script>
+  <script type="module" src="../components/candidaturas.js"></script>
 
   <script src="../components/crud.js" defer></script>
 
@@ -129,6 +130,7 @@
 
   </script>
 
+  <link rel="stylesheet" href="../styles/candidaturas.css">
 </head>
 
 <body>
@@ -238,7 +240,7 @@
 
         <div class="circle-bg"></div>
 
-        <img src="../assets/criancinha.jpg ">
+        <img src="../assets/criancinha.jpg">
 
         <!-- BOTÃO DE EDIÇÃO OSC -->
         <button class="btn-editar-secao" data-tipo="osc" onclick="abrirModalEdicao('osc')">
@@ -255,7 +257,7 @@
           <span>Destaques</span>
         </h2>
 
-        <section class="secao-ongs" aria-labelledby="titulo-ongs">
+        <section class="secao-ongs" id="ongs" aria-labelledby="titulo-ongs">
           <div class="cabecalho-ongs">
             <div>
               <span class="subtitulo-ongs">CONHEÇA QUEM TRANSFORMA</span>
@@ -274,35 +276,43 @@
             </div>
           </div>
 
+          <p class="showcase-status" id="ongs-status" role="status" aria-live="polite">Carregando ONGs…</p>
+          <button type="button" class="showcase-retry" id="ongs-tentar-novamente" hidden>Tentar novamente</button>
+
           <div class="carrossel-ongs" id="carrossel-ongs">
-            <div class="cards" id="cards-osc">
-              <!-- Os cards das OSCs serão inseridos pelo JavaScript -->
+            <div class="cards ong-showcase-cards" id="cards-osc" data-home-showcase="true" role="list" aria-label="ONGs em destaque">
             </div>
           </div>
         </section>
-        <!-- <div class="cards" id="cards-osc">
 
-          <div class="card card-vazio"></div>
-          <div class="card card-vazio"></div>
-          <div class="card card-vazio"></div>
-          <div class="card card-vazio"></div>
-
-        </div> -->
-
-        <!-- <a href="/oscs" class="section-link">
-          Ver todas ONG's →
-        </a> -->
-        <!-- Quando estiver pronto, devemos tirar o comentário do código e apagar o que esta em baixo para que ele seja
-        compilado e funcione corretamente. -->
-
-        <a href="../pages/oscs-page.html" class="section-link">
-          Ver todas ONG's →
-        </a>
+        <a href="/catalogo?categoria=ongs" class="section-link">Ver todas as ONGs →</a>
 
       </div>
 
     </section>
 
+  </section>
+
+  <section class="surgir showcase-home-section" id="publicacoes" aria-labelledby="titulo-publicacoes-home">
+    <section class="section reverse">
+      <div class="section-content">
+        <h2 id="titulo-publicacoes-home">Publicações <span>Recentes</span></h2>
+        <p class="showcase-introducao">Histórias, campanhas e novidades compartilhadas pelas organizações.</p>
+        <div class="showcase-controles" aria-label="Navegação das publicações">
+          <button type="button" id="publicacoes-anterior" aria-label="Publicações anteriores" disabled>‹</button>
+          <button type="button" id="publicacoes-proximo" aria-label="Próximas publicações" disabled>›</button>
+        </div>
+        <p class="showcase-status" id="publicacoes-status" role="status" aria-live="polite">Carregando publicações…</p>
+        <button type="button" class="showcase-retry" id="publicacoes-tentar-novamente" hidden>Tentar novamente</button>
+        <div class="showcase-grid" id="cards-publicacoes" role="list" aria-label="Publicações recentes"></div>
+        <a href="/catalogo?categoria=publicacoes" class="section-link">Ver todas as publicações →</a>
+      </div>
+      <div class="section-image showcase-ilustracao">
+        <div class="moon1"><img class="moon1 img" src="../assets/moon.png" alt=""></div>
+        <div class="circle-bg"></div>
+        <img src="../assets/Campanha-vacinacao.jpg" alt="Atividade de uma campanha social" loading="lazy">
+      </div>
+    </section>
   </section>
 
   <section class="destaque">
@@ -317,26 +327,23 @@
 
   <section class="surgir">
 
-    <section class="section reverse">
+    <section class="section reverse" id="voluntariado" aria-labelledby="titulo-voluntariado-home">
 
       <div class="section-content">
 
         <h2>
-          <span>Voluntariados</span>
+          <span id="titulo-voluntariado-home">Voluntariados</span>
         </h2>
 
-        <div class="cards" id="cards-voluntariacao">
-
-          <div class="card card-vazio"></div>
-          <div class="card card-vazio"></div>
-          <div class="card card-vazio"></div>
-          <div class="card card-vazio"></div>
-
+        <div class="showcase-controles" aria-label="Navegação dos voluntariados">
+          <button type="button" id="voluntariado-anterior" aria-label="Voluntariados anteriores" disabled>‹</button>
+          <button type="button" id="voluntariado-proximo" aria-label="Próximos voluntariados" disabled>›</button>
         </div>
+        <p class="showcase-status" id="voluntariado-status" role="status" aria-live="polite">Carregando oportunidades…</p>
+        <button type="button" class="showcase-retry" id="voluntariado-tentar-novamente" hidden>Tentar novamente</button>
+        <div class="showcase-grid" id="cards-voluntariacao" data-home-showcase="true" role="list" aria-label="Oportunidades de voluntariado"></div>
 
-        <a href="#" class="section-link">
-          Ver voluntariados →
-        </a>
+        <a href="/catalogo?categoria=voluntariado" class="section-link">Ver todos os voluntariados →</a>
 
       </div>
 
@@ -374,7 +381,7 @@
 
   <section class="surgir">
 
-    <section class="section">
+    <section class="section" id="doacoes" aria-labelledby="titulo-doacoes-home">
 
       <div class="section-image">
 
@@ -398,21 +405,18 @@
 
         <h2>
           Doe esperança
-          <span>Doações</span>
+          <span id="titulo-doacoes-home">Doações</span>
         </h2>
 
-        <div class="cards" id="cards-doacao">
-
-          <div class="card card-vazio"></div>
-          <div class="card card-vazio"></div>
-          <div class="card card-vazio"></div>
-          <div class="card card-vazio"></div>
-
+        <div class="showcase-controles" aria-label="Navegação das doações">
+          <button type="button" id="doacoes-anterior" aria-label="Doações anteriores" disabled>‹</button>
+          <button type="button" id="doacoes-proximo" aria-label="Próximas doações" disabled>›</button>
         </div>
+        <p class="showcase-status" id="doacoes-status" role="status" aria-live="polite">Ainda não há campanhas de arrecadação verificadas para exibir.</p>
+        <button type="button" class="showcase-retry" id="doacoes-tentar-novamente" hidden>Tentar novamente</button>
+        <div class="showcase-grid" id="cards-doacao" data-home-showcase="true" role="list" aria-label="Campanhas de doação verificadas"></div>
 
-        <a href="#" class="section-link">
-          Doar →
-        </a>
+        <a href="/catalogo?categoria=doacoes" class="section-link">Ver todas as doações →</a>
 
       </div>
 
@@ -525,11 +529,11 @@
   <!-- MODAL DE VISUALIZAÇÃO DE CARD -->
   <!-- ========================= -->
 
-  <div class="modal-overlay" id="modal-card-overlay" onclick="fecharModalCard(event)">
+  <div class="modal-overlay" id="modal-card-overlay" aria-hidden="true" onclick="fecharModalCard(event)">
 
-    <div class="modal-card-container" id="modal-card-container">
+    <div class="modal-card-container" id="modal-card-container" role="dialog" aria-modal="true" aria-labelledby="modal-card-titulo">
 
-      <button class="modal-fechar" onclick="fecharModalCardDireto()">
+      <button class="modal-fechar" id="fechar-modal-card" type="button" aria-label="Fechar publicação" onclick="fecharModalCardDireto()">
         <i class="fa-solid fa-xmark"></i>
       </button>
 
@@ -545,6 +549,9 @@
         <h2 class="modal-card-titulo" id="modal-card-titulo"></h2>
         <p class="modal-card-osc" id="modal-card-osc"></p>
         <p class="modal-card-conteudo" id="modal-card-conteudo"></p>
+        <dl class="modal-card-vaga-detalhes" id="modal-card-vaga-detalhes" hidden></dl>
+        <button type="button" id="btn-modal-candidatar" class="botao botao-primario" hidden>Quero participar</button>
+        <p id="estado-candidatura-modal" role="status" aria-live="polite" hidden></p>
         <div class="modal-card-rodape">
           <span class="modal-card-usuario" id="modal-card-usuario">
             <i class="fa-solid fa-user"></i>
@@ -557,6 +564,20 @@
     </div>
 
   </div>
+
+  <dialog class="dialogo-candidatura" id="dialogo-candidatura" aria-labelledby="titulo-dialogo-candidatura">
+    <form method="dialog" class="dialogo-candidatura__conteudo">
+      <button type="submit" class="dialogo-candidatura__fechar" aria-label="Fechar confirmação">×</button>
+      <p class="showcase-card-kicker">VOLUNTARIADO</p>
+      <h2 id="titulo-dialogo-candidatura">Enviar candidatura?</h2>
+      <p id="texto-dialogo-candidatura">Confirme que deseja se candidatar a esta oportunidade.</p>
+      <p id="estado-dialogo-candidatura" role="status" aria-live="polite"></p>
+      <div class="dialogo-candidatura__acoes">
+        <button type="submit" class="botao botao-secundario">Voltar</button>
+        <button type="button" id="confirmar-candidatura" class="botao botao-primario">Confirmar candidatura</button>
+      </div>
+    </form>
+  </dialog>
 
 </body>
 

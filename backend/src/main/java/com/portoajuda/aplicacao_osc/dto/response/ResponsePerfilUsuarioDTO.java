@@ -13,5 +13,7 @@ public record ResponsePerfilUsuarioDTO(
         LocalDate dataNascimento,
         LocalDateTime dataCriacao,
         String fotoPerfilUrl,
-        String genero) {
+        String genero,
+        boolean administrador,
+        boolean telefoneVerificado) {
 }

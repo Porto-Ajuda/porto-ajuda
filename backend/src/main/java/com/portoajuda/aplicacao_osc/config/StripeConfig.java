@@ -1,3 +1,4 @@
+
 package com.portoajuda.aplicacao_osc.config;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -6,10 +7,18 @@ import org.springframework.context.annotation.Configuration;
 
 import com.stripe.StripeClient;
 
-@Configuration 
+@Configuration
 public class StripeConfig {
+
     @Bean
-    public StripeClient stripeClient(@Value("${SECRET_KEY}") String apiKey) {
+    public StripeClient stripeClient(
+            @Value("${SECRET_KEY}") String apiKey) {
+
+        if (apiKey == null || apiKey.isBlank()) {
+            throw new IllegalStateException(
+                    "A variável SECRET_KEY não foi configurada.");
+        }
+
         return new StripeClient(apiKey);
     }
 }

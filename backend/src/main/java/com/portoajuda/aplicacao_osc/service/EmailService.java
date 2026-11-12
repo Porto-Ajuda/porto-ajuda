@@ -77,6 +77,37 @@ public class EmailService {
                                 texto);
         }
 
+        /** Link de recuperação com credencial de uso único; o conteúdo nunca é registrado. */
+        public void enviarRecuperacaoSenha(String emailUsuario, String link) {
+                String texto = "Recebemos uma solicitação para redefinir a senha da sua conta Porto Ajuda.\n\n"
+                                + "Para escolher uma nova senha, acesse o link seguro abaixo. Ele expira em 20 minutos e só pode ser usado uma vez:\n\n"
+                                + link + "\n\nSe você não solicitou a recuperação, ignore esta mensagem.";
+                enviar(emailUsuario, "Recuperação de senha - Porto Ajuda", texto);
+        }
+
+        /** Envia somente o OTP já gerado pelo backend; não registre o conteúdo da mensagem. */
+        public void enviarCodigoAutenticacaoAdministrativa(String emailUsuario, String codigo) {
+                String texto = "Seu código de verificação administrativa do Porto Ajuda é "
+                                + codigo
+                                + ". Ele expira em 5 minutos. Não compartilhe este código."
+                                + " Se você não iniciou esta tentativa, ignore esta mensagem.";
+                enviar(emailUsuario, "Código de segurança - Porto Ajuda", texto);
+        }
+
+        /** Alerta sem credenciais, OTPs, telefone, IP ou payloads de autenticação. */
+        public void enviarAlertaIncidenteAutenticacaoAdmin(
+                        String emailDestinatario,
+                        String incidenteId,
+                        java.time.Instant ocorreuEm,
+                        String assuntoIncidente) {
+                String texto = "Um incidente de autenticação administrativa foi registrado no Porto Ajuda.\n\n"
+                                + "Referência: " + incidenteId + "\n"
+                                + "Tipo: " + assuntoIncidente + "\n"
+                                + "Horário UTC: " + ocorreuEm + "\n\n"
+                                + "Nenhuma senha ou código de verificação é incluído neste alerta.";
+                enviar(emailDestinatario, "Alerta de segurança administrativa - Porto Ajuda", texto);
+        }
+
         private void enviar(
                         String destinatario,
                         String assunto,

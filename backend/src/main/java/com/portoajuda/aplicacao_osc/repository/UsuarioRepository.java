@@ -18,6 +18,16 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
 
         Optional<Usuario> findByEmail(Email email);
 
+        @Query("""
+                        select distinct u from Usuario u join u.roles r
+                        where r.nome = 'ADMIN'
+                          and u.ativo = true
+                          and u.emailVerificado = true
+                          and (:excludedId is null or u.id <> :excludedId)
+                        """)
+        List<Usuario> listarAdministradoresAtivosParaIncidente(
+                        @Param("excludedId") Integer excludedId);
+
         @Lock(LockModeType.PESSIMISTIC_WRITE)
         @Query("select usuario from Usuario usuario where usuario.id = :usuarioId")
         Optional<Usuario> findByIdForUpdate(@Param("usuarioId") Integer usuarioId);
@@ -42,13 +52,6 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
         @Modifying
         @Query("DELETE FROM Usuario usuario WHERE usuario.id = :usuarioId")
         int excluirPorIdSemCascade(@Param("usuarioId") Integer usuarioId);
-
-        @Query("""
-                        SELECT COUNT(m) > 0
-                        FROM OscMembros m
-                        WHERE m.usuario.id = :usuarioId
-                        """)
-        boolean usuarioIsMember(Integer usuarioId);
 
         List<Usuario> findByAtivoFalseAndDataSolicitacaoExclusaoIsNotNullAndDataExclusaoAgendadaLessThanEqual(
                         LocalDateTime agora);

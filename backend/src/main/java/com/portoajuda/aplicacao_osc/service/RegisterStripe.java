@@ -30,9 +30,9 @@ public class RegisterStripe {
     private final StripeAccountRepository stripeAccountRepository;
 
     public String createStripeAccount(Usuario usuario) throws StripeException {
-        Osc osc = oscRepository.findByUsuarioId(usuario.getId())
+        Osc osc = oscRepository.findByUsuarioIdAndDataArquivamentoIsNull(usuario.getId())
                 .orElseThrow(() -> new RuntimeException("Você não possui uma OSC cadastrada"));
-        if(!osc.getUsuario().getId().equals(usuario.getId())){
+        if (osc.getUsuario() == null || !osc.getUsuario().getId().equals(usuario.getId())) {
             throw new RuntimeException("Você não possui permissão para criar uma conta Stripe para essa OSC");
         }
 
@@ -143,11 +143,11 @@ public class RegisterStripe {
     public String refreshOnboardingLink(Usuario usuario)
             throws StripeException {
 
-        Osc osc = oscRepository.findByUsuarioId(usuario.getId())
+        Osc osc = oscRepository.findByUsuarioIdAndDataArquivamentoIsNull(usuario.getId())
                 .orElseThrow(() ->
                         new RuntimeException("OSC não encontrada"));
 
-        if (!osc.getUsuario().getId().equals(usuario.getId())) {
+        if (osc.getUsuario() == null || !osc.getUsuario().getId().equals(usuario.getId())) {
             throw new RuntimeException("Você não possui permissão");
         }
 

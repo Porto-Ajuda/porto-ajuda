@@ -1,5 +1,6 @@
 import { getAPI_URL } from "./modoBack.js";
 import { fetchAutenticado } from "./api.js";
+import { formatarCnpj, normalizarCnpj, validarCnpj } from "./cnpj.js";
 
 const API_URL = getAPI_URL();
 
@@ -140,33 +141,6 @@ document.addEventListener("DOMContentLoaded", () => {
        VALIDAÇÕES AUXILIARES
     ===================================================== */
 
-    function cnpjValido(valor) {
-        const n = valor.replace(/\D/g, "");
-
-        if (n.length !== 14 || /^(\d)\1+$/.test(n)) {
-            return false;
-        }
-
-        const digito = (tamanho) => {
-            let soma = 0;
-            let peso = tamanho - 7;
-
-            for (let i = 0; i < tamanho; i++) {
-                soma += Number(n[i]) * peso--;
-
-                if (peso < 2) {
-                    peso = 9;
-                }
-            }
-
-            const resto = soma % 11;
-            return resto < 2 ? 0 : 11 - resto;
-        };
-
-        return digito(12) === Number(n[12])
-            && digito(13) === Number(n[13]);
-    }
-
     function limparErro() {
         form.querySelectorAll(".msg-error").forEach(el => el.remove());
     }
@@ -199,16 +173,16 @@ document.addEventListener("DOMContentLoaded", () => {
     async function consultarCnpj() {
         if (!cnpj) return false;
 
-        const numero = cnpj.value.replace(/\D/g, "");
+        const numero = normalizarCnpj(cnpj.value);
 
-        if (!cnpjValido(numero)) {
+        if (!numero || !validarCnpj(numero)) {
             cnpjConsultadoValor = "";
             cnpjElegivel = false;
 
             mostrarStatusCnpj(
-                numero.length === 0
+                !cnpj.value.trim()
                     ? ""
-                    : "Confira os 14 dígitos do CNPJ.",
+                    : "Informe 12 caracteres alfanuméricos válidos e dois dígitos verificadores.",
                 "erro"
             );
 
@@ -229,7 +203,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const promise = (async () => {
             try {
                 const resposta = await fetch(
-                    `${API_URL}/osc/consultar-cnpj/${numero}`
+                    `${API_URL}/osc/consultar-cnpj/${encodeURIComponent(numero)}`
                 );
 
                 if (!resposta.ok) {
@@ -239,7 +213,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 const resultado = await resposta.json();
 
                 // Não aplica uma resposta antiga a um CNPJ diferente.
-                if (cnpj.value.replace(/\D/g, "") !== numero) {
+                if (normalizarCnpj(cnpj.value) !== numero) {
                     return false;
                 }
 
@@ -259,7 +233,7 @@ document.addEventListener("DOMContentLoaded", () => {
             } catch (erro) {
                 console.error("Erro ao consultar CNPJ:", erro);
 
-                if (cnpj.value.replace(/\D/g, "") === numero) {
+                if (normalizarCnpj(cnpj.value) === numero) {
                     cnpjConsultadoValor = "";
                     cnpjElegivel = false;
 
@@ -292,15 +266,9 @@ document.addEventListener("DOMContentLoaded", () => {
             mostrarStatusCnpj("");
         });
 
-        // Máscara: 00.000.000/0000-00
+        // Máscara compatível com CNPJ numérico e alfanumérico.
         cnpj.addEventListener("input", () => {
-            cnpj.value = cnpj.value
-                .replace(/\D/g, "")
-                .slice(0, 14)
-                .replace(/^(\d{2})(\d)/, "$1.$2")
-                .replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
-                .replace(/\.(\d{3})(\d)/, ".$1/$2")
-                .replace(/(\d{4})(\d)/, "$1-$2");
+            cnpj.value = formatarCnpj(cnpj.value);
         });
     }
 
@@ -346,7 +314,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // 3. CNPJ
         if (cnpj && etapa.contains(cnpj)) {
-            if (!cnpjValido(cnpj.value)) {
+            if (!validarCnpj(cnpj.value)) {
                 mostrarErro(cnpj, "Informe um CNPJ válido.");
                 cnpj.focus();
                 return false;
@@ -831,7 +799,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const diasFuncionamento = [...form.querySelectorAll('input[name="dias_funcionamento[]"]:checked')]
             .map(campo => campo.value);
         const payload = {
-            cnpj: cnpj.value.replace(/\D/g, ""),
+            cnpj: normalizarCnpj(cnpj.value),
             ...montarCausas(),
             ods: [...odsEscolhidas].map(Number),
             nome: valorTexto("nome_ong"),
