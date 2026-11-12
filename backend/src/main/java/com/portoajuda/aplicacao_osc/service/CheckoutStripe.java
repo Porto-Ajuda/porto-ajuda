@@ -63,8 +63,8 @@ public class CheckoutStripe {
             .addAllowedPaymentMethodType(SessionCreateParams.AllowedPaymentMethodType.BOLETO)  
             .setMode(SessionCreateParams.Mode.PAYMENT)
             .setSubmitType(SessionCreateParams.SubmitType.DONATE)
-            .setSuccessUrl(urlSite + "/stripe/stripe-success.html")
-            .setCancelUrl(urlSite + "/stripe/stripe-cancel.html")
+            .setSuccessUrl(urlSite + "/stripe/success")
+            .setCancelUrl(urlSite + "/stripe/cancel")
             .putMetadata("oscId", String.valueOf(oscId))
             .setPaymentIntentData(
                     SessionCreateParams.PaymentIntentData.builder()
