@@ -63,6 +63,14 @@
       "destination": "/pages/ong-profile"
     },
     {
+      "source": "/stripe/success",
+      "destination": "/pages/stripe-success"
+    },
+    {
+      "source": "/stripe/cancel",
+      "destination": "/pages/stripe-cancel"
+    },
+    {
       "source": "/cadastro-osc",
       "destination": "/pages/cadastro-osc"
     }

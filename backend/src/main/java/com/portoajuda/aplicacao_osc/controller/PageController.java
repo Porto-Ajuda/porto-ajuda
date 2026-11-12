@@ -71,7 +71,17 @@ public class PageController {
         return "forward:/pages/ong-profile.html";
     }
 
-        @GetMapping("/cadastro-osc")
+    @GetMapping("/stripe/success")
+    public String stripeSuccess() {
+        return "forward:/pages/stripe-success.html";
+    }
+
+    @GetMapping("/stripe/cancel")
+    public String stripeCancel() {
+        return "forward:/pages/stripe-cancel.html";
+    }
+
+    @GetMapping("/cadastro-osc")
     public String CadastroOng() {
         return "forward:/pages/cadastro-osc.html";
     }

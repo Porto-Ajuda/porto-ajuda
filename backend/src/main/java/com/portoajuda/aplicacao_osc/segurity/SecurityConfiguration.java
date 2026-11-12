@@ -72,6 +72,8 @@ public class SecurityConfiguration {
                                                                 "/proximidade",
                                                                 "/apoio",
                                                                 "/ong-profile",
+                                                                "/stripe/success",
+                                                                "/stripe/cancel",
                                                                 "/cadastro-osc",
                                                                 "/pages/**",
                                                                 "/assets/**",

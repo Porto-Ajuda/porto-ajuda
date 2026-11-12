@@ -1,4 +1,5 @@
 ﻿import { getAPI_URL } from "./modoBack.js";
+import { obterTokenCSRF } from "./auth.js";
 const API_URL = getAPI_URL();
 
 // ========================================
@@ -679,3 +680,106 @@ async function carregarPerfil() {
 
 document.getElementById("perfil-tentar-novamente").addEventListener("click", carregarPerfil);
 document.addEventListener("DOMContentLoaded", carregarPerfil, { once: true });
+
+const modalDoacao = document.getElementById("modal-doacao-perfil");
+const formularioDoacao = document.getElementById("form-doacao-perfil");
+const botaoDoar = document.getElementById("efetuar-doacao");
+const botaoCancelarDoacao = document.getElementById("cancelar-doacao-perfil");
+const campoValorDoacao = document.getElementById("valor-doacao-perfil");
+let overflowAnterior = "";
+
+function fecharModalDoacao() {
+    if (modalDoacao.hidden) return;
+    modalDoacao.hidden = true;
+    document.body.style.overflow = overflowAnterior;
+    document.querySelector(".perfil-publico")?.removeAttribute("inert");
+    document.querySelector(".navbar")?.removeAttribute("inert");
+    document.querySelector("#footer")?.removeAttribute("inert");
+    botaoDoar.focus();
+}
+
+botaoDoar.addEventListener("click", () => {
+    overflowAnterior = document.body.style.overflow;
+    campoValorDoacao.value = "5.00";
+    modalDoacao.hidden = false;
+    document.body.style.overflow = "hidden";
+    document.querySelector(".perfil-publico")?.setAttribute("inert", "");
+    document.querySelector(".navbar")?.setAttribute("inert", "");
+    document.querySelector("#footer")?.setAttribute("inert", "");
+    campoValorDoacao.focus();
+});
+
+botaoCancelarDoacao.addEventListener("click", fecharModalDoacao);
+
+formularioDoacao.addEventListener("submit", evento => {
+    evento.preventDefault();
+    iniciarCheckoutDoacao();
+});
+
+async function iniciarCheckoutDoacao() {
+    const feedback = document.getElementById("feedback-doacao-perfil");
+    const botaoConfirmar = formularioDoacao.querySelector('[type="submit"]');
+    const valor = campoValorDoacao.value;
+    const oscId = Number(new URLSearchParams(window.location.search).get("id"));
+
+    feedback.textContent = "";
+    if (!Number.isInteger(oscId) || oscId <= 0) {
+        feedback.textContent = "Não foi possível identificar a organização para esta doação.";
+        return;
+    }
+
+    if (!Number.isFinite(Number(valor)) || Number(valor) < 5) {
+        feedback.textContent = "O valor mínimo para doação é R$ 5,00.";
+        campoValorDoacao.focus();
+        return;
+    }
+
+    botaoConfirmar.disabled = true;
+    botaoConfirmar.textContent = "Conectando ao pagamento…";
+
+    try {
+        const csrf = await obterTokenCSRF();
+        const formularioCheckout = document.createElement("form");
+        formularioCheckout.method = "POST";
+        formularioCheckout.action = `${API_URL.replace(/\/+$/, "")}/stripe/create-checkout-session`;
+        formularioCheckout.hidden = true;
+
+        for (const [nome, valorCampo] of Object.entries({
+            oscId: String(oscId),
+            valor,
+            _csrf: csrf.token
+        })) {
+            const campo = document.createElement("input");
+            campo.type = "hidden";
+            campo.name = nome;
+            campo.value = valorCampo;
+            formularioCheckout.append(campo);
+        }
+
+        document.body.append(formularioCheckout);
+        formularioCheckout.submit();
+    } catch (erro) {
+        console.error("Não foi possível iniciar o checkout da doação:", erro);
+        feedback.textContent = "Não foi possível iniciar o pagamento. Verifique sua conexão e tente novamente.";
+        botaoConfirmar.disabled = false;
+        botaoConfirmar.textContent = "Confirmar";
+    }
+}
+
+document.addEventListener("keydown", evento => {
+    if (modalDoacao.hidden) return;
+    if (evento.key === "Escape") {
+        fecharModalDoacao();
+    } else if (evento.key === "Tab") {
+        const controles = [...modalDoacao.querySelectorAll("button, input")];
+        const primeiro = controles[0];
+        const ultimo = controles.at(-1);
+        if (evento.shiftKey && document.activeElement === primeiro) {
+            evento.preventDefault();
+            ultimo.focus();
+        } else if (!evento.shiftKey && document.activeElement === ultimo) {
+            evento.preventDefault();
+            primeiro.focus();
+        }
+    }
+});

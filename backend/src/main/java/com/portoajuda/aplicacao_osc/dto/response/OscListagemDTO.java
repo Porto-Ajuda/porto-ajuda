@@ -2,6 +2,7 @@ package com.portoajuda.aplicacao_osc.dto.response;
 
 import com.portoajuda.aplicacao_osc.entity.Osc;
 import com.portoajuda.aplicacao_osc.enums.CausaSocial;
+import com.portoajuda.aplicacao_osc.enums.StatusOsc;
 
 import java.util.Set;
 import java.util.Collections;
@@ -17,7 +18,7 @@ public record OscListagemDTO(
         /** Compatibilidade para consumidores antigos da lista plana. */
         Set<CausaSocial> causas,
         Set<Integer> ods,
-        boolean ativo,
+        StatusOsc status,
         String descricaoCurta,
         String descricao,
         String rua,
@@ -33,7 +34,7 @@ public record OscListagemDTO(
         return new OscListagemDTO(
                 osc.getId(), osc.getNome(), osc.getLogo(), osc.getCausaPrincipal(),
                 copiar(osc.getCausasSecundarias()), copiar(osc.getCausas()), copiar(osc.getOds()),
-                osc.isAtivo(), osc.getDescricaoCurta(), osc.getDescricao(), osc.getRua(),
+                osc.getStatus(), osc.getDescricaoCurta(), osc.getDescricao(), osc.getRua(),
                 osc.getNumero(), osc.getBairro(), osc.getCidade(), osc.getEstado(), osc.getPais(),
                 osc.getLatitude(), osc.getLongitude());
     }

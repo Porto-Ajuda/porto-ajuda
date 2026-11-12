@@ -1,6 +1,7 @@
 package com.portoajuda.aplicacao_osc.entity;
 
 import com.portoajuda.aplicacao_osc.enums.CausaSocial;
+import com.portoajuda.aplicacao_osc.enums.StatusOsc;
 import com.portoajuda.aplicacao_osc.utils.Cnpj;
 import com.portoajuda.aplicacao_osc.utils.Email;
 import jakarta.persistence.*;
@@ -65,8 +66,9 @@ public class Osc {
         @Column(name = "logo", length = 1000)
         private String logo;
 
-        @Column(name = "ativo", nullable = false)
-        private boolean ativo;
+        @Enumerated(EnumType.STRING)
+        @Column(name = "status", nullable = false, length = 20)
+        private StatusOsc status = StatusOsc.INATIVA;
 
         @Column(name = "descricao", columnDefinition = "TEXT", nullable = false)
         private String descricao;

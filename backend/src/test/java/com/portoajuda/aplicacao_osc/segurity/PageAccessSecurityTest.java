@@ -53,4 +53,15 @@ class PageAccessSecurityTest {
                 .andExpect(status().isOk())
                 .andExpect(forwardedUrl("/pages/cadastro-osc.html"));
     }
+
+    @Test
+    void retornosDoStripeSaoPaginasPublicas() throws Exception {
+        mockMvc.perform(get("/stripe/success"))
+                .andExpect(status().isOk())
+                .andExpect(forwardedUrl("/pages/stripe-success.html"));
+
+        mockMvc.perform(get("/stripe/cancel"))
+                .andExpect(status().isOk())
+                .andExpect(forwardedUrl("/pages/stripe-cancel.html"));
+    }
 }

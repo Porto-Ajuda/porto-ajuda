@@ -2737,3 +2737,47 @@ body.alto-contraste .perfil-publico :is(.bloco-perfil p, .lista-perfil, .texto-a
     animation-duration: .01ms !important; animation-iteration-count: 1 !important;
   }
 }
+
+.modal-doacao-perfil {
+  position: fixed; inset: 0; z-index: 3000; display: grid; place-items: center;
+  padding: 20px; background: rgba(8, 10, 20, .72); backdrop-filter: blur(3px);
+}
+.modal-doacao-perfil[hidden] { display: none; }
+.modal-doacao-perfil-caixa {
+  width: min(440px, 100%); padding: 32px; border: 1px solid rgba(249, 200, 107, .38);
+  border-radius: 14px; background: linear-gradient(140deg, #2e1c50, #161928);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, .45); color: #f7f5fa;
+  font-family: 'Poppins', sans-serif;
+}
+.modal-doacao-perfil-caixa h2 {
+  margin: 0 0 24px; color: #f9c86b;
+  font: 600 2rem/1.1 'Cormorant Garamond', serif;
+}
+.modal-doacao-perfil-caixa label { display: block; margin-bottom: 8px; color: #d8d5e2; }
+.campo-valor-doacao {
+  display: flex; align-items: center; gap: 10px; padding: 0 14px;
+  border: 1px solid rgba(249, 200, 107, .48); border-radius: 7px;
+  background: rgba(255, 255, 255, .06); color: #f9c86b;
+}
+.campo-valor-doacao input {
+  width: 100%; min-width: 0; padding: 12px 0; border: 0; outline: 0;
+  background: transparent; color: #fff; font: 500 1rem 'Poppins', sans-serif;
+}
+.campo-valor-doacao:focus-within { outline: 3px solid #f9c86b; outline-offset: 3px; }
+.feedback-doacao-perfil { min-height: 1.4em; margin: 12px 0 0; color: #ffb8b8; font-size: .88rem; }
+.acoes-doacao-perfil { display: flex; justify-content: flex-end; gap: 10px; margin-top: 26px; }
+.acoes-doacao-perfil button {
+  min-height: 44px; padding: 9px 16px; border: 1px solid #ddaa41; border-radius: 7px;
+  background: transparent; color: #fff; font: 500 .9rem 'Poppins', sans-serif; cursor: pointer;
+}
+.acoes-doacao-perfil button:hover { border-color: #f9c86b; background: rgba(249, 200, 107, .12); }
+.acoes-doacao-perfil .btn-confirmar-doacao {
+  border-color: #f2aa1a; background: #f2aa1a; color: #161928;
+}
+.acoes-doacao-perfil .btn-confirmar-doacao:hover { border-color: #f9c86b; background: #f9c86b; }
+.acoes-doacao-perfil .btn-confirmar-doacao:disabled { cursor: wait; opacity: .7; }
+.modal-doacao-perfil :is(input, button):focus-visible { outline: 3px solid #f9c86b; outline-offset: 3px; }
+@media (max-width: 480px) {
+  .modal-doacao-perfil-caixa { padding: 25px 20px; }
+  .acoes-doacao-perfil { display: grid; grid-template-columns: 1fr 1fr; }
+}

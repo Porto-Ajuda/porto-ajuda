@@ -1,18 +1,18 @@
 package com.portoajuda.aplicacao_osc.controller;
 
 import com.portoajuda.aplicacao_osc.entity.Usuario;
+import com.portoajuda.aplicacao_osc.service.CheckoutStripe;
 import com.portoajuda.aplicacao_osc.service.RegisterStripe;
 import com.stripe.exception.StripeException;
+import com.stripe.model.checkout.Session;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.net.URI;
 
 @RestController
@@ -20,6 +20,7 @@ import java.net.URI;
 @RequestMapping("/stripe")
 public class StriveController {
     private final RegisterStripe registerStripe;
+    private final CheckoutStripe checkoutStripe;
 
     @PreAuthorize("hasRole('OSC')")
     @GetMapping("/account-link")
@@ -44,6 +45,16 @@ public class StriveController {
         return ResponseEntity
                 .status(HttpStatus.SEE_OTHER)
                 .location(URI.create(url))
+                .build();
+    }
+
+    @PreAuthorize("hasRole('USUARIO')")
+    @PostMapping("/create-checkout-session")
+    public ResponseEntity<String> createCheckoutSession(@AuthenticationPrincipal Usuario usuario, @RequestParam Integer oscId, @RequestParam String valor) throws Exception {
+        Session checkoutSession = checkoutStripe.createCheckoutSession(usuario, oscId, new BigDecimal(valor));
+        return ResponseEntity
+                .status(HttpStatus.SEE_OTHER)
+                .location(URI.create(checkoutSession.getUrl()))
                 .build();
     }
 }
