@@ -26,6 +26,11 @@ a {
     text-decoration: none;
 }
 
+/* Cor padrão do logo: garante #F9C86B em qualquer página,
+   mesmo que o CSS da página não defina --gold-light */
+:root {
+    --gold-light: #F9C86B;
+}
 
 /* =========================================================
    HEADER
