@@ -2,7 +2,8 @@ import {
     AdminRequestError,
     fetchAdminAssignments,
     fetchAdminSession,
-    mutateAdminAssignment
+    mutateAdminAssignment,
+    showAdminDialog
 } from "./admin-rbac.js";
 
 const PAGE_SIZE = 50;
@@ -317,7 +318,7 @@ export function initializeAdminAssignments({ apiUrl, authorization, onUnauthoriz
             elements.currentProfile.hidden = false;
         }
 
-        elements.dialog.showModal();
+        showAdminDialog(elements.dialog);
         (operation === "assign" ? elements.userId : operation === "change-profile"
             ? elements.profile : elements.reason).focus();
     }

@@ -41,6 +41,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.client.RestClientException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.slf4j.Logger;
@@ -68,6 +69,12 @@ public class PostService {
     private final CandidaturasVoluntariadoRepository candidaturasRepository;
     private final OscService oscService;
     private final SupabaseStorageService storageService;
+    @Autowired(required = false)
+    private ContentReportService contentReports;
+    @Autowired(required = false)
+    private ModerationPointsService moderationPoints;
+    @Autowired(required = false)
+    private VerificacaoRepresentanteService verificationService;
 
     @Transactional
     public void create(RequestCreatePostDTO request, Usuario usuarioAuth){
@@ -113,8 +120,10 @@ public class PostService {
     @Transactional
     public PostConteudoDTO createInOsc(
             Integer oscId, RequestCreatePostDTO request, Usuario usuarioAuth, MultipartFile imagem) {
-        Osc osc = buscarOscParaGestao(oscId, usuarioAuth);
+        if(moderationPoints!=null) moderationPoints.requireBusinessMutationAllowed(usuarioAuth==null?null:usuarioAuth.getId(),oscId);
+        Osc osc = buscarOscParaGestaoParaAtualizacao(oscId, usuarioAuth);
         CargoOsc cargo = oscService.obterCargoUsuario(osc, usuarioAuth);
+        if (verificationService != null) verificationService.requireOperationallyVerified(oscId);
         if (request == null || request.post() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Informe os dados do post.");
         }
@@ -179,7 +188,8 @@ public class PostService {
     @Transactional
     public PostConteudoDTO atualizarConteudoDaOsc(
             Integer oscId, RequestUpdatePostDTO request, Usuario usuarioAuth, MultipartFile imagem) {
-        Osc osc = buscarOscParaGestao(oscId, usuarioAuth);
+        if(moderationPoints!=null) moderationPoints.requireBusinessMutationAllowed(usuarioAuth==null?null:usuarioAuth.getId(),oscId);
+        Osc osc = buscarOscParaGestaoParaAtualizacao(oscId, usuarioAuth);
         CargoOsc cargo = oscService.obterCargoUsuario(osc, usuarioAuth);
         if (request == null || request.id() == null || request.post() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Informe os dados do post.");
@@ -209,12 +219,22 @@ public class PostService {
                     ? null : parseVagaStatus(request.vaga().status());
         }
         Vaga vaga = null;
+        Integer vagaExistenteId = null;
         if (post.getTipo() == TipoPost.VOLUNTARIADO) {
             Vaga existente = vagaRepository.findByPost(post).orElse(null);
+            vagaExistenteId = existente == null ? null : existente.getId();
             vaga = existente == null
                     ? new Vaga()
                     : vagaRepository.findForUpdateById(existente.getId()).orElseThrow(() ->
                             new ResponseStatusException(HttpStatus.NOT_FOUND, "Oportunidade não encontrada."));
+        }
+        if (vagaExistenteId != null) {
+            long candidaturasAprovadas = candidaturasRepository.countByVaga_IdAndStatus(
+                    vagaExistenteId, com.portoajuda.aplicacao_osc.enums.StatusCandidatura.APROVADA);
+            if (request.vaga().quantidadeVagas() < candidaturasAprovadas) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "A quantidade de vagas não pode ficar abaixo das candidaturas aprovadas.");
+            }
         }
         post.setAtivo(request.post().ativo());
         post.setTitulo(request.post().titulo().trim());
@@ -245,10 +265,15 @@ public class PostService {
     @Transactional(readOnly = true)
     public List<PostConteudoDTO> listarConteudoPublicoDaOsc(Integer oscId) {
         Osc osc = oscRepository.findById(oscId)
-                .filter(org -> !org.isArquivada() && org.getStatus() == StatusOsc.ATIVA)
+                .filter(org -> !org.isArquivada() && org.getStatus() == StatusOsc.ATIVA
+                        && !protecaoAtiva("OSC", org.getId())
+                        && (verificationService == null || verificationService.isPubliclyEligible(org.getId())))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Organizacao nao encontrada."));
-        return postRepository.findPublicosPorOsc(osc.getId(), StatusOsc.ATIVA).stream()
+        List<Post> publicPosts = contentReports != null && contentReports.isEnabled()
+                ? postRepository.findPublicosPorOscSemBloqueio(osc.getId(), StatusOsc.ATIVA.name())
+                : postRepository.findPublicosPorOsc(osc.getId(), StatusOsc.ATIVA);
+        return publicPosts.stream()
                 .filter(this::publicamenteVisivel)
                 .map(post -> conteudoDTO(post, post.getVagaVoluntariado(), false))
                 .toList();
@@ -265,7 +290,8 @@ public class PostService {
 
     @Transactional
     public void excluirConteudoDaOsc(Integer oscId, Integer postId, Usuario usuarioAuth) {
-        Osc osc = buscarOscParaGestao(oscId, usuarioAuth);
+        if(moderationPoints!=null) moderationPoints.requireBusinessMutationAllowed(usuarioAuth==null?null:usuarioAuth.getId(),oscId);
+        Osc osc = buscarOscParaGestaoParaAtualizacao(oscId, usuarioAuth);
         CargoOsc cargo = oscService.obterCargoUsuario(osc, usuarioAuth);
         Post post = buscarPostDaOsc(osc, postId);
         if (!podeModificar(post, osc, usuarioAuth, cargo)) {
@@ -292,6 +318,14 @@ public class PostService {
             String reason = adminAuthorization.requireReason(adminReason);
             Post post = postRepository.findById(request.id())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post nÃ£o encontrado."));
+            Integer oscId = post.getOsc() == null ? null : post.getOsc().getId();
+            if (oscId == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Post nÃ£o encontrado.");
+            oscRepository.findForUpdateById(oscId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "OrganizaÃ§Ã£o nÃ£o encontrada."));
+            post = postRepository.findForUpdateById(request.id())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post nÃ£o encontrado."));
+            if (post.getOsc() == null || !oscId.equals(post.getOsc().getId()))
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Post nÃ£o encontrado.");
             if (post.getTipo() != TipoPost.NOTICIA) {
                 throw new AccessDeniedException("Administradores so podem editar noticias nesta rota.");
             }
@@ -331,9 +365,21 @@ public class PostService {
             String reason = adminAuthorization.requireReason(adminReason);
             Post post = postRepository.findById(id)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post nÃ£o encontrado."));
+            Integer oscId = post.getOsc() == null ? null : post.getOsc().getId();
+            if (oscId == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Post nÃ£o encontrado.");
+            oscRepository.findForUpdateById(oscId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "OrganizaÃ§Ã£o nÃ£o encontrada."));
+            post = postRepository.findForUpdateById(id)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post nÃ£o encontrado."));
+            if (post.getOsc() == null || !oscId.equals(post.getOsc().getId()))
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Post nÃ£o encontrado.");
             TipoPost previousType = post.getTipo();
             Vaga vaga = vagaRepository.findByPost(post).orElse(null);
             boolean hadVolunteerOpportunity = vaga != null;
+            if (contentReports != null && contentReports.hasReportHistory("POST", id)) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "Este conteúdo possui histórico de denúncias e não pode ser removido.");
+            }
             if (vaga != null && vaga.getId() != null && candidaturasRepository.existsByVaga_Id(vaga.getId())) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT,
                         "Esta oportunidade possui candidaturas e nao pode ser excluida.");
@@ -381,44 +427,81 @@ public class PostService {
     public List<ResponsePostDTO> getPostsPorCausaSocial(CausaSocial causaSocial) {
         return postRepository.findPublicosPorCausaSocial(causaSocial, StatusOsc.ATIVA)
                 .stream()
+                .filter(post -> post.getOsc() != null && (verificationService == null
+                        || verificationService.isPubliclyEligible(post.getOsc().getId())))
+                .filter(post -> !protecaoAtiva("OSC", post.getOsc().getId())
+                        && !protecaoAtiva("POST", post.getId()))
                 .map(ResponsePostDTO::from)
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public Page<ResponsePostDTO> getAll(Pageable pageable) {
-        return postRepository.findPublicos(StatusOsc.ATIVA, pageable)
+        Page<Post> page = paginaPostsPublicos(pageable);
+        return page
                 .map(ResponsePostDTO::from);
     }
 
     @Transactional(readOnly = true)
     public Page<PostConteudoDTO> listarPublicacoesHome(Pageable pageable) {
         Pageable vitrine = pageableVitrine(pageable);
-        return postRepository.findPublicacoesHome(StatusOsc.ATIVA, TipoPost.VOLUNTARIADO, vitrine)
+        return paginaPublicacoes(vitrine)
                 .map(post -> conteudoDTO(post, post.getVagaVoluntariado(), false));
     }
 
     @Transactional(readOnly = true)
     public Page<PostConteudoDTO> listarVoluntariadosHome(Pageable pageable) {
         Pageable vitrine = pageableVitrine(pageable);
-        return postRepository.findVoluntariadosHome(
-                        StatusOsc.ATIVA, TipoPost.VOLUNTARIADO, StatusVaga.ABERTA, LocalDate.now(), vitrine)
+        return paginaVoluntariados(vitrine)
                 .map(post -> conteudoDTO(post, post.getVagaVoluntariado(), false));
     }
 
     @Transactional(readOnly = true)
     public Page<PostConteudoDTO> listarPublicacoesCatalogo(Pageable pageable) {
         Pageable catalogo = pageableCatalogo(pageable);
-        return postRepository.findPublicacoesHome(StatusOsc.ATIVA, TipoPost.VOLUNTARIADO, catalogo)
+        return paginaPublicacoes(catalogo)
                 .map(post -> conteudoDTO(post, post.getVagaVoluntariado(), false));
     }
 
     @Transactional(readOnly = true)
     public Page<PostConteudoDTO> listarVoluntariadosCatalogo(Pageable pageable) {
         Pageable catalogo = pageableCatalogo(pageable);
-        return postRepository.findVoluntariadosHome(
-                        StatusOsc.ATIVA, TipoPost.VOLUNTARIADO, StatusVaga.ABERTA, LocalDate.now(), catalogo)
+        return paginaVoluntariados(catalogo)
                 .map(post -> conteudoDTO(post, post.getVagaVoluntariado(), false));
+    }
+
+    private Page<Post> paginaPostsPublicos(Pageable pageable) {
+        boolean reports = contentReports != null && contentReports.isEnabled();
+        boolean verification = verificationService != null && verificationService.isEnabled();
+        if (reports && verification) return postRepository.findPublicosComVerificacaoSemBloqueio(StatusOsc.ATIVA.name(), pageable);
+        if (reports) return postRepository.findPublicosSemBloqueio(StatusOsc.ATIVA.name(), pageable);
+        if (verification) return postRepository.findPublicosComVerificacao(StatusOsc.ATIVA.name(), pageable);
+        return postRepository.findPublicos(StatusOsc.ATIVA, pageable);
+    }
+
+    private Page<Post> paginaPublicacoes(Pageable pageable) {
+        boolean reports = contentReports != null && contentReports.isEnabled();
+        boolean verification = verificationService != null && verificationService.isEnabled();
+        if (reports && verification) return postRepository.findPublicacoesHomeVerificadasSemBloqueio(
+                StatusOsc.ATIVA.name(), TipoPost.VOLUNTARIADO.name(), pageable);
+        if (reports) return postRepository.findPublicacoesHomeSemBloqueio(
+                StatusOsc.ATIVA.name(), TipoPost.VOLUNTARIADO.name(), pageable);
+        if (verification) return postRepository.findPublicacoesHomeVerificadas(
+                StatusOsc.ATIVA.name(), TipoPost.VOLUNTARIADO.name(), pageable);
+        return postRepository.findPublicacoesHome(StatusOsc.ATIVA, TipoPost.VOLUNTARIADO, pageable);
+    }
+
+    private Page<Post> paginaVoluntariados(Pageable pageable) {
+        boolean reports = contentReports != null && contentReports.isEnabled();
+        boolean verification = verificationService != null && verificationService.isEnabled();
+        if (reports && verification) return postRepository.findVoluntariadosHomeVerificadosSemBloqueio(
+                StatusOsc.ATIVA.name(), TipoPost.VOLUNTARIADO.name(), StatusVaga.ABERTA.name(), LocalDate.now(), pageable);
+        if (reports) return postRepository.findVoluntariadosHomeSemBloqueio(
+                StatusOsc.ATIVA.name(), TipoPost.VOLUNTARIADO.name(), StatusVaga.ABERTA.name(), LocalDate.now(), pageable);
+        if (verification) return postRepository.findVoluntariadosHomeVerificados(
+                StatusOsc.ATIVA.name(), TipoPost.VOLUNTARIADO.name(), StatusVaga.ABERTA.name(), LocalDate.now(), pageable);
+        return postRepository.findVoluntariadosHome(
+                StatusOsc.ATIVA, TipoPost.VOLUNTARIADO, StatusVaga.ABERTA, LocalDate.now(), pageable);
     }
 
     private Pageable pageableVitrine(Pageable pageable) {
@@ -467,6 +550,24 @@ public class PostService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Organizacao nao encontrada.");
         }
         // Inactive organizations remain manageable by their actual members.
+        return osc;
+    }
+
+    /**
+     * Serializa mutações de conteúdo com alterações de associação, papel, status e arquivamento.
+     * Esses fluxos já bloqueiam a linha da ONG; a autorização precisa ser lida sob o mesmo lock.
+     */
+    private Osc buscarOscParaGestaoParaAtualizacao(Integer oscId, Usuario usuario) {
+        exigirUsuario(usuario);
+        if (oscId == null || oscId <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Identificador de organizacao invalido.");
+        }
+        Osc osc = oscRepository.findForUpdateById(oscId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Organizacao nao encontrada."));
+        if (osc.isArquivada()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Organizacao nao encontrada.");
+        }
         return osc;
     }
 
@@ -736,7 +837,8 @@ public class PostService {
     }
 
     private boolean publicamenteVisivel(Post post) {
-        if (!post.isAtivo()) {
+        if (!post.isAtivo() || protecaoAtiva("POST", post.getId())
+                || post.getOsc() == null || protecaoAtiva("OSC", post.getOsc().getId())) {
             return false;
         }
         if (post.getTipo() != TipoPost.VOLUNTARIADO) {
@@ -751,7 +853,15 @@ public class PostService {
                 && vaga.getDataFim() != null && !vaga.getDataFim().isBefore(LocalDate.now());
     }
 
+    private boolean protecaoAtiva(String tipo, Integer id) {
+        return contentReports != null && contentReports.isBlocked(tipo, id);
+    }
+
     private void excluirPostEPreservarCandidaturas(Post post) {
+        if (contentReports != null && contentReports.hasReportHistory("POST", post.getId())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Este conteúdo possui histórico de denúncias e não pode ser removido.");
+        }
         Vaga vaga = vagaRepository.findByPost(post).orElse(null);
         if (vaga != null && vaga.getId() != null && candidaturasRepository.existsByVaga_Id(vaga.getId())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,

@@ -20,6 +20,54 @@ public interface OscRepository extends JpaRepository<Osc, Integer> {
 
     Page<Osc> findAllByStatusAndDataArquivamentoIsNull(StatusOsc status, Pageable pageable);
 
+    @Query(value = """
+            SELECT o.* FROM public.oscs o WHERE o.status=:status AND o.data_arquivamento IS NULL
+              AND NOT EXISTS (SELECT 1 FROM public.content_moderation_blocks b
+                WHERE b.target_type='OSC' AND b.target_id=o.id AND b.active)
+             ORDER BY o.data_criacao DESC, o.id DESC
+            """, countQuery = """
+            SELECT count(*) FROM public.oscs o WHERE o.status=:status AND o.data_arquivamento IS NULL
+              AND NOT EXISTS (SELECT 1 FROM public.content_moderation_blocks b
+                WHERE b.target_type='OSC' AND b.target_id=o.id AND b.active)
+            """, nativeQuery = true)
+    Page<Osc> findAllPublicasSemBloqueio(@Param("status") String status, Pageable pageable);
+
+    @Query(value = """
+            SELECT o.* FROM public.oscs o
+             WHERE o.status=:status AND o.data_arquivamento IS NULL
+               AND NOT EXISTS (SELECT 1 FROM public.ngo_representative_verification_applications v
+                    WHERE v.osc_id=o.id AND v.status <> 'APPROVED')
+               AND public.ngo_representative_is_publicly_eligible(o.id)
+             ORDER BY o.data_criacao DESC, o.id DESC
+            """, countQuery = """
+            SELECT count(*) FROM public.oscs o
+             WHERE o.status=:status AND o.data_arquivamento IS NULL
+               AND NOT EXISTS (SELECT 1 FROM public.ngo_representative_verification_applications v
+                    WHERE v.osc_id=o.id AND v.status <> 'APPROVED')
+               AND public.ngo_representative_is_publicly_eligible(o.id)
+            """, nativeQuery = true)
+    Page<Osc> findAllPublicasVerificadas(@Param("status") String status, Pageable pageable);
+
+    @Query(value = """
+            SELECT o.* FROM public.oscs o
+             WHERE o.status=:status AND o.data_arquivamento IS NULL
+               AND NOT EXISTS (SELECT 1 FROM public.ngo_representative_verification_applications v
+                    WHERE v.osc_id=o.id AND v.status <> 'APPROVED')
+               AND public.ngo_representative_is_publicly_eligible(o.id)
+               AND NOT EXISTS (SELECT 1 FROM public.content_moderation_blocks b
+                    WHERE b.target_type='OSC' AND b.target_id=o.id AND b.active)
+             ORDER BY o.data_criacao DESC, o.id DESC
+            """, countQuery = """
+            SELECT count(*) FROM public.oscs o
+             WHERE o.status=:status AND o.data_arquivamento IS NULL
+               AND NOT EXISTS (SELECT 1 FROM public.ngo_representative_verification_applications v
+                    WHERE v.osc_id=o.id AND v.status <> 'APPROVED')
+               AND public.ngo_representative_is_publicly_eligible(o.id)
+               AND NOT EXISTS (SELECT 1 FROM public.content_moderation_blocks b
+                    WHERE b.target_type='OSC' AND b.target_id=o.id AND b.active)
+            """, nativeQuery = true)
+    Page<Osc> findAllPublicasVerificadasSemBloqueio(@Param("status") String status, Pageable pageable);
+
     long countByStatusAndDataArquivamentoIsNull(StatusOsc status);
 
     long countByDataArquivamentoIsNotNull();

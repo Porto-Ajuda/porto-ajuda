@@ -37,6 +37,50 @@ public class AdminAssignmentRepository {
                 """.formatted(SELECT_COLUMNS), userId);
     }
 
+    /** Minimal directory data for service recipients; never returns private contact fields. */
+    public List<SupportStaffCandidate> findActiveSupportCandidates() {
+        return jdbcTemplate.query("""
+                SELECT DISTINCT u.id AS user_id,
+                       COALESCE(NULLIF(BTRIM(u.nome_social), ''),
+                                NULLIF(SPLIT_PART(BTRIM(u.nome), ' ', 1), ''), 'Atendente') AS display_name,
+                       a.profile
+                  FROM public.admin_assignments a
+                  JOIN public.usuarios u ON u.id=a.usuario_id
+                  JOIN public.usuario_roles ur ON ur.id_usuario=u.id
+                  JOIN public.roles r ON r.id=ur.id_role
+                 WHERE a.status='ACTIVE' AND u.ativo=TRUE AND r.nome='ADMIN'
+                 ORDER BY display_name,u.id
+                """, (row, rowNumber) -> new SupportStaffCandidate(row.getInt("user_id"),
+                        row.getString("display_name"), AdminProfile.valueOf(row.getString("profile"))));
+    }
+
+    public boolean hasEligibleActiveAdminAccount(Integer userId) {
+        Integer count = jdbcTemplate.queryForObject("""
+                SELECT count(*)
+                  FROM public.admin_assignments a
+                  JOIN public.usuarios u ON u.id=a.usuario_id
+                  JOIN public.usuario_roles ur ON ur.id_usuario=u.id
+                  JOIN public.roles r ON r.id=ur.id_role
+                 WHERE a.usuario_id=? AND a.status='ACTIVE' AND u.ativo=TRUE AND r.nome='ADMIN'
+                """, Integer.class, userId);
+        return count != null && count > 0;
+    }
+
+    /** Locks the active account and ADMIN role row through a support transfer transaction. */
+    public boolean lockEligibleActiveAdminAccount(Integer userId) {
+        List<Integer> rows = jdbcTemplate.query("""
+                SELECT u.id
+                  FROM public.usuarios u
+                  JOIN public.usuario_roles ur ON ur.id_usuario=u.id
+                  JOIN public.roles r ON r.id=ur.id_role
+                 WHERE u.id=? AND u.ativo=TRUE AND r.nome='ADMIN'
+                 ORDER BY ur.id_role
+                 LIMIT 1
+                 FOR UPDATE OF u,ur
+                """, (row, rowNumber) -> row.getInt(1), userId);
+        return !rows.isEmpty();
+    }
+
     public Optional<AdminAssignment> findActiveByUserIdForUpdate(Integer userId) {
         return queryOne("""
                 SELECT %s FROM public.admin_assignments
@@ -229,4 +273,6 @@ public class AdminAssignmentRepository {
         Timestamp value = row.getTimestamp(column);
         return value == null ? null : value.toInstant();
     }
+
+    public record SupportStaffCandidate(Integer userId, String displayName, AdminProfile profile) {}
 }

@@ -13,7 +13,7 @@ import org.hibernate.validator.constraints.URL;
 import java.time.LocalTime;
 import java.util.Set;
 
-/** Campos que podem ser alterados sem trocar a identidade ou o criador da OSC. */
+/** Dados de edição; nome, ano de fundação e causa principal são somente leitura. */
 public record UpdateOscDTO(
         @NotBlank @CnpjValido(message = "CNPJ inválido") String cnpj,
         @Size(max = 255) String nome,

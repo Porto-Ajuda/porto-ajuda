@@ -8,9 +8,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 /** Polls a database-backed outbox; PostgreSQL row locks coordinate all app instances. */
 @Component
+@ConditionalOnProperty(prefix = "app.admin-auth.delivery-worker", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class AdminAuthDeliveryWorker {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AdminAuthDeliveryWorker.class);

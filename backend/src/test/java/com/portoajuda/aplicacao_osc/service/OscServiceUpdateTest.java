@@ -96,9 +96,9 @@ class OscServiceUpdateTest {
     void atualizacaoAlteraSomenteAssociacoesEnviadas() throws Exception {
         service.update(new UpdateOscDTO(
                 CNPJ, "Descrição atualizada", "contato@exemplo.org.br", null, null,
-                CausaSocial.SAUDE, Set.of(CausaSocial.CULTURA), Set.of(3, 17)), usuario);
+                null, Set.of(CausaSocial.CULTURA), Set.of(3, 17)), usuario);
 
-        assertEquals(CausaSocial.SAUDE, osc.getCausaPrincipal());
+        assertEquals(CausaSocial.EDUCACAO, osc.getCausaPrincipal());
         assertEquals(Set.of(CausaSocial.CULTURA), osc.getCausasSecundarias());
         assertEquals(Set.of(3, 17), osc.getOds());
         verify(oscRepository).save(osc);
@@ -110,7 +110,7 @@ class OscServiceUpdateTest {
                 ResponseStatusException.class,
                 () -> service.update(new UpdateOscDTO(
                         CNPJ, "Descrição atualizada", "contato@exemplo.org.br", null, null,
-                        CausaSocial.SAUDE, Set.of(CausaSocial.SAUDE), null), usuario));
+                        CausaSocial.EDUCACAO, Set.of(CausaSocial.EDUCACAO), null), usuario));
 
         assertEquals(422, erro.getStatusCode().value());
         verify(oscRepository, never()).save(any(Osc.class));
@@ -160,6 +160,64 @@ class OscServiceUpdateTest {
                 null, null, null), usuario));
 
         verify(oscRepository, never()).save(any(Osc.class));
+    }
+
+    @Test
+    void craftedRequestCannotChangeOrganizationNameOrPartiallyUpdateProfile() {
+        osc.setNome("Nome original");
+        osc.setDescricao("Descrição original");
+
+        ResponseStatusException error = assertThrows(ResponseStatusException.class,
+                () -> service.update(dto("Nome adulterado", null, null), usuario));
+
+        assertEquals(422, error.getStatusCode().value());
+        assertEquals("Nome original", osc.getNome());
+        assertEquals("Descrição original", osc.getDescricao());
+        verify(oscRepository, never()).save(any(Osc.class));
+    }
+
+    @Test
+    void craftedRequestCannotChangeFoundationYear() {
+        osc.setAnoFundacao(1998);
+
+        ResponseStatusException error = assertThrows(ResponseStatusException.class,
+                () -> service.update(dto(null, 1999, null), usuario));
+
+        assertEquals(422, error.getStatusCode().value());
+        assertEquals(1998, osc.getAnoFundacao());
+        verify(oscRepository, never()).save(any(Osc.class));
+    }
+
+    @Test
+    void craftedRequestCannotChangePrimaryCause() {
+        ResponseStatusException error = assertThrows(ResponseStatusException.class,
+                () -> service.update(new UpdateOscDTO(CNPJ, "Descrição", "contato@exemplo.org", null, null,
+                        CausaSocial.CULTURA, null, null), usuario));
+
+        assertEquals(422, error.getStatusCode().value());
+        assertEquals(CausaSocial.EDUCACAO, osc.getCausaPrincipal());
+        verify(oscRepository, never()).save(any(Osc.class));
+    }
+
+    @Test
+    void unchangedReadOnlyIdentityFieldsRemainCompatibleWithUpdateRequests() {
+        osc.setNome("Nome original");
+        osc.setAnoFundacao(1998);
+
+        service.update(dto("Nome original", 1998, CausaSocial.EDUCACAO), usuario);
+
+        assertEquals("Nome original", osc.getNome());
+        assertEquals(1998, osc.getAnoFundacao());
+        assertEquals(CausaSocial.EDUCACAO, osc.getCausaPrincipal());
+        verify(oscRepository).save(osc);
+    }
+
+    private UpdateOscDTO dto(String nome, Integer anoFundacao, CausaSocial causaPrincipal) {
+        return new UpdateOscDTO(CNPJ, nome, null, "Descrição atualizada", anoFundacao,
+                "contato@exemplo.org", null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null, null,
+                null, causaPrincipal, null, null);
     }
 
     private void prepararCargo(CargoOsc cargo) {

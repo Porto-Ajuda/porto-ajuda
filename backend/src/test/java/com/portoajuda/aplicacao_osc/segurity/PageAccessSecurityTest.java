@@ -1,6 +1,7 @@
 package com.portoajuda.aplicacao_osc.segurity;
 
 import com.portoajuda.aplicacao_osc.controller.PageController;
+import com.portoajuda.aplicacao_osc.controller.AuthController;
 import com.portoajuda.aplicacao_osc.controller.AdminSessionCookie;
 import com.portoajuda.aplicacao_osc.controller.AdminDashboardController;
 import com.portoajuda.aplicacao_osc.controller.PostController;
@@ -8,6 +9,7 @@ import com.portoajuda.aplicacao_osc.controller.GeocodingController;
 import com.portoajuda.aplicacao_osc.controller.CandidaturaVoluntariadoController;
 import com.portoajuda.aplicacao_osc.controller.UsuarioController;
 import com.portoajuda.aplicacao_osc.dto.response.Coordenadas;
+import com.portoajuda.aplicacao_osc.dto.request.RequestAtualizarPerfilDTO;
 import com.portoajuda.aplicacao_osc.dto.response.DisponibilidadeCandidaturaDTO;
 import com.portoajuda.aplicacao_osc.entity.Role;
 import com.portoajuda.aplicacao_osc.entity.Usuario;
@@ -21,6 +23,7 @@ import com.portoajuda.aplicacao_osc.service.CodigoAutenticacaoService;
 import com.portoajuda.aplicacao_osc.service.RecuperacaoSenhaService;
 import com.portoajuda.aplicacao_osc.service.UsuarioService;
 import com.portoajuda.aplicacao_osc.service.AdminPrivilegedSessionService;
+import com.portoajuda.aplicacao_osc.service.AutenticacaoAbusoUsuarioService;
 import com.portoajuda.aplicacao_osc.service.AdminPrivilegedSessionService.AuthenticatedAdmin;
 import com.portoajuda.aplicacao_osc.service.SessaoUsuarioService;
 import jakarta.servlet.http.Cookie;
@@ -46,6 +49,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
@@ -63,7 +67,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "app.frontend-url=https://portoajuda.test",
         "app.cookies.secure=false"
 })
-@Import({ SecurityConfiguration.class, JwtAuthFilter.class, AdminSessionAuthFilter.class,
+@Import({ SecurityConfiguration.class, JwtAuthFilter.class, AdminSessionAuthFilter.class, AuthController.class,
         PageController.class, AdminDashboardController.class, PostController.class, GeocodingController.class,
         CandidaturaVoluntariadoController.class, UsuarioController.class })
 class PageAccessSecurityTest {
@@ -110,6 +114,9 @@ class PageAccessSecurityTest {
     private UsuarioService usuarioService;
 
     @MockitoBean
+    private AutenticacaoAbusoUsuarioService autenticacaoAbuso;
+
+    @MockitoBean
     private RecuperacaoSenhaService recuperacaoSenhaService;
 
     @MockitoBean
@@ -134,6 +141,66 @@ class PageAccessSecurityTest {
         mockMvc.perform(get("/catalogo").param("categoria", "ongs"))
                 .andExpect(status().isOk())
                 .andExpect(forwardedUrl("/pages/catalogo.html"));
+    }
+
+    @Test
+    void registrationAndLoginRemainPublicEndpointsButRequireCsrfAndUseResolvedIp() throws Exception {
+        when(clientIpResolver.resolve(any())).thenReturn(TEST_IP);
+        String registration = """
+                {"cpf":"01234567890","cep":"01000000","nome":"Conta Sintética",
+                 "dataNascimento":"1990-01-01","email":"novo@example.invalid",
+                 "genero":"FEMININO","senha":"SenhaValida1!"}
+                """;
+        mockMvc.perform(post("/usuario/register").contentType("application/json").content(registration))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(post("/usuario/register").with(csrf())
+                        .contentType("application/json").content(registration))
+                .andExpect(status().isCreated());
+        verify(usuarioService).signup(any(com.portoajuda.aplicacao_osc.dto.request.RequestUsuarioDTO.class),
+                eq(TEST_IP));
+
+        when(usuarioService.login(any(com.portoajuda.aplicacao_osc.dto.request.RequestLoginDTO.class), eq(TEST_IP)))
+                .thenThrow(new org.springframework.security.authentication.BadCredentialsException(
+                        "Email ou senha incorretos"));
+        String login = "{\"email\":\"unknown@example.invalid\",\"senha\":\"WrongPassword1!\",\"lembrarDeMim\":false}";
+        mockMvc.perform(post("/usuario/login").contentType("application/json").content(login))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(post("/usuario/login").with(csrf())
+                        .contentType("application/json").content(login))
+                .andExpect(status().isUnauthorized());
+        verify(usuarioService).login(any(com.portoajuda.aplicacao_osc.dto.request.RequestLoginDTO.class),
+                eq(TEST_IP));
+    }
+
+    @Test
+    void confirmationResendAlwaysUsesGenericResponseAndResolvedIp() throws Exception {
+        when(clientIpResolver.resolve(any())).thenReturn(TEST_IP);
+        mockMvc.perform(post("/usuario/reenviar-confirmacao")
+                        .contentType("application/json").content("{\"email\":\"synthetic@example.invalid\"}"))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(post("/usuario/reenviar-confirmacao").with(csrf())
+                        .contentType("application/json").content("{\"email\":\"synthetic@example.invalid\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.mensagem").value(
+                        "Se houver uma conta pendente de confirmação, as instruções serão enviadas."));
+        verify(usuarioService).reenviarConfirmacaoEmail("synthetic@example.invalid", TEST_IP);
+    }
+
+    @Test
+    void passwordlessLoginCodeConsumptionIsCsrfProtectedAndIpLimited() throws Exception {
+        when(clientIpResolver.resolve(any())).thenReturn(TEST_IP);
+        when(autenticacaoAbuso.registrarTentativaCodigoLoginPorIp(TEST_IP)).thenReturn(false);
+
+        mockMvc.perform(post("/usuario/trocar-codigo")
+                        .contentType("application/json").content("{\"codigo\":\"synthetic-code\"}"))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(post("/usuario/trocar-codigo").with(csrf())
+                        .contentType("application/json").content("{\"codigo\":\"synthetic-code\"}"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.mensagem").value("Código inválido, expirado ou já utilizado."));
+
+        verify(autenticacaoAbuso).registrarTentativaCodigoLoginPorIp(TEST_IP);
+        org.mockito.Mockito.verifyNoInteractions(codigoAutenticacaoService);
     }
 
     @Test
@@ -330,6 +397,23 @@ class PageAccessSecurityTest {
                 .andExpect(status().isOk());
         verify(usuarioService).changePassword("Current1!", "NewPassword1!", "NewPassword1!", 17,
                 902L, true);
+    }
+
+    @Test
+    void profilePatchRejectsCraftedAccountEmailChangeWithClearValidationResponse() throws Exception {
+        when(usuarioService.atualizarPerfil(eq(17), any(RequestAtualizarPerfilDTO.class)))
+                .thenThrow(new IllegalArgumentException("O e-mail da conta não pode ser alterado."));
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                        .patch("/usuario/perfil")
+                        .with(user("17").roles("USUARIO"))
+                        .with(csrf())
+                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"alterado@example.invalid\",\"nomeSocial\":\"Outro nome\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.mensagem").value("O e-mail da conta não pode ser alterado."));
+
+        verify(usuarioService).atualizarPerfil(eq(17), any(RequestAtualizarPerfilDTO.class));
     }
 
     private UsernamePasswordAuthenticationToken regularUserWithSession(Long sessionId) {

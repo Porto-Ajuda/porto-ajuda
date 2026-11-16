@@ -25,10 +25,34 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const alertaCadastro = document.getElementById("alerta-cadastro");
     const btnIrLogin = document.getElementById("btn-ir-login");
+    const linkVerificacao = document.getElementById("ir-verificacao-osc");
+    const campoRepresentacao = document.getElementById("representacao-osc");
     const statusCadastro = document.getElementById("status-cadastro-osc");
     const linkLogin = document.getElementById("link-login-cadastro");
 
     let etapaAtual = 0;
+    let verificacaoRepresentanteHabilitada = false;
+    let configuracaoVerificacaoDisponivel = false;
+
+    async function carregarConfiguracaoVerificacao() {
+        if (!campoRepresentacao) return;
+        try {
+            const response = await fetch(`${API_URL}/osc/verificacao/config`, {
+                credentials: "include", cache: "no-store", headers: { Accept: "application/json" }
+            });
+            if (!response.ok) return;
+            const config = await response.json();
+            configuracaoVerificacaoDisponivel = true;
+            verificacaoRepresentanteHabilitada = config?.enabled === true;
+            campoRepresentacao.hidden = !verificacaoRepresentanteHabilitada;
+            campoRepresentacao.querySelectorAll('input[name="representacao"]').forEach(input => {
+                input.required = verificacaoRepresentanteHabilitada;
+            });
+        } catch {
+            // Sem resposta da configuração, o formulário legado permanece compatível.
+        }
+    }
+    const verificacaoConfigReady = carregarConfiguracaoVerificacao();
 
     /* =====================================================
        ELEMENTOS DAS ÁREAS E ODS
@@ -785,6 +809,11 @@ document.addEventListener("DOMContentLoaded", () => {
         event.preventDefault();
 
         if (etapaAtual < etapas.length - 1 || btnCadastrar.disabled) return;
+        await verificacaoConfigReady;
+        if (!configuracaoVerificacaoDisponivel) {
+            mostrarStatusCadastro("Não foi possível confirmar se a verificação de representação está ativa. Verifique a conexão e tente novamente.");
+            return;
+        }
         mostrarStatusCadastro("");
         if (linkLogin) linkLogin.hidden = true;
         if (!await validarEtapa()) return;
@@ -843,6 +872,16 @@ document.addEventListener("DOMContentLoaded", () => {
             "dados",
             new Blob([JSON.stringify(payload)], { type: "application/json" })
         );
+        if (verificacaoRepresentanteHabilitada) {
+            const representacao = form.querySelector('input[name="representacao"]:checked')?.value;
+            if (!representacao) {
+                mostrarStatusCadastro("Selecione sua condição de representante legal ou pessoa delegada.");
+                campoRepresentacao.hidden = false;
+                form.querySelector('input[name="representacao"]')?.focus();
+                return;
+            }
+            multipart.append("representacao", representacao);
+        }
         if (arquivoLogo) multipart.append("logo", arquivoLogo);
 
         btnCadastrar.disabled = true;
@@ -872,8 +911,19 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             if (alertaCadastro) {
+                const result = await resposta.json();
+                if (verificacaoRepresentanteHabilitada && Number.isSafeInteger(Number(result?.id))) {
+                    const organizationId = Number(result.id);
+                    const message = alertaCadastro.querySelector(".conteudo-cadastro p");
+                    if (message) message.textContent = "A ONG foi cadastrada com status operacional inativo e verificação de representação pendente. Envie os documentos pelo perfil da organização para iniciar a análise.";
+                    if (linkVerificacao) {
+                        linkVerificacao.href = `/ong-profile?id=${encodeURIComponent(organizationId)}#configuracoes`;
+                        linkVerificacao.hidden = false;
+                    }
+                    if (btnIrLogin) btnIrLogin.textContent = "Voltar ao Porto Ajuda";
+                }
                 alertaCadastro.hidden = false;
-                btnIrLogin?.focus();
+                (verificacaoRepresentanteHabilitada ? linkVerificacao : btnIrLogin)?.focus();
             }
         } catch (erro) {
             console.error("Falha ao enviar cadastro da OSC:", erro);

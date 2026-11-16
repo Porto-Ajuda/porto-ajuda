@@ -3,6 +3,7 @@ package com.portoajuda.aplicacao_osc.service;
 
 import com.portoajuda.aplicacao_osc.utils.Cnpj;
 import tools.jackson.databind.JsonNode;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
@@ -10,12 +11,11 @@ import org.springframework.web.client.RestClientException;
 @Service
 public class CnpjaService {
 
-    private static final String URL_BASE = "https://open.cnpja.com/office/";
-
     private final RestClient restClient;
 
-    public CnpjaService() {
-        this.restClient = RestClient.create(URL_BASE);
+    public CnpjaService(@Value("${cnpja.url-base:https://open.cnpja.com/office/}") String urlBase) {
+        String normalizedBase = urlBase.endsWith("/") ? urlBase : urlBase + "/";
+        this.restClient = RestClient.create(normalizedBase);
     }
 
     public JsonNode consultarCnpj(String cnpj) {

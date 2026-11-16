@@ -10,9 +10,12 @@
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 
   <link rel="stylesheet" href="../styles/ong-profile.css" />
+  <link rel="stylesheet" href="../styles/denunciar-conteudo.css">
   <link rel="stylesheet" href="../styles/geral.css">
   <script type="module" src="../components/header_footer.js" defer></script>
   <script type="module" src="../components/ong-profile.js" defer></script>
+  <script type="module" src="../components/verificacao-representante.js" defer></script>
+  <script type="module" src="../components/denunciar-conteudo.js" defer></script>
   <link rel="stylesheet" href="../styles/candidaturas.css">
 </head>
 <body>
@@ -41,6 +44,7 @@
             <a class="btn btn-secundario" href="#contato">Ver formas de contato</a>
             <button id="efetuar-doacao" class="btn btn-secundario" type="button">Efetuar doação</button>
             <button id="compartilhar" class="btn btn-secundario" type="button">Compartilhar organização</button>
+            <button id="denunciar-osc" class="btn btn-secundario" type="button" data-content-report data-report-type="OSC" hidden>Denunciar organização</button>
           </nav>
           <p id="mensagem-compartilhar" class="feedback-perfil" role="status" aria-live="polite"></p>
         </div>
@@ -147,6 +151,7 @@
       <section id="painel-conteudo" class="painel-aba painel-gestao-osc painel-conteudo-gestao" role="tabpanel" aria-labelledby="aba-conteudo" tabindex="0" hidden>
         <h2>Conteúdo da organização</h2>
         <p>As alterações são autorizadas pelo vínculo e cargo atual do membro nesta organização.</p>
+        <div id="aviso-restricao-pontuacao-conteudo" class="moderation-write-notice" data-points-write-notice hidden role="status" aria-live="polite"></div>
         <section class="bloco-perfil" aria-labelledby="titulo-gestao-posts">
           <div class="cabecalho-conteudo-osc"><div><h3 id="titulo-gestao-posts">Posts</h3><p>Crie e edite publicações de doação. Notícias são gerenciadas pela plataforma.</p></div><button id="criar-post-osc" class="btn" type="button">Criar post</button></div>
           <p id="posts-gestao-status" role="status" aria-live="polite">Carregando posts…</p><div id="posts-gestao-lista" class="grade-conteudo-osc"></div>
@@ -177,6 +182,47 @@
         <ul id="lista-membros" class="lista-membros-osc"></ul>
       </section>
       <section id="painel-dados" class="painel-aba painel-gestao-osc" role="tabpanel" aria-labelledby="aba-dados" tabindex="0" hidden>
+        <div class="moderation-write-notice" data-points-write-notice hidden role="status" aria-live="polite"></div>
+        <section id="verificacao-representante-aplicacao" class="verificacao-aplicacao-osc" aria-labelledby="titulo-verificacao-representante" hidden>
+          <h2 id="titulo-verificacao-representante">Verificação de representação</h2>
+          <p>Novas ONGs precisam comprovar a representação antes de aparecer publicamente ou publicar conteúdo. A verificação é separada do status operacional, arquivamento, bloqueios e sanções da ONG.</p>
+          <p id="verificacao-representante-status" role="status" aria-live="polite">Carregando solicitação…</p>
+          <p id="verificacao-impacto-operacional" class="verificacao-impacto-operacional"></p>
+          <p id="verificacao-representante-feedback" class="verificacao-feedback" role="status" aria-live="polite"></p>
+          <form id="form-iniciar-verificacao" class="form-evidencia-verificacao" hidden>
+            <label for="tipo-representacao-verificacao">Seu vínculo de representação</label>
+            <select id="tipo-representacao-verificacao" required><option value="">Selecione</option><option value="LEGAL_REPRESENTATIVE">Representante legal</option><option value="AUTHORIZED_DELEGATE">Pessoa delegada por representante legal</option></select>
+            <label class="confirmar-impacto-verificacao"><input id="confirmar-impacto-verificacao" type="checkbox" required> Confirmo a adesão voluntária. A verificação não altera a operação ou as restrições atuais da ONG.</label>
+            <button id="iniciar-aplicacao-verificacao" class="btn" type="submit">Iniciar verificação</button>
+          </form>
+          <form id="form-reaplicar-verificacao" class="form-evidencia-verificacao" hidden>
+            <h3>Corrigir e reenviar a solicitação</h3>
+            <p>A recusa e os documentos anteriores continuarão registrados. Esta ação cria uma nova solicitação vinculada ao histórico anterior.</p>
+            <label for="tipo-representacao-reaplicacao">Seu vínculo de representação</label>
+            <select id="tipo-representacao-reaplicacao" required><option value="">Selecione</option><option value="LEGAL_REPRESENTATIVE">Representante legal</option><option value="AUTHORIZED_DELEGATE">Pessoa delegada por representante legal</option></select>
+            <label class="confirmar-impacto-verificacao"><input id="confirmar-reaplicacao-verificacao" type="checkbox" required> Confirmo que desejo abrir uma nova solicitação.</label>
+            <button id="confirmar-reaplicacao-verificacao-botao" class="btn" type="submit">Criar nova solicitação</button>
+          </form>
+          <div class="verificacao-documentos-ajuda">
+            <strong>Documentos aceitos</strong>
+            <p>Envie PDF, JPEG ou PNG de até 10 MB (até cinco arquivos por tipo em cada versão). Certificado ou consulta de CNPJ, sozinho, não comprova poderes de representação.</p>
+            <p><strong>Representante legal:</strong> apresente documentos que identifiquem a entidade e demonstrem que seu ato de eleição ou nomeação continua vigente, conforme a natureza da organização.</p>
+            <p><strong>Pessoa delegada:</strong> apresente a comprovação dos poderes de quem delega e uma autorização ou procuração assinada que identifique o escopo e a vigência da delegação.</p>
+            <p>A análise é humana; a lista final depende do tipo de entidade. Os arquivos ficam em armazenamento privado e são acessados somente após autorização, por links temporários.</p>
+          </div>
+          <div id="verificacao-representante-arquivos" class="verificacao-arquivos" aria-live="polite"></div>
+          <form id="form-evidencia-representacao" class="form-evidencia-verificacao">
+            <label for="arquivo-evidencia-representacao">Comprovação de representação</label>
+            <input id="arquivo-evidencia-representacao" type="file" accept="application/pdf,image/jpeg,image/png" required>
+            <button id="enviar-evidencia-representacao" class="btn" type="submit">Enviar documento</button>
+          </form>
+          <form id="form-evidencia-delegacao" class="form-evidencia-verificacao" hidden>
+            <label for="arquivo-evidencia-delegacao">Autorização do representante legal</label>
+            <input id="arquivo-evidencia-delegacao" type="file" accept="application/pdf,image/jpeg,image/png" required>
+            <button id="enviar-evidencia-delegacao" class="btn" type="submit">Enviar autorização</button>
+          </form>
+          <button id="solicitar-revisao-verificacao" class="btn btn-secundario" type="button" disabled>Enviar solicitação para análise</button>
+        </section>
         <section id="resumo-dados-osc" class="bloco-perfil resumo-dados-osc" aria-labelledby="titulo-resumo-dados-osc">
           <h2 id="titulo-resumo-dados-osc">Dados da organização</h2>
           <dl class="grade-resumo-dados-osc">
@@ -266,6 +312,12 @@
           </form>
         </section>
         <dialog id="dialogo-descartar" class="dialogo-descartar"><form method="dialog"><h2>Descartar alterações?</h2><p>As informações preenchidas voltarão aos valores carregados anteriormente.</p><div><button class="btn btn-secundario" value="cancelar">Continuar editando</button><button class="btn" value="descartar">Descartar alterações</button></div></form></dialog>
+        <section id="moderacao-configuracoes-osc" data-moderation-section class="bloco-perfil" aria-labelledby="titulo-moderacao-configuracoes-osc" hidden>
+          <h2 id="titulo-moderacao-configuracoes-osc">Moderação e recursos</h2>
+          <p>A pontuação e o histórico pertencem à ONG. Pontos permanecem após o término de uma restrição temporária.</p>
+          <p data-moderation-status role="status" aria-live="polite"></p>
+          <div data-moderation-content></div>
+        </section>
         <section id="zona-perigo" class="zona-perigo" aria-labelledby="titulo-zona-perigo" hidden>
           <h2 id="titulo-zona-perigo">Ações administrativas</h2>
           <p>As ações abaixo alteram a visibilidade ou removem dados da organização.</p>
@@ -317,6 +369,7 @@
   <dialog id="dialogo-post-osc" class="dialogo-conteudo-osc" aria-labelledby="titulo-dialogo-post-osc" aria-describedby="descricao-dialogo-post-osc">
     <form id="form-post-osc" class="form-dialogo-conteudo-osc">
       <h2 id="titulo-dialogo-post-osc">Criar post</h2><p id="descricao-dialogo-post-osc">Posts são associados a esta organização e autorizados no servidor.</p>
+      <div class="moderation-write-notice" data-points-write-notice hidden role="status" aria-live="polite"></div>
       <label for="post-titulo-osc">Título</label><input id="post-titulo-osc" maxlength="255" required>
       <label for="post-conteudo-osc">Conteúdo</label><textarea id="post-conteudo-osc" rows="6" maxlength="10000" required></textarea>
       <label for="post-imagem-arquivo-osc">Imagem (opcional)</label><input id="post-imagem-arquivo-osc" type="file" accept="image/jpeg,image/png" aria-describedby="post-imagem-ajuda-osc post-imagem-feedback-osc"><small id="post-imagem-ajuda-osc" class="campo-ajuda">JPEG ou PNG, até 10 MB.</small>
@@ -331,6 +384,7 @@
   <dialog id="dialogo-oportunidade-osc" class="dialogo-conteudo-osc" aria-labelledby="titulo-dialogo-oportunidade-osc" aria-describedby="descricao-dialogo-oportunidade-osc">
     <form id="form-oportunidade-osc" class="form-dialogo-conteudo-osc">
       <h2 id="titulo-dialogo-oportunidade-osc">Criar oportunidade</h2><p id="descricao-dialogo-oportunidade-osc">O post e a vaga serão salvos juntos.</p>
+      <div class="moderation-write-notice" data-points-write-notice hidden role="status" aria-live="polite"></div>
       <label for="oportunidade-titulo-osc">Título</label><input id="oportunidade-titulo-osc" maxlength="255" required>
       <label for="oportunidade-conteudo-osc">Descrição</label><textarea id="oportunidade-conteudo-osc" rows="5" maxlength="10000" required></textarea>
       <label for="oportunidade-imagem-arquivo-osc">Imagem (opcional)</label><input id="oportunidade-imagem-arquivo-osc" type="file" accept="image/jpeg,image/png" aria-describedby="oportunidade-imagem-ajuda-osc oportunidade-imagem-feedback-osc"><small id="oportunidade-imagem-ajuda-osc" class="campo-ajuda">JPEG ou PNG, até 10 MB.</small>

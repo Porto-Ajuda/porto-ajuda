@@ -108,6 +108,15 @@ public class EmailService {
                 enviar(emailDestinatario, "Alerta de segurança administrativa - Porto Ajuda", texto);
         }
 
+        /** Aviso sem identificar denunciantes nem revelar detalhes das denúncias. */
+        public void enviarAvisoProtecaoConteudo(String emailResponsavel, String nomeOrganizacao) {
+                String nome = nomeOrganizacao == null || nomeOrganizacao.isBlank() ? "sua organização" : nomeOrganizacao;
+                String texto = "O conteúdo público de " + nome + " foi ocultado preventivamente e encaminhado para revisão pela equipe Porto Ajuda.\n\n"
+                        + "Esta medida não representa uma decisão final. A organização não pode remover a proteção enquanto a revisão estiver pendente.\n"
+                        + "Nenhuma identidade de denunciante é compartilhada neste aviso.";
+                enviar(emailResponsavel, "Conteúdo encaminhado para revisão - Porto Ajuda", texto);
+        }
+
         private void enviar(
                         String destinatario,
                         String assunto,

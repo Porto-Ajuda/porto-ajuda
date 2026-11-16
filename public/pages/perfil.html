@@ -18,6 +18,7 @@
 
     <script type="module" src="../components/header_footer.js" defer></script>
     <script type="module" src="../components/perfil.js" defer></script>
+    <script type="module" src="../components/moderation-profile.js" defer></script>
     <script type="module" src="../components/logout.js" defer></script>
     <script type="module" src="../components/abas-perfil.js" defer></script>
     <script type="module" src="../components/filtros-perfil.js" defer></script>
@@ -121,7 +122,8 @@
                             <input id="data-nascimento" name="dataNascimento" type="text" disabled>
 
                             <label for="email">E-mail</label>
-                            <input id="email" name="email" type="email" autocomplete="email" disabled>
+                            <input id="email" name="email" type="email" autocomplete="email" aria-describedby="email-imutavel-ajuda" disabled>
+                            <small id="email-imutavel-ajuda">O e-mail da conta não pode ser alterado.</small>
 
                             <label for="telefone">Telefone</label>
                             <input id="telefone" name="telefone" type="tel" autocomplete="tel" disabled>
@@ -795,6 +797,15 @@
                             </div>
 
 
+                            <section class="preferencias-voz" aria-labelledby="preferencias-voz-titulo">
+                                <h3 id="preferencias-voz-titulo">Assistência por voz</h3>
+                                <p>Configuração neste dispositivo. Você não precisa informar uma deficiência para ativar esses recursos.</p>
+                                <label><input type="checkbox" id="preferencia-assistencia-voz"> Ativar assistência por voz</label>
+                                <label><input type="checkbox" id="preferencia-leitura-voz"> Ler novas respostas em voz alta</label>
+                                <label><input type="checkbox" id="preferencia-evitar-leitor-tela" checked> Evitar conflito com leitor de tela</label>
+                                <button class="botao botao-secundario" type="button" id="preferencia-configurar-voz">Configurar voz no atendimento</button>
+                            </section>
+
                             <div class="grupo-botoes">
                                 <button class="botao botao-secundario" type="button" id="salvar-preferencias-acss">
                                     Salvar preferências
@@ -961,6 +972,17 @@
                                 <div class="grupo-botoes">
                                     <button class="botao botao-secundario" type="button" id="abrir-alterar-senha">Alterar senha</button>
                                 </div>
+                            </section>
+
+                                <section id="moderacao-perfil-usuario" data-moderation-section class="configuracao" aria-labelledby="titulo-moderacao-perfil">
+                                <div><h3 id="titulo-moderacao-perfil">Moderação e recursos</h3><p>A pontuação e o histórico pertencem somente à sua conta. Pontos permanecem após o término de uma restrição temporária.</p></div>
+                                <p data-moderation-status role="status" aria-live="polite">Carregando informações de moderação…</p>
+                                <div data-moderation-content></div>
+                                <details id="moderacao-organizacoes-usuario" class="moderation-profile__organizations" aria-labelledby="titulo-moderacao-organizacoes">
+                                    <summary id="titulo-moderacao-organizacoes">Moderação das ONGs que administro</summary>
+                                    <p data-managed-ngo-status role="status" aria-live="polite">Expanda para consultar ONGs com histórico de pontuação.</p>
+                                    <div data-managed-ngo-content></div>
+                                </details>
                             </section>
 
                             <dialog id="dialog-alterar-senha" class="dialogo-verificacao-telefone"

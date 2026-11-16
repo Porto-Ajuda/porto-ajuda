@@ -80,6 +80,19 @@ public class AdminAuthorizationService {
         return false;
     }
 
+    /** Checks whether a transfer target has an active assignment granting the requested permission. */
+    public boolean userHasPermission(Integer userId, AdminPermission permission) {
+        if (userId == null || permission == null) return false;
+        try {
+            if (!assignmentRepository.hasEligibleActiveAdminAccount(userId)) return false;
+            return assignmentRepository.findActiveByUserId(userId)
+                    .map(assignment -> AdminPermissionCatalog.grants(assignment.profile(), permission))
+                    .orElse(false);
+        } catch (DataAccessException unavailable) {
+            return false;
+        }
+    }
+
     public AdminActor requirePermission(AdminPermission permission) {
         Authentication authentication = currentAuthentication();
         if (!hasPermission(authentication, permission)) {
@@ -110,39 +123,75 @@ public class AdminAuthorizationService {
     }
 
     public boolean isEligibleForPrivilegedSession(Usuario user) {
-        if (user == null || user.getId() == null || !user.isEnabled()
-                || !user.isEmailVerificado() || !user.isTelefoneVerificado()
-                || user.getEmail() == null || user.getTelefone() == null
-                || user.getTelefone().isBlank() || !hasRoleAdmin(user)) {
-            return false;
+        return privilegedSessionEligibility(user) == PrivilegedSessionEligibility.ELIGIBLE;
+    }
+
+    /** Safe reason codes used only for internal diagnosis; no account data is included. */
+    public enum PrivilegedSessionEligibility {
+        ELIGIBLE,
+        USER_MISSING,
+        USER_ID_MISSING,
+        ACCOUNT_INACTIVE,
+        EMAIL_UNVERIFIED,
+        PHONE_UNVERIFIED,
+        EMAIL_MISSING,
+        PHONE_MISSING,
+        ROLE_ADMIN_MISSING,
+        EMAIL_BLANK,
+        PHONE_FORMAT_INVALID,
+        PHONE_NUMBER_INVALID,
+        ACTIVE_ASSIGNMENT_MISSING,
+        ASSIGNMENT_LOOKUP_UNAVAILABLE
+    }
+
+    public PrivilegedSessionEligibility privilegedSessionEligibility(Usuario user) {
+        if (user == null) return PrivilegedSessionEligibility.USER_MISSING;
+        if (user.getId() == null) return PrivilegedSessionEligibility.USER_ID_MISSING;
+        if (!user.isEnabled()) return PrivilegedSessionEligibility.ACCOUNT_INACTIVE;
+        if (!user.isEmailVerificado()) return PrivilegedSessionEligibility.EMAIL_UNVERIFIED;
+        if (!user.isTelefoneVerificado()) return PrivilegedSessionEligibility.PHONE_UNVERIFIED;
+        if (user.getEmail() == null) return PrivilegedSessionEligibility.EMAIL_MISSING;
+        if (user.getTelefone() == null || user.getTelefone().isBlank()) {
+            return PrivilegedSessionEligibility.PHONE_MISSING;
         }
-        if (!enforcementEnabled) {
-            return true;
-        }
-        if (!hasEligibleVerifiedAdminContacts(user)) {
-            return false;
+        if (!hasRoleAdmin(user)) return PrivilegedSessionEligibility.ROLE_ADMIN_MISSING;
+        if (!enforcementEnabled) return PrivilegedSessionEligibility.ELIGIBLE;
+
+        PrivilegedSessionEligibility contactEligibility = contactEligibility(user);
+        if (contactEligibility != PrivilegedSessionEligibility.ELIGIBLE) {
+            return contactEligibility;
         }
         try {
-            return assignmentRepository.findActiveByUserId(user.getId()).isPresent();
+            return assignmentRepository.findActiveByUserId(user.getId()).isPresent()
+                    ? PrivilegedSessionEligibility.ELIGIBLE
+                    : PrivilegedSessionEligibility.ACTIVE_ASSIGNMENT_MISSING;
         } catch (DataAccessException unavailable) {
-            return false;
+            return PrivilegedSessionEligibility.ASSIGNMENT_LOOKUP_UNAVAILABLE;
         }
     }
 
     public boolean hasEligibleVerifiedAdminContacts(Usuario user) {
-        if (user == null || user.getEmail() == null || user.getEmail().valor().isBlank()
-                || !user.isEmailVerificado() || !user.isTelefoneVerificado()) {
-            return false;
-        }
+        return contactEligibility(user) == PrivilegedSessionEligibility.ELIGIBLE;
+    }
+
+    private PrivilegedSessionEligibility contactEligibility(Usuario user) {
+        if (user == null) return PrivilegedSessionEligibility.USER_MISSING;
+        if (user.getEmail() == null) return PrivilegedSessionEligibility.EMAIL_MISSING;
+        if (user.getEmail().valor().isBlank()) return PrivilegedSessionEligibility.EMAIL_BLANK;
+        if (!user.isEmailVerificado()) return PrivilegedSessionEligibility.EMAIL_UNVERIFIED;
+        if (!user.isTelefoneVerificado()) return PrivilegedSessionEligibility.PHONE_UNVERIFIED;
         String phone = user.getTelefone();
-        if (phone == null || phone.isBlank() || !phone.trim().matches("\\+?[0-9\\s().-]+")) {
-            return false;
+        if (phone == null || phone.isBlank()) return PrivilegedSessionEligibility.PHONE_MISSING;
+        if (!phone.trim().matches("\\+?[0-9\\s().-]+")) {
+            return PrivilegedSessionEligibility.PHONE_FORMAT_INVALID;
         }
         String digits = phone.replaceAll("[^0-9]", "");
         if (digits.length() == 13 && digits.startsWith("55")) {
             digits = digits.substring(2);
         }
-        return digits.matches("[1-9][0-9]9[0-9]{8}");
+        return digits.matches("[1-9][0-9]9[0-9]{8}")
+                ? PrivilegedSessionEligibility.ELIGIBLE
+                : PrivilegedSessionEligibility.PHONE_NUMBER_INVALID;
     }
 
     public AdminCapabilitiesDTO capabilities() {

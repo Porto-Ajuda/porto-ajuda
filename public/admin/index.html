@@ -9,8 +9,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="/styles/admin.css">
     <link rel="stylesheet" href="/styles/acesso-admin.css">
+    <link rel="stylesheet" href="/styles/admin-support.css">
     <script type="module" src="/components/acesso-admin.js" defer></script>
     <script type="module" src="/components/admin.js" defer></script>
 </head>
@@ -36,6 +38,13 @@
                 <a class="admin-nav__link" id="nav-administradores" data-admin-permission="ADMIN_MANAGE" href="#administradores">
                     <span aria-hidden="true">♙</span> Administradores
                 </a>
+                <a class="admin-nav__link" id="nav-denuncias" data-admin-permission="REPORT_READ" href="#denuncias">
+                    <span aria-hidden="true">⚑</span> Denúncias
+                </a>
+                <a class="admin-nav__link" id="nav-entidades" data-admin-permission="ENTITY_READ" href="#entidades"><span aria-hidden="true">▦</span> Entidades</a>
+                <a class="admin-nav__link" id="nav-recursos" data-admin-permission="APPEAL_READ" href="#recursos"><span aria-hidden="true">↗</span> Recursos</a>
+                <a class="admin-nav__link" id="nav-verificacao-representantes" data-admin-permission="NGO_VERIFICATION_READ" href="#verificacao-representantes"><span aria-hidden="true">▣</span> Verificação de ONGs</a>
+                <a class="admin-nav__link" id="nav-atendimentos" data-admin-permission="SUPPORT_READ" href="#atendimentos"><i class="fa-solid fa-headset" aria-hidden="true"></i> Atendimentos</a>
             </nav>
 
             <div class="admin-sidebar__bottom">
@@ -226,9 +235,58 @@
                     <button class="admin-secondary-button" id="proxima-pagina-administradores" type="button">Próxima página</button>
                 </nav>
             </section>
+
+            <section class="admin-content" id="denuncias-admin" aria-labelledby="titulo-denuncias-admin" hidden>
+                <div class="admin-page-heading"><div><p class="eyebrow">SEGURANÇA DA COMUNIDADE</p><h1 id="titulo-denuncias-admin">Denúncias</h1><p class="admin-page-description">Fila agrupada por conteúdo. Identidades de denunciantes não são exibidas.</p></div><button class="admin-secondary-button" id="atualizar-denuncias" type="button">Atualizar fila</button></div>
+                <div class="admin-module-filters admin-module-filters--reports" aria-label="Filtros de denúncias"><div class="admin-module-filter"><label for="filtro-estado-denuncia">Revisão</label><select id="filtro-estado-denuncia"><option value="PENDING">Denúncias pendentes</option><option value="ACTIVE">Restrições ativas</option><option value="RESOLVED">Denúncias resolvidas</option></select></div><div class="admin-module-filter"><label for="filtro-tipo-denuncia">Tipo</label><select id="filtro-tipo-denuncia"><option value="">Todos</option><option value="OSC">ONGs</option><option value="POST">Publicações e voluntariado</option></select></div></div>
+                <p id="status-denuncias" class="admin-inline-status" role="status" aria-live="polite"></p>
+                <div id="lista-denuncias" class="admin-report-list" aria-live="polite"></div>
+                <nav class="admin-pagination" aria-label="Paginação de denúncias"><button class="admin-secondary-button" id="denuncias-anterior" type="button" disabled>Página anterior</button><span id="denuncias-pagina" aria-live="polite"></span><button class="admin-secondary-button" id="denuncias-proxima" type="button" disabled>Próxima página</button></nav>
+                <section id="detalhe-denuncia-admin" class="admin-report-detail" hidden aria-live="polite"></section>
+            </section>
+            <section class="admin-content" id="entidades-admin" aria-labelledby="titulo-entidades-admin" hidden>
+                <div class="admin-page-heading"><div><p class="eyebrow">MODERAÇÃO DA PLATAFORMA</p><h1 id="titulo-entidades-admin">Entidades</h1><p class="admin-page-description">Consulte pessoas, organizações e conteúdo com dados de moderação vinculados ao sujeito correto.</p></div></div>
+                <div class="admin-module-filters admin-module-filters--entities" aria-label="Filtros de entidades"><div class="admin-module-filter"><label for="filtro-entidades-admin">Categoria</label><select id="filtro-entidades-admin"><option value="OSC">ONGs</option><option value="PUBLICATION">Publicações</option><option value="VOLUNTEERING">Voluntariados</option><option value="USER">Usuários</option><option value="DONATIONS" disabled>Doações — integração indisponível</option></select></div><div class="admin-module-filter admin-module-filter--search"><label for="busca-entidades-admin">Buscar</label><input id="busca-entidades-admin" type="search" maxlength="120" autocomplete="off" placeholder="Nome, título ou cidade"></div></div>
+                <p id="status-entidades-admin" class="admin-inline-status" role="status" aria-live="polite"></p><div class="admin-report-list" id="lista-entidades-admin" aria-live="polite" aria-busy="false"></div>
+                <nav class="admin-pagination" aria-label="Paginação de entidades"><button class="admin-secondary-button" id="entidades-anterior" type="button" disabled>Página anterior</button><span id="entidades-pagina" aria-live="polite"></span><button class="admin-secondary-button" id="entidades-proxima" type="button" disabled>Próxima página</button></nav>
+            </section>
+            <section class="admin-content" id="recursos-admin" aria-labelledby="titulo-recursos-admin" hidden>
+                <div class="admin-page-heading"><div><p class="eyebrow">REVISÃO DE SANÇÕES</p><h1 id="titulo-recursos-admin">Recursos</h1><p class="admin-page-description">Decisões próprias não podem ser revistas pelo mesmo revisor.</p></div></div>
+                <div class="admin-module-filters admin-module-filters--appeals" aria-label="Filtro de recursos"><div class="admin-module-filter"><label for="filtro-recursos-admin">Status</label><select id="filtro-recursos-admin"><option value="PENDING">Pendentes</option><option value="REJECTED">Rejeitados</option><option value="PARTIAL">Parcialmente aceitos</option><option value="ACCEPTED">Aceitos</option></select></div></div>
+                <p id="status-recursos-admin" class="admin-inline-status" role="status" aria-live="polite"></p><div class="admin-report-list" id="lista-recursos-admin" aria-live="polite" aria-busy="false"></div>
+                <nav class="admin-pagination" aria-label="Paginação de recursos"><button class="admin-secondary-button" id="recursos-anterior" type="button" disabled>Página anterior</button><span id="recursos-pagina" aria-live="polite"></span><button class="admin-secondary-button" id="recursos-proxima" type="button" disabled>Próxima página</button></nav>
+            </section>
+            <section class="admin-content admin-verification-page" id="verificacao-representantes-admin" aria-labelledby="titulo-verificacao-representantes-admin" hidden>
+                <div class="admin-page-heading">
+                    <div><p class="eyebrow">REPRESENTAÇÃO INSTITUCIONAL</p><h1 id="titulo-verificacao-representantes-admin">Verificação de ONGs</h1><p class="admin-page-description">Revise documentos privados e decida manualmente. A aprovação não altera status operacional, arquivamento, bloqueios ou sanções.</p></div>
+                    <button class="admin-secondary-button" id="atualizar-verificacoes-representantes" type="button">Atualizar fila</button>
+                </div>
+                <div class="admin-module-filters admin-module-filters--verification" aria-label="Filtro de verificações">
+                    <div class="admin-module-filter"><label for="filtro-verificacao-representantes">Status</label>
+                    <select id="filtro-verificacao-representantes">
+                        <option value="PENDING">Pendentes</option><option value="UNDER_REVIEW">Em análise</option>
+                        <option value="INFORMATION_REQUESTED">Informações solicitadas</option><option value="APPROVED">Aprovadas</option><option value="REJECTED">Recusadas</option>
+                    </select>
+                    </div>
+                </div>
+                <p id="status-verificacao-representantes" class="admin-inline-status" role="status" aria-live="polite"></p>
+                <div id="lista-verificacao-representantes" class="admin-report-list" aria-live="polite" aria-busy="false"></div>
+                <nav class="admin-pagination" aria-label="Paginação das verificações de ONGs">
+                    <button class="admin-secondary-button" id="verificacoes-representantes-anterior" type="button" disabled>Página anterior</button>
+                    <span id="verificacoes-representantes-pagina" aria-live="polite"></span>
+                    <button class="admin-secondary-button" id="verificacoes-representantes-proxima" type="button" disabled>Próxima página</button>
+                </nav>
+            </section>
+        <section class="admin-content" id="atendimentos-admin" aria-labelledby="titulo-atendimentos-admin" hidden>
+                <div class="admin-page-heading"><div><p class="eyebrow">SUPORTE AO USUÁRIO</p><h1 id="titulo-atendimentos-admin">Atendimentos</h1><p class="admin-page-description">Acompanhe conversas, assuma solicitações e responda de forma assíncrona.</p></div><button class="admin-secondary-button" id="atualizar-atendimentos-admin" type="button">Atualizar fila</button></div>
+                <div class="admin-module-filters"><div class="admin-module-filter"><label for="filtro-atendimentos-admin">Fila</label><select id="filtro-atendimentos-admin"><option value="WAITING_HUMAN">Aguardando atendimento</option><option value="HUMAN_ACTIVE">Em atendimento</option><option value="CLOSED">Encerradas</option></select></div></div>
+                <p id="status-atendimentos-admin" class="admin-inline-status" role="status" aria-live="polite"></p>
+                <div class="admin-report-list" id="lista-atendimentos-admin" aria-live="polite" aria-busy="false"></div>
+                <section id="detalhe-atendimento-admin" class="support-admin-detail" aria-live="polite"></section>
+            <div id="acoes-atendimento-admin" class="support-admin-actions"></div>
+            </section>
         </main>
     </div>
-
     <dialog class="admin-dialog" id="dialogo-atribuicao-admin" aria-labelledby="titulo-dialogo-atribuicao" aria-describedby="descricao-dialogo-atribuicao">
         <form class="admin-dialog__card" id="formulario-atribuicao-admin">
             <p class="eyebrow">OPERAÇÃO ADMINISTRATIVA</p>
@@ -277,6 +335,42 @@
                 <button class="admin-secondary-button" id="voltar-atribuicao-admin" type="button" hidden>Voltar</button>
                 <button class="admin-primary-button" id="revisar-atribuicao-admin" type="button">Revisar operação</button>
                 <button class="admin-primary-button" id="confirmar-atribuicao-admin" type="submit" hidden>Confirmar</button>
+            </div>
+        </form>
+    </dialog>
+
+    <dialog class="admin-dialog admin-verification-dialog" id="dialogo-verificacao-representante" aria-labelledby="titulo-dialogo-verificacao-representante" aria-describedby="descricao-dialogo-verificacao-representante">
+        <form class="admin-dialog__card admin-verification-dialog__card" id="formulario-revisao-verificacao">
+            <p class="eyebrow">ANÁLISE DOCUMENTAL</p>
+            <h2 id="titulo-dialogo-verificacao-representante">Solicitação da ONG</h2>
+            <p class="admin-dialog__description" id="descricao-dialogo-verificacao-representante"></p>
+            <div id="documentos-verificacao-representante" class="admin-verification-documents"></div>
+            <section id="analise-ia-verificacao" class="admin-verification-ai-summary" aria-labelledby="titulo-analise-ia-verificacao" aria-live="polite" hidden>
+                <h3 id="titulo-analise-ia-verificacao">Análise documental assistida</h3>
+                <p class="admin-verification-ai-summary__disclaimer">Resultado auxiliar. Não comprova autenticidade nem substitui a revisão humana.</p>
+                <div id="conteudo-analise-ia-verificacao"></div>
+            </section>
+            <button class="admin-secondary-button" id="iniciar-revisao-verificacao" type="button">Iniciar revisão humana</button>
+            <p class="admin-verification-ai-summary__disclaimer">Este botão inicia a revisão humana; não dispara nem repete uma chamada ao provedor de IA.</p>
+            <div class="admin-form-field" id="campo-decisao-verificacao">
+                <label for="decisao-verificacao-representante">Decisão</label>
+                <select id="decisao-verificacao-representante" required>
+                    <option value="">Selecione uma decisão</option>
+                    <option value="REQUEST_INFORMATION">Solicitar informações adicionais</option>
+                    <option value="APPROVE">Aprovar representação</option>
+                    <option value="REJECT">Recusar solicitação</option>
+                </select>
+            </div>
+            <div class="admin-form-field">
+                <label id="rotulo-justificativa-verificacao" for="justificativa-verificacao-representante">Justificativa obrigatória</label>
+                <textarea id="justificativa-verificacao-representante" rows="5" maxlength="2000" required aria-describedby="ajuda-justificativa-verificacao"></textarea>
+                <small id="ajuda-justificativa-verificacao">A justificativa será registrada no histórico e, quando aplicável, exibida à pessoa solicitante. Não inclua dados ou documentos no campo de texto.</small>
+            </div>
+            <p id="feedback-verificacao-representante" class="admin-dialog__error" role="status" aria-live="polite"></p>
+            <div class="admin-dialog__actions">
+                <button class="admin-secondary-button" id="cancelar-revisao-verificacao" type="button">Fechar</button>
+                <button class="admin-secondary-button" id="reabrir-verificacao" type="button" hidden>Reabrir para correção</button>
+                <button class="admin-primary-button" id="confirmar-revisao-verificacao" type="submit">Registrar decisão</button>
             </div>
         </form>
     </dialog>

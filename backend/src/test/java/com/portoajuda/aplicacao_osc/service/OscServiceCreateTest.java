@@ -100,7 +100,7 @@ class OscServiceCreateTest {
                                 "Brasil", "São Paulo", "01000-000",
                                 "São Paulo", "Rua Exemplo", "10")).thenReturn(coordenadas);
 
-                when(persistenciaService.salvar(dados, 25, coordenadas, null))
+                when(persistenciaService.salvar(dados, 25, coordenadas, null, null))
                                 .thenReturn(resposta);
 
                 ResponseOscDTO resultado = service.create(dados, usuario, null);
@@ -108,7 +108,7 @@ class OscServiceCreateTest {
                 assertEquals(81, resultado.id());
                 assertEquals(Set.of(4), resultado.ods());
 
-                verify(persistenciaService).salvar(dados, 25, coordenadas, null);
+                verify(persistenciaService).salvar(dados, 25, coordenadas, null, null);
         }
 
         @Test
@@ -125,7 +125,7 @@ class OscServiceCreateTest {
                 when(geocodingService.buscarCoordenadas(
                                 "Brasil", "São Paulo", "01000-000",
                                 "São Paulo", "Rua Exemplo", "10")).thenReturn(coordenadas);
-                when(persistenciaService.salvar(dados, 25, coordenadas, null))
+                when(persistenciaService.salvar(dados, 25, coordenadas, null, null))
                                 .thenReturn(new ResponseOscDTO(
                                                 82, cnpjAlfanumerico, "Instituto Exemplo",
                                                 CausaSocial.EDUCACAO, Set.of(),
@@ -135,7 +135,7 @@ class OscServiceCreateTest {
 
                 assertEquals(82, resultado.id());
                 verify(validacaoCnpjOscService).validar(cnpjAlfanumerico);
-                verify(persistenciaService).salvar(dados, 25, coordenadas, null);
+                verify(persistenciaService).salvar(dados, 25, coordenadas, null, null);
         }
 
         @Test

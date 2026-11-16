@@ -60,6 +60,8 @@ class UsuarioServiceAdminSessionRevocationTest {
     @Mock private RecuperacaoSenhaRepository recoveryCredentials;
     @Mock private AdminAssignmentService adminAssignmentService;
     @Mock private AdminRbacInvariantService adminRbacInvariantService;
+    @Mock private AutenticacaoAbusoUsuarioService autenticacaoAbuso;
+    @Mock private UsuarioLoginService usuarioLoginService;
 
     @InjectMocks private UsuarioService service;
 
@@ -163,31 +165,19 @@ class UsuarioServiceAdminSessionRevocationTest {
 
     @Test
     void loginBloqueiaContaAntesDeValidarSenhaEEmitirSessao() {
-        Usuario usuario = new Usuario();
-        ReflectionTestUtils.setField(usuario, "id", 74);
-        usuario.setCpf(new Cpf("52998224725"));
-        usuario.setEmail(new Email("login@example.invalid"));
-        usuario.setNome("Conta Sintética");
-        usuario.setDataNascimento(LocalDate.of(1990, 1, 1));
-        usuario.setSenha("password-hash");
-        usuario.setEmailVerificado(true);
-        when(usuarioRepository.findByEmailForUpdate(new Email("login@example.invalid")))
-                .thenReturn(Optional.of(usuario));
-        when(passwordEncoder.matches("Password1!", "password-hash")).thenReturn(true);
-        SessaoUsuario sessao = new SessaoUsuario(usuario, "f".repeat(64), Instant.now(),
-                Instant.now().plusSeconds(3600), false);
-        ReflectionTestUtils.setField(sessao, "id", 810L);
-        when(regularSessions.criarSessao(usuario, false))
-                .thenReturn(new SessaoUsuarioService.SessaoCriada(sessao, "synthetic-refresh-token"));
-        when(jwtService.generateToken(usuario, 810L)).thenReturn("synthetic-access-token");
+        RequestLoginDTO loginRequest = new RequestLoginDTO("login@example.invalid", "Password1!", false);
+        when(autenticacaoAbuso.registrarTentativaLoginPorIp("192.0.2.73")).thenReturn(true);
+        var expected = new UsuarioService.LoginResultado("synthetic-access-token", "synthetic-refresh-token",
+                false, null, Instant.now().plusSeconds(3600));
+        when(usuarioLoginService.autenticar(loginRequest, new Email("login@example.invalid")))
+                .thenReturn(new UsuarioLoginService.LoginOutcome(expected, true));
 
-        var result = service.login(new RequestLoginDTO("login@example.invalid", "Password1!", false));
+        var result = service.login(loginRequest, "192.0.2.73");
 
         assertEquals("synthetic-access-token", result.accessToken());
-        InOrder order = inOrder(usuarioRepository, passwordEncoder, regularSessions);
-        order.verify(usuarioRepository).findByEmailForUpdate(new Email("login@example.invalid"));
-        order.verify(passwordEncoder).matches("Password1!", "password-hash");
-        order.verify(regularSessions).criarSessao(usuario, false);
+        verify(autenticacaoAbuso).registrarTentativaLoginPorIp("192.0.2.73");
+        verify(usuarioLoginService).autenticar(loginRequest, new Email("login@example.invalid"));
+        verify(autenticacaoAbuso).limparFalhasLogin("login@example.invalid");
     }
 
     @Test

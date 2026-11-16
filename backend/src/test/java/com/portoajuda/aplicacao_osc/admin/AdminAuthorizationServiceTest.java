@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
@@ -75,6 +77,18 @@ class AdminAuthorizationServiceTest {
     }
 
     @Test
+    void supportTransferRequiresAnEligibleActiveAdminAccountAndGrantedPermission() {
+        AdminAuthorizationService authorization = new AdminAuthorizationService(assignments, true);
+        when(assignments.hasEligibleActiveAdminAccount(70)).thenReturn(true);
+        when(assignments.findActiveByUserId(70)).thenReturn(Optional.of(assignment(AdminProfile.MODERATOR)));
+        assertTrue(authorization.userHasPermission(70, AdminPermission.SUPPORT_MANAGE));
+
+        when(assignments.hasEligibleActiveAdminAccount(71)).thenReturn(false);
+        assertFalse(authorization.userHasPermission(71, AdminPermission.SUPPORT_MANAGE));
+        verify(assignments, never()).findActiveByUserId(71);
+    }
+
+    @Test
     void flagDesabilitadoPreservaPermissoesLegadasSemLiberarGestaoDePerfis() {
         AdminAuthorizationService authorization = new AdminAuthorizationService(assignments, false);
         var authentication = authentication(true, true, false);
@@ -98,6 +112,8 @@ class AdminAuthorizationServiceTest {
                 .when(user).getAuthorities();
 
         assertFalse(authorization.isEligibleForPrivilegedSession(user));
+        assertEquals(AdminAuthorizationService.PrivilegedSessionEligibility.PHONE_FORMAT_INVALID,
+                authorization.privilegedSessionEligibility(user));
     }
 
     @Test
@@ -116,6 +132,56 @@ class AdminAuthorizationServiceTest {
                 .thenThrow(new DataAccessResourceFailureException("RBAC table unavailable"));
 
         assertFalse(authorization.isEligibleForPrivilegedSession(user));
+        assertEquals(AdminAuthorizationService.PrivilegedSessionEligibility.ASSIGNMENT_LOOKUP_UNAVAILABLE,
+                authorization.privilegedSessionEligibility(user));
+    }
+
+    @Test
+    void distingueAtribuicaoAusenteDeContaElegivel() {
+        AdminAuthorizationService authorization = new AdminAuthorizationService(assignments, true);
+        Usuario user = eligibleSyntheticAdmin();
+        when(assignments.findActiveByUserId(44)).thenReturn(Optional.empty());
+
+        assertEquals(AdminAuthorizationService.PrivilegedSessionEligibility.ACTIVE_ASSIGNMENT_MISSING,
+                authorization.privilegedSessionEligibility(user));
+        when(assignments.findActiveByUserId(44)).thenReturn(Optional.of(assignment(AdminProfile.PLATFORM_ADMIN)));
+        assertEquals(AdminAuthorizationService.PrivilegedSessionEligibility.ELIGIBLE,
+                authorization.privilegedSessionEligibility(user));
+    }
+
+    @Test
+    void distingueContaDesabilitadaEmailNaoVerificadoTelefoneNaoVerificadoERoleAusente() {
+        AdminAuthorizationService authorization = new AdminAuthorizationService(assignments, true);
+        Usuario user = eligibleSyntheticAdmin();
+
+        user.setAtivo(false);
+        assertEquals(AdminAuthorizationService.PrivilegedSessionEligibility.ACCOUNT_INACTIVE,
+                authorization.privilegedSessionEligibility(user));
+        user.setAtivo(true);
+        user.setEmailVerificado(false);
+        assertEquals(AdminAuthorizationService.PrivilegedSessionEligibility.EMAIL_UNVERIFIED,
+                authorization.privilegedSessionEligibility(user));
+        user.setEmailVerificado(true);
+        user.setTelefoneVerificado(false);
+        assertEquals(AdminAuthorizationService.PrivilegedSessionEligibility.PHONE_UNVERIFIED,
+                authorization.privilegedSessionEligibility(user));
+        user.setTelefoneVerificado(true);
+        user.setRoles(java.util.Set.of());
+        assertEquals(AdminAuthorizationService.PrivilegedSessionEligibility.ROLE_ADMIN_MISSING,
+                authorization.privilegedSessionEligibility(user));
+    }
+
+    private Usuario eligibleSyntheticAdmin() {
+        Usuario user = new Usuario();
+        ReflectionTestUtils.setField(user, "id", 44);
+        user.setEmail(new Email("synthetic-admin@example.invalid"));
+        user.setTelefone("11987654321");
+        user.setEmailVerificado(true);
+        user.setTelefoneVerificado(true);
+        Role adminRole = new Role();
+        adminRole.setNome("ADMIN");
+        user.setRoles(new java.util.HashSet<>(java.util.Set.of(adminRole)));
+        return user;
     }
 
     @Test

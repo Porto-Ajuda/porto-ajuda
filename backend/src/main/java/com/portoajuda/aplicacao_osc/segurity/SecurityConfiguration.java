@@ -148,7 +148,13 @@ public class SecurityConfiguration {
                                                 .requestMatchers(
                                                                 "/error",
                                                                 "/api/config/**",
-                                                                "/osc/list")
+                                                                "/osc/list",
+                                                                "/osc/verificacao/config")
+                                                .permitAll()
+
+                                                .requestMatchers(HttpMethod.GET,
+                                                                "/support-assistant/intro",
+                                                                "/support-assistant/public-search")
                                                 .permitAll()
 
                                                 // Preflight CORS

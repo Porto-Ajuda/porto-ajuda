@@ -35,6 +35,8 @@ class UsuarioServiceExclusaoTest {
     @Mock private SupabaseStorageService supabaseStorageService;
     @Mock private AdminAssignmentService adminAssignmentService;
     @Mock private AdminRbacInvariantService adminRbacInvariantService;
+    @Mock private AutenticacaoAbusoUsuarioService autenticacaoAbuso;
+    @Mock private UsuarioReativacaoService usuarioReativacaoService;
 
     @InjectMocks
     private UsuarioService usuarioService;
@@ -121,46 +123,24 @@ class UsuarioServiceExclusaoTest {
     }
 
     @Test
-    void cancelamentoValidoReativaEInvalidaSessoesParaExigirNovoLogin() {
-        Usuario usuario = mock(Usuario.class);
-        LocalDateTime solicitadaEm = LocalDateTime.now(ZoneId.of("America/Sao_Paulo"))
-                .minusDays(1);
+    void cancelamentoDentroDoPrazoPassaPelosLimitesAntesDoNucleoTransacional() {
+        when(autenticacaoAbuso.registrarTentativaLoginPorIp("198.51.100.42")).thenReturn(true);
+        when(usuarioRepository.existsByEmail(new Email("conta@example.test"))).thenReturn(true);
+        when(autenticacaoAbuso.permitirReativacaoConta("conta@example.test")).thenReturn(true);
+        when(usuarioReativacaoService.cancelar(new Email("conta@example.test"), "senha-teste"))
+                .thenReturn(true);
 
-        when(usuarioRepository.findByEmailForUpdate(any(Email.class)))
-                .thenReturn(Optional.of(usuario));
-        when(passwordEncoder.matches("senha-teste", "hash-teste")).thenReturn(true);
-        when(usuario.getSenha()).thenReturn("hash-teste");
-        when(usuario.isEnabled()).thenReturn(false);
-        when(usuario.isEmailVerificado()).thenReturn(true);
-        when(usuario.getDataSolicitacaoExclusao()).thenReturn(solicitadaEm);
-        when(usuario.getDataExclusaoAgendada()).thenReturn(solicitadaEm.plusMonths(6));
-        when(usuario.getId()).thenReturn(42);
-
-        assertTrue(usuarioService.cancelarExclusao("conta@example.test", "senha-teste"));
-
-        verify(usuario).setAtivo(true);
-        verify(usuario).setDataSolicitacaoExclusao(null);
-        verify(usuario).setDataExclusaoAgendada(null);
-        verify(sessaoUsuarioService).revogarSessoesDoUsuario(42);
+        assertTrue(usuarioService.cancelarExclusao("conta@example.test", "senha-teste", "198.51.100.42"));
+        verify(usuarioReativacaoService).cancelar(new Email("conta@example.test"), "senha-teste");
     }
 
     @Test
-    void cancelamentoNaoReativaContaComPrazoVencido() {
-        Usuario usuario = mock(Usuario.class);
-        LocalDateTime solicitadaEm = LocalDateTime.now(ZoneId.of("America/Sao_Paulo"))
-                .minusMonths(7);
+    void limiteDeReativacaoImpedeAcessoAoNucleoSemMudarCicloDeVida() {
+        when(autenticacaoAbuso.registrarTentativaLoginPorIp("198.51.100.42")).thenReturn(true);
+        when(usuarioRepository.existsByEmail(new Email("conta@example.test"))).thenReturn(true);
+        when(autenticacaoAbuso.permitirReativacaoConta("conta@example.test")).thenReturn(false);
 
-        when(usuarioRepository.findByEmailForUpdate(any(Email.class)))
-                .thenReturn(Optional.of(usuario));
-        when(passwordEncoder.matches("senha-teste", "hash-teste")).thenReturn(true);
-        when(usuario.getSenha()).thenReturn("hash-teste");
-        when(usuario.isEnabled()).thenReturn(false);
-        when(usuario.isEmailVerificado()).thenReturn(true);
-        when(usuario.getDataSolicitacaoExclusao()).thenReturn(solicitadaEm);
-        when(usuario.getDataExclusaoAgendada()).thenReturn(solicitadaEm.plusMonths(6));
-
-        assertFalse(usuarioService.cancelarExclusao("conta@example.test", "senha-teste"));
-        verify(usuario, never()).setAtivo(true);
-        verifyNoInteractions(sessaoUsuarioService);
+        assertFalse(usuarioService.cancelarExclusao("conta@example.test", "senha-teste", "198.51.100.42"));
+        verifyNoInteractions(usuarioReativacaoService);
     }
 }

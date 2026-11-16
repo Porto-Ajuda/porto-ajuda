@@ -3,6 +3,7 @@
 import com.portoajuda.aplicacao_osc.entity.OscMembroId;
 import com.portoajuda.aplicacao_osc.entity.OscMembros;
 import com.portoajuda.aplicacao_osc.utils.Email;
+import com.portoajuda.aplicacao_osc.enums.CargoOsc;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -21,6 +22,11 @@ public interface OscMembrosRepository
     Optional<OscMembros> findByOsc_IdAndUsuario_Id(
             Integer oscId,
             Integer usuarioId);
+
+    boolean existsByOsc_IdAndUsuario_Id(Integer oscId, Integer usuarioId);
+
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = "usuario")
+    Optional<OscMembros> findByOsc_IdAndCargoOsc(Integer oscId, CargoOsc cargoOsc);
 
     @org.springframework.data.jpa.repository.EntityGraph(attributePaths = "usuario")
     List<OscMembros> findAllByOsc_IdOrderByUsuario_NomeAsc(Integer oscId);

@@ -136,6 +136,7 @@ async function cancelar(id, button) {
                     headers: { Accept: "application/json", [csrf.headerName]: csrf.token }
                 });
                 if (response.ok) { await carregar(pagina); return; }
+                if (response.status === 404 || response.status === 409) await carregar(pagina);
                 throw new Error(response.status === 409
                     ? "A candidatura já recebeu uma decisão e não pode ser cancelada."
                     : response.status === 404 ? "A candidatura não foi encontrada."

@@ -8,6 +8,7 @@ import com.portoajuda.aplicacao_osc.segurity.ClientIpResolver;
 import com.portoajuda.aplicacao_osc.segurity.UserAuthenticationDetails;
 import com.portoajuda.aplicacao_osc.service.CodigoAutenticacaoService;
 import com.portoajuda.aplicacao_osc.service.CodigoAutenticacaoService.LoginPorCodigo;
+import com.portoajuda.aplicacao_osc.service.AutenticacaoAbusoUsuarioService;
 import com.portoajuda.aplicacao_osc.service.RecuperacaoSenhaService;
 import com.portoajuda.aplicacao_osc.service.UsuarioService;
 
@@ -60,6 +61,7 @@ public class UsuarioController {
         private final UsuarioRepository usuarioRepository;
         private final JwtService jwtService;
         private final CodigoAutenticacaoService codigoAutenticacaoService;
+        private final AutenticacaoAbusoUsuarioService autenticacaoAbuso;
         private final UsuarioService usuarioService;
         private final RecuperacaoSenhaService recuperacaoSenhaService;
         private final ClientIpResolver clientIpResolver;
@@ -73,7 +75,8 @@ public class UsuarioController {
 
         @PostMapping("/reenviar-confirmacao")
         public ResponseEntity<Map<String, String>> reenviarConfirmacao(
-                        @RequestBody Map<String, String> requisicao) {
+                        @RequestBody Map<String, String> requisicao,
+                        HttpServletRequest request) {
 
                 String email = requisicao.get("email");
 
@@ -85,7 +88,7 @@ public class UsuarioController {
                 }
 
                 try {
-                        usuarioService.reenviarConfirmacaoEmail(email.trim());
+                        usuarioService.reenviarConfirmacaoEmail(email.trim(), clientIpResolver.resolve(request));
                 } catch (IllegalArgumentException | IllegalStateException e) {
                         // Não revelar se o endereço está cadastrado.
                 }
@@ -208,6 +211,12 @@ public class UsuarioController {
         public ResponseEntity<?> trocarCodigo(
                         @RequestBody Map<String, String> requisicao,
                         HttpServletRequest request) {
+
+                if (!autenticacaoAbuso.registrarTentativaCodigoLoginPorIp(clientIpResolver.resolve(request))) {
+                        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                        .cacheControl(org.springframework.http.CacheControl.noStore())
+                                        .body(Map.of("mensagem", "Código inválido, expirado ou já utilizado."));
+                }
 
                 try {
                         String codigo = requisicao.get("codigo");

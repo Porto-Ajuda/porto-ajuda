@@ -88,6 +88,7 @@ class PostServiceNgoContentTest {
         actor.setAtivo(true);
 
         lenient().when(oscRepository.findById(101)).thenReturn(Optional.of(osc));
+        lenient().when(oscRepository.findForUpdateById(101)).thenReturn(Optional.of(osc));
         lenient().when(usuarioRepository.findById(7)).thenReturn(Optional.of(actor));
         lenient().when(postRepository.save(any(Post.class))).thenAnswer(invocation -> {
             Post post = invocation.getArgument(0);
@@ -148,7 +149,7 @@ class PostServiceNgoContentTest {
         Osc other = new Osc();
         ReflectionTestUtils.setField(other, "id", 202);
         other.setStatus(StatusOsc.ATIVA);
-        when(oscRepository.findById(202)).thenReturn(Optional.of(other));
+        when(oscRepository.findForUpdateById(202)).thenReturn(Optional.of(other));
         when(oscService.obterCargoUsuario(other, actor)).thenReturn(CargoOsc.EDITOR);
 
         PostConteudoDTO created = service.createInOsc(202, createPost("DOACAO", null), actor);
@@ -257,6 +258,35 @@ class PostServiceNgoContentTest {
         assertTrue(updated.podeEditar());
         assertEquals("updated", post.getTitulo());
         verify(postRepository).save(post);
+    }
+
+    @Test
+    void opportunityCapacityCannotBeReducedBelowApprovedApplications() {
+        Post post = post(TipoPost.VOLUNTARIADO, 55);
+        Vaga existing = vacancy(StatusVaga.ABERTA, LocalDate.now().plusDays(10));
+        existing.setPost(post);
+        post.setVagaVoluntariado(existing);
+        when(postRepository.findById(900)).thenReturn(Optional.of(post));
+        when(oscService.obterCargoUsuario(osc, actor)).thenReturn(CargoOsc.MEMBRO);
+        when(membrosRepository.findByOsc_IdAndUsuario_Id(101, 55))
+                .thenReturn(Optional.of(member(CargoOsc.MEMBRO)));
+        when(vagaRepository.findByPost(post)).thenReturn(Optional.of(existing));
+        when(vagaRepository.findForUpdateById(77)).thenReturn(Optional.of(existing));
+        when(candidaturasRepository.countByVaga_IdAndStatus(77,
+                com.portoajuda.aplicacao_osc.enums.StatusCandidatura.APROVADA)).thenReturn(2L);
+        RequestVagaDTO reduced = new RequestVagaDTO(1, "PRESENCIAL", "Disponibilidade", "4h",
+                "Santos", "Centro", "Rua A", "10", null,
+                LocalDate.now(), LocalDate.now().plusDays(10), "ABERTA");
+        RequestUpdatePostDTO update = new RequestUpdatePostDTO(900,
+                new RequestPostDTO("VOLUNTARIADO", true, "Atualizado", null, "Conteudo atualizado"), reduced);
+
+        ResponseStatusException error = assertThrows(ResponseStatusException.class,
+                () -> service.atualizarConteudoDaOsc(101, update, actor));
+
+        assertEquals(HttpStatus.CONFLICT, error.getStatusCode());
+        assertEquals(2, existing.getQuantidadeVagas());
+        verify(postRepository, never()).save(any(Post.class));
+        verify(vagaRepository, never()).save(any(Vaga.class));
     }
 
     @Test

@@ -220,6 +220,89 @@ test("store não consulta nem grava localStorage/sessionStorage", async () => {
     assert.doesNotMatch(source, /localStorage|sessionStorage/);
 });
 
+test("hash navigation maps supported admin modules and legacy overview anchors", async () => {
+    const { adminPageFromHash } = await loadAdminRbacModule();
+    assert.equal(adminPageFromHash("#visao-geral"), "dashboard");
+    assert.equal(adminPageFromHash("#denuncias"), "reports");
+    assert.equal(adminPageFromHash("#entidades"), "entities");
+    assert.equal(adminPageFromHash("#recursos"), "appeals");
+    assert.equal(adminPageFromHash("#verificacao-representantes"), "verification");
+    assert.equal(adminPageFromHash("#indicadores"), "dashboard");
+    assert.equal(adminPageFromHash("#atividade"), "dashboard");
+    assert.equal(adminPageFromHash("#desconhecido"), "dashboard");
+});
+
+test("module failure stays local and preserves authorized navigation state", async () => {
+    const { renderAdminModuleFailure } = await loadAdminRbacModule();
+    const elements = new Map();
+    for (const [id, value] of [
+        ["status-denuncias", ""], ["lista-denuncias", "report"],
+        ["status-entidades-admin", ""], ["lista-entidades-admin", "entity"],
+        ["status-recursos-admin", ""], ["lista-recursos-admin", "appeal"],
+        ["status-verificacao-representantes", ""], ["lista-verificacao-representantes", "verification"]
+    ]) {
+        elements.set(id, {
+            textContent: value,
+            hidden: true,
+            attributes: {},
+            replaceChildren() { this.textContent = ""; this.replaced = true; },
+            setAttribute(name, next) { this.attributes[name] = next; }
+        });
+    }
+    const navigation = { hidden: false };
+    const profile = { hidden: false };
+    const document = { getElementById: id => elements.get(id) ?? null };
+
+    assert.equal(renderAdminModuleFailure(document, "verification", "Verification disabled."), true);
+    assert.equal(elements.get("status-verificacao-representantes").textContent, "Verification disabled.");
+    assert.equal(elements.get("lista-verificacao-representantes").replaced, true);
+    assert.equal(elements.get("lista-verificacao-representantes").attributes["aria-busy"], "false");
+    assert.equal(navigation.hidden, false);
+    assert.equal(profile.hidden, false);
+    assert.equal(elements.get("status-denuncias").textContent, "");
+    assert.equal(elements.get("status-entidades-admin").textContent, "");
+    assert.equal(elements.get("status-recursos-admin").textContent, "");
+});
+
+test("native admin dialogs lock page scroll and restore prior styles after the last close", async () => {
+    const { showAdminDialog } = await loadAdminRbacModule();
+    const body = { style: { overflow: "auto", paddingRight: "4px" } };
+    const root = { style: { overflow: "clip" }, clientWidth: 1184 };
+    const document = { body, documentElement: root };
+    const restoredScroll = [];
+    const window = {
+        innerWidth: 1200,
+        scrollX: 7,
+        scrollY: 240,
+        getComputedStyle: () => ({ paddingRight: "4px" }),
+        scrollTo: (x, y) => restoredScroll.push([x, y])
+    };
+    const makeDialog = () => {
+        const listeners = new Map();
+        return {
+            open: false,
+            addEventListener(type, callback) { listeners.set(type, callback); },
+            showModal() { this.open = true; },
+            close() { this.open = false; listeners.get("close")?.(); }
+        };
+    };
+    const first = makeDialog();
+    const second = makeDialog();
+
+    showAdminDialog(first, document, window);
+    showAdminDialog(second, document, window);
+    assert.equal(body.style.overflow, "hidden");
+    assert.equal(root.style.overflow, "hidden");
+    assert.equal(body.style.paddingRight, "20px");
+    first.close();
+    assert.equal(body.style.overflow, "hidden", "another open dialog retains the background lock");
+    second.close();
+    assert.equal(body.style.overflow, "auto");
+    assert.equal(root.style.overflow, "clip");
+    assert.equal(body.style.paddingRight, "4px");
+    assert.deepEqual(restoredScroll, [[7, 240]]);
+});
+
 function assignmentDto(overrides = {}) {
     return {
         id: "79ea5000-32fb-4d6f-9d5d-c9113d41e4e8",
@@ -336,7 +419,7 @@ test("interface administrativa usa dialog acessível e confirma antes da mutaç�
     const source = await readFile(resolve(__dirname, "../../public/components/admin-assignments.js"), "utf8");
     assert.match(html, /<dialog[^>]+aria-labelledby="titulo-dialogo-atribuicao"[^>]+aria-describedby="descricao-dialogo-atribuicao"/);
     assert.match(html, /id="motivo-atribuicao-admin"[^>]+required/);
-    assert.match(source, /elements\.dialog\.showModal\(\)/);
+    assert.match(source, /showAdminDialog\(elements\.dialog\)/);
     assert.match(source, /elements\.dialog\.addEventListener\("cancel"/);
     assert.match(source, /if \(isMutating\) event\.preventDefault\(\)/);
     assert.match(source, /async function submitMutation/);
@@ -400,4 +483,22 @@ test("não envia mutação sem justificativa ou com contrato inválido", async (
         error => error.kind === "invalid-request"
     );
     assert.equal(requestCount, 0);
+});
+
+test("a rota e a navegação de Atendimentos dependem da permissão SUPPORT_READ", async () => {
+    const { adminPageFromHash, createAdminAuthorizationStore, renderPermissionNavigation } = await loadAdminRbacModule();
+    assert.equal(adminPageFromHash("#atendimentos"), "support");
+    const authorization = createAdminAuthorizationStore();
+    authorization.set({ profile: "MODERATOR", permissions: ["SUPPORT_READ"] });
+    const supportLink = { id: "nav-atendimentos", hidden: false };
+    const reportsLink = { id: "nav-denuncias", hidden: false };
+    const navigation = { hidden: true };
+    const visible = renderPermissionNavigation(navigation, [
+        { id: "nav-atendimentos", permission: "SUPPORT_READ", element: supportLink },
+        { id: "nav-denuncias", permission: "REPORT_READ", element: reportsLink }
+    ], authorization);
+    assert.deepEqual(visible.map(item => item.id), ["nav-atendimentos"]);
+    assert.equal(navigation.hidden, false);
+    assert.equal(supportLink.hidden, false);
+    assert.equal(reportsLink.hidden, true);
 });

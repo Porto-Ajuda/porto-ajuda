@@ -10,6 +10,7 @@ import com.portoajuda.aplicacao_osc.entity.Role;
 import com.portoajuda.aplicacao_osc.entity.Usuario;
 import com.portoajuda.aplicacao_osc.enums.CausaSocial;
 import com.portoajuda.aplicacao_osc.enums.CargoOsc;
+import com.portoajuda.aplicacao_osc.enums.StatusOsc;
 import com.portoajuda.aplicacao_osc.utils.Cnpj;
 import com.portoajuda.aplicacao_osc.repository.OscRepository;
 import com.portoajuda.aplicacao_osc.repository.OscMembrosRepository;
@@ -40,6 +41,7 @@ class OscPersistenciaServiceTest {
     @Mock private OscMembrosRepository membrosRepository;
     @Mock private UsuarioRepository usuarioRepository;
     @Mock private RoleRepository roleRepository;
+    @Mock private VerificacaoRepresentanteService verificationService;
 
     private OscPersistenciaService service;
     private Usuario usuario;
@@ -120,6 +122,26 @@ class OscPersistenciaServiceTest {
         assertEquals(CausaSocial.EDUCACAO, resposta.causaPrincipal());
         assertEquals(Set.of(CausaSocial.SAUDE), resposta.causasSecundarias());
         assertEquals(Set.of(3, 4, 17), resposta.ods());
+    }
+
+    @Test
+    void criaSolicitacaoPendenteNaMesmaPersistenciaSemAlterarStatusOperacional() {
+        RequestOscDTO dados = dados(Set.of(3, 4, 17));
+        when(oscRepository.existsByCnpj(any())).thenReturn(false);
+        when(usuarioRepository.findById(7)).thenReturn(Optional.of(usuario));
+        when(roleRepository.findByNome("OSC")).thenReturn(Optional.of(role));
+        when(verificationService.isEnabled()).thenReturn(true);
+        ReflectionTestUtils.setField(service, "verificationService", verificationService);
+
+        OscPersistenciaService serviceForVerification = service;
+        ResponseOscDTO response = serviceForVerification.salvar(dados, 7,
+                new Coordenadas(-23.5, -46.6), null, "LEGAL_REPRESENTATIVE");
+
+        assertEquals(81, response.id());
+        ArgumentCaptor<Osc> organization = ArgumentCaptor.forClass(Osc.class);
+        verify(oscRepository).save(organization.capture());
+        assertEquals(StatusOsc.INATIVA, organization.getValue().getStatus());
+        verify(verificationService).createInitialApplication(81, 7, "LEGAL_REPRESENTATIVE");
     }
 
     @Test

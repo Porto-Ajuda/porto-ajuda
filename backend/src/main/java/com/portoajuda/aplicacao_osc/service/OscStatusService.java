@@ -29,6 +29,8 @@ public class OscStatusService {
     private final OscService oscService;
     private final AdminAuthorizationService adminAuthorization;
     private final AdminOperationAuditService operationAudit;
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private ModerationPointsService moderationPoints;
 
     public OscStatusService(
             OscRepository oscRepository,
@@ -48,6 +50,7 @@ public class OscStatusService {
             Integer oscId,
             RequestAtualizarStatusOscDTO request,
             Usuario ator) {
+        if(moderationPoints!=null) moderationPoints.requireBusinessMutationAllowed(ator==null?null:ator.getId(),oscId);
         Osc osc = buscarParaAtualizacao(oscId);
         CargoOsc cargo = oscService.obterCargoUsuario(osc, ator);
         if (cargo != CargoOsc.CRIADOR && cargo != CargoOsc.ADMINISTRADOR) {

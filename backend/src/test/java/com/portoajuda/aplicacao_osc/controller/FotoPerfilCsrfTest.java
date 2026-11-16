@@ -36,9 +36,11 @@ import com.portoajuda.aplicacao_osc.service.CodigoAutenticacaoService;
 import com.portoajuda.aplicacao_osc.service.SessaoUsuarioService;
 import com.portoajuda.aplicacao_osc.service.UsuarioService;
 import com.portoajuda.aplicacao_osc.service.AdminAuthenticationService;
+import com.portoajuda.aplicacao_osc.service.AutenticacaoAbusoUsuarioService;
 import com.portoajuda.aplicacao_osc.service.AdminPrivilegedSessionService;
 import com.portoajuda.aplicacao_osc.service.PhoneVerificationService;
 import com.portoajuda.aplicacao_osc.service.AdminDashboardService;
+import com.portoajuda.aplicacao_osc.service.RecuperacaoSenhaService;
 import com.portoajuda.aplicacao_osc.segurity.ClientIpResolver;
 
 import jakarta.servlet.http.Cookie;
@@ -93,6 +95,12 @@ class FotoPerfilCsrfTest {
 
         @MockitoBean
         private UsuarioService usuarioService;
+
+        @MockitoBean
+        private RecuperacaoSenhaService recuperacaoSenhaService;
+
+        @MockitoBean
+        private AutenticacaoAbusoUsuarioService autenticacaoAbuso;
 
         @MockitoBean
         private SessaoUsuarioService sessaoUsuarioService;
@@ -168,7 +176,7 @@ class FotoPerfilCsrfTest {
         void confirmacaoValidaChegaAoControllerSemSessaoEAtualizaUsuario() throws Exception {
                 Usuario usuario = mock(Usuario.class);
                 when(jwtService.extractSubject("jwt-confirmacao-valido")).thenReturn("123");
-                when(usuarioRepository.findById(123)).thenReturn(Optional.of(usuario));
+                when(usuarioRepository.findByIdForUpdate(123)).thenReturn(Optional.of(usuario));
                 when(jwtService.validateEmailVerificationToken(
                                 "jwt-confirmacao-valido", usuario)).thenReturn(true);
                 when(codigoAutenticacaoService.criarCodigo(usuario)).thenReturn("codigo-de-login");
@@ -203,7 +211,7 @@ class FotoPerfilCsrfTest {
         void tokenDeConfirmacaoExpiradoNaoVerificaEmail() throws Exception {
                 Usuario usuario = mock(Usuario.class);
                 when(jwtService.extractSubject("jwt-expirado")).thenReturn("123");
-                when(usuarioRepository.findById(123)).thenReturn(Optional.of(usuario));
+                when(usuarioRepository.findByIdForUpdate(123)).thenReturn(Optional.of(usuario));
                 when(jwtService.validateEmailVerificationToken("jwt-expirado", usuario))
                                 .thenReturn(false);
 

@@ -800,6 +800,51 @@ body {
     color: var(--border);
 }
 
+.moderation-profile__history { display:grid; gap:12px; margin:12px 0 18px; padding-left:20px; }
+.moderation-profile__history li { padding:12px; border:1px solid var(--border-soft,rgba(255,255,255,.14)); border-radius:10px; }
+.moderation-profile__history p { margin:4px 0; overflow-wrap:anywhere; }
+
+.moderation-profile__score-summary { padding:14px 16px; color:var(--text); background:rgba(124,92,207,.16); border:1px solid rgba(169,149,240,.3); border-radius:12px; line-height:1.6; }
+.moderation-profile__restriction-notices { display:grid; gap:12px; margin:14px 0; }
+.moderation-profile__restriction { display:grid; gap:8px; padding:14px 16px; color:var(--text); background:rgba(124,92,207,.2); border:1px solid rgba(169,149,240,.45); border-left:4px solid var(--gold); border-radius:10px; }
+.moderation-profile__restriction--permanent { border-left-color:#e27b86; }
+.moderation-profile__restriction h4,.moderation-profile__restriction p { margin:0; line-height:1.55; }
+.moderation-profile__restriction-deadline { color:var(--gold-light); font-weight:600; }
+.moderation-profile__restriction ul { display:grid; gap:6px; margin:0; padding-left:20px; overflow-wrap:anywhere; }
+.moderation-profile__history-link { justify-self:start; color:var(--gold-light); font-weight:600; text-decoration:underline; text-underline-offset:3px; }
+.moderation-profile__history-link:focus-visible,.moderation-profile__ngo-toggle:focus-visible { outline:2px solid var(--gold); outline-offset:3px; }
+.moderation-profile__organizations { margin-top:18px; padding:16px; color:var(--text); background:rgba(46,28,80,.82); border:1px solid rgba(169,149,240,.35); border-radius:12px; }
+.moderation-profile__organizations > summary { color:var(--gold-light); font-weight:600; cursor:pointer; }
+.moderation-profile__organizations > [data-managed-ngo-status] { color:var(--text-soft); line-height:1.55; }
+.moderation-profile__ngo { margin:10px 0; border:1px solid rgba(169,149,240,.28); border-radius:10px; overflow:hidden; }
+.moderation-profile__ngo-toggle { display:flex; width:100%; align-items:center; justify-content:space-between; gap:14px; padding:13px 15px; color:var(--text); background:rgba(124,92,207,.17); border:0; text-align:left; font:inherit; cursor:pointer; }
+.moderation-profile__ngo-name { min-width:0; overflow-wrap:anywhere; }
+.moderation-profile__ngo-score { flex:0 0 auto; color:var(--gold-light); font-size:.88rem; }
+.moderation-profile__ngo-history { padding:12px 14px; background:rgba(18,13,36,.32); }
+.moderation-profile__ngo-history[aria-busy="true"] { opacity:.8; }
+.moderation-profile__appeal-dialog { width:min(560px,calc(100vw - 28px)); max-width:none; max-height:min(88vh,760px); padding:0; overflow:auto; color:var(--text); background:var(--bg-section); border:1px solid rgba(245,181,46,.48); border-radius:16px; }
+.moderation-profile__appeal-dialog::backdrop { background:rgba(9,7,18,.72); backdrop-filter:blur(3px); }
+.moderation-profile__appeal-dialog .dialogo-verificacao-telefone__conteudo { display:grid; gap:12px; padding:clamp(20px,4vw,30px); }
+.moderation-profile__appeal-dialog h2,.moderation-profile__appeal-dialog p { margin:0; }
+.moderation-profile__appeal-dialog p { line-height:1.55; }
+.moderation-profile__appeal-field { display:grid; gap:7px; }
+.moderation-profile__appeal-field label { color:var(--gold-light); font-weight:600; }
+.moderation-profile__appeal-field textarea { width:100%; min-height:140px; box-sizing:border-box; padding:12px; color:var(--text); background:rgba(14,10,34,.64); border:1px solid rgba(169,149,240,.5); border-radius:10px; font:inherit; resize:vertical; }
+.moderation-profile__appeal-field textarea:focus-visible { outline:2px solid var(--gold); outline-offset:2px; border-color:var(--gold); }
+.moderation-profile__appeal-error { min-height:1.3em; color:#ffb2a7; }
+.moderation-profile__appeal-actions { display:flex; justify-content:flex-end; flex-wrap:wrap; gap:10px; margin-top:6px; }
+.moderation-profile__appeal-actions button { min-width:130px; }
+.moderation-profile__appeal-submit { color:#20172c; background:var(--gold); }
+.moderation-profile__appeal-submit:hover { background:var(--gold-light); }
+.moderation-profile__appeal-submit:disabled,.moderation-profile__retry-restrictions:disabled { opacity:.6; cursor:wait; }
+
+@media(max-width:560px) {
+  .moderation-profile__organizations { padding:12px; }
+  .moderation-profile__ngo-toggle { align-items:flex-start; flex-direction:column; gap:4px; }
+  .moderation-profile__appeal-actions { flex-direction:column-reverse; }
+  .moderation-profile__appeal-actions button { width:100%; }
+}
+
 
 /* ==========================================================
    FILTROS

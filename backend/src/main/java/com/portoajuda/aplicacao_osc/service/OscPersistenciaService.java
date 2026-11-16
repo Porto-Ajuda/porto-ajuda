@@ -18,6 +18,7 @@
     import org.springframework.stereotype.Service;
     import org.springframework.transaction.annotation.Transactional;
     import org.springframework.web.server.ResponseStatusException;
+import org.springframework.beans.factory.annotation.Autowired;
     import com.portoajuda.aplicacao_osc.enums.CargoOsc;
     import com.portoajuda.aplicacao_osc.enums.StatusOsc;
 
@@ -42,6 +43,8 @@
         private final OscMembrosRepository membrosRepository;
         private final UsuarioRepository usuarioRepository;
         private final RoleRepository roleRepository;
+        @Autowired(required = false)
+        private VerificacaoRepresentanteService verificationService;
 
         @Transactional
         public ResponseOscDTO salvar(
@@ -49,6 +52,16 @@
                 Integer usuarioId,
                 Coordenadas coordenadas,
                 String logoUrl) {
+            return salvar(dados, usuarioId, coordenadas, logoUrl, null);
+        }
+
+        @Transactional
+        public ResponseOscDTO salvar(
+                RequestOscDTO dados,
+                Integer usuarioId,
+                Coordenadas coordenadas,
+                String logoUrl,
+                String representacao) {
 
             CausasValidadas causas = validarCausas(dados);
             validarValoresDeDominio(dados, coordenadas);
@@ -126,6 +139,10 @@
             membroCriador.setCargoOsc(CargoOsc.CRIADOR);
             membroCriador.setDataCriacao(LocalDateTime.now());
             membrosRepository.save(membroCriador);
+
+            if (verificationService != null && verificationService.isEnabled()) {
+                verificationService.createInitialApplication(salva.getId(), usuarioId, representacao);
+            }
 
             return new ResponseOscDTO(
                     salva.getId(),

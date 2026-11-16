@@ -42,6 +42,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -67,6 +68,12 @@ public class OscService {
     private final SupabaseStorageService supabaseStorageService;
     private final LimpezaService limpezaService;
     private final AdminAuthorizationService adminAuthorization;
+    @Autowired(required = false)
+    private ContentReportService contentReports;
+    @Autowired(required = false)
+    private ModerationPointsService moderationPoints;
+    @Autowired(required = false)
+    private VerificacaoRepresentanteService verificationService;
 
     // =====================================================
     // PERMISSÕES
@@ -152,16 +159,29 @@ public class OscService {
     // CADASTRO
     // =====================================================
 
+    @Transactional
     public ResponseOscDTO create(
             RequestOscDTO oscDTO,
             Usuario usuarioAuth,
             MultipartFile logo) {
+        return create(oscDTO, usuarioAuth, logo, null);
+    }
+
+    @Transactional
+    public ResponseOscDTO create(
+            RequestOscDTO oscDTO,
+            Usuario usuarioAuth,
+            MultipartFile logo,
+            String representacao) {
 
         if (usuarioAuth == null || usuarioAuth.getId() == null) {
             throw new ResponseStatusException(
                     HttpStatus.UNAUTHORIZED,
                     "Entre na sua conta antes de cadastrar uma OSC.");
         }
+        if(moderationPoints!=null) moderationPoints.requireBusinessMutationAllowed(usuarioAuth.getId(),null);
+        String representacaoValidada = verificationService == null
+                ? null : verificationService.validateRegistrationRepresentation(representacao);
 
         if (oscRepository.existsByCnpj(new Cnpj(oscDTO.cnpj()))) {
             throw new ResponseStatusException(
@@ -206,7 +226,8 @@ public class OscService {
                     oscDTO,
                     usuarioAuth.getId(),
                     coordenadas,
-                    arquivoLogo == null ? null : arquivoLogo.url());
+                    arquivoLogo == null ? null : arquivoLogo.url(),
+                    representacaoValidada);
 
         } catch (DataIntegrityViolationException erro) {
             removerLogoSeNecessario(arquivoLogo);
@@ -298,11 +319,14 @@ public class OscService {
     @Transactional
     public OscEdicaoDTO update(UpdateOscDTO updateOscDTO, Usuario usuario) {
 
+        if(moderationPoints!=null&&usuario!=null) moderationPoints.requireBusinessMutationAllowed(usuario.getId(),null);
+
         Osc osc = oscRepository.findForUpdateByCnpj(
                 new Cnpj(updateOscDTO.cnpj()))
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "CNPJ não encontrado."));
+        if(moderationPoints!=null) moderationPoints.requireBusinessMutationAllowed(null,osc.getId());
 
         exigirCargo(
                 osc,
@@ -311,12 +335,14 @@ public class OscService {
                 CargoOsc.ADMINISTRADOR,
                 CargoOsc.EDITOR);
 
+        validarCamposIdentidadeImutaveis(updateOscDTO, osc);
+
         osc.setDescricao(updateOscDTO.descricao());
         osc.setEmail(new Email(updateOscDTO.email()));
         osc.setTelefone(updateOscDTO.telefone());
         osc.setSite(updateOscDTO.site());
 
-        if (updateOscDTO.nome() != null || updateOscDTO.descricaoCurta() != null) {
+        if (updateOscDTO.descricaoCurta() != null) {
             atualizarCamposEditaveis(updateOscDTO, osc);
         }
 
@@ -361,6 +387,21 @@ public class OscService {
         return OscEdicaoDTO.de(osc);
     }
 
+    private void validarCamposIdentidadeImutaveis(UpdateOscDTO dados, Osc osc) {
+        if (dados.nome() != null && !dados.nome().trim().equals(osc.getNome())) {
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+                    "O nome da organização não pode ser alterado por este formulário.");
+        }
+        if (dados.anoFundacao() != null && !java.util.Objects.equals(dados.anoFundacao(), osc.getAnoFundacao())) {
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+                    "O ano de fundação não pode ser alterado por este formulário.");
+        }
+        if (dados.causaPrincipal() != null && dados.causaPrincipal() != osc.getCausaPrincipal()) {
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+                    "A causa principal não pode ser alterada por este formulário.");
+        }
+    }
+
     private void atualizarCamposEditaveis(UpdateOscDTO dados, Osc osc) {
         if (dados.anoFundacao() != null && dados.anoFundacao() > java.time.LocalDate.now().getYear()) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "O ano de fundação não pode estar no futuro.");
@@ -394,9 +435,7 @@ public class OscService {
             osc.setLongitude(coordenadas.longitude());
         }
 
-        if (dados.nome() != null) osc.setNome(dados.nome().trim());
         if (dados.descricaoCurta() != null) osc.setDescricaoCurta(dados.descricaoCurta().trim());
-        if (dados.anoFundacao() != null) osc.setAnoFundacao(dados.anoFundacao());
         osc.setWhatsapp(limparOpcional(dados.whatsapp()));
         osc.setLinkedin(limparOpcional(dados.linkedin()));
         osc.setInstagram(limparOpcional(dados.instagram()));
@@ -453,6 +492,8 @@ public class OscService {
     @Transactional
     public void delete(Integer oscId, Usuario usuario) {
 
+        if(moderationPoints!=null) moderationPoints.requireBusinessMutationAllowed(usuario==null?null:usuario.getId(),oscId);
+
         Osc osc = oscRepository.findForUpdateById(oscId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
@@ -478,6 +519,8 @@ public class OscService {
             Integer oscId,
             Usuario usuario,
             RequestNewMembroDTO newMembroDTO) {
+
+        if(moderationPoints!=null) moderationPoints.requireBusinessMutationAllowed(usuario==null?null:usuario.getId(),oscId);
 
         Osc osc = oscRepository.findForUpdateById(oscId)
                 .orElseThrow(() -> new ResponseStatusException(
@@ -543,6 +586,8 @@ public class OscService {
             Usuario usuario,
             Email email) {
 
+        if(moderationPoints!=null) moderationPoints.requireBusinessMutationAllowed(usuario==null?null:usuario.getId(),oscId);
+
         Osc osc = oscRepository.findForUpdateById(oscId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
@@ -585,6 +630,8 @@ public class OscService {
             Integer usuarioId,
             Usuario solicitante,
             CargoOsc novoCargo) {
+
+        if(moderationPoints!=null) moderationPoints.requireBusinessMutationAllowed(solicitante==null?null:solicitante.getId(),oscId);
 
         if (novoCargo == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cargo obrigatório.");
@@ -675,7 +722,9 @@ public class OscService {
                         HttpStatus.NOT_FOUND,
                         "Organização não encontrada."));
 
-        if (osc.isArquivada() || osc.getStatus() != StatusOsc.ATIVA) {
+        if (osc.isArquivada() || osc.getStatus() != StatusOsc.ATIVA
+                || protecaoAtiva("OSC", osc.getId())
+                || (verificationService != null && !verificationService.isPubliclyEligible(osc.getId()))) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Organização não encontrada.");
         }
 
@@ -721,9 +770,29 @@ public class OscService {
     public Page<OscListagemDTO> viewAll(Pageable pageable) {
         int page = pageable == null ? 0 : Math.max(0, pageable.getPageNumber());
         int size = pageable == null ? 24 : Math.min(Math.max(1, pageable.getPageSize()), 24);
-        Pageable boundedPage = PageRequest.of(page, size, Sort.by(Sort.Order.desc("dataCriacao"), Sort.Order.desc("id")));
+        boolean reportingEnabled = contentReports != null && contentReports.isEnabled();
+        boolean verificationEnabled = verificationService != null && verificationService.isEnabled();
+        if (reportingEnabled && verificationEnabled) {
+            return oscRepository.findAllPublicasVerificadasSemBloqueio(StatusOsc.ATIVA.name(), PageRequest.of(page, size))
+                    .map(OscListagemDTO::de);
+        }
+        if (reportingEnabled) {
+            // The native query owns its stable SQL ordering; Spring must not append entity-property names as SQL columns.
+            return oscRepository.findAllPublicasSemBloqueio(StatusOsc.ATIVA.name(), PageRequest.of(page, size))
+                    .map(OscListagemDTO::de);
+        }
+        if (verificationEnabled) {
+            return oscRepository.findAllPublicasVerificadas(StatusOsc.ATIVA.name(), PageRequest.of(page, size))
+                    .map(OscListagemDTO::de);
+        }
+        Pageable boundedPage = PageRequest.of(page, size,
+                Sort.by(Sort.Order.desc("dataCriacao"), Sort.Order.desc("id")));
         return oscRepository.findAllByStatusAndDataArquivamentoIsNull(StatusOsc.ATIVA, boundedPage)
                 .map(OscListagemDTO::de);
+    }
+
+    private boolean protecaoAtiva(String tipo, Integer id) {
+        return contentReports != null && contentReports.isBlocked(tipo, id);
     }
 
     @Transactional(readOnly = true)

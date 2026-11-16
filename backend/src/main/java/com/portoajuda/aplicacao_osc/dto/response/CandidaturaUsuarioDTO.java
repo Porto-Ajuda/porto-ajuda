@@ -25,10 +25,14 @@ public record CandidaturaUsuarioDTO(
         boolean oportunidadePublica) {
 
     public static CandidaturaUsuarioDTO from(CandidaturasVoluntariado candidatura) {
+        return from(candidatura, true);
+    }
+
+    public static CandidaturaUsuarioDTO from(CandidaturasVoluntariado candidatura, boolean verificationEligible) {
         var vaga = candidatura.getVaga();
         var post = vaga.getPost();
         var osc = post.getOsc();
-        boolean publica = post.isAtivo() && osc.getStatus() == com.portoajuda.aplicacao_osc.enums.StatusOsc.ATIVA
+        boolean publica = verificationEligible && post.isAtivo() && osc.getStatus() == com.portoajuda.aplicacao_osc.enums.StatusOsc.ATIVA
                 && !osc.isArquivada() && vaga.getStatus() == StatusVaga.ABERTA
                 && vaga.getQuantidadeVagas() != null && vaga.getQuantidadeVagas() > 0
                 && vaga.getDataFim() != null && !vaga.getDataFim().isBefore(LocalDate.now());

@@ -103,7 +103,12 @@ import { getAPI_URL } from "./modoBack.js";
     // }
 
     function validarCPF(valor) {
-        valor = somenteNumeros(valor);
+        valor = valor.trim();
+        if (/^[0-9]{3}\.[0-9]{3}\.[0-9]{3}-[0-9]{2}$/.test(valor)) {
+            valor = valor.replace(/[.-]/g, "");
+        } else if (!/^[0-9]{11}$/.test(valor)) {
+            return false;
+        }
 
         if (valor.length !== 11) return false;
         if (/^(\d)\1{10}$/.test(valor)) return false;
@@ -166,7 +171,20 @@ import { getAPI_URL } from "./modoBack.js";
 
     // ---------- MÁSCARAS ----------
     cpf.addEventListener("input", () => {
-        let v = somenteNumeros(cpf.value).slice(0, 11);
+        const entrada = cpf.value;
+        const prefixoPontuadoValido = /^(?:[0-9]{0,3}|[0-9]{3}\.[0-9]{0,3}|[0-9]{3}\.[0-9]{3}\.[0-9]{0,3}|[0-9]{3}\.[0-9]{3}\.[0-9]{3}-[0-9]{0,2})$/;
+        if (!/^[0-9.-]*$/.test(entrada)
+                || (/[.-]/.test(entrada) && !prefixoPontuadoValido.test(entrada))) {
+            cpf.setCustomValidity("Use apenas números ou a pontuação padrão do CPF.");
+            return;
+        }
+
+        let v = entrada.replace(/[.-]/g, "");
+        if (v.length > 11) {
+            cpf.setCustomValidity("O CPF deve ter exatamente 11 dígitos.");
+            return;
+        }
+        cpf.setCustomValidity("");
 
         v = v
             .replace(/(\d{3})(\d)/, "$1.$2")
@@ -174,7 +192,6 @@ import { getAPI_URL } from "./modoBack.js";
             .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
 
         cpf.value = v;
-        cpf.setCustomValidity("");
     });
 
     telefone.addEventListener("input", () => {

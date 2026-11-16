@@ -8,6 +8,11 @@ async function loadContentModule() {
     return import(`data:text/javascript;base64,${Buffer.from(source).toString("base64")}`);
 }
 
+async function loadProfileEditModule() {
+    const source = await readFile(resolve(__dirname, "../../public/components/ong-profile-edit.js"), "utf8");
+    return import(`data:text/javascript;base64,${Buffer.from(source).toString("base64")}`);
+}
+
 function donationPayload() {
     return { post: {
         tipo: "DOACAO", ativo: true, titulo: "Campanha de alimentos",
@@ -267,4 +272,73 @@ test("NGO profile orders content before members and moves status changes into an
     assert.ok(styles.includes("@media (max-width:350px)"));
     assert.match(source, /function criarPreviewSemImagem/);
     assert.match(source, /function preencherVisualizadorOportunidade/);
+});
+
+test("submits volunteer acceptance as a boolean, persists both choices, and preserves hidden details", async () => {
+    const { montarPayloadAtualizacaoOsc, enviarAtualizacaoOsc } = await loadProfileEditModule();
+    const values = new Map([
+        ["edicao-descricao-curta", " Resumo "], ["edicao-descricao", "Descrição"],
+        ["edicao-email", "ong@example.invalid"], ["edicao-telefone", ""],
+        ["edicao-whatsapp", ""], ["edicao-site", ""], ["edicao-instagram", ""],
+        ["edicao-linkedin", ""], ["edicao-youtube", ""], ["edicao-area-geografica", "cidade"],
+        ["edicao-pais", " Brasil "], ["edicao-estado", "SP"], ["edicao-cidade", " Santos "],
+        ["edicao-cep", "11000000"], ["edicao-bairro", " Centro "], ["edicao-rua", " Rua A "],
+        ["edicao-numero", ""], ["edicao-complemento", ""], ["edicao-horario-abertura", ""],
+        ["edicao-horario-fechamento", ""], ["edicao-presencial", "true"],
+        ["edicao-online", "false"], ["edicao-agendamento", ""],
+        ["edicao-aceita-voluntarios", "true"], ["edicao-frequencia", " Semanal "],
+        ["edicao-idade-minima", "18"], ["edicao-processo-seletivo", "true"],
+        ["edicao-certificado", "false"], ["edicao-atividades", " Apoio comunitário " ]
+    ]);
+    const read = id => values.get(id) ?? "";
+    const optional = id => read(id).trim() || null;
+    const numericOptional = id => read(id) === "" ? null : Number(read(id));
+    let persisted;
+    let requests = 0;
+    const authenticatedRequest = async (path, options) => {
+        requests += 1;
+        assert.equal(path, "/osc/put");
+        assert.equal(options.method, "PUT");
+        assert.equal(options.headers["Content-Type"], "application/json");
+        persisted = JSON.parse(options.body);
+        return { ok: true, status: 204 };
+    };
+
+    for (const [formValue, expected] of [["true", true], ["false", false]]) {
+        values.set("edicao-aceita-voluntarios", formValue);
+        const payload = montarPayloadAtualizacaoOsc({
+            cnpj: "12345678000195", obterValor: read, opcional: optional,
+            numeroOpcional: numericOptional, diasHorariosFuncionamento: "segunda, quarta",
+            causasSecundarias: ["EDUCACAO"], ods: [4]
+        });
+        const response = await enviarAtualizacaoOsc(authenticatedRequest, payload);
+
+        assert.equal(response.status, 204);
+        assert.equal(typeof persisted.aceitaVoluntarios, "boolean");
+        assert.equal(persisted.aceitaVoluntarios, expected);
+        assert.equal(persisted.frequenciaVoluntariado, "Semanal");
+        assert.equal(persisted.idadeMinimaVoluntario, 18);
+        assert.equal(persisted.atividadesVoluntariado, "Apoio comunitário");
+        assert.equal(persisted.descricao, "Descrição");
+        const reloaded = JSON.parse(JSON.stringify(persisted));
+        assert.equal(reloaded.aceitaVoluntarios, expected);
+        assert.equal(reloaded.atividadesVoluntariado, "Apoio comunitário");
+    }
+    assert.equal(requests, 2);
+});
+
+test("hides and disables volunteer details without clearing entered values", async () => {
+    const { configurarCamposVoluntariado } = await loadProfileEditModule();
+    const field = { value: "Semanal", disabled: false };
+    const group = { hidden: false, querySelectorAll: () => [field] };
+
+    configurarCamposVoluntariado(group, false);
+    assert.equal(group.hidden, true);
+    assert.equal(field.disabled, true);
+    assert.equal(field.value, "Semanal");
+
+    configurarCamposVoluntariado(group, true);
+    assert.equal(group.hidden, false);
+    assert.equal(field.disabled, false);
+    assert.equal(field.value, "Semanal");
 });

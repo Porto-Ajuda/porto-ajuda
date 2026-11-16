@@ -7,6 +7,7 @@ import com.portoajuda.aplicacao_osc.dto.response.ResponseUsuarioDTO;
 import com.portoajuda.aplicacao_osc.entity.SessaoUsuario;
 import com.portoajuda.aplicacao_osc.entity.Usuario;
 import com.portoajuda.aplicacao_osc.segurity.JwtService;
+import com.portoajuda.aplicacao_osc.segurity.ClientIpResolver;
 import com.portoajuda.aplicacao_osc.service.SessaoUsuarioService;
 import com.portoajuda.aplicacao_osc.service.SessaoUsuarioService.SessaoCriada;
 import com.portoajuda.aplicacao_osc.service.UsuarioService;
@@ -31,6 +32,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Map;
 import java.util.Optional;
 
 @RequiredArgsConstructor
@@ -44,6 +46,7 @@ public class AuthController {
         private final UsuarioService usuarioService;
         private final SessaoUsuarioService sessaoUsuarioService;
         private final JwtService jwtService;
+        private final ClientIpResolver clientIpResolver;
 
         @Value("${app.cookies.secure:true}")
         private boolean secureCookies;
@@ -62,9 +65,10 @@ public class AuthController {
 
         @PostMapping(value = "/register", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
         public ResponseEntity<Void> register(
-                        @Valid @RequestBody RequestUsuarioDTO usuarioDTO) {
+                        @Valid @RequestBody RequestUsuarioDTO usuarioDTO,
+                        HttpServletRequest request) {
 
-                usuarioService.signup(usuarioDTO);
+                usuarioService.signup(usuarioDTO, clientIpResolver.resolve(request));
 
                 return ResponseEntity.status(HttpStatus.CREATED).build();
         }
@@ -74,9 +78,10 @@ public class AuthController {
          */
         @PostMapping(value = "/login", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
         public ResponseEntity<ResponseUsuarioDTO> login(
-                        @Valid @RequestBody RequestLoginDTO loginDTO) {
+                        @Valid @RequestBody RequestLoginDTO loginDTO,
+                        HttpServletRequest request) {
 
-                LoginResultado resultado = usuarioService.login(loginDTO);
+                LoginResultado resultado = usuarioService.login(loginDTO, clientIpResolver.resolve(request));
 
                 ResponseCookie accessCookie = criarCookie(
                                 ACCESS_COOKIE,
@@ -200,11 +205,13 @@ public class AuthController {
 
         @PostMapping(value = "/cancelar-exclusao", consumes = MediaType.APPLICATION_JSON_VALUE)
         public ResponseEntity<Void> cancelarExclusao(
-                        @Valid @RequestBody RequestCancelarExclusaoDTO requisicao) {
+                        @Valid @RequestBody RequestCancelarExclusaoDTO requisicao,
+                        HttpServletRequest request) {
 
                 if (!usuarioService.cancelarExclusao(
                                 requisicao.email().trim(),
-                                requisicao.senha())) {
+                                requisicao.senha(),
+                                clientIpResolver.resolve(request))) {
                         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                                         .cacheControl(CacheControl.noStore())
                                         .build();
@@ -217,11 +224,15 @@ public class AuthController {
 
         @PreAuthorize("hasRole('USUARIO')")
         @PutMapping(value = "/put", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-        public ResponseEntity<Void> put(
+        public ResponseEntity<?> put(
                         @Valid @RequestBody RequestUsuarioDTO requestUsuarioDTO,
                         @AuthenticationPrincipal Usuario usuario) {
 
-                usuarioService.update(requestUsuarioDTO, usuario);
+                try {
+                        usuarioService.update(requestUsuarioDTO, usuario);
+                } catch (IllegalArgumentException e) {
+                        return ResponseEntity.badRequest().body(Map.of("mensagem", e.getMessage()));
+                }
 
                 return ResponseEntity.status(HttpStatus.ACCEPTED).build();
         }

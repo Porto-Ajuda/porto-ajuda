@@ -57,6 +57,14 @@ public interface AdminAuthControlRepository extends JpaRepository<AdminAuthContr
             @Param("lockThreshold") int lockThreshold,
             @Param("lockedUntil") Instant lockedUntil);
 
+    @Query(value = "select locked_until from admin_auth_controls where control_key = :controlKey",
+            nativeQuery = true)
+    java.util.Optional<Instant> findLockedUntilByControlKey(@Param("controlKey") String controlKey);
+
+    @Query(value = "select counter from admin_auth_controls where control_key = :controlKey",
+            nativeQuery = true)
+    java.util.Optional<Integer> findCounterByControlKey(@Param("controlKey") String controlKey);
+
     @Modifying
     @Query("""
             update AdminAuthControl c
@@ -64,4 +72,12 @@ public interface AdminAuthControlRepository extends JpaRepository<AdminAuthContr
              where c.controlKey = :controlKey
             """)
     int reset(@Param("controlKey") String controlKey, @Param("now") Instant now);
+
+    @Modifying
+    @Query("""
+            delete from AdminAuthControl c
+             where c.updatedAt < :updatedBefore
+               and (c.lockedUntil is null or c.lockedUntil <= :now)
+            """)
+    int deleteExpired(@Param("updatedBefore") Instant updatedBefore, @Param("now") Instant now);
 }

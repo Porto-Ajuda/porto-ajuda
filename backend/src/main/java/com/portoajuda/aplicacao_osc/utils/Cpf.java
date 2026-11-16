@@ -14,7 +14,12 @@ public record Cpf(String valor) {
             throw new IllegalArgumentException("CPF não pode ser vazio");
         }
 
-        cpf = cpf.replaceAll("\\D", "");
+        cpf = cpf.trim();
+        if (cpf.matches("[0-9]{3}\\.[0-9]{3}\\.[0-9]{3}-[0-9]{2}")) {
+            cpf = cpf.replace(".", "").replace("-", "");
+        } else if (!cpf.matches("[0-9]{11}")) {
+            throw new IllegalArgumentException("Formato de CPF inválido");
+        }
 
         if (cpf.length() != 11 || cpf.matches("(\\d)\\1{10}")) {
             throw new IllegalArgumentException("Sequência inválida");

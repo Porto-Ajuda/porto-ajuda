@@ -605,6 +605,20 @@ window.abrirModalConteudoPublico = (item, tipo, origem) => {
     }
     window.conteudoVoluntariadoAtual = vagaAplicavel && tipo === "voluntariado" ? item : null;
 
+    let botaoDenunciar = document.getElementById("btn-modal-denunciar");
+    if (!botaoDenunciar) {
+        botaoDenunciar = document.createElement("button");
+        botaoDenunciar.id = "btn-modal-denunciar";
+        botaoDenunciar.type = "button";
+        botaoDenunciar.className = "botao botao-secundario";
+        botaoDenunciar.dataset.contentReport = "";
+        botaoDenunciar.textContent = "Denunciar";
+        document.querySelector("#modal-card-overlay .modal-card-info")?.append(botaoDenunciar);
+    }
+    botaoDenunciar.dataset.reportType = tipo === "voluntariado" ? "VOLUNTARIADO" : "PUBLICACAO";
+    botaoDenunciar.dataset.reportId = String(item.id);
+    botaoDenunciar.hidden = !Number.isInteger(Number(item.id)) || Number(item.id) < 1;
+
     overlay.dataset.conteudoPublico = "true";
     overlay.setAttribute("aria-hidden", "false");
     document.getElementById("fechar-modal-card").setAttribute(

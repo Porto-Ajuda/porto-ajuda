@@ -16,6 +16,7 @@ import com.portoajuda.aplicacao_osc.enums.TipoPost;
 import com.portoajuda.aplicacao_osc.repository.CandidaturasVoluntariadoRepository;
 import com.portoajuda.aplicacao_osc.repository.OscRepository;
 import com.portoajuda.aplicacao_osc.repository.VagaRepository;
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.Lock;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,6 +35,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import org.mockito.ArgumentCaptor;
+import org.springframework.data.domain.PageImpl;
 
 @ExtendWith(MockitoExtension.class)
 class CandidaturaVoluntariadoServiceTest {
@@ -42,6 +44,7 @@ class CandidaturaVoluntariadoServiceTest {
     @Mock private VagaRepository vagas;
     @Mock private OscRepository oscs;
     @Mock private OscService oscService;
+    @Mock private EntityManager entityManager;
     @InjectMocks private CandidaturaVoluntariadoService service;
 
     private Usuario applicant;
@@ -82,6 +85,7 @@ class CandidaturaVoluntariadoServiceTest {
         vaga.setCargaHoraria("4 horas semanais");
         vaga.setDataInicio(LocalDate.now());
         vaga.setDataFim(LocalDate.now().plusDays(20));
+        lenient().when(vagas.findById(41)).thenReturn(Optional.of(vaga));
     }
 
     @Test
@@ -114,6 +118,24 @@ class CandidaturaVoluntariadoServiceTest {
 
         assertEquals(409, error.getStatusCode().value());
         verify(candidaturas, never()).save(any());
+    }
+
+    @Test
+    void reapplicationAfterApplicantCancellationRemainsAllowedButRejectedHistoryBlocksIt() {
+        when(vagas.findForUpdateById(41)).thenReturn(Optional.of(vaga));
+        when(candidaturas.existsByVaga_IdAndUsuario_IdAndStatusIn(eq(41), eq(11), anyCollection()))
+                .thenAnswer(invocation -> {
+                    java.util.Collection<StatusCandidatura> blocking = invocation.getArgument(2);
+                    assertTrue(blocking.contains(StatusCandidatura.RECUSADA));
+                    assertFalse(blocking.contains(StatusCandidatura.DESISTIU));
+                    return false;
+                });
+        when(candidaturas.countByVaga_IdAndStatus(41, StatusCandidatura.APROVADA)).thenReturn(0L);
+        when(candidaturas.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        var created = service.candidatar(41, null, applicant);
+
+        assertEquals(StatusCandidatura.PENDENTE, created.status());
     }
 
     @Test
@@ -153,7 +175,6 @@ class CandidaturaVoluntariadoServiceTest {
 
     @Test
     void membroEditorNaoPodeDecidirCandidaturas() {
-        when(oscs.findById(7)).thenReturn(Optional.of(osc));
         when(oscService.obterCargoUsuario(osc, manager)).thenReturn(CargoOsc.EDITOR);
 
         ResponseStatusException error = assertThrows(ResponseStatusException.class,
@@ -164,9 +185,45 @@ class CandidaturaVoluntariadoServiceTest {
     }
 
     @Test
+    void editorAndMemberCannotReadCandidateManagementData() {
+        for (CargoOsc cargo : new CargoOsc[] { CargoOsc.EDITOR, CargoOsc.MEMBRO }) {
+            when(oscService.obterCargoUsuario(osc, manager)).thenReturn(cargo);
+            ResponseStatusException error = assertThrows(ResponseStatusException.class,
+                    () -> service.listarDaOsc(7, null, manager,
+                            org.springframework.data.domain.PageRequest.of(0, 20)));
+            assertEquals(403, error.getStatusCode().value());
+        }
+        verify(candidaturas, never()).listarPorOscEStatus(anyInt(), any(), any());
+    }
+
+    @Test
+    void administratorCanReadCandidateManagementData() {
+        when(oscService.obterCargoUsuario(osc, manager)).thenReturn(CargoOsc.ADMINISTRADOR);
+        when(candidaturas.listarPorOscEStatus(eq(7), isNull(), any()))
+                .thenReturn(new PageImpl<>(java.util.List.of()));
+
+        var result = service.listarDaOsc(7, null, manager,
+                org.springframework.data.domain.PageRequest.of(0, 20));
+
+        assertTrue(result.isEmpty());
+        verify(candidaturas).listarPorOscEStatus(eq(7), isNull(), any());
+    }
+
+    @Test
+    void archivedOrganizationDoesNotExposeCandidateManagementData() {
+        osc.setDataArquivamento(java.time.LocalDateTime.now());
+
+        ResponseStatusException error = assertThrows(ResponseStatusException.class,
+                () -> service.listarDaOsc(7, null, manager,
+                        org.springframework.data.domain.PageRequest.of(0, 20)));
+
+        assertEquals(404, error.getStatusCode().value());
+        verify(candidaturas, never()).listarPorOscEStatus(anyInt(), any(), any());
+    }
+
+    @Test
     void aprovacaoNaoUltrapassaCapacidadeDaVaga() {
         CandidaturasVoluntariado candidatura = candidatura(StatusCandidatura.PENDENTE);
-        when(oscs.findById(7)).thenReturn(Optional.of(osc));
         when(oscService.obterCargoUsuario(osc, manager)).thenReturn(CargoOsc.ADMINISTRADOR);
         when(candidaturas.findByIdAndVaga_Post_Osc_Id(99, 7)).thenReturn(Optional.of(candidatura));
         when(vagas.findForUpdateById(41)).thenReturn(Optional.of(vaga));
@@ -182,7 +239,6 @@ class CandidaturaVoluntariadoServiceTest {
     @Test
     void aprovacaoERejeicaoSaoFinaisEApenasCandidaturaPendentePodeSerDecidida() {
         CandidaturasVoluntariado candidatura = candidatura(StatusCandidatura.PENDENTE);
-        when(oscs.findById(7)).thenReturn(Optional.of(osc));
         when(oscService.obterCargoUsuario(osc, manager)).thenReturn(CargoOsc.CRIADOR);
         when(candidaturas.findByIdAndVaga_Post_Osc_Id(99, 7)).thenReturn(Optional.of(candidatura));
         when(vagas.findForUpdateById(41)).thenReturn(Optional.of(vaga));
@@ -231,7 +287,6 @@ class CandidaturaVoluntariadoServiceTest {
     @Test
     void finalizedApplicationCannotBeChangedAgain() {
         CandidaturasVoluntariado candidatura = candidatura(StatusCandidatura.RECUSADA);
-        when(oscs.findById(7)).thenReturn(Optional.of(osc));
         when(oscService.obterCargoUsuario(osc, manager)).thenReturn(CargoOsc.ADMINISTRADOR);
         when(candidaturas.findByIdAndVaga_Post_Osc_Id(99, 7)).thenReturn(Optional.of(candidatura));
         when(vagas.findForUpdateById(41)).thenReturn(Optional.of(vaga));

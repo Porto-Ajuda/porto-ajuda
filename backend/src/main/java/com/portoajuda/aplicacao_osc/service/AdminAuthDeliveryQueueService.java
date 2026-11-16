@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class AdminAuthDeliveryQueueService {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(AdminAuthDeliveryQueueService.class);
     private static final java.time.Duration DELIVERY_LEASE = java.time.Duration.ofMinutes(2);
     private static final List<State> ACTIVE_DELIVERY_STATES = List.of(State.PENDING, State.PROCESSING);
 
@@ -47,8 +50,13 @@ public class AdminAuthDeliveryQueueService {
         AdminAuthChallenge challenge = challengeRepository.findById(delivery.getChallenge().getId())
                 .orElse(null);
         Usuario usuario = challenge == null ? null : challenge.getUsuario();
-        if (!eligible(challenge, usuario, now)) {
+        String rejectionReason = eligibilityRejectionReason(challenge, usuario, now);
+        if (rejectionReason != null) {
+            LOGGER.warn("Admin authentication delivery skipped before provider call; reason={}",
+                    rejectionReason);
             if (challenge != null) {
+                audit.registrar("ADMIN_AUTH_DELIVERY_INELIGIBLE_" + rejectionReason,
+                        usuarioId(challenge), challenge.getId(), null, null);
                 invalidate(challenge, "ADMIN_AUTH_DELIVERY_NO_LONGER_ELIGIBLE", now);
             } else {
                 failDelivery(delivery, now);
@@ -96,7 +104,9 @@ public class AdminAuthDeliveryQueueService {
         delivery.setEncryptedCode(null);
         delivery.setLeaseUntil(null);
         delivery.setUpdatedAt(now);
-        deliveryRepository.save(delivery);
+        // Flush before counting SENT rows; the next delivery may finish in this same transaction,
+        // and the challenge must become PENDING as soon as both provider calls have succeeded.
+        deliveryRepository.saveAndFlush(delivery);
 
         if (deliveryRepository.countByChallenge_IdAndState(challenge.getId(), State.SENT) == 2) {
             challenge.setState(AdminAuthChallenge.State.PENDING);
@@ -135,25 +145,49 @@ public class AdminAuthDeliveryQueueService {
                 challengeId, ACTIVE_DELIVERY_STATES, State.FAILED, now);
     }
 
-    private boolean eligible(AdminAuthChallenge challenge, Usuario usuario, Instant now) {
-        if (challenge == null || usuario == null
-                || challenge.getState() != AdminAuthChallenge.State.ISSUING
-                || challenge.getExpiresAt() == null || !challenge.getExpiresAt().isAfter(now)
-                || !usuario.isEnabled() || !usuario.isEmailVerificado() || !usuario.isTelefoneVerificado()
-                || usuario.getEmail() == null || usuario.getTelefone() == null
-                || usuario.getTelefone().isBlank()) {
-            return false;
+    String eligibilityRejectionReason(
+            AdminAuthChallenge challenge,
+            Usuario usuario,
+            Instant now) {
+        if (challenge == null) return "CHALLENGE_MISSING";
+        if (usuario == null) return "USER_MISSING";
+        if (challenge.getState() != AdminAuthChallenge.State.ISSUING) return "CHALLENGE_STATE_NOT_ISSUING";
+        if (challenge.getExpiresAt() == null || !challenge.getExpiresAt().isAfter(now)) {
+            return "CHALLENGE_EXPIRED";
         }
-        if (!adminAuthorization.isEligibleForPrivilegedSession(usuario)
-                || !crypto.accountKey(usuario.getEmail().valor()).equals(challenge.getEmailSnapshotHash())) {
-            return false;
+
+        AdminAuthorizationService.PrivilegedSessionEligibility eligibility =
+                adminAuthorization.privilegedSessionEligibility(usuario);
+        if (eligibility != AdminAuthorizationService.PrivilegedSessionEligibility.ELIGIBLE) {
+            return switch (eligibility) {
+                case USER_MISSING -> "USER_MISSING";
+                case USER_ID_MISSING -> "USER_ID_MISSING";
+                case ACCOUNT_INACTIVE -> "ACCOUNT_INACTIVE";
+                case EMAIL_UNVERIFIED -> "EMAIL_UNVERIFIED";
+                case PHONE_UNVERIFIED -> "PHONE_UNVERIFIED";
+                case EMAIL_MISSING -> "EMAIL_MISSING";
+                case PHONE_MISSING -> "PHONE_MISSING";
+                case ROLE_ADMIN_MISSING -> "ROLE_ADMIN_MISSING";
+                case EMAIL_BLANK -> "EMAIL_BLANK";
+                case PHONE_FORMAT_INVALID -> "PHONE_FORMAT_INVALID";
+                case PHONE_NUMBER_INVALID -> "PHONE_NUMBER_INVALID";
+                case ACTIVE_ASSIGNMENT_MISSING -> "ACTIVE_ASSIGNMENT_MISSING";
+                case ASSIGNMENT_LOOKUP_UNAVAILABLE -> "ASSIGNMENT_LOOKUP_UNAVAILABLE";
+                case ELIGIBLE -> null;
+            };
+        }
+        if (!crypto.accountKey(usuario.getEmail().valor()).equals(challenge.getEmailSnapshotHash())) {
+            return "EMAIL_SNAPSHOT_MISMATCH";
         }
         try {
-            return crypto.phoneKey(SmsService.normalizarTelefoneBrasileiro(usuario.getTelefone()))
-                    .equals(challenge.getPhoneSnapshotHash());
+            if (!crypto.phoneKey(SmsService.normalizarTelefoneBrasileiro(usuario.getTelefone()))
+                    .equals(challenge.getPhoneSnapshotHash())) {
+                return "PHONE_SNAPSHOT_MISMATCH";
+            }
         } catch (SmsDeliveryException invalidPhone) {
-            return false;
+            return "PHONE_FORMAT_INVALID";
         }
+        return null;
     }
 
     private void invalidate(AdminAuthChallenge challenge, String event, Instant now) {

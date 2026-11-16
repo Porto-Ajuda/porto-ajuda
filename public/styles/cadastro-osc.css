@@ -711,3 +711,35 @@ body {
   .botoes-navegacao { gap: 8px; }
   .botao { padding: 12px 10px; font-size: .82rem; }
 }
+.verificacao-representante-cadastro {
+    display: grid;
+    gap: 10px;
+    width: 100%;
+    box-sizing: border-box;
+    margin: 12px 0 0;
+    padding: 16px;
+    border: 1px solid rgba(240, 190, 90, .55);
+    border-radius: 12px;
+    color: #f8f4ff;
+    background: rgba(39, 29, 58, .78);
+}
+.verificacao-representante-cadastro[hidden] { display: none; }
+.verificacao-representante-cadastro legend { padding: 0 6px; color: #ffd16a; font-weight: 700; }
+.verificacao-representante-cadastro label { display: flex; align-items: center; gap: 10px; }
+.verificacao-representante-cadastro input[type="radio"] { accent-color: #f0be5a; }
+.verificacao-representante-cadastro p { margin: 0; line-height: 1.55; }
+.btn-ir-verificacao-osc {
+    display: block;
+    margin: 0 0 12px;
+    padding: 12px 16px;
+    border: 1px solid #f0be5a;
+    border-radius: 9px;
+    color: #211a38;
+    background: #f0be5a;
+    font-weight: 700;
+    text-align: center;
+    text-decoration: none;
+}
+.btn-ir-verificacao-osc[hidden] { display: none; }
+.btn-ir-verificacao-osc:focus-visible,
+.verificacao-representante-cadastro input:focus-visible { outline: 3px solid #ffd16a; outline-offset: 3px; }

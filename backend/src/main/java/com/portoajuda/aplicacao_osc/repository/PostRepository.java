@@ -7,11 +7,13 @@ import com.portoajuda.aplicacao_osc.enums.TipoPost;
 import com.portoajuda.aplicacao_osc.enums.StatusVaga;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import jakarta.persistence.LockModeType;
 
 import java.util.List;
 import java.util.Optional;
@@ -26,6 +28,10 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
     int excluirPorOscId(@Param("oscId") Integer oscId);
 
     Optional<Post> findById(Integer id);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT p FROM Post p JOIN FETCH p.osc o WHERE p.id = :postId")
+    Optional<Post> findForUpdateById(@Param("postId") Integer postId);
 
     boolean existsByImagemUrl(String imagemUrl);
 
@@ -51,6 +57,18 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
             @Param("oscId") Integer oscId,
             @Param("statusOsc") StatusOsc statusOsc);
 
+    @Query(value = """
+            SELECT p.* FROM public.post p JOIN public.oscs o ON o.id = p.id_osc
+             WHERE p.id_osc = :oscId AND p.ativo = TRUE AND o.status = :statusOsc
+               AND o.data_arquivamento IS NULL
+               AND NOT EXISTS (SELECT 1 FROM public.content_moderation_blocks b
+                    WHERE b.active AND ((b.target_type='OSC' AND b.target_id=o.id)
+                       OR (b.target_type='POST' AND b.target_id=p.id)))
+             ORDER BY p.data_criacao DESC, p.id DESC
+            """, nativeQuery = true)
+    List<Post> findPublicosPorOscSemBloqueio(@Param("oscId") Integer oscId,
+            @Param("statusOsc") String statusOsc);
+
     List<Post> findByOscCausas(CausaSocial causaSocial);
 
     @Query("""
@@ -60,6 +78,53 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
               AND (p.osc IS NULL OR (o.status = :statusOsc AND o.dataArquivamento IS NULL))
             """)
     Page<Post> findPublicos(@Param("statusOsc") StatusOsc statusOsc, Pageable pageable);
+
+    @Query(value = """
+            SELECT p.* FROM public.post p LEFT JOIN public.oscs o ON o.id=p.id_osc
+             WHERE p.ativo=TRUE AND (p.id_osc IS NULL OR (o.status=:statusOsc AND o.data_arquivamento IS NULL))
+               AND NOT EXISTS (SELECT 1 FROM public.content_moderation_blocks b WHERE b.active
+                 AND ((b.target_type='OSC' AND b.target_id=o.id) OR (b.target_type='POST' AND b.target_id=p.id)))
+            """, countQuery = """
+            SELECT count(*) FROM public.post p LEFT JOIN public.oscs o ON o.id=p.id_osc
+             WHERE p.ativo=TRUE AND (p.id_osc IS NULL OR (o.status=:statusOsc AND o.data_arquivamento IS NULL))
+               AND NOT EXISTS (SELECT 1 FROM public.content_moderation_blocks b WHERE b.active
+                 AND ((b.target_type='OSC' AND b.target_id=o.id) OR (b.target_type='POST' AND b.target_id=p.id)))
+            """, nativeQuery = true)
+    Page<Post> findPublicosSemBloqueio(@Param("statusOsc") String statusOsc, Pageable pageable);
+
+    @Query(value = """
+            SELECT p.* FROM public.post p LEFT JOIN public.oscs o ON o.id=p.id_osc
+             WHERE p.ativo=TRUE AND (p.id_osc IS NULL OR
+                   (o.status=:statusOsc AND o.data_arquivamento IS NULL
+                    AND public.ngo_representative_is_publicly_eligible(o.id)))
+             ORDER BY p.data_criacao DESC, p.id DESC
+            """, countQuery = """
+            SELECT count(*) FROM public.post p LEFT JOIN public.oscs o ON o.id=p.id_osc
+             WHERE p.ativo=TRUE AND (p.id_osc IS NULL OR
+                   (o.status=:statusOsc AND o.data_arquivamento IS NULL
+                    AND public.ngo_representative_is_publicly_eligible(o.id)))
+            """, nativeQuery = true)
+    Page<Post> findPublicosComVerificacao(@Param("statusOsc") String statusOsc, Pageable pageable);
+
+    @Query(value = """
+            SELECT p.* FROM public.post p LEFT JOIN public.oscs o ON o.id=p.id_osc
+             WHERE p.ativo=TRUE AND (p.id_osc IS NULL OR
+                   (o.status=:statusOsc AND o.data_arquivamento IS NULL
+                    AND public.ngo_representative_is_publicly_eligible(o.id)))
+               AND NOT EXISTS (SELECT 1 FROM public.content_moderation_blocks b WHERE b.active
+                    AND ((b.target_type='POST' AND b.target_id=p.id) OR
+                         (b.target_type='OSC' AND b.target_id=o.id)))
+             ORDER BY p.data_criacao DESC, p.id DESC
+            """, countQuery = """
+            SELECT count(*) FROM public.post p LEFT JOIN public.oscs o ON o.id=p.id_osc
+             WHERE p.ativo=TRUE AND (p.id_osc IS NULL OR
+                   (o.status=:statusOsc AND o.data_arquivamento IS NULL
+                    AND public.ngo_representative_is_publicly_eligible(o.id)))
+               AND NOT EXISTS (SELECT 1 FROM public.content_moderation_blocks b WHERE b.active
+                    AND ((b.target_type='POST' AND b.target_id=p.id) OR
+                         (b.target_type='OSC' AND b.target_id=o.id)))
+            """, nativeQuery = true)
+    Page<Post> findPublicosComVerificacaoSemBloqueio(@Param("statusOsc") String statusOsc, Pageable pageable);
 
     @EntityGraph(attributePaths = {"osc", "vagaVoluntariado"})
     @Query("""
@@ -74,6 +139,57 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
             @Param("statusOsc") StatusOsc statusOsc,
             @Param("tipoVoluntariado") TipoPost tipoVoluntariado,
             Pageable pageable);
+
+    @Query(value = """
+            SELECT p.* FROM public.post p JOIN public.oscs o ON o.id=p.id_osc
+             WHERE p.ativo=TRUE AND p.tipo <> :tipoVoluntariado AND o.status=:statusOsc
+               AND o.data_arquivamento IS NULL
+               AND NOT EXISTS (SELECT 1 FROM public.content_moderation_blocks b WHERE b.active
+                 AND ((b.target_type='OSC' AND b.target_id=o.id) OR (b.target_type='POST' AND b.target_id=p.id)))
+             ORDER BY p.data_criacao DESC, p.id DESC
+            """, countQuery = """
+            SELECT count(*) FROM public.post p JOIN public.oscs o ON o.id=p.id_osc
+             WHERE p.ativo=TRUE AND p.tipo <> :tipoVoluntariado AND o.status=:statusOsc
+               AND o.data_arquivamento IS NULL
+               AND NOT EXISTS (SELECT 1 FROM public.content_moderation_blocks b WHERE b.active
+                 AND ((b.target_type='OSC' AND b.target_id=o.id) OR (b.target_type='POST' AND b.target_id=p.id)))
+            """, nativeQuery = true)
+    Page<Post> findPublicacoesHomeSemBloqueio(@Param("statusOsc") String statusOsc,
+            @Param("tipoVoluntariado") String tipoVoluntariado, Pageable pageable);
+
+    @Query(value = """
+            SELECT p.* FROM public.post p JOIN public.oscs o ON o.id=p.id_osc
+             WHERE p.ativo=TRUE AND p.tipo <> :tipoVoluntariado AND o.status=:statusOsc
+               AND o.data_arquivamento IS NULL
+               AND public.ngo_representative_is_publicly_eligible(o.id)
+             ORDER BY p.data_criacao DESC, p.id DESC
+            """, countQuery = """
+            SELECT count(*) FROM public.post p JOIN public.oscs o ON o.id=p.id_osc
+             WHERE p.ativo=TRUE AND p.tipo <> :tipoVoluntariado AND o.status=:statusOsc
+               AND o.data_arquivamento IS NULL
+               AND public.ngo_representative_is_publicly_eligible(o.id)
+            """, nativeQuery = true)
+    Page<Post> findPublicacoesHomeVerificadas(@Param("statusOsc") String statusOsc,
+            @Param("tipoVoluntariado") String tipoVoluntariado, Pageable pageable);
+
+    @Query(value = """
+            SELECT p.* FROM public.post p JOIN public.oscs o ON o.id=p.id_osc
+             WHERE p.ativo=TRUE AND p.tipo <> :tipoVoluntariado AND o.status=:statusOsc
+               AND o.data_arquivamento IS NULL
+               AND public.ngo_representative_is_publicly_eligible(o.id)
+               AND NOT EXISTS (SELECT 1 FROM public.content_moderation_blocks b WHERE b.active
+                    AND ((b.target_type='OSC' AND b.target_id=o.id) OR (b.target_type='POST' AND b.target_id=p.id)))
+             ORDER BY p.data_criacao DESC, p.id DESC
+            """, countQuery = """
+            SELECT count(*) FROM public.post p JOIN public.oscs o ON o.id=p.id_osc
+             WHERE p.ativo=TRUE AND p.tipo <> :tipoVoluntariado AND o.status=:statusOsc
+               AND o.data_arquivamento IS NULL
+               AND public.ngo_representative_is_publicly_eligible(o.id)
+               AND NOT EXISTS (SELECT 1 FROM public.content_moderation_blocks b WHERE b.active
+                    AND ((b.target_type='OSC' AND b.target_id=o.id) OR (b.target_type='POST' AND b.target_id=p.id)))
+            """, nativeQuery = true)
+    Page<Post> findPublicacoesHomeVerificadasSemBloqueio(@Param("statusOsc") String statusOsc,
+            @Param("tipoVoluntariado") String tipoVoluntariado, Pageable pageable);
 
     @EntityGraph(attributePaths = {"osc", "vagaVoluntariado"})
     @Query("""
@@ -95,6 +211,72 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
             @Param("statusVaga") StatusVaga statusVaga,
             @Param("dataAtual") java.time.LocalDate dataAtual,
             Pageable pageable);
+
+    @Query(value = """
+            SELECT p.* FROM public.post p JOIN public.oscs o ON o.id=p.id_osc
+              JOIN public.vagas_voluntariado v ON v.id_post=p.id
+             WHERE p.ativo=TRUE AND p.tipo=:tipoVoluntariado AND o.status=:statusOsc
+               AND o.data_arquivamento IS NULL AND v.status=:statusVaga
+               AND v.quantidade_vagas>0 AND v.data_fim>=:dataAtual
+               AND NOT EXISTS (SELECT 1 FROM public.content_moderation_blocks b WHERE b.active
+                 AND ((b.target_type='OSC' AND b.target_id=o.id) OR (b.target_type='POST' AND b.target_id=p.id)))
+             ORDER BY p.data_criacao DESC, p.id DESC
+            """, countQuery = """
+            SELECT count(*) FROM public.post p JOIN public.oscs o ON o.id=p.id_osc
+              JOIN public.vagas_voluntariado v ON v.id_post=p.id
+             WHERE p.ativo=TRUE AND p.tipo=:tipoVoluntariado AND o.status=:statusOsc
+               AND o.data_arquivamento IS NULL AND v.status=:statusVaga
+               AND v.quantidade_vagas>0 AND v.data_fim>=:dataAtual
+               AND NOT EXISTS (SELECT 1 FROM public.content_moderation_blocks b WHERE b.active
+                 AND ((b.target_type='OSC' AND b.target_id=o.id) OR (b.target_type='POST' AND b.target_id=p.id)))
+            """, nativeQuery = true)
+    Page<Post> findVoluntariadosHomeSemBloqueio(@Param("statusOsc") String statusOsc,
+            @Param("tipoVoluntariado") String tipoVoluntariado, @Param("statusVaga") String statusVaga,
+            @Param("dataAtual") java.time.LocalDate dataAtual, Pageable pageable);
+
+    @Query(value = """
+            SELECT p.* FROM public.post p JOIN public.oscs o ON o.id=p.id_osc
+              JOIN public.vagas_voluntariado v ON v.id_post=p.id
+             WHERE p.ativo=TRUE AND p.tipo=:tipoVoluntariado AND o.status=:statusOsc
+               AND o.data_arquivamento IS NULL AND v.status=:statusVaga
+               AND v.quantidade_vagas>0 AND v.data_fim>=:dataAtual
+               AND public.ngo_representative_is_publicly_eligible(o.id)
+             ORDER BY p.data_criacao DESC, p.id DESC
+            """, countQuery = """
+            SELECT count(*) FROM public.post p JOIN public.oscs o ON o.id=p.id_osc
+              JOIN public.vagas_voluntariado v ON v.id_post=p.id
+             WHERE p.ativo=TRUE AND p.tipo=:tipoVoluntariado AND o.status=:statusOsc
+               AND o.data_arquivamento IS NULL AND v.status=:statusVaga
+               AND v.quantidade_vagas>0 AND v.data_fim>=:dataAtual
+               AND public.ngo_representative_is_publicly_eligible(o.id)
+            """, nativeQuery = true)
+    Page<Post> findVoluntariadosHomeVerificados(@Param("statusOsc") String statusOsc,
+            @Param("tipoVoluntariado") String tipoVoluntariado, @Param("statusVaga") String statusVaga,
+            @Param("dataAtual") java.time.LocalDate dataAtual, Pageable pageable);
+
+    @Query(value = """
+            SELECT p.* FROM public.post p JOIN public.oscs o ON o.id=p.id_osc
+              JOIN public.vagas_voluntariado v ON v.id_post=p.id
+             WHERE p.ativo=TRUE AND p.tipo=:tipoVoluntariado AND o.status=:statusOsc
+               AND o.data_arquivamento IS NULL AND v.status=:statusVaga
+               AND v.quantidade_vagas>0 AND v.data_fim>=:dataAtual
+               AND public.ngo_representative_is_publicly_eligible(o.id)
+               AND NOT EXISTS (SELECT 1 FROM public.content_moderation_blocks b WHERE b.active
+                    AND ((b.target_type='OSC' AND b.target_id=o.id) OR (b.target_type='POST' AND b.target_id=p.id)))
+             ORDER BY p.data_criacao DESC, p.id DESC
+            """, countQuery = """
+            SELECT count(*) FROM public.post p JOIN public.oscs o ON o.id=p.id_osc
+              JOIN public.vagas_voluntariado v ON v.id_post=p.id
+             WHERE p.ativo=TRUE AND p.tipo=:tipoVoluntariado AND o.status=:statusOsc
+               AND o.data_arquivamento IS NULL AND v.status=:statusVaga
+               AND v.quantidade_vagas>0 AND v.data_fim>=:dataAtual
+               AND public.ngo_representative_is_publicly_eligible(o.id)
+               AND NOT EXISTS (SELECT 1 FROM public.content_moderation_blocks b WHERE b.active
+                    AND ((b.target_type='OSC' AND b.target_id=o.id) OR (b.target_type='POST' AND b.target_id=p.id)))
+            """, nativeQuery = true)
+    Page<Post> findVoluntariadosHomeVerificadosSemBloqueio(@Param("statusOsc") String statusOsc,
+            @Param("tipoVoluntariado") String tipoVoluntariado, @Param("statusVaga") String statusVaga,
+            @Param("dataAtual") java.time.LocalDate dataAtual, Pageable pageable);
 
     @Query("""
             SELECT DISTINCT p FROM Post p

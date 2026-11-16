@@ -24,6 +24,7 @@
                 <h2 id="titulo-alerta-cadastro">OSC cadastrada<br><span>com sucesso!</span></h2>
                 <p>Os dados da organização foram salvos e vinculados à sua conta autenticada.</p>
             </div>
+            <a id="ir-verificacao-osc" class="btn-ir-verificacao-osc" href="#" hidden>Enviar documentos de representação</a>
             <button type="button" id="btn-ir-login" class="btn-ir-login">
                 Voltar ao Porto Ajuda <i class="fa-solid fa-arrow-right"></i>
             </button>
@@ -408,6 +409,12 @@
                 <div class="row etapa-osc">
                     <h2>Revisão e envio</h2>
                     <p class="descricao-etapa">O cadastro será associado à conta que está autenticada. Senhas e credenciais não fazem parte dos dados institucionais da OSC.</p>
+                    <fieldset id="representacao-osc" class="verificacao-representante-cadastro" hidden>
+                        <legend>Qual é seu vínculo de representação?</legend>
+                        <label><input type="radio" name="representacao" value="LEGAL_REPRESENTATIVE"> Sou representante legal</label>
+                        <label><input type="radio" name="representacao" value="AUTHORIZED_DELEGATE"> Sou pessoa delegada por representante legal</label>
+                        <p>Após o cadastro, a ONG ficará pendente de verificação. Envie documento que comprove os poderes de representação. Pessoas delegadas também devem apresentar autorização emitida por representante legal. A análise é humana; não há aprovação automática.</p>
+                    </fieldset>
                 </div>
 
                 <!-- NAVEGAÇÃO (sempre visível no rodapé do card) -->

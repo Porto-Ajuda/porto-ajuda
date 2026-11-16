@@ -59,12 +59,14 @@ public class OscController {
     public ResponseEntity<ResponseOscDTO> create(
             @Valid @RequestPart("dados") RequestOscDTO oscDTO,
             @RequestPart(value = "logo", required = false) MultipartFile logo,
+            @RequestPart(value = "representacao", required = false) String representacao,
             @AuthenticationPrincipal Usuario usuario) {
 
         ResponseOscDTO criada = oscService.create(
                 oscDTO,
                 usuario,
-                logo);
+                logo,
+                representacao);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -75,12 +77,14 @@ public class OscController {
     @PostMapping(value = "/create", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ResponseOscDTO> createJson(
             @Valid @RequestBody RequestOscDTO oscDTO,
+            @RequestParam(value = "representacao", required = false) String representacao,
             @AuthenticationPrincipal Usuario usuario) {
 
         ResponseOscDTO criada = oscService.create(
                 oscDTO,
                 usuario,
-                null);
+                null,
+                representacao);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)

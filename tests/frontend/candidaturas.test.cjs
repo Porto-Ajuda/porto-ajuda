@@ -89,4 +89,12 @@ test("NGO applicant management reflects backend decision permission and uses spe
     assert.match(source, /body: JSON\.stringify\(\{ status \}\)/);
     assert.match(source, /response\.status === 409/);
     assert.match(source, /Atualize a lista para confirmar o estado antes de repetir/);
+    assert.match(source, /\[401, 403, 404, 409\]\.includes\(response\.status\)/);
+    assert.match(source, /await load\(button\.closest\("\[data-candidaturas-ong\]"\)\)/);
+});
+
+test("applicant cancellation refreshes stale state after a 404 or 409 conflict", async () => {
+    const source = await ler("public/components/minhas-candidaturas.js");
+    assert.match(source, /response\.status === 404 \|\| response\.status === 409\) await carregar\(pagina\)/);
+    assert.match(source, /A candidatura .+recebeu uma decis/);
 });

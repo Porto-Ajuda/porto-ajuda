@@ -25,6 +25,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.time.Instant;
@@ -38,6 +43,8 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class UsuarioService {
+
+        private static final Logger log = LoggerFactory.getLogger(UsuarioService.class);
 
         private static final ZoneId ZONA_APLICACAO = ZoneId.of("America/Sao_Paulo");
 
@@ -56,12 +63,25 @@ public class UsuarioService {
         private final PhoneVerificationChallengeRepository phoneVerificationChallengeRepository;
         private final CodigoAutenticacaoRepository codigoAutenticacaoRepository;
         private final RecuperacaoSenhaRepository recuperacaoSenhaRepository;
+        private final AutenticacaoAbusoUsuarioService autenticacaoAbuso;
+        private final UsuarioReativacaoService usuarioReativacaoService;
+        private final UsuarioLoginService usuarioLoginService;
 
         @Transactional
-        public void signup(RequestUsuarioDTO usuarioDTO) {
+        public void signup(RequestUsuarioDTO usuarioDTO, String enderecoRemoto) {
+
+                if (!autenticacaoAbuso.permitirCadastro(enderecoRemoto)) {
+                        throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS,
+                                        "Não foi possível concluir o cadastro agora. Tente novamente mais tarde.");
+                }
+
+                Cpf cpf = new Cpf(usuarioDTO.cpf());
+                if (usuarioRepository.existsByCpf(cpf)) {
+                        throw conflitoCadastro();
+                }
 
                 if (usuarioRepository.existsByEmail(new Email(usuarioDTO.email()))) {
-                        throw new BadCredentialsException("Email já está cadastrado");
+                        throw conflitoCadastro();
                 }
 
                 int idade = Period.between(
@@ -74,7 +94,7 @@ public class UsuarioService {
 
                 Usuario usuario = new Usuario();
 
-                usuario.setCpf(new Cpf(usuarioDTO.cpf()));
+                usuario.setCpf(cpf);
                 usuario.setCep(usuarioDTO.cep());
                 usuario.setNome(usuarioDTO.nome());
                 usuario.setNomeSocial(usuarioDTO.nomeSocial());
@@ -89,7 +109,13 @@ public class UsuarioService {
 
                 usuario.setRoles(Set.of(role));
 
-                Usuario usuarioSalvo = usuarioRepository.save(usuario);
+                Usuario usuarioSalvo;
+                try {
+                        usuarioSalvo = usuarioRepository.saveAndFlush(usuario);
+                } catch (DataIntegrityViolationException conflitoDeUnicidade) {
+                        // A constraint persistente também cobre cadastros concorrentes.
+                        throw conflitoCadastro();
+                }
 
                 String token = jwtService.generateEmailVerificationToken(usuarioSalvo);
 
@@ -98,23 +124,27 @@ public class UsuarioService {
                                 .build()
                                 .toUriString();
 
-                emailService.enviarConfirmacaoEmail(
-                                usuarioSalvo.getNome(),
-                                usuarioSalvo.getEmail().valor(),
-                                token,
-                                appBaseUrl);
+                try {
+                        emailService.enviarConfirmacaoEmail(
+                                        usuarioSalvo.getNome(),
+                                        usuarioSalvo.getEmail().valor(),
+                                        token,
+                                        appBaseUrl);
+                } catch (RuntimeException falhaDeEntrega) {
+                        throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
+                                        "Não foi possível concluir o cadastro agora. Tente novamente mais tarde.");
+                }
         }
 
-        @Transactional
-        public void reenviarConfirmacaoEmail(String emailInformado) {
+        public void reenviarConfirmacaoEmail(String emailInformado, String enderecoRemoto) {
 
-                Usuario usuario = usuarioRepository.findByEmail(new Email(emailInformado))
-                                .orElseThrow(() -> new IllegalArgumentException(
-                                                "Não foi possível reenviar o e-mail de confirmação."));
+                if (!autenticacaoAbuso.permitirReenvioConfirmacaoIp(enderecoRemoto)) return;
 
-                if (usuario.isEmailVerificado()) {
-                        throw new IllegalStateException("Este e-mail já foi confirmado.");
-                }
+                Email emailNormalizado = new Email(emailInformado);
+                Usuario usuario = usuarioRepository.findByEmail(emailNormalizado).orElse(null);
+
+                if (usuario == null || usuario.isEmailVerificado()) return;
+                if (!autenticacaoAbuso.permitirReenvioConfirmacaoConta(emailNormalizado.valor())) return;
 
                 String token = jwtService.generateEmailVerificationToken(usuario);
 
@@ -123,62 +153,38 @@ public class UsuarioService {
                                 .build()
                                 .toUriString();
 
-                emailService.enviarConfirmacaoEmail(
-                                usuario.getNome(),
-                                usuario.getEmail().valor(),
-                                token,
-                                appBaseUrl);
+                try {
+                        emailService.enviarConfirmacaoEmail(
+                                        usuario.getNome(),
+                                        usuario.getEmail().valor(),
+                                        token,
+                                        appBaseUrl);
+                } catch (RuntimeException falhaDeEntrega) {
+                        throw new IllegalStateException("Não foi possível reenviar o e-mail de confirmação.");
+                }
         }
 
-        @Transactional
-        public LoginResultado login(RequestLoginDTO loginDTO) {
-
-                // Serialize credential validation/session creation with password changes.
-                Usuario usuario = usuarioRepository.findByEmailForUpdate(
-                                new Email(loginDTO.email()))
-                                .orElseThrow(() -> new BadCredentialsException("Email ou senha incorretos"));
-
-                if (!passwordEncoder.matches(loginDTO.senha(), usuario.getSenha())) {
+        public LoginResultado login(RequestLoginDTO loginDTO, String enderecoRemoto) {
+                Email email = new Email(loginDTO.email());
+                String emailNormalizado = email.valor();
+                if (!autenticacaoAbuso.registrarTentativaLoginPorIp(enderecoRemoto)) {
                         throw new BadCredentialsException("Email ou senha incorretos");
                 }
 
-                if (!usuario.isEmailVerificado()) {
-                        throw new BadCredentialsException(
-                                        "Confirme seu e-mail antes de entrar na conta");
+                UsuarioLoginService.LoginOutcome outcome = usuarioLoginService.autenticar(loginDTO, email);
+                if (!outcome.autenticado()) {
+                        throw new BadCredentialsException("Email ou senha incorretos");
                 }
 
-                if (!usuario.isEnabled()) {
-                        throw new BadCredentialsException("Esta conta está desativada.");
+                LoginResultado resultado = outcome.resultado();
+
+                try {
+                        autenticacaoAbuso.limparFalhasLogin(emailNormalizado);
+                } catch (RuntimeException persistenciaDeLimiteIndisponivel) {
+                        log.warn("Não foi possível limpar o contador de falhas após autenticação bem-sucedida.");
                 }
-
-                // Cria uma sessão e guarda somente o hash do refresh token no banco.
-                SessaoUsuarioService.SessaoCriada sessaoCriada = sessaoUsuarioService.criarSessao(
-                                usuario,
-                                loginDTO.lembrarDeMim());
-
-                SessaoUsuario sessao = sessaoCriada.sessao();
-
-                // O JWT fica vinculado à sessão pelo claim "sid".
-                String accessToken = jwtService.generateToken(
-                                usuario,
-                                sessao.getId());
-
-                ResponseUsuarioDTO dadosUsuario = new ResponseUsuarioDTO(
-                                usuario.getCpf().valor(),
-                                usuario.getNome(),
-                                usuario.getNomeSocial(),
-                                usuario.getDataNascimento().toString(),
-                                usuario.getEmail().valor(),
-                                usuario.getTelefone());
-
-                return new LoginResultado(
-                                accessToken,
-                                sessaoCriada.refreshToken(),
-                                loginDTO.lembrarDeMim(),
-                                dadosUsuario,
-                                sessao.getExpiraEm());
+                return resultado;
         }
-
         @Transactional
         public LocalDateTime solicitarExclusao(Integer usuarioId) {
                 adminRbacInvariantService.lockEligibilityChanges();
@@ -232,33 +238,12 @@ public class UsuarioService {
                 return solicitadaEm.plusMonths(6);
         }
 
-        @Transactional
-        public boolean cancelarExclusao(String email, String senha) {
-                Usuario usuario = usuarioRepository.findByEmailForUpdate(new Email(email))
-                                .orElse(null);
-                LocalDateTime agora = LocalDateTime.now(ZONA_APLICACAO);
-
-                if (usuario == null
-                                || senha == null
-                                || !passwordEncoder.matches(senha, usuario.getSenha())
-                                || usuario.isEnabled()
-                                || !usuario.isEmailVerificado()
-                                || usuario.getDataSolicitacaoExclusao() == null
-                                || usuario.getDataExclusaoAgendada() == null
-                                || usuario.getDataSolicitacaoExclusao().isAfter(
-                                                agora)
-                                || !usuario.getDataExclusaoAgendada().equals(
-                                                calcularDataExclusao(usuario.getDataSolicitacaoExclusao()))
-                                || !agora.isBefore(usuario.getDataExclusaoAgendada())) {
-                        return false;
-                }
-
-                usuario.setAtivo(true);
-                usuario.setDataSolicitacaoExclusao(null);
-                usuario.setDataExclusaoAgendada(null);
-                sessaoUsuarioService.revogarSessoesDoUsuario(usuario.getId());
-
-                return true;
+        public boolean cancelarExclusao(String email, String senha, String enderecoRemoto) {
+                Email emailNormalizado = new Email(email);
+                if (!autenticacaoAbuso.registrarTentativaLoginPorIp(enderecoRemoto)) return false;
+                if (usuarioRepository.existsByEmail(emailNormalizado)
+                                && !autenticacaoAbuso.permitirReativacaoConta(emailNormalizado.valor())) return false;
+                return usuarioReativacaoService.cancelar(emailNormalizado, senha);
         }
 
         @Transactional
@@ -266,32 +251,27 @@ public class UsuarioService {
                         RequestUsuarioDTO usuarioDTO,
                         Usuario usuario) {
 
-                adminRbacInvariantService.lockEligibilityChanges();
-
                 Usuario usuarioAlterado = usuarioRepository.findById(usuario.getId())
                                 .orElseThrow(() -> new IllegalArgumentException("Usuário não existe"));
 
+                validarCpfImutavel(usuarioAlterado.getCpf(), new Cpf(usuarioDTO.cpf()));
                 Email novoEmail = new Email(usuarioDTO.email());
+                validarEmailImutavel(usuarioAlterado.getEmail(), novoEmail);
+
+                adminRbacInvariantService.lockEligibilityChanges();
                 String novoTelefone = usuarioDTO.telefone();
-                boolean emailAlterado = !java.util.Objects.equals(
-                                usuarioAlterado.getEmail() == null ? null : usuarioAlterado.getEmail().valor(),
-                                novoEmail.valor());
                 boolean telefoneAlterado = !java.util.Objects.equals(
                                 usuarioAlterado.getTelefone(), novoTelefone);
 
-                if (emailAlterado || telefoneAlterado) {
+                if (telefoneAlterado) {
                         adminRbacInvariantService.assertMayRemoveEligibility(usuarioAlterado.getId());
                 }
 
-                if (emailAlterado) {
-                        usuarioAlterado.setEmail(novoEmail);
-                        usuarioAlterado.setEmailVerificado(false);
-                }
                 if (telefoneAlterado) {
                         usuarioAlterado.setTelefone(novoTelefone);
                         usuarioAlterado.setTelefoneVerificado(false);
                 }
-                if (emailAlterado || telefoneAlterado) {
+                if (telefoneAlterado) {
                         invalidarDesafiosVerificacao(usuarioAlterado.getId());
                         adminPrivilegedSessionService.revogarTodasDoUsuario(
                                         usuarioAlterado.getId(), "CONTACT_CHANGED");
@@ -425,10 +405,14 @@ public class UsuarioService {
                         Integer usuarioId,
                         RequestAtualizarPerfilDTO dados) {
 
-                adminRbacInvariantService.lockEligibilityChanges();
-
                 Usuario usuario = usuarioRepository.findById(usuarioId)
                                 .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado."));
+
+                if (dados.email() != null) {
+                        validarEmailImutavel(usuario.getEmail(), new Email(dados.email()));
+                }
+
+                adminRbacInvariantService.lockEligibilityChanges();
 
                 if (!usuario.isEnabled()) {
                         throw new IllegalStateException("Usuário inativo.");
@@ -474,6 +458,23 @@ public class UsuarioService {
                                                 : cep);
 
                 return usuarioRepository.save(usuario);
+        }
+
+        private void validarEmailImutavel(Email emailAtual, Email emailSolicitado) {
+                if (!java.util.Objects.equals(emailAtual, emailSolicitado)) {
+                        throw new IllegalArgumentException("O e-mail da conta não pode ser alterado.");
+                }
+        }
+
+        private void validarCpfImutavel(Cpf cpfAtual, Cpf cpfSolicitado) {
+                if (!java.util.Objects.equals(cpfAtual, cpfSolicitado)) {
+                        throw new IllegalArgumentException("O CPF da conta não pode ser alterado.");
+                }
+        }
+
+        private ResponseStatusException conflitoCadastro() {
+                return new ResponseStatusException(HttpStatus.CONFLICT,
+                                "Não foi possível concluir o cadastro com os dados informados.");
         }
 
         private void invalidarDesafiosVerificacao(Integer usuarioId) {

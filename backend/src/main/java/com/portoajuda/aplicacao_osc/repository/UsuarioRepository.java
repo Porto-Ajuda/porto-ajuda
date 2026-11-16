@@ -38,6 +38,8 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
 
         boolean existsByEmail(Email email);
 
+        boolean existsByCpf(com.portoajuda.aplicacao_osc.utils.Cpf cpf);
+
         List<Usuario> findByEmailVerificadoFalseAndDataCriacaoBefore(
                         LocalDateTime limite);
 

@@ -1161,6 +1161,14 @@ const acessibilidadeHTML = `
                 🤟 Ativar Libras
             </button>
 
+            <h3>Assistência por voz</h3>
+            <button id="acss-voz-configurar" class="opcao-acessibilidade" type="button">
+                Configurar voz no atendimento
+            </button>
+            <button id="acss-voz-sair" class="opcao-acessibilidade" type="button" hidden>
+                Sair da assistência por voz
+            </button>
+
         </div>
 
     </div>
@@ -1174,6 +1182,15 @@ document.body.insertAdjacentHTML(
     "beforeend",
     acessibilidadeHTML
 );
+
+/* Assistente de suporte independente do painel de acessibilidade/VLibras. */
+const supportAssistantStyles = document.createElement("link");
+supportAssistantStyles.rel = "stylesheet";
+supportAssistantStyles.href = "../styles/support-assistant.css";
+document.head.appendChild(supportAssistantStyles);
+import("./support-assistant.js").catch(() => {
+    // A falha no widget não pode impedir navegação ou acessibilidade.
+});
 
 /* =========================================================
    VLibras

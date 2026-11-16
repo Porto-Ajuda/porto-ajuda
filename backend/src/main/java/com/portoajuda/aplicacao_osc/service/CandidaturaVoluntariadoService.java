@@ -18,6 +18,8 @@ import com.portoajuda.aplicacao_osc.enums.TipoPost;
 import com.portoajuda.aplicacao_osc.repository.CandidaturasVoluntariadoRepository;
 import com.portoajuda.aplicacao_osc.repository.OscRepository;
 import com.portoajuda.aplicacao_osc.repository.VagaRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -26,6 +28,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -42,6 +45,13 @@ public class CandidaturaVoluntariadoService {
     private final VagaRepository vagaRepository;
     private final OscRepository oscRepository;
     private final OscService oscService;
+    private final EntityManager entityManager;
+    @Autowired(required = false)
+    private ContentReportService contentReports;
+    @Autowired(required = false)
+    private ModerationPointsService moderationPoints;
+    @Autowired(required = false)
+    private VerificacaoRepresentanteService verificationService;
 
     @Transactional(readOnly = true)
     public DisponibilidadeCandidaturaDTO disponibilidadePublica(Integer vagaId) {
@@ -65,8 +75,13 @@ public class CandidaturaVoluntariadoService {
     @Transactional
     public CandidaturaUsuarioDTO candidatar(Integer vagaId, RequestCandidaturaDTO request, Usuario usuario) {
         exigirUsuario(usuario);
+        if (vagaId == null || vagaId < 1) throw naoEncontrada();
+        Vaga referencia = vagaRepository.findById(vagaId)
+                .orElseThrow(CandidaturaVoluntariadoService::naoEncontrada);
+        if(moderationPoints!=null)moderationPoints.requireBusinessMutationAllowed(usuario.getId(),oscIdFromVaga(referencia));
+        Osc oscBloqueada = bloquearOscDaVaga(referencia);
         Vaga vaga = bloquearVaga(vagaId);
-        validarVagaPublicaDisponivel(vaga);
+        validarVagaPublicaDisponivel(vaga, oscBloqueada);
         if (candidaturasRepository.existsByVaga_IdAndUsuario_IdAndStatusIn(
                 vagaId, usuario.getId(), STATUS_QUE_BLOQUEIAM_REAPLICACAO)) {
             throw conflito("Você já possui uma candidatura ativa ou encerrada para esta oportunidade.");
@@ -82,7 +97,8 @@ public class CandidaturaVoluntariadoService {
         candidatura.setMensagem(request == null || request.mensagem() == null ? null : request.mensagem().trim());
         candidatura.setStatus(StatusCandidatura.PENDENTE);
         candidatura.setDataCandidatura(LocalDate.now());
-        return CandidaturaUsuarioDTO.from(candidaturasRepository.save(candidatura));
+        return CandidaturaUsuarioDTO.from(candidaturasRepository.save(candidatura),
+                verificationService == null || verificationService.isPubliclyEligible(oscBloqueada.getId()));
     }
 
     @Transactional(readOnly = true)
@@ -90,7 +106,8 @@ public class CandidaturaVoluntariadoService {
         exigirUsuario(usuario);
         Pageable paginacao = paginacaoLimitada(pageable);
         return candidaturasRepository.findAllByUsuario_IdOrderByDataCandidaturaDesc(usuario.getId(), paginacao)
-                .map(CandidaturaUsuarioDTO::from);
+                .map(candidatura -> CandidaturaUsuarioDTO.from(candidatura,
+                        verificationService == null || verificationService.isPubliclyEligible(oscIdFromVaga(candidatura.getVaga()))));
     }
 
     @Transactional
@@ -98,9 +115,10 @@ public class CandidaturaVoluntariadoService {
         exigirUsuario(usuario);
         CandidaturasVoluntariado inicial = candidaturasRepository.findByIdAndUsuario_Id(candidaturaId, usuario.getId())
                 .orElseThrow(CandidaturaVoluntariadoService::naoEncontrada);
+        if(moderationPoints!=null)moderationPoints.requireBusinessMutationAllowed(usuario.getId(),oscIdFromVaga(inicial.getVaga()));
         Vaga vaga = bloquearVaga(inicial.getVaga().getId());
-        CandidaturasVoluntariado candidatura = candidaturasRepository.findByIdAndUsuario_Id(candidaturaId, usuario.getId())
-                .orElseThrow(CandidaturaVoluntariadoService::naoEncontrada);
+        entityManager.refresh(inicial, LockModeType.PESSIMISTIC_WRITE);
+        CandidaturasVoluntariado candidatura = inicial;
         if (candidatura.getVaga().getId().equals(vaga.getId()) == false) {
             throw naoEncontrada();
         }
@@ -108,17 +126,26 @@ public class CandidaturaVoluntariadoService {
             throw conflito("Somente candidaturas pendentes podem ser canceladas.");
         }
         candidatura.setStatus(StatusCandidatura.DESISTIU);
-        return CandidaturaUsuarioDTO.from(candidaturasRepository.save(candidatura));
+        return CandidaturaUsuarioDTO.from(candidaturasRepository.save(candidatura),
+                verificationService == null || verificationService.isPubliclyEligible(oscIdFromVaga(candidatura.getVaga())));
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public Page<CandidaturaOngDTO> listarDaOsc(Integer oscId, StatusCandidatura status, Usuario solicitante, Pageable pageable) {
-        Osc osc = validarMembro(oscId, solicitante);
+        exigirUsuario(solicitante);
+        if (oscId == null || oscId < 1) throw naoEncontrada();
+        if(moderationPoints!=null)moderationPoints.requireBusinessMutationAllowed(solicitante.getId(),oscId);
+        Osc osc = oscRepository.findForUpdateById(oscId)
+                .orElseThrow(CandidaturaVoluntariadoService::naoEncontrada);
+        if (osc.isArquivada()) throw naoEncontrada();
         CargoOsc cargo = oscService.obterCargoUsuario(osc, solicitante);
-        boolean podeDecidir = cargo == CargoOsc.CRIADOR || cargo == CargoOsc.ADMINISTRADOR;
+        if (cargo != CargoOsc.CRIADOR && cargo != CargoOsc.ADMINISTRADOR) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Somente CRIADOR ou ADMINISTRADOR pode consultar candidaturas desta ONG.");
+        }
         Pageable paginacao = paginacaoLimitada(pageable);
         return candidaturasRepository.listarPorOscEStatus(osc.getId(), status, paginacao)
-                .map(candidatura -> CandidaturaOngDTO.from(candidatura, podeDecidir));
+                .map(candidatura -> CandidaturaOngDTO.from(candidatura, true));
     }
 
     @Transactional
@@ -129,7 +156,11 @@ public class CandidaturaVoluntariadoService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "A decisão deve ser APROVADA ou RECUSADA.");
         }
-        Osc osc = validarMembro(oscId, solicitante);
+        exigirUsuario(solicitante);
+        if (oscId == null || oscId < 1) throw naoEncontrada();
+        Osc osc = oscRepository.findForUpdateById(oscId)
+                .orElseThrow(CandidaturaVoluntariadoService::naoEncontrada);
+        if (osc.isArquivada()) throw naoEncontrada();
         CargoOsc cargo = oscService.obterCargoUsuario(osc, solicitante);
         if (cargo != CargoOsc.CRIADOR && cargo != CargoOsc.ADMINISTRADOR) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
@@ -139,15 +170,15 @@ public class CandidaturaVoluntariadoService {
         CandidaturasVoluntariado inicial = candidaturasRepository.findByIdAndVaga_Post_Osc_Id(candidaturaId, oscId)
                 .orElseThrow(CandidaturaVoluntariadoService::naoEncontrada);
         Vaga vaga = bloquearVaga(inicial.getVaga().getId());
-        CandidaturasVoluntariado candidatura = candidaturasRepository.findByIdAndVaga_Post_Osc_Id(candidaturaId, oscId)
-                .orElseThrow(CandidaturaVoluntariadoService::naoEncontrada);
+        entityManager.refresh(inicial, LockModeType.PESSIMISTIC_WRITE);
+        CandidaturasVoluntariado candidatura = inicial;
         if (!candidatura.getVaga().getId().equals(vaga.getId())) throw naoEncontrada();
         if (candidatura.getStatus() != StatusCandidatura.PENDENTE) {
             throw conflito("Esta candidatura já recebeu uma decisão e não pode ser alterada.");
         }
 
         if (request.status() == StatusCandidatura.APROVADA) {
-            validarVagaPublicaDisponivel(vaga);
+            validarVagaPublicaDisponivel(vaga, osc);
             long aprovadas = candidaturasRepository.countByVaga_IdAndStatus(
                     vaga.getId(), StatusCandidatura.APROVADA);
             int capacidade = vaga.getQuantidadeVagas() == null ? 0 : vaga.getQuantidadeVagas();
@@ -159,12 +190,17 @@ public class CandidaturaVoluntariadoService {
         return CandidaturaOngDTO.from(candidaturasRepository.save(candidatura), true);
     }
 
-    private Osc validarMembro(Integer oscId, Usuario usuario) {
-        exigirUsuario(usuario);
-        if (oscId == null || oscId < 1) throw naoEncontrada();
-        Osc osc = oscRepository.findById(oscId).orElseThrow(CandidaturaVoluntariadoService::naoEncontrada);
-        oscService.obterCargoUsuario(osc, usuario);
-        return osc;
+    private Osc bloquearOscDaVaga(Vaga vaga) {
+        var post = vaga == null ? null : vaga.getPost();
+        var osc = post == null ? null : post.getOsc();
+        if (osc == null || osc.getId() == null) throw naoEncontrada();
+        return oscRepository.findForUpdateById(osc.getId())
+                .orElseThrow(CandidaturaVoluntariadoService::naoEncontrada);
+    }
+
+    private Integer oscIdFromVaga(Vaga vaga) {
+        return vaga == null || vaga.getPost() == null || vaga.getPost().getOsc() == null
+                ? null : vaga.getPost().getOsc().getId();
     }
 
     private Vaga bloquearVaga(Integer vagaId) {
@@ -172,13 +208,15 @@ public class CandidaturaVoluntariadoService {
         return vagaRepository.findForUpdateById(vagaId).orElseThrow(CandidaturaVoluntariadoService::naoEncontrada);
     }
 
-    private void validarVagaPublicaDisponivel(Vaga vaga) {
+    private void validarVagaPublicaDisponivel(Vaga vaga, Osc oscAtual) {
         if (!vagaBasicaDisponivel(vaga)) {
             throw conflito("Esta oportunidade não está aceitando candidaturas.");
         }
-        Osc oscAtual = oscRepository.findForUpdateById(vaga.getPost().getOsc().getId())
-                .orElseThrow(CandidaturaVoluntariadoService::naoEncontrada);
-        if (oscAtual.getStatus() != StatusOsc.ATIVA || oscAtual.isArquivada()) {
+        if (oscAtual.getStatus() != StatusOsc.ATIVA || oscAtual.isArquivada()
+                || vaga.getPost() == null || vaga.getPost().getOsc() == null
+                || !oscAtual.getId().equals(vaga.getPost().getOsc().getId())
+                || protecaoAtiva("OSC", oscAtual.getId())
+                || protecaoAtiva("POST", vaga.getPost().getId())) {
             throw conflito("Esta oportunidade não está aceitando candidaturas.");
         }
     }
@@ -189,8 +227,14 @@ public class CandidaturaVoluntariadoService {
         LocalDate hoje = LocalDate.now();
         return !(post == null || post.getTipo() != TipoPost.VOLUNTARIADO || !post.isAtivo()
                 || osc == null || osc.getStatus() != StatusOsc.ATIVA || osc.isArquivada()
+                || (verificationService != null && !verificationService.isPubliclyEligible(osc.getId()))
+                || protecaoAtiva("OSC", osc.getId()) || protecaoAtiva("POST", post.getId())
                 || vaga.getStatus() != StatusVaga.ABERTA || vaga.getQuantidadeVagas() == null
                 || vaga.getQuantidadeVagas() < 1 || vaga.getDataFim() == null || vaga.getDataFim().isBefore(hoje));
+    }
+
+    private boolean protecaoAtiva(String tipo, Integer id) {
+        return contentReports != null && contentReports.isBlocked(tipo, id);
     }
 
     private Pageable paginacaoLimitada(Pageable pageable) {

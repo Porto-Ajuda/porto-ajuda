@@ -1,9 +1,10 @@
 ﻿import { getAPI_URL } from "./modoBack.js";
 import { fetchAutenticado, sessaoInvalidaConfirmada } from "./api.js";
-import { obterEstadoSessao } from "./auth.js";
+import { obterEstadoSessao, obterTokenCSRF } from "./auth.js";
 import { confirmarPorDigitacao, notificar as notificarSistema } from "./confirm-modal.js";
 import { respostaConteudoOscValida, separarConteudoOsc, separarConteudoPublicoOsc, urlImagemSegura, validarArquivoImagem, validarConteudoOsc } from "./ong-content.js";
-import { obterTokenCSRF } from "./auth.js";
+import { configurarCamposVoluntariado, converterValorBooleano, enviarAtualizacaoOsc, montarPayloadAtualizacaoOsc } from "./ong-profile-edit.js";
+import { carregarAvisoRestricaoConteudo, carregarModeracaoPerfil } from "./moderation-profile.js";
 const API_URL = getAPI_URL();
 let oscAtual = null;
 let cargoAtual = null;
@@ -16,6 +17,8 @@ const imagensConteudoOsc = {
 };
 let origemVisualizadorConteudo = null;
 let overflowAnteriorVisualizador = null;
+let moderationSettingsOscId = null;
+let moderationSettingsPromise = null;
 let requisicaoConteudoPublicoAtual = 0;
 let membroOscConfirmado = false;
 let verificacaoMembroOscConcluida = false;
@@ -596,6 +599,11 @@ function configurarCompartilhamento(osc) {
 }
 
 function renderizarPerfil(osc) {
+    const botaoDenunciarOsc = document.getElementById("denunciar-osc");
+    if (botaoDenunciarOsc) {
+        botaoDenunciarOsc.dataset.reportId = String(osc.id);
+        botaoDenunciarOsc.hidden = osc.status !== "ATIVA" || osc.arquivada === true;
+    }
     document.title = `${textoLimpo(osc.nome) || "Organização"} | Porto Ajuda`;
     const avisoStatus = document.getElementById("estado-status-osc");
     avisoStatus.hidden = osc.status !== "INATIVA" && !osc.arquivada;
@@ -886,8 +894,7 @@ function definirSelectBooleano(id, valor) {
 }
 
 function valorBooleano(id) {
-    const valor = document.getElementById(id).value;
-    return valor === "" ? null : valor === "true";
+    return converterValorBooleano(document.getElementById(id).value);
 }
 
 function preencherCamposEdicao(dados) {
@@ -923,7 +930,10 @@ function preencherCamposEdicao(dados) {
     definirSelectBooleano("edicao-certificado", dados.emiteCertificadoVoluntario);
     atualizarCamposVoluntariado();
 }
-function atualizarCamposVoluntariado() { const sim = document.getElementById("edicao-aceita-voluntarios").value === "true"; const grupo = document.getElementById("edicao-campos-voluntariado"); grupo.hidden = !sim; grupo.querySelectorAll("input,select,textarea").forEach(el => { el.disabled = !sim; }); }
+function atualizarCamposVoluntariado() {
+    const grupo = document.getElementById("edicao-campos-voluntariado");
+    configurarCamposVoluntariado(grupo, valorBooleano("edicao-aceita-voluntarios"));
+}
 
 async function requisicaoAutenticada(caminho, opcoes = {}) {
     const resposta = await fetchAutenticado(caminho, opcoes);
@@ -1111,6 +1121,19 @@ function abrirVisualizadorConteudo(item, oportunidade, origem) {
     document.getElementById("titulo-visualizador-conteudo").textContent = item.titulo;
     document.getElementById("texto-visualizador-conteudo").textContent = item.conteudo;
     preencherVisualizadorOportunidade(oportunidade ? item : { vaga: null });
+    let denunciarConteudo = document.getElementById("denunciar-conteudo-osc");
+    if (!denunciarConteudo) {
+        denunciarConteudo = document.createElement("button");
+        denunciarConteudo.id = "denunciar-conteudo-osc";
+        denunciarConteudo.type = "button";
+        denunciarConteudo.className = "btn btn-secundario";
+        denunciarConteudo.dataset.contentReport = "";
+        denunciarConteudo.textContent = "Denunciar";
+        document.querySelector("#dialogo-conteudo-publico .visualizador-texto-conteudo")?.append(denunciarConteudo);
+    }
+    denunciarConteudo.dataset.reportType = oportunidade ? "VOLUNTARIADO" : "PUBLICACAO";
+    denunciarConteudo.dataset.reportId = String(item.id);
+    denunciarConteudo.hidden = !Number.isInteger(Number(item.id)) || Number(item.id) < 1;
     const data = item.dataAtualizacao || item.dataCriacao;
     const dataElemento = document.getElementById("data-visualizador-conteudo");
     dataElemento.textContent = `${item.dataAtualizacao ? "Atualizado" : "Publicado"} em ${dataConteudo(data)}`;
@@ -1491,7 +1514,7 @@ function mensagemErroConteudo(resposta) {
     if (!resposta) return "Não foi possível confirmar a sessão. Entre novamente e tente de novo.";
     if (resposta.status === 400) return "Revise os campos e as datas informadas.";
     if (resposta.status === 401) return "Sua sessão expirou. Entre novamente para continuar.";
-    if (resposta.status === 403) return "Seu vínculo ou cargo não permite esta operação.";
+    if (resposta.status === 403) return "A operação não foi autorizada. Confirme seu vínculo e consulte os avisos de moderação desta conta e da ONG.";
     if (resposta.status === 404) return "A organização ou o conteúdo não está disponível.";
     if (resposta.status === 409) return "A operação conflita com o estado atual. Atualize a lista e revise as candidaturas antes de tentar novamente.";
     if (resposta.status === 413) return "O arquivo enviado excede o limite permitido de 10 MB.";
@@ -1500,6 +1523,12 @@ function mensagemErroConteudo(resposta) {
 
 async function salvarConteudo(form, operation) {
     if (form.dataset.salvando === "true" || !form.reportValidity()) return;
+    const restrictionState = form.dataset.pointsRestrictionState;
+    if (["blocked", "checking", "unknown"].includes(restrictionState)) {
+        const notice = document.querySelector("[data-points-write-notice]:not([hidden])");
+        notice?.scrollIntoView({ behavior: "smooth", block: "center" });
+        return;
+    }
     const isOpportunity = operation === "opportunity";
     const button = form.querySelector("button[type=submit]");
     const feedback = document.getElementById(isOpportunity ? "oportunidade-form-feedback-osc" : "post-form-feedback-osc");
@@ -1540,7 +1569,12 @@ async function salvarConteudo(form, operation) {
             method,
             body: dados
         });
-        if (!resposta?.ok) throw new Error(mensagemErroConteudo(resposta));
+        if (!resposta?.ok) {
+            if (resposta.status === 403) {
+                void carregarAvisoRestricaoConteudo(oscAtual.id, ["CRIADOR", "ADMINISTRADOR"].includes(cargoAtual), moderationSettingsPromise, true);
+            }
+            throw new Error(mensagemErroConteudo(resposta));
+        }
         await resposta.json();
         document.getElementById(isOpportunity ? "dialogo-oportunidade-osc" : "dialogo-post-osc").close();
         notificar(document.getElementById("notificacao-osc"),
@@ -1551,7 +1585,7 @@ async function salvarConteudo(form, operation) {
         feedback.textContent = erro.message || "Não foi possível salvar. Atualize a lista e tente novamente.";
     } finally {
         form.dataset.salvando = "false";
-        button.disabled = false;
+        button.disabled = ["blocked", "checking", "unknown"].includes(form.dataset.pointsRestrictionState);
     }
 }
 
@@ -1766,6 +1800,17 @@ async function configurarGestao() {
     const formularioEdicao = document.getElementById("form-edicao-osc");
     const feedbackEdicao = document.getElementById("edicao-feedback");
     const feedbackMembros = document.getElementById("membros-feedback");
+    const moderationSection = document.getElementById("moderacao-configuracoes-osc");
+    let moderationSubjectPromise = null;
+    if (moderationSection) {
+        moderationSection.hidden = !admin;
+        if (admin && moderationSection.dataset.initialized !== "true") {
+            moderationSection.dataset.initialized = "true";
+            moderationSettingsOscId = oscAtual.id;
+            moderationSettingsPromise = carregarModeracaoPerfil(moderationSection, `/osc/${oscAtual.id}/moderation`);
+        }
+        if (admin && Number(moderationSettingsOscId) === Number(oscAtual.id)) moderationSubjectPromise = moderationSettingsPromise;
+    }
     if (oscAtual.arquivada) {
         gestao.hidden = true;
         painelMembros.hidden = true;
@@ -1774,6 +1819,7 @@ async function configurarGestao() {
         return;
     }
     configurarConteudo();
+    void carregarAvisoRestricaoConteudo(oscAtual.id, admin, moderationSubjectPromise);
     void carregarConteudoGestao();
     document.getElementById("form-adicionar-membro").hidden = !admin;
     const podeEditarDados = ["CRIADOR", "ADMINISTRADOR", "EDITOR"].includes(cargoAtual);
@@ -1825,6 +1871,10 @@ async function configurarGestao() {
         formularioEdicao.addEventListener("submit", async (evento) => {
             evento.preventDefault();
             if (formularioEdicao.dataset.salvando === "true") return;
+            if (["blocked", "checking", "unknown"].includes(formularioEdicao.dataset.pointsRestrictionState)) {
+                document.querySelector("[data-points-write-notice]:not([hidden])")?.scrollIntoView({ behavior: "smooth", block: "center" });
+                return;
+            }
             if (!formularioEdicao.reportValidity()) return;
             formularioEdicao.dataset.salvando = "true";
             const botaoSalvar = formularioEdicao.querySelector("button[type=submit]");
@@ -1833,34 +1883,23 @@ async function configurarGestao() {
             try {
                 const opcionais = (id) => document.getElementById(id).value.trim() || null;
                 const numeroOpcional = (id) => document.getElementById(id).value === "" ? null : Number(document.getElementById(id).value);
-                const resposta = await requisicaoAutenticada("/osc/put", {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        cnpj: snapshotDadosEdicao?.cnpj || oscAtual.cnpj,
-                        descricaoCurta: document.getElementById("edicao-descricao-curta").value.trim(),
-                        descricao: document.getElementById("edicao-descricao").value,
-                        email: document.getElementById("edicao-email").value,
-                        telefone: opcionais("edicao-telefone"), whatsapp: opcionais("edicao-whatsapp"),
-                        site: opcionais("edicao-site"), instagram: opcionais("edicao-instagram"),
-                        linkedin: opcionais("edicao-linkedin"), youtube: opcionais("edicao-youtube"),
-                        areaGeografica: document.getElementById("edicao-area-geografica").value,
-                        pais: document.getElementById("edicao-pais").value.trim(),
-                        estado: opcionais("edicao-estado"), cidade: document.getElementById("edicao-cidade").value.trim(),
-                        cep: document.getElementById("edicao-cep").value.trim(), bairro: document.getElementById("edicao-bairro").value.trim(),
-                        rua: document.getElementById("edicao-rua").value.trim(), numero: opcionais("edicao-numero"),
-                        complemento: opcionais("edicao-complemento"),
-                        diasHorariosFuncionamento: [...document.querySelectorAll("#edicao-dias-semana input:checked")].map(el => el.value).join(", ") || null,
-                        horarioAbertura: opcionais("edicao-horario-abertura"), horarioFechamento: opcionais("edicao-horario-fechamento"),
-                        atendimentoPresencial: valorBooleano("edicao-presencial"), atendimentoOnline: valorBooleano("edicao-online"),
-                        necessitaAgendamento: valorBooleano("edicao-agendamento"), aceitaVoluntarios,
-                        frequenciaVoluntariado: opcionais("edicao-frequencia"), idadeMinimaVoluntario: numeroOpcional("edicao-idade-minima"),
-                        processoSeletivoVoluntario: valorBooleano("edicao-processo-seletivo"), emiteCertificadoVoluntario: valorBooleano("edicao-certificado"),
-                        atividadesVoluntariado: opcionais("edicao-atividades"),
-                        causasSecundarias: [...causasEdicao], ods: [...odsEdicao].map(Number)
-                    })
+                const payload = montarPayloadAtualizacaoOsc({
+                    cnpj: snapshotDadosEdicao?.cnpj || oscAtual.cnpj,
+                    obterValor: id => document.getElementById(id).value,
+                    opcional: opcionais,
+                    numeroOpcional,
+                    diasHorariosFuncionamento: [...document.querySelectorAll("#edicao-dias-semana input:checked")]
+                        .map(el => el.value).join(", ") || null,
+                    causasSecundarias: [...causasEdicao],
+                    ods: [...odsEdicao].map(Number)
                 });
-                if (!resposta?.ok) throw new Error(await mensagemErroApi(resposta, "salvar dados"));
+                const resposta = await enviarAtualizacaoOsc(requisicaoAutenticada, payload);
+                if (!resposta?.ok) {
+                    if (resposta.status === 403) {
+                        void carregarAvisoRestricaoConteudo(oscAtual.id, ["CRIADOR", "ADMINISTRADOR"].includes(cargoAtual), moderationSettingsPromise, true);
+                    }
+                    throw new Error(await mensagemErroApi(resposta, "salvar dados"));
+                }
                 const respostaEdicao = resposta.clone();
                 const dadosSalvos = await respostaEdicao.json().catch(() => null);
                 notificar(feedbackEdicao, "Informações da organização atualizadas com sucesso.");
@@ -1886,7 +1925,7 @@ async function configurarGestao() {
                 notificar(feedbackEdicao, erro.message || "Não foi possível salvar as informações.", "erro");
             } finally {
                 formularioEdicao.dataset.salvando = "false";
-                botaoSalvar.disabled = false;
+                botaoSalvar.disabled = ["blocked", "checking", "unknown"].includes(formularioEdicao.dataset.pointsRestrictionState);
             }
         });
         formularioEdicao.addEventListener("input", atualizarEstadoEdicao);

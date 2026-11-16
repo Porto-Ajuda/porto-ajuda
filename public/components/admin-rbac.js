@@ -95,6 +95,100 @@ export function clearProtectedDashboard(elements, { keepLogout = false } = {}) {
     if (!keepLogout) elements.logout.hidden = true;
 }
 
+const ADMIN_MODULE_HASHES = Object.freeze({
+    "#denuncias": "reports",
+    "#entidades": "entities",
+    "#recursos": "appeals",
+    "#verificacao-representantes": "verification",
+    "#administradores": "administrators",
+    "#atendimentos": "support"
+});
+
+/** Resolves direct links to supported admin modules without treating module errors as logout. */
+export function adminPageFromHash(hash) {
+    return ADMIN_MODULE_HASHES[hash] ?? "dashboard";
+}
+
+/** Displays a failure inside its own module and leaves authenticated navigation untouched. */
+export function renderAdminModuleFailure(document, page, message) {
+    const targets = {
+        reports: ["status-denuncias", "lista-denuncias"],
+        entities: ["status-entidades-admin", "lista-entidades-admin"],
+        appeals: ["status-recursos-admin", "lista-recursos-admin"],
+        verification: ["status-verificacao-representantes", "lista-verificacao-representantes"],
+        administrators: ["status-administradores", "linhas-administradores"],
+        support: ["status-atendimentos-admin", "lista-atendimentos-admin"]
+    };
+    const target = targets[page];
+    if (!target) return false;
+
+    const status = document.getElementById(target[0]);
+    const list = document.getElementById(target[1]);
+    if (status) {
+        status.textContent = message;
+        status.hidden = false;
+    }
+    if (list) {
+        list.replaceChildren();
+        list.setAttribute("aria-busy", "false");
+    }
+    return true;
+}
+
+const adminDialogScrollLocks = new WeakMap();
+let activeAdminDialogLocks = 0;
+let savedAdminPageScroll = null;
+
+/** Opens a native admin dialog with a shared, nest-safe page scroll lock. */
+export function showAdminDialog(dialog, documentRef = document, windowRef = window) {
+    if (!dialog || typeof dialog.showModal !== "function") {
+        throw new TypeError("A native dialog element is required.");
+    }
+    if (adminDialogScrollLocks.has(dialog)) return;
+
+    if (activeAdminDialogLocks === 0) {
+        const body = documentRef.body;
+        const root = documentRef.documentElement;
+        const scrollBarWidth = Math.max(0, windowRef.innerWidth - root.clientWidth);
+        const computedPadding = Number.parseFloat(windowRef.getComputedStyle?.(body)?.paddingRight ?? "0") || 0;
+        savedAdminPageScroll = {
+            bodyOverflow: body.style.overflow,
+            rootOverflow: root.style.overflow,
+            bodyPaddingRight: body.style.paddingRight,
+            scrollX: windowRef.scrollX ?? 0,
+            scrollY: windowRef.scrollY ?? 0
+        };
+        body.style.overflow = "hidden";
+        root.style.overflow = "hidden";
+        if (scrollBarWidth > 0) body.style.paddingRight = `${computedPadding + scrollBarWidth}px`;
+    }
+
+    activeAdminDialogLocks += 1;
+    let released = false;
+    const release = () => {
+        if (released) return;
+        released = true;
+        adminDialogScrollLocks.delete(dialog);
+        activeAdminDialogLocks = Math.max(0, activeAdminDialogLocks - 1);
+        if (activeAdminDialogLocks !== 0 || !savedAdminPageScroll) return;
+
+        const saved = savedAdminPageScroll;
+        savedAdminPageScroll = null;
+        documentRef.body.style.overflow = saved.bodyOverflow;
+        documentRef.documentElement.style.overflow = saved.rootOverflow;
+        documentRef.body.style.paddingRight = saved.bodyPaddingRight;
+        try { windowRef.scrollTo(saved.scrollX, saved.scrollY); } catch { /* Scroll restoration is best effort. */ }
+    };
+    adminDialogScrollLocks.set(dialog, release);
+    dialog.addEventListener("close", release, { once: true });
+    try {
+        dialog.showModal();
+    } catch (error) {
+        release();
+        throw error;
+    }
+}
+
 async function fetchAdminResponse(url, fetchImpl, signal, options = {}) {
     let response;
     try {
@@ -114,6 +208,28 @@ async function fetchAdminResponse(url, fetchImpl, signal, options = {}) {
     if (response.status === 401) throw new AdminRequestError("unauthorized", 401);
     if (response.status === 403) throw new AdminRequestError("forbidden", 403);
     return response;
+}
+
+export async function fetchAdminModuleRequest(apiUrl, path, options = {}, fetchImpl = fetch, signal) {
+    const method = (options.method || "GET").toUpperCase();
+    const headers = { ...(options.headers || {}) };
+    if (!["GET", "HEAD", "OPTIONS", "TRACE"].includes(method)) {
+        const csrfResponse = await fetchAdminResponse(`${apiUrl}/usuario/csrf`, fetchImpl, signal);
+        if (!csrfResponse.ok) throw new AdminRequestError("unavailable", csrfResponse.status);
+        let csrf;
+        try { csrf = await csrfResponse.json(); } catch { throw new AdminRequestError("invalid-response"); }
+        if (!csrf?.headerName || !csrf?.token) throw new AdminRequestError("invalid-response");
+        headers[csrf.headerName] = csrf.token;
+    }
+    const response = await fetchAdminResponse(`${apiUrl}${path}`, fetchImpl, signal, {
+        ...options, method, headers: { Accept: "application/json", ...headers }
+    });
+    if (!response.ok) {
+        const kind = response.status === 503 ? "unavailable" : response.status === 409 ? "conflict" : "unexpected-response";
+        throw new AdminRequestError(kind, response.status);
+    }
+    if (response.status === 204) return null;
+    try { return await response.json(); } catch { throw new AdminRequestError("invalid-response", response.status); }
 }
 
 export async function fetchAdminCapabilities(apiUrl, fetchImpl = fetch, signal) {

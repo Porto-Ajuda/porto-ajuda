@@ -57,7 +57,9 @@ import org.springframework.web.util.UriUtils;
  * It creates a single synthetic account per test and removes only rows linked to that ID.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = {"server.address=127.0.0.1", "spring.jpa.hibernate.ddl-auto=validate"})
+        properties = {"server.address=127.0.0.1", "spring.jpa.hibernate.ddl-auto=validate",
+                "app.security.railway-public-edge-enabled=true", "app.admin-auth.controls-cleanup-cron=-",
+                "app.maintenance.cleanup-cron=-", "app.initialization.seed-roles=false"})
 @EnabledIfEnvironmentVariable(named = "PASSWORD_RECOVERY_TEST_DATABASE_CONFIRMED", matches = "true")
 class PasswordRecoverySupabaseIntegrationTest {
     private static final String OLD_PASSWORD = "OldPassw0rd!";
@@ -75,6 +77,8 @@ class PasswordRecoverySupabaseIntegrationTest {
     @Autowired RecuperacaoSenhaRepository recoveries;
     @Autowired javax.sql.DataSource dataSource;
     @Autowired RecuperacaoSenhaService recoveryService;
+    @Autowired CodigoAutenticacaoService codigoAutenticacaoService;
+    @Autowired AdminAuthCodeSecurity authControlCrypto;
     @Autowired UsuarioService userService;
     @Autowired SessaoUsuarioService userSessionService;
     @Autowired AdminPrivilegedSessionService adminSessionService;
@@ -131,6 +135,7 @@ class PasswordRecoverySupabaseIntegrationTest {
     @AfterEach
     void cleanOnlySyntheticFixtureRows() {
         reset(adminSessionSpy);
+        if (email != null && testIp != null) cleanSyntheticAuthControlRows();
         if (fixture == null || fixture.getId() == null) return;
         Integer id = fixture.getId();
         String emailKey = hmac(email);
@@ -145,6 +150,17 @@ class PasswordRecoverySupabaseIntegrationTest {
         jdbc.update("delete from usuario_roles where id_usuario = ?", id);
         jdbc.update("delete from usuarios where id = ?", id);
         fixture = null;
+    }
+
+    private void cleanSyntheticAuthControlRows() {
+        List<String> keys = List.of(
+                authControlCrypto.hashIdentifier("control:START_IP", "user-login-ip:" + testIp),
+                authControlCrypto.hashIdentifier("control:ACCOUNT_FAILURE", "user-login-failure:" + email),
+                authControlCrypto.hashIdentifier("control:START_IP", "user-registration-ip:" + testIp),
+                authControlCrypto.hashIdentifier("control:START_IP", "user-resend-ip:" + testIp),
+                authControlCrypto.hashIdentifier("control:START_ACCOUNT", "user-resend-account:" + email),
+                authControlCrypto.hashIdentifier("control:START_ACCOUNT", "user-reactivation-account:" + email));
+        for (String key : keys) jdbc.update("delete from admin_auth_controls where control_key = ?", key);
     }
 
     @Test
@@ -232,6 +248,233 @@ class PasswordRecoverySupabaseIntegrationTest {
         assertEquals(currentExpiry, currentAfter.getExpiraEm());
         assertTrue(currentAfter.isLembrarDeMim());
         assertTrue(encoder.matches(CHANGED_PASSWORD, users.findById(fixture.getId()).orElseThrow().getSenha()));
+        assertEquals(1, activeSessionCount());
+    }
+
+    @Test
+    void concurrentWrongPasswordAttemptsAreAccountLimitedAndUnknownEmailsRemainGeneric() throws Exception {
+        int attempts = AutenticacaoAbusoUsuarioService.LOGIN_ACCOUNT_FAILURES + 3;
+        CountDownLatch ready = new CountDownLatch(attempts);
+        CountDownLatch start = new CountDownLatch(1);
+        try (var pool = Executors.newFixedThreadPool(attempts)) {
+            List<Future<HttpResult>> failures = new java.util.ArrayList<>();
+            for (int i = 0; i < attempts; i++) {
+                failures.add(pool.submit(() -> concurrentHttpResult(ready, start, "/usuario/login",
+                        java.util.Map.of("email", email.toUpperCase(java.util.Locale.ROOT),
+                                "senha", "WrongPassword1!", "lembrarDeMim", false))));
+            }
+            assertTrue(ready.await(10, TimeUnit.SECONDS));
+            start.countDown();
+            String genericFailure = null;
+            for (Future<HttpResult> result : failures) {
+                HttpResult failed = result.get(30, TimeUnit.SECONDS);
+                assertEquals(401, failed.statusCode());
+                if (genericFailure == null) genericFailure = failed.body();
+                else assertEquals(genericFailure, failed.body());
+            }
+        }
+
+        String failureKey = authControlCrypto.hashIdentifier(
+                "control:ACCOUNT_FAILURE", "user-login-failure:" + email);
+        Integer failureCount = jdbc.queryForObject(
+                "select counter from admin_auth_controls where control_key = ?", Integer.class, failureKey);
+        Instant lockedUntil = jdbc.queryForObject(
+                "select locked_until from admin_auth_controls where control_key = ?", Instant.class, failureKey);
+        assertEquals(AutenticacaoAbusoUsuarioService.LOGIN_ACCOUNT_FAILURES, failureCount);
+        assertTrue(lockedUntil.isAfter(Instant.now()));
+
+        HttpResult correctPasswordDuringThrottle = request("POST", "/usuario/login", loginBody(OLD_PASSWORD), true, true);
+        HttpResult unknown = request("POST", "/usuario/login", java.util.Map.of(
+                "email", "unknown-" + UUID.randomUUID() + "@example.invalid",
+                "senha", OLD_PASSWORD, "lembrarDeMim", false), true, true);
+        assertEquals(200, correctPasswordDuringThrottle.statusCode(),
+                "A correct password must not be blocked by failures an attacker can trigger.");
+        assertEquals(401, unknown.statusCode());
+        assertEquals(1, activeSessionCount());
+    }
+
+    @Test
+    void confirmationResendLimitAppliesToPendingAccountsWithoutEnumeration() throws Exception {
+        fixture.setEmailVerificado(false);
+        fixture = users.saveAndFlush(fixture);
+        String generic = null;
+        for (int i = 0; i < AutenticacaoAbusoUsuarioService.RESEND_WINDOW_ACCOUNT; i++) {
+            HttpResult response = request("POST", "/usuario/reenviar-confirmacao",
+                    java.util.Map.of("email", email), true, true);
+            assertEquals(200, response.statusCode());
+            if (generic == null) generic = response.body(); else assertEquals(generic, response.body());
+        }
+        HttpResult overLimit = request("POST", "/usuario/reenviar-confirmacao",
+                java.util.Map.of("email", email), true, true);
+        HttpResult unknown = request("POST", "/usuario/reenviar-confirmacao",
+                java.util.Map.of("email", "unknown-" + UUID.randomUUID() + "@example.invalid"), true, true);
+        assertEquals(200, overLimit.statusCode());
+        assertEquals(200, unknown.statusCode());
+        assertEquals(generic, overLimit.body());
+        assertEquals(generic, unknown.body());
+        verify(emailService, org.mockito.Mockito.times(AutenticacaoAbusoUsuarioService.RESEND_WINDOW_ACCOUNT))
+                .enviarConfirmacaoEmail(org.mockito.ArgumentMatchers.anyString(), eq(email),
+                        org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString());
+    }
+    @Test
+    void registrationAcceptsSyntheticAccountAndReturnsGenericConflictsForDuplicateEmailOrCpf() throws Exception {
+        String registeredEmail = "abuse-register-" + UUID.randomUUID() + "@example.invalid";
+        String registeredCpf = validSyntheticCpf();
+        HttpResult created = request("POST", "/usuario/register",
+                registrationBody(registeredEmail, registeredCpf), true, true);
+        assertEquals(201, created.statusCode());
+
+        Usuario registered = users.findByEmail(new Email(registeredEmail)).orElseThrow();
+        assertNotEquals(47, registered.getId());
+        assertNotEquals(48, registered.getId());
+        recordSyntheticFixtureId(registered.getId());
+        try {
+            assertEquals(registeredCpf, registered.getCpf().valor());
+            assertEquals(registeredEmail, registered.getEmail().valor());
+            HttpResult duplicateEmail = request("POST", "/usuario/register",
+                    registrationBody(email, validSyntheticCpf()), true, true);
+            HttpResult duplicateCpf = request("POST", "/usuario/register",
+                    registrationBody("abuse-duplicate-" + UUID.randomUUID() + "@example.invalid",
+                            fixture.getCpf().valor()), true, true);
+            assertEquals(409, duplicateEmail.statusCode());
+            assertEquals(409, duplicateCpf.statusCode());
+            assertFalse(duplicateEmail.body().contains(email));
+            assertFalse(duplicateEmail.body().contains(fixture.getCpf().valor()));
+            assertFalse(duplicateCpf.body().contains(email));
+            assertFalse(duplicateCpf.body().contains(fixture.getCpf().valor()));
+            verify(emailService, org.mockito.Mockito.times(1)).enviarConfirmacaoEmail(
+                    org.mockito.ArgumentMatchers.anyString(), eq(registeredEmail),
+                    org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString());
+        } finally {
+            jdbc.update("delete from usuario_roles where id_usuario = ?", registered.getId());
+            jdbc.update("delete from usuarios where id = ?", registered.getId());
+        }
+    }
+
+    @Test
+    void emailConfirmationReplayDoesNotIssueAnotherPasswordlessLoginCode() throws Exception {
+        fixture.setEmailVerificado(false);
+        fixture = users.saveAndFlush(fixture);
+        String token = jwtService.generateEmailVerificationToken(fixture);
+        String confirmationPath = "/usuario/confirmar-email?token="
+                + UriUtils.encodeQueryParam(token, StandardCharsets.UTF_8);
+        var first = http.send(java.net.http.HttpRequest.newBuilder(
+                java.net.URI.create(baseUrl() + confirmationPath)).GET().build(),
+                java.net.http.HttpResponse.BodyHandlers.discarding());
+        assertEquals(302, first.statusCode());
+        assertTrue(users.findById(fixture.getId()).orElseThrow().isEmailVerificado());
+        assertEquals(1, jdbc.queryForObject(
+                "select count(*) from codigos_autenticacao where usuario_id = ?", Integer.class, fixture.getId()));
+
+        var replay = http.send(java.net.http.HttpRequest.newBuilder(
+                java.net.URI.create(baseUrl() + confirmationPath)).GET().build(),
+                java.net.http.HttpResponse.BodyHandlers.discarding());
+        assertEquals(302, replay.statusCode());
+        assertEquals(1, jdbc.queryForObject(
+                "select count(*) from codigos_autenticacao where usuario_id = ?", Integer.class, fixture.getId()));
+    }
+
+    private java.util.Map<String, Object> registrationBody(String email, String cpf) {
+        return java.util.Map.of(
+                "cpf", cpf,
+                "cep", "01001000",
+                "nome", "Conta Sintetica QA",
+                "nomeSocial", "",
+                "dataNascimento", "1990-01-01",
+                "email", email,
+                "genero", "PREFIRO_NAO_INFORMAR",
+                "telefone", "11912345678",
+                "senha", "SyntheticPassw0rd!");
+    }
+
+    @Test
+    void deletionRequestCanBeReactivatedWithinExistingSixMonthWindow() throws Exception {
+        var oldSession = userSessionService.criarSessao(fixture, true).sessao();
+        userService.solicitarExclusao(fixture.getId());
+        Usuario inactive = users.findById(fixture.getId()).orElseThrow();
+        assertFalse(inactive.isEnabled());
+        assertEquals(UsuarioService.calcularDataExclusao(inactive.getDataSolicitacaoExclusao()),
+                inactive.getDataExclusaoAgendada());
+        assertTrue(sessions.findById(oldSession.getId()).orElseThrow().isRevogada());
+
+        HttpResult reactivation = request("POST", "/usuario/cancelar-exclusao", java.util.Map.of(
+                "email", email, "senha", OLD_PASSWORD), true, true);
+        assertEquals(204, reactivation.statusCode());
+        Usuario reactivated = users.findById(fixture.getId()).orElseThrow();
+        assertTrue(reactivated.isEnabled());
+        assertNull(reactivated.getDataSolicitacaoExclusao());
+        assertNull(reactivated.getDataExclusaoAgendada());
+        assertTrue(sessions.findById(oldSession.getId()).orElseThrow().isRevogada());
+        assertEquals(200, request("POST", "/usuario/login", loginBody(OLD_PASSWORD), true, true).statusCode());
+    }
+
+    @Test
+    void passwordLoginLimitsCaseNormalizedFailuresAndKeepsUnknownResponsesGeneric() throws Exception {
+        String variedCaseEmail = email.toUpperCase(java.util.Locale.ROOT);
+        String genericFailure = null;
+        for (int i = 0; i < AutenticacaoAbusoUsuarioService.LOGIN_ACCOUNT_FAILURES; i++) {
+            HttpResult failed = request("POST", "/usuario/login",
+                    java.util.Map.of("email", variedCaseEmail, "senha", "WrongPassword1!", "lembrarDeMim", false),
+                    true, true);
+            assertEquals(401, failed.statusCode());
+            if (genericFailure == null) genericFailure = failed.body();
+            else assertEquals(genericFailure, failed.body());
+        }
+
+        HttpResult correctDuringAccountThrottle = request("POST", "/usuario/login", loginBody(OLD_PASSWORD), true, true);
+        HttpResult unknown = request("POST", "/usuario/login", java.util.Map.of(
+                "email", "unknown-" + UUID.randomUUID() + "@example.invalid",
+                "senha", OLD_PASSWORD, "lembrarDeMim", false), true, true);
+        assertEquals(200, correctDuringAccountThrottle.statusCode());
+        assertEquals(401, unknown.statusCode());
+        assertEquals(genericFailure, unknown.body());
+        assertEquals(1, activeSessionCount());
+        assertTrue(authControlCrypto.hashIdentifier("control:ACCOUNT_FAILURE",
+                "user-login-failure:" + email).matches("[0-9a-f]{64}"));
+    }
+
+    @Test
+    void loginRememberMeRefreshRotationAndLogoutRetainSessionRules() throws Exception {
+        HttpResult login = request("POST", "/usuario/login", loginBody(OLD_PASSWORD), true, true);
+        assertEquals(200, login.statusCode());
+        String access = cookie(login, "PA_ACCESS");
+        String originalRefresh = cookie(login, "PA_REFRESH");
+        var session = sessions.findById(jwtService.extractSessionId(access)).orElseThrow();
+        assertTrue(session.isLembrarDeMim());
+
+        HttpResult rotation = request("POST", "/usuario/refresh", null, true, true,
+                "PA_REFRESH=" + originalRefresh);
+        assertEquals(204, rotation.statusCode());
+        String rotatedRefresh = cookie(rotation, "PA_REFRESH");
+        assertNotEquals(originalRefresh, rotatedRefresh);
+        assertEquals(401, request("POST", "/usuario/refresh", null, true, true,
+                "PA_REFRESH=" + originalRefresh).statusCode());
+        String rotatedAccess = cookie(rotation, "PA_ACCESS");
+
+        HttpResult logout = request("POST", "/usuario/logout", null, true, true,
+                "PA_ACCESS=" + rotatedAccess);
+        assertEquals(204, logout.statusCode());
+        assertEquals(401, request("GET", "/usuario/sessao-atual", null, false, true,
+                "PA_ACCESS=" + rotatedAccess).statusCode());
+        assertEquals(401, request("POST", "/usuario/refresh", null, true, true,
+                "PA_REFRESH=" + rotatedRefresh).statusCode());
+    }
+
+    @Test
+    void passwordlessLoginCodeIsIpLimitedOneTimeAndCreatesOnlyTheExistingSessionType() throws Exception {
+        String code = codigoAutenticacaoService.criarCodigo(fixture);
+        HttpResult accepted = request("POST", "/usuario/trocar-codigo",
+                java.util.Map.of("codigo", code), true, true);
+        assertEquals(200, accepted.statusCode());
+        String access = cookie(accepted, "PA_ACCESS");
+        Long sessionId = jwtService.extractSessionId(access);
+        assertFalse(sessions.findById(sessionId).orElseThrow().isLembrarDeMim());
+        assertEquals(1, activeSessionCount());
+
+        HttpResult replay = request("POST", "/usuario/trocar-codigo",
+                java.util.Map.of("codigo", code), true, true);
+        assertEquals(401, replay.statusCode());
+        assertTrue(replay.body().contains("Código inválido"));
         assertEquals(1, activeSessionCount());
     }
 

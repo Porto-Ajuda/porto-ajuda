@@ -49,6 +49,12 @@ public final class AdminPermissionCatalog {
                 AdminPermission.REPORT_RESOLVE,
                 AdminPermission.APPEAL_READ,
                 AdminPermission.APPEAL_RESOLVE,
+                AdminPermission.NGO_VERIFICATION_READ,
+                AdminPermission.NGO_VERIFICATION_REVIEW,
+                AdminPermission.SUPPORT_READ,
+                AdminPermission.SUPPORT_MANAGE,
+                AdminPermission.ENTITY_READ,
+                AdminPermission.POINTS_READ,
                 AdminPermission.AUDIT_READ_CASE,
                 AdminPermission.SESSION_REVOKE_SELF));
         result.put(AdminProfile.MODERATOR, Set.of(
@@ -58,6 +64,8 @@ public final class AdminPermissionCatalog {
                 AdminPermission.CONTENT_DEACTIVATE,
                 AdminPermission.REPORT_READ,
                 AdminPermission.REPORT_REVIEW,
+                AdminPermission.SUPPORT_READ,
+                AdminPermission.SUPPORT_MANAGE,
                 AdminPermission.AUDIT_READ_CASE,
                 AdminPermission.SESSION_REVOKE_SELF));
         result.put(AdminProfile.AUDITOR, Set.of(
@@ -67,6 +75,8 @@ public final class AdminPermissionCatalog {
                 AdminPermission.CONTENT_READ,
                 AdminPermission.REPORT_READ,
                 AdminPermission.APPEAL_READ,
+                AdminPermission.ENTITY_READ,
+                AdminPermission.POINTS_READ,
                 AdminPermission.AUDIT_READ_GLOBAL,
                 AdminPermission.FINANCE_SUMMARY_READ,
                 AdminPermission.SESSION_REVOKE_SELF));

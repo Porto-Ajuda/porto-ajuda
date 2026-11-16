@@ -158,7 +158,9 @@ async function decide(item, status, button) {
                     await load(button.closest("[data-candidaturas-ong]"));
                     return;
                 }
-                if (response.status === 409) await load(button.closest("[data-candidaturas-ong]"));
+                if ([401, 403, 404, 409].includes(response.status)) {
+                    await load(button.closest("[data-candidaturas-ong]"));
+                }
                 throw new Error(response.status === 403 ? "Seu cargo n\u00e3o pode decidir candidaturas."
                     : response.status === 409 ? "A vaga atingiu a capacidade ou a candidatura j\u00e1 foi decidida. A lista foi atualizada."
                         : response.status === 404 ? "A candidatura n\u00e3o est\u00e1 mais dispon\u00edvel."
