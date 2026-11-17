@@ -11,7 +11,7 @@
 import { urlImagemSegura } from "./ong-content.js";
 
 export const VITRINE_MAX_ITENS = 6;
-const DISTANCIA_SETAS_PX = 60;
+const DISTANCIA_SETAS_PX = 200;
 
 function criarElemento(tag, classe, texto) {
     const elemento = document.createElement(tag);

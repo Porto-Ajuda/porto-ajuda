@@ -34,8 +34,8 @@
 @media (min-width: 1201px) {
     .vitrine {
         --v-altura: 450px;
-        --v-sangria: 90px;
-        --v-recuo: 275px; /* 60px de gap + 215px (metade da imagem de 430px) */
+        --v-sangria: 40px; /* respiro de rolagem à direita; sem fade */
+        --v-recuo: 275px; /* 60px de gap + 215px (metade da imagem de 430px); só vale com gap de 60px */
     }
 }
 
@@ -105,21 +105,21 @@
     display: none;
 }
 
-/* esmaece a borda onde o card some atrás da imagem */
+/* o fade esquerdo começa na borda da imagem e termina antes do primeiro card */
 @media (min-width: 1201px) {
     .vitrine-viewport {
-        -webkit-mask-image: linear-gradient(to right, transparent 0, transparent 40px, #000 150px);
-        mask-image: linear-gradient(to right, transparent 0, transparent 40px, #000 150px);
+        -webkit-mask-image: linear-gradient(to right, transparent 0, transparent calc(var(--v-recuo) - 60px), #000 calc(var(--v-recuo) - 5px), #000 100%);
+        mask-image: linear-gradient(to right, transparent 0, transparent calc(var(--v-recuo) - 60px), #000 calc(var(--v-recuo) - 5px), #000 100%);
     }
 }
 
-/* telas menores: sem imagem ao lado, esmaece as duas pontas */
+/* telas menores: sem imagem ao lado, mantém só um fade esquerdo curto */
 @media (max-width: 1200px) {
     .vitrine-viewport {
         padding-inline: 24px;
         scroll-padding-inline: 24px;
-        -webkit-mask-image: linear-gradient(to right, transparent 0, #000 24px, #000 calc(100% - 24px), transparent 100%);
-        mask-image: linear-gradient(to right, transparent 0, #000 24px, #000 calc(100% - 24px), transparent 100%);
+        -webkit-mask-image: linear-gradient(to right, transparent 0, #000 12px, #000 100%);
+        mask-image: linear-gradient(to right, transparent 0, #000 12px, #000 100%);
     }
 }
 
@@ -136,6 +136,7 @@
 .vitrine-trilho {
     display: flex;
     align-items: center;
+    transform: translateY(-12px);
     gap: var(--v-gap);
     width: max-content;
     min-width: 100%;

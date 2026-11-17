@@ -2198,6 +2198,23 @@ Lista escondida
   margin-top: 4px;
 }
 
+@media (min-width: 1201px) {
+  .section:has(.vitrine) {
+    width: 100%;
+    max-width: 1680px;
+    margin-inline: auto;
+    box-sizing: border-box;
+    justify-content: center;
+    gap: 60px;
+  }
+}
+
+.section-content:has(.vitrine) .section-link {
+  display: block;
+  width: fit-content;
+  margin: 28px auto 0;
+}
+
 .showcase-ilustracao > img:last-child {
   object-fit: cover;
 }
