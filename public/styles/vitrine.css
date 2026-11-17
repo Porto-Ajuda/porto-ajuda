@@ -105,21 +105,22 @@
     display: none;
 }
 
-/* o fade esquerdo começa na borda da imagem e termina antes do primeiro card */
+/* o fade esquerdo começa na borda da imagem e termina antes do primeiro card
+   e o fade direito usa metade da largura anterior (12px) */
 @media (min-width: 1201px) {
     .vitrine-viewport {
-        -webkit-mask-image: linear-gradient(to right, transparent 0, transparent calc(var(--v-recuo) - 60px), #000 calc(var(--v-recuo) - 5px), #000 100%);
-        mask-image: linear-gradient(to right, transparent 0, transparent calc(var(--v-recuo) - 60px), #000 calc(var(--v-recuo) - 5px), #000 100%);
+        -webkit-mask-image: linear-gradient(to right, transparent 0, transparent calc(var(--v-recuo) - 60px), #000 calc(var(--v-recuo) - 5px), #000 calc(100% - 12px), transparent 100%);
+        mask-image: linear-gradient(to right, transparent 0, transparent calc(var(--v-recuo) - 60px), #000 calc(var(--v-recuo) - 5px), #000 calc(100% - 12px), transparent 100%);
     }
 }
 
-/* telas menores: sem imagem ao lado, mantém só um fade esquerdo curto */
+/* telas menores: sem imagem ao lado, mantém o fade esquerdo curto e recoloca o da direita com 12px */
 @media (max-width: 1200px) {
     .vitrine-viewport {
         padding-inline: 24px;
         scroll-padding-inline: 24px;
-        -webkit-mask-image: linear-gradient(to right, transparent 0, #000 12px, #000 100%);
-        mask-image: linear-gradient(to right, transparent 0, #000 12px, #000 100%);
+        -webkit-mask-image: linear-gradient(to right, transparent 0, #000 12px, #000 calc(100% - 12px), transparent 100%);
+        mask-image: linear-gradient(to right, transparent 0, #000 12px, #000 calc(100% - 12px), transparent 100%);
     }
 }
 
@@ -153,7 +154,7 @@
     width: var(--v-w);
     height: 100%;
     container-type: inline-size;
-    transition: flex-basis .55s var(--v-ease), width .55s var(--v-ease);
+    transition: flex-basis .9s var(--v-ease), width .9s var(--v-ease);
 }
 
 .vitrine-card {
