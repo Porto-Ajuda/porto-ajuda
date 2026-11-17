@@ -57,8 +57,6 @@
     border-radius: 18px;
 
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
-
-    display: none;
 }
 
 #painel-acessibilidade,
@@ -67,10 +65,49 @@
 }
 
 
-/* PAINEL ABERTO */
+/* ANIMAÇÃO DO PAINEL (sai de trás da bolinha) */
+
+#botao-acessibilidade {
+    position: relative;
+    z-index: 2; /* botão fica por cima, o painel parece sair de trás */
+}
+
+#painel-acessibilidade {
+    display: block;
+    z-index: 1;
+
+    /* origem no centro do botão: 30px da borda direita, 45px abaixo do painel */
+    transform-origin: calc(100% - 30px) calc(100% + 45px);
+
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: scale(.2) translateY(20px);
+
+    transition:
+        transform .4s cubic-bezier(.22, 1, .36, 1),
+        opacity .25s ease-out,
+        visibility 0s linear .4s;
+}
 
 #painel-acessibilidade.aberto {
-    display: block;
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: none;
+
+    transition:
+        transform .4s cubic-bezier(.22, 1, .36, 1),
+        opacity .25s ease-out,
+        visibility 0s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #painel-acessibilidade,
+    #painel-acessibilidade.aberto {
+        transform: none;
+        transition: opacity .01s, visibility 0s;
+    }
 }
 
 

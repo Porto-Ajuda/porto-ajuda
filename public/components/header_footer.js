@@ -1064,7 +1064,7 @@ const acessibilidadeHTML = `
     </button>
 
 
-    <div id="painel-acessibilidade">
+    <div id="painel-acessibilidade" hidden>
 
         <div class="acessibilidade-cabecalho">
 
