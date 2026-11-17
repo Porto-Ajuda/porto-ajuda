@@ -1,109 +1,23 @@
-const { readFile } = require("node:fs/promises");
+const { access, readFile } = require("node:fs/promises");
 const { resolve } = require("node:path");
 const test = require("node:test");
 const assert = require("node:assert/strict");
 
-async function carregarPaginador() {
-    const source = await readFile(resolve(__dirname, "../../public/components/showcase-pagination.js"), "utf8");
-    return import(`data:text/javascript;base64,${Buffer.from(source).toString("base64")}`);
-}
+const raiz = resolve(__dirname, "../..");
+const ler = caminho => readFile(resolve(raiz, caminho), "utf8");
+const existe = caminho => access(resolve(raiz, caminho)).then(() => true, () => false);
 
-test("homepage paginates in groups of six and handles a short final page", async () => {
-    const { createShowcasePager, HOME_SHOWCASE_PAGE_SIZE } = await carregarPaginador();
-    const requested = [];
-    const pager = createShowcasePager({
-        fetchPage: async (page, size) => {
-            requested.push({ page, size });
-            return page === 0
-                ? { number: 0, totalPages: 2, content: Array.from({ length: 6 }, (_, i) => `first-${i}`) }
-                : { number: 1, totalPages: 2, content: ["last-a", "last-b"] };
-        }
-    });
-
-    await pager.load();
-    assert.equal(HOME_SHOWCASE_PAGE_SIZE, 6);
-    assert.equal(pager.getState().items.length, 6);
-    assert.equal(pager.getState().canPrevious, false);
-    assert.equal(pager.getState().canNext, true);
-
-    await pager.next();
-    assert.equal(pager.getState().page, 1);
-    assert.deepEqual(pager.getState().items, ["last-a", "last-b"]);
-    assert.equal(pager.getState().canNext, false);
-    assert.equal(pager.getState().canPrevious, true);
-    assert.deepEqual(requested, [{ page: 0, size: 6 }, { page: 1, size: 6 }]);
-
-    await pager.next();
-    assert.equal(requested.length, 2);
-    await pager.previous();
-    assert.equal(pager.getState().page, 0);
-    assert.equal(pager.getState().canPrevious, false);
-    assert.deepEqual(requested[2], { page: 0, size: 6 });
-});
-
-test("showcase pagination state is independent per category", async () => {
-    const { createShowcasePager } = await carregarPaginador();
-    const pages = { publications: 0, volunteering: 0 };
-    const create = key => createShowcasePager({
-        fetchPage: async page => {
-            pages[key] = page;
-            return { number: page, totalPages: 3, content: [`${key}-${page}`] };
-        }
-    });
-    const publications = create("publications");
-    const volunteering = create("volunteering");
-
-    await publications.load();
-    await volunteering.load();
-    await publications.next();
-
-    assert.equal(publications.getState().page, 1);
-    assert.equal(volunteering.getState().page, 0);
-    assert.deepEqual(pages, { publications: 1, volunteering: 0 });
-});
-
-test("showcase arrows report correct disabled states and retries recover errors", async () => {
-    const { createShowcasePager } = await carregarPaginador();
-    let fail = true;
-    const pager = createShowcasePager({
-        fetchPage: async page => {
-            if (fail) throw new Error("offline");
-            return { number: page, totalPages: 1, content: ["recovered"] };
-        }
-    });
-
-    await pager.load();
-    assert.equal(pager.getState().status, "error");
-    assert.equal(pager.getState().canPrevious, false);
-    assert.equal(pager.getState().canNext, false);
-    fail = false;
-    await pager.retry();
-    assert.equal(pager.getState().status, "ready");
-    assert.deepEqual(pager.getState().items, ["recovered"]);
-    assert.equal(pager.getState().canNext, false);
-});
-
-test("empty public pages settle into an accessible empty state with disabled arrows", async () => {
-    const { createShowcasePager } = await carregarPaginador();
-    const pager = createShowcasePager({
-        fetchPage: async () => ({ number: 0, totalPages: 0, content: [] })
-    });
-
-    await pager.load();
-
-    assert.equal(pager.getState().status, "empty");
-    assert.deepEqual(pager.getState().items, []);
-    assert.equal(pager.getState().canPrevious, false);
-    assert.equal(pager.getState().canNext, false);
-});
-
-test("homepage uses category-specific public paged APIs and a verified-donations empty state", async () => {
-    const home = await readFile(resolve(__dirname, "../../public/components/home-showcases.js"), "utf8");
-    const html = await readFile(resolve(__dirname, "../../public/pages/Porto-Ajuda.html"), "utf8");
-    assert.match(home, /endpoint: "\/osc\/list"/);
-    assert.match(home, /endpoint: "\/post\/publicos"/);
-    assert.match(home, /endpoint: "\/post\/voluntariados"/);
-    assert.doesNotMatch(home, /endpoint:.*doa[cç][aã]o/i);
+test("homepage carousels load at most six items from category-specific public APIs and keep the verified-donations empty state", async () => {
+    const home = await ler("public/components/home-showcases.js");
+    const vitrine = await ler("public/components/vitrine.js");
+    const html = await ler("public/pages/Porto-Ajuda.html");
+    assert.match(vitrine, /export const VITRINE_MAX_ITENS = 6;/);
+    assert.match(home, /page=0&size=\$\{VITRINE_MAX_ITENS\}/);
+    assert.match(vitrine, /\.slice\(0, VITRINE_MAX_ITENS\)/);
+    assert.match(home, /buscarItens\("\/osc\/list"\)/);
+    assert.match(home, /buscarItens\("\/post\/publicos"\)/);
+    assert.match(home, /buscarItens\("\/post\/voluntariados"\)/);
+    assert.doesNotMatch(home, /buscarItens\(.*doa[cç][aã]o/i);
     assert.match(home, /Ainda não há campanhas de arrecadação verificadas/);
     assert.match(html, /href="\/catalogo\?categoria=ongs"[^>]*>Ver todas as ONGs/);
     assert.match(html, /href="\/catalogo\?categoria=publicacoes"[^>]*>Ver todas as publicações/);
@@ -111,27 +25,63 @@ test("homepage uses category-specific public paged APIs and a verified-donations
     assert.match(html, /href="\/catalogo\?categoria=doacoes"[^>]*>Ver todas as doações/);
 });
 
-test("homepage showcase controls and states are keyboard-accessible and category-specific", async () => {
-    const html = await readFile(resolve(__dirname, "../../public/pages/Porto-Ajuda.html"), "utf8");
-    const source = await readFile(resolve(__dirname, "../../public/components/home-showcases.js"), "utf8");
-    const modal = await readFile(resolve(__dirname, "../../public/components/crud.js"), "utf8");
+test("homepage carousels expose accessible states, cards and arrows", async () => {
+    const html = await ler("public/pages/Porto-Ajuda.html");
+    const vitrine = await ler("public/components/vitrine.js");
+    const modal = await ler("public/components/crud.js");
     assert.match(html, /id="ongs-status"[^>]+role="status"[^>]+aria-live="polite"/);
     assert.match(html, /id="publicacoes-status"[^>]+role="status"[^>]+aria-live="polite"/);
     assert.match(html, /id="voluntariado-status"[^>]+role="status"[^>]+aria-live="polite"/);
-    assert.match(html, /id="ongs-anterior"[^>]+aria-label=/);
-    assert.match(html, /id="publicacoes-proximo"[^>]+aria-label=/);
-    assert.match(html, /id="voluntariado-proximo"[^>]+aria-label=/);
-    assert.match(source, /anterior\.addEventListener\("click"/);
-    assert.match(source, /proximo\.addEventListener\("click"/);
-    assert.match(source, /aria-haspopup/, "content cards announce the dialog viewer");
-    assert.match(source, /vaga\.quantidadeVagas/);
-    assert.match(source, /vaga\.modalidadeVoluntariado/);
+    for (const id of ["cards-osc", "cards-publicacoes", "cards-voluntariacao", "cards-doacao"]) {
+        assert.match(html, new RegExp(`<div class="vitrine-trilho" id="${id}"[^>]+role="list"[^>]+aria-label=`));
+    }
+    // o crud.js só deixa de desenhar os cards antigos se o atributo estiver no HTML
+    for (const id of ["cards-osc", "cards-voluntariacao", "cards-doacao"]) {
+        assert.match(html, new RegExp(`id="${id}"[^>]+data-home-showcase="true"`));
+    }
+    assert.match(vitrine, /aria-label", lado === "esq" \? "Itens anteriores" : "Próximos itens"/);
+    assert.match(vitrine, /esquerda\.disabled = viewport\.scrollLeft <= 2/);
+    assert.match(vitrine, /aria-haspopup/, "content cards announce the dialog viewer");
+    assert.match(vitrine, /card\.setAttribute\("aria-label", rotulo\)/);
     assert.match(html, /id="modal-card-container"[^>]+role="dialog"[^>]+aria-modal="true"/);
     assert.match(html, /id="modal-card-vaga-detalhes"[^>]*hidden/);
     assert.match(modal, /window\.abrirModalConteudoPublico/);
     assert.match(modal, /function imagemPublicaValida/);
     assert.match(modal, /evento\.key === "Escape"/);
     assert.match(modal, /origemModalConteudoPublico\.focus\(\)/);
+});
+
+test("carousel arrows only appear when the mouse is near and are hidden on touch devices", async () => {
+    const vitrine = await ler("public/components/vitrine.js");
+    const estilos = await ler("public/styles/vitrine.css");
+    assert.match(vitrine, /const DISTANCIA_SETAS_PX = 60;/);
+    assert.match(vitrine, /evento\.pointerType !== "mouse"/);
+    assert.match(estilos, /\.vitrine-seta\s*\{[^}]*opacity:\s*0;[^}]*pointer-events:\s*none/s);
+    assert.match(estilos, /\.vitrine-seta\.vitrine-seta-visivel,\s*\.vitrine-seta:focus-visible\s*\{[^}]*opacity:\s*1/s);
+    assert.match(estilos, /@media \(hover: none\)[\s\S]*\.vitrine-seta\s*\{[^}]*display:\s*none/);
+    assert.match(estilos, /@media \(hover: none\)[\s\S]*scroll-snap-type:\s*x mandatory/);
+});
+
+test("card expansion is a hover/keyboard interaction for fine pointers with a reduced-motion fallback", async () => {
+    const estilos = await ler("public/styles/vitrine.css");
+    assert.match(estilos, /@media \(hover: hover\) and \(pointer: fine\)\s*\{\s*\.vitrine-item:hover\s*\{[^}]*flex-basis:\s*var\(--v-w-aberto\)/s);
+    assert.match(estilos, /\.vitrine-item:focus-within\s*\{[^}]*flex-basis:\s*var\(--v-w-aberto\)/s);
+    assert.match(estilos, /height:\s*37\.5%/);
+    assert.match(estilos, /\.vitrine-trilho:has\(\.vitrine-item:hover\) \.vitrine-item:not\(:hover\) \.vitrine-card\s*\{[^}]*scale\(\.92\)/s);
+    assert.match(estilos, /@media \(prefers-reduced-motion: reduce\)/);
+    // a imagem lateral fica por cima para os cards passarem por trás dela
+    assert.match(estilos, /\.section:has\(\.vitrine\) \.section-image\s*\{[^}]*z-index:\s*2/s);
+});
+
+test("legacy paginated list and old NGO carousel code is gone", async () => {
+    const html = await ler("public/pages/Porto-Ajuda.html");
+    assert.equal(await existe("public/components/carrossel-amostra.js"), false);
+    assert.equal(await existe("public/components/showcase-pagination.js"), false);
+    assert.doesNotMatch(html, /showcase-grid|showcase-controles|controles-carrossel|carrossel-ongs|ongs-anterior|ongs-proximo/);
+    const cssHome = await ler("public/styles/Porto-Ajuda.css");
+    assert.doesNotMatch(cssHome, /\.showcase-grid|\.showcase-controles|\.showcase-card-(media|preview|informacoes|title|ngo|detail)|\.showcase-card\s*[{:,]/);
+    const cssOngs = await ler("public/styles/carrossel-amostra.css");
+    assert.doesNotMatch(cssOngs, /\.card-osc|\.ong-showcase|\.carrossel-ongs|\.controles-carrossel|#cards-osc/);
 });
 
 test("category catalog routes, bounded public feeds, filters, and location controls are present", async () => {
@@ -157,14 +107,4 @@ test("category catalog routes, bounded public feeds, filters, and location contr
     assert.match(script, /abrirModalConteudoPublico/);
     assert.match(script, /catalogo-doacoes-vazio/);
     assert.doesNotMatch(script, /payment|stripe|checkout/i);
-});
-
-test("NGO expansion stays in a fixed two-row layout and is disabled as a hover interaction on touch", async () => {
-    const styles = await readFile(resolve(__dirname, "../../public/styles/carrossel-amostra.css"), "utf8");
-    const html = await readFile(resolve(__dirname, "../../public/pages/Porto-Ajuda.html"), "utf8");
-    assert.match(html, /id="cards-osc"[^>]+data-home-showcase="true"/);
-    assert.match(styles, /\.ong-showcase-row\s*\{[^}]*height:\s*350px/s);
-    assert.match(styles, /\.ong-showcase-row \.card-osc:hover[^}]*flex:\s*2 1 0/s);
-    assert.match(styles, /@media \(max-width: 768px\)[\s\S]*\.ong-showcase-row\s*\{[^}]*display:\s*grid/s);
-    assert.match(styles, /@media \(prefers-reduced-motion: reduce\)/);
 });
