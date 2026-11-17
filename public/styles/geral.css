@@ -2141,9 +2141,18 @@ body.modo-claro .acessibilidade-cabecalho h2 {
 }
 
 
+body.modo-claro .icone-titulo,
+body.modo-claro img.icone-opcao {
+
+    filter: brightness(0);
+
+}
+
+
 body.modo-claro #fechar-acessibilidade {
 
     color: #1A241E;
+    border: 1px solid #B8C8BE;
 
 }
 
@@ -3044,7 +3053,7 @@ body.alto-contraste #fechar-acessibilidade {
 
     color: #FFFFFF;
 
-    border: none;
+    border: 2px solid #FFFFFF;
 
 }
 
