@@ -2213,6 +2213,8 @@ Lista escondida
   display: block;
   width: fit-content;
   margin: 28px auto 0;
+  position: absolute;
+  
 }
 
 .showcase-ilustracao > img:last-child {
