@@ -7,6 +7,13 @@
  * ===================================================== */
 
 import { getAPI_URL } from "./modoBack.js";
+import {
+    formatarCpfCadastro,
+    criarTravaEnvioCadastro,
+    normalizarEmailCadastro,
+    validarSenhasCadastro,
+    verificarSenhaCadastro
+} from "./cadastro-logic.js";
 
 (function () {
     "use strict";
@@ -15,6 +22,7 @@ import { getAPI_URL } from "./modoBack.js";
     const formCadastro = document.getElementById("form-cadastro");
 
     const cpf = document.getElementById("cpf");
+    const emailCadastro = formCadastro.querySelector("input[type='email']");
     const telefone = document.getElementById("telefone");
     const cep = document.getElementById("cep");
     const nascimento = document.getElementById("nascimento");
@@ -134,15 +142,7 @@ import { getAPI_URL } from "./modoBack.js";
         return true;
     }
 
-    function verificarSenha(senha) {
-        return {
-            tamanho: senha.length >= 8,
-            maiuscula: /[A-Z]/.test(senha),
-            minuscula: /[a-z]/.test(senha),
-            numero: /[0-9]/.test(senha),
-            especial: /[^A-Za-z0-9]/.test(senha)
-        };
-    }
+    const travaEnvioCadastro = criarTravaEnvioCadastro();
 
     // Tenta extrair uma mensagem útil da resposta do backend
     function extrairMensagem(data) {
@@ -171,28 +171,37 @@ import { getAPI_URL } from "./modoBack.js";
 
     // ---------- MÁSCARAS ----------
     cpf.addEventListener("input", () => {
-        const entrada = cpf.value;
-        const prefixoPontuadoValido = /^(?:[0-9]{0,3}|[0-9]{3}\.[0-9]{0,3}|[0-9]{3}\.[0-9]{3}\.[0-9]{0,3}|[0-9]{3}\.[0-9]{3}\.[0-9]{3}-[0-9]{0,2})$/;
-        if (!/^[0-9.-]*$/.test(entrada)
-                || (/[.-]/.test(entrada) && !prefixoPontuadoValido.test(entrada))) {
-            cpf.setCustomValidity("Use apenas números ou a pontuação padrão do CPF.");
-            return;
-        }
+        const resultado = formatarCpfCadastro(
+            cpf.value,
+            cpf.selectionStart ?? cpf.value.length,
+            cpf.selectionEnd ?? cpf.value.length
+        );
+        cpf.setCustomValidity(resultado.erro);
+        if (!resultado.valido) return;
 
-        let v = entrada.replace(/[.-]/g, "");
-        if (v.length > 11) {
-            cpf.setCustomValidity("O CPF deve ter exatamente 11 dígitos.");
-            return;
-        }
-        cpf.setCustomValidity("");
-
-        v = v
-            .replace(/(\d{3})(\d)/, "$1.$2")
-            .replace(/(\d{3})(\d)/, "$1.$2")
-            .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
-
-        cpf.value = v;
+        cpf.value = resultado.valor;
+        cpf.setSelectionRange(resultado.inicioSelecao, resultado.fimSelecao);
     });
+
+    function normalizarEmailVisivel({ reportarErro = false } = {}) {
+        const resultado = normalizarEmailCadastro(emailCadastro.value);
+        emailCadastro.value = resultado.valor;
+        emailCadastro.setCustomValidity(resultado.erro);
+
+        if (resultado.valido && resultado.valor && !emailCadastro.checkValidity()) {
+            emailCadastro.setCustomValidity("Informe um e-mail completo e válido.");
+        }
+
+        if (reportarErro && resultado.valor && !emailCadastro.checkValidity()) {
+            emailCadastro.reportValidity();
+            emailCadastro.focus();
+            return false;
+        }
+        return resultado.valido && (!resultado.valor || emailCadastro.checkValidity());
+    }
+
+    emailCadastro.addEventListener("input", () => emailCadastro.setCustomValidity(""));
+    emailCadastro.addEventListener("blur", () => normalizarEmailVisivel({ reportarErro: true }));
 
     telefone.addEventListener("input", () => {
         let v = somenteNumeros(telefone.value).slice(0, 11);
@@ -453,15 +462,10 @@ import { getAPI_URL } from "./modoBack.js";
     });
 
 
-    senhaCadastro.addEventListener("input", () => {
-
+    function atualizarIndicadoresSenha() {
         const senha = senhaCadastro.value;
-
-        const tamanho = senha.length >= 8;
-        const maiuscula = /[A-Z]/.test(senha);
-        const minuscula = /[a-z]/.test(senha);
-        const numero = /[0-9]/.test(senha);
-        const especial = /[^A-Za-z0-9]/.test(senha);
+        const regras = verificarSenhaCadastro(senha);
+        const { tamanho, maiuscula, minuscula, numero, especial } = regras;
 
         reqTamanho.style.display = tamanho ? "none" : "block";
         reqMaiuscula.style.display = maiuscula ? "none" : "block";
@@ -499,13 +503,26 @@ import { getAPI_URL } from "./modoBack.js";
             textoSeguranca.textContent = "Senha forte";
         }
 
-        confirmarSenha.setCustomValidity("");
+    }
+
+    function atualizarValidadeSenhas() {
+        const erros = validarSenhasCadastro(senhaCadastro.value, confirmarSenha.value);
+        senhaCadastro.setCustomValidity(erros.erroSenha);
+        confirmarSenha.setCustomValidity(erros.erroConfirmacao);
+    }
+
+    senhaCadastro.addEventListener("input", () => {
+        atualizarIndicadoresSenha();
+        atualizarValidadeSenhas();
     });
+    confirmarSenha.addEventListener("input", atualizarValidadeSenhas);
 
     // ---------- ENVIO ----------
     formCadastro.addEventListener("submit", async function (event) {
 
         event.preventDefault();
+        // O formulário usa novalidate para que esta normalização também rode ao enviar com Enter.
+        if (!normalizarEmailVisivel({ reportarErro: true })) return;
 
         // Enter numa etapa intermediária: apenas avança
         if (etapa < rows.length - 1) {
@@ -527,24 +544,19 @@ import { getAPI_URL } from "./modoBack.js";
         }
 
         // Senha forte
-        const r = verificarSenha(senhaCadastro.value);
-
-        if (!Object.values(r).every(Boolean)) {
-            senhaCadastro.setCustomValidity("A senha não atende aos requisitos de segurança.");
+        atualizarValidadeSenhas();
+        if (!senhaCadastro.checkValidity()) {
             senhaCadastro.reportValidity();
             senhaCadastro.focus();
             return;
         }
-        senhaCadastro.setCustomValidity("");
 
         // Confirmação
-        if (senhaCadastro.value !== confirmarSenha.value) {
-            confirmarSenha.setCustomValidity("As senhas não são iguais.");
+        if (!confirmarSenha.checkValidity()) {
             confirmarSenha.reportValidity();
             confirmarSenha.focus();
             return;
         }
-        confirmarSenha.setCustomValidity("");
 
         // Revalida as etapas anteriores (garante que nada ficou vazio)
         for (let i = 0; i < rows.length - 1; i++) {
@@ -565,9 +577,7 @@ import { getAPI_URL } from "./modoBack.js";
 
             dataNascimento: normalizarData(nascimento.value),
 
-            email: document
-                .querySelector("#form-cadastro input[type='email']")
-                .value.trim(),
+            email: emailCadastro.value,
 
             // "nao-binario" -> "NAO_BINARIO"
             genero: inputGenero.value.toUpperCase().replace(/-/g, "_"),
@@ -577,14 +587,13 @@ import { getAPI_URL } from "./modoBack.js";
             senha: senhaCadastro.value
         };
 
-        // Para depuração (a senha não é exibida)
-        console.log("Payload do cadastro:", { ...usuario, senha: "***" });
-
+        if (!travaEnvioCadastro.tentarIniciar()) return;
         cad.disabled = true;
 
         try {
             await postCadastro(usuario);
         } finally {
+            travaEnvioCadastro.finalizar();
             cad.disabled = false;
         }
     });
@@ -609,7 +618,7 @@ import { getAPI_URL } from "./modoBack.js";
 
             if (!csrfResponse.ok) {
                 throw new Error(
-                    `Não foi possível obter o token CSRF: HTTP ${csrfResponse.status}`
+                    "Não foi possível iniciar o cadastro. Atualize a página e tente novamente."
                 );
             }
 
@@ -696,7 +705,7 @@ import { getAPI_URL } from "./modoBack.js";
             mostrarAlerta(
                 "erro",
                 "Não foi possível cadastrar",
-                mensagem || `O servidor retornou HTTP ${response.status}.`
+                mensagem || "Não foi possível criar a conta. Revise os dados e tente novamente."
             );
         } catch (error) {
             console.error("Erro ao realizar cadastro:", error);

@@ -14,14 +14,17 @@
 
     <link rel="stylesheet" href="../styles/geral.css">
     <link rel="stylesheet" href="../styles/perfil.css">
+    <link rel="stylesheet" href="../styles/ajuste-imagem.css">
     <link rel="stylesheet" href="../styles/candidaturas.css">
 
     <script type="module" src="../components/header_footer.js" defer></script>
     <script type="module" src="../components/perfil.js" defer></script>
+    <script type="module" src="../components/ajuste-imagem.js" defer></script>
     <script type="module" src="../components/moderation-profile.js" defer></script>
     <script type="module" src="../components/logout.js" defer></script>
     <script type="module" src="../components/abas-perfil.js" defer></script>
     <script type="module" src="../components/filtros-perfil.js" defer></script>
+    <script type="module" src="../components/perfil-historico.js" defer></script>
     <script type="module" src="../components/acessibilidade.js" defer></script>
     <script type="module" src="../components/avatar.js" defer></script>
     <script type="module" src="../components/tour.js" defer></script>
@@ -96,7 +99,9 @@
                                 </label>
 
                                 <input type="file" id="input-foto-perfil" accept="image/jpeg,image/png,image/webp"
-                                    hidden>
+                                    data-image-adjustment data-aspect-ratio="1" data-preview-shape="circle"
+                                    data-image-feedback="estado-foto-perfil" data-image-title="Ajustar foto de perfil" hidden>
+                                <button type="button" id="remover-foto-perfil" class="botao botao-secundario" hidden>Remover foto</button>
 
                                 <p id="estado-foto-perfil" role="status" aria-live="polite"></p>
                             </div>
@@ -122,8 +127,7 @@
                             <input id="data-nascimento" name="dataNascimento" type="text" disabled>
 
                             <label for="email">E-mail</label>
-                            <input id="email" name="email" type="email" autocomplete="email" aria-describedby="email-imutavel-ajuda" disabled>
-                            <small id="email-imutavel-ajuda">O e-mail da conta não pode ser alterado.</small>
+                            <input id="email" name="email" type="email" autocomplete="email" disabled>
 
                             <label for="telefone">Telefone</label>
                             <input id="telefone" name="telefone" type="tel" autocomplete="tel" disabled>
@@ -187,59 +191,26 @@
                             aria-labelledby="aba-registro" tabindex="0">
 
 
+                            <section id="area-historico-atividades" data-activity-history-content aria-label="Histórico de atividades">
+
                             <!-- RESUMO DO REGISTRO -->
 
                             <div class="resumo-registro">
-
                                 <div class="estatistica">
-
-                                    <div class="valor-estatistica">
-                                        R$ 1.800
-                                    </div>
-
-                                    <div class="rotulo-estatistica">
-                                        reais doados em 7 contribuições
-                                    </div>
-
+                                    <div class="valor-estatistica" id="registro-total-candidaturas">—</div>
+                                    <div class="rotulo-estatistica">candidaturas enviadas</div>
                                 </div>
-
-
                                 <div class="estatistica">
-
-                                    <div class="valor-estatistica">
-                                        12 horas
-                                    </div>
-
-                                    <div class="rotulo-estatistica">
-                                        de trabalho voluntário
-                                    </div>
-
+                                    <div class="valor-estatistica">Indisponível</div>
+                                    <div class="rotulo-estatistica">horas de voluntariado concluídas</div>
                                 </div>
-
-
                                 <div class="estatistica">
-
-                                    <div class="valor-estatistica">
-                                        8
-                                    </div>
-
-                                    <div class="rotulo-estatistica">
-                                        iniciativas apoiadas
-                                    </div>
-
+                                    <div class="valor-estatistica">Indisponível</div>
+                                    <div class="rotulo-estatistica">histórico financeiro de doações</div>
                                 </div>
-
-
-                                <br>
-                                <br>
-
-
-                                <!-- BAIXAR DECLARAÇÃO -->
-
-                                <button class="botao botao-secundario" type="button" id="baixar-registro">
-                                    Baixar Registro
-                                </button>
-
+                                <p id="registro-historico-explicacao" class="registro-historico-explicacao">
+                                    As candidaturas são carregadas da sua conta. O site ainda não disponibiliza horas concluídas nem conciliação de doações neste histórico.
+                                </p>
                             </div>
 
 
@@ -253,7 +224,7 @@
 
                             <div class="barra-registro">
 
-                                <div class="filtros-registro" role="group" aria-label="Filtrar registro por tipo">
+                                <div class="filtros-registro" role="group" aria-label="Filtrar registro por tipo" hidden>
 
                                     <button class="filtro" type="button" aria-pressed="true" data-filtro="tudo">
                                         Tudo
@@ -318,244 +289,37 @@
 
                             <p class="contador-registros" id="contador-registros" role="status" aria-live="polite"></p>
 
-                            <!-- ANO DO REGISTRO (o JS atualiza conforme o filtro) -->
-
-                            <p class="ano-registro">
-                                2026
+                                                        <p class="ano-registro" hidden></p>
+                            <p id="registro-carregando" role="status" aria-live="polite">Carregando seu histórico…</p>
+                            <p id="registro-doacoes-indisponivel" class="registro-historico-indisponivel" role="status" hidden>
+                                O histórico de doações ainda não está disponível porque as doações não são conciliadas com esta conta.
                             </p>
-                            <ul class="linha-tempo">
-
-
-                                <!-- Registro de doação -->
-
-                                <li class="registro" data-tipo="doacao">
-
-                                    <div class="data-registro">
-                                        15 SET
-                                    </div>
-
-                                    <h3>
-                                        Instituto Esperança
-
-                                        <span class="etiqueta">
-                                            Doação
-                                        </span>
-
-                                    </h3>
-
-                                    <p>
-
-                                        <span class="valor-doacao">
-                                            R$ 50,00
-                                        </span>
-
-                                        — destinada à compra de alimentos para famílias de Santos.
-
-                                    </p>
-
-                                </li>
-
-
-                                <!-- Registro de voluntariado -->
-
-                                <li class="registro" data-tipo="voluntariado">
-
-                                    <div class="data-registro">
-                                        07 SET
-                                    </div>
-
-                                    <h3>
-                                        Campanha do Agasalho
-
-                                        <span class="etiqueta">
-                                            6 horas
-                                        </span>
-
-                                    </h3>
-
-                                    <p>
-                                        São Vicente — organização e distribuição de roupas e cobertores.
-                                    </p>
-
-                                </li>
-
-
-                                <!-- Registro de doação -->
-
-                                <li class="registro" data-tipo="doacao">
-
-                                    <div class="data-registro">
-                                        28 AGO
-                                    </div>
-
-                                    <h3>
-                                        Casa Acolher
-
-                                        <span class="etiqueta">
-                                            Doação
-                                        </span>
-
-                                    </h3>
-
-                                    <p>
-
-                                        <span class="valor-doacao">
-                                            R$ 100,00
-                                        </span>
-
-                                        — destinada à compra de materiais para famílias de Praia Grande.
-
-                                    </p>
-
-                                </li>
-
-
-                                <!-- Registro de voluntariado -->
-
-                                <li class="registro" data-tipo="voluntariado">
-
-                                    <div class="data-registro">
-                                        16 AGO
-                                    </div>
-
-                                    <h3>
-                                        Mutirão Comunitário
-
-                                        <span class="etiqueta">
-                                            4 horas
-                                        </span>
-
-                                    </h3>
-
-                                    <p>
-                                        Guarujá — auxílio na organização e distribuição de cestas básicas.
-                                    </p>
-
-                                </li>
-
-
-                                <!-- Registro de doação -->
-
-                                <li class="registro" data-tipo="doacao">
-
-                                    <div class="data-registro">
-                                        02 AGO
-                                    </div>
-
-                                    <h3>
-                                        Projeto Recomeço
-
-                                        <span class="etiqueta">
-                                            Doação
-                                        </span>
-
-                                    </h3>
-
-                                    <p>
-
-                                        <span class="valor-doacao">
-                                            R$ 75,00
-                                        </span>
-
-                                        — destinada à compra de produtos de higiene em Cubatão.
-
-                                    </p>
-
-                                </li>
-
-
-                                <!-- Registro de voluntariado -->
-
-                                <li class="registro" data-tipo="voluntariado">
-
-                                    <div class="data-registro">
-                                        19 JUL
-                                    </div>
-
-                                    <h3>
-                                        Ação Solidária
-
-                                        <span class="etiqueta">
-                                            5 horas
-                                        </span>
-
-                                    </h3>
-
-                                    <p>
-                                        Mongaguá — preparação e distribuição de refeições.
-                                    </p>
-
-                                </li>
-
-
-                                <!-- Registro de doação -->
-
-                                <li class="registro" data-tipo="doacao">
-
-                                    <div class="data-registro">
-                                        05 JUL
-                                    </div>
-
-                                    <h3>
-                                        Projeto Sementes
-
-                                        <span class="etiqueta">
-                                            Doação
-                                        </span>
-
-                                    </h3>
-
-                                    <p>
-
-                                        <span class="valor-doacao">
-                                            R$ 60,00
-                                        </span>
-
-                                        — destinada à compra de materiais escolares em Itanhaém.
-
-                                    </p>
-
-                                </li>
-
-
-                                <!-- Registro de voluntariado -->
-
-                                <li class="registro" data-tipo="voluntariado">
-
-                                    <div class="data-registro">
-                                        21 JUN
-                                    </div>
-
-                                    <h3>
-                                        Ação Comunitária
-
-                                        <span class="etiqueta">
-                                            3 horas
-                                        </span>
-
-                                    </h3>
-
-                                    <p>
-                                        Peruíbe — apoio na arrecadação e separação de alimentos.
-                                    </p>
-
-                                </li>
-
-                            </ul>
-
+                            <ul class="linha-tempo" id="linha-tempo-registros" aria-live="polite" aria-busy="true"></ul>
+                            <section class="estado-vazio" id="registro-erro" role="alert" hidden>
+                                <h3>Não foi possível carregar seu histórico</h3>
+                                <p id="registro-erro-mensagem">Tente novamente.</p>
+                                <a class="botao botao-secundario" id="registro-entrar" href="/login" hidden>Entrar para consultar</a>
+                                <button class="botao botao-secundario" type="button" id="registro-tentar-novamente">Tentar novamente</button>
+                            </section>
+                            <button class="botao botao-secundario" type="button" id="registro-carregar-mais" hidden>Carregar mais candidaturas</button>
 
                             <!-- ESTADO VAZIO -->
 
                             <div class="estado-vazio" id="registro-vazio" hidden>
 
-                                <h3></h3>
+                                <h3>Nenhuma candidatura encontrada</h3>
 
-                                <p></p>
+                                <p>Quando você se candidatar a uma oportunidade, ela aparecerá aqui.</p>
 
-                                <button class="botao botao-secundario" type="button">
-                                </button>
+                                <button class="botao botao-secundario" type="button" id="registro-limpar-filtros">Limpar filtros</button>
 
                             </div>
+
+                            </section>
+
+                            <p id="registro-sem-atividades" class="registro-historico-sem-atividades" role="status" aria-live="polite" hidden>
+                                Seu histórico de atividades aparecerá aqui quando houver registros na sua conta.
+                            </p>
 
                         </div>
 
@@ -596,6 +360,30 @@
                                     <span></span>
                                 </label>
 
+                            </div>
+
+                            <div class="acss-configuracao" aria-labelledby="preferencias-voz-titulo">
+                                <div>
+                                    <h3 id="preferencias-voz-titulo">Assistência por voz</h3>
+                                    <p id="preferencias-voz-descricao">Ativa a leitura em voz alta do conteúdo e das respostas do site.</p>
+                                </div>
+                                <label class="acss-interruptor">
+                                    <input type="checkbox" id="preferencia-assistencia-voz" role="switch" aria-labelledby="preferencias-voz-titulo" aria-describedby="preferencias-voz-descricao" aria-controls="preferencias-voz-opcoes" aria-expanded="false">
+                                    <span></span>
+                                </label>
+                            </div>
+                            <div id="preferencias-voz-opcoes" class="preferencias-voz-opcoes" hidden>
+                                <label for="preferencia-leitura-voz">
+                                    <input type="checkbox" id="preferencia-leitura-voz">
+                                    Ler novas respostas em voz alta
+                                </label>
+                                <label for="preferencia-evitar-leitor-tela">
+                                    <input type="checkbox" id="preferencia-evitar-leitor-tela" checked>
+                                    Evitar conflitos com leitores de tela
+                                </label>
+                                <button class="botao botao-secundario" type="button" id="preferencia-configurar-voz">
+                                    Configurar voz no atendimento
+                                </button>
                             </div>
 
 
@@ -797,15 +585,6 @@
                             </div>
 
 
-                            <section class="preferencias-voz" aria-labelledby="preferencias-voz-titulo">
-                                <h3 id="preferencias-voz-titulo">Assistência por voz</h3>
-                                <p>Configuração neste dispositivo. Você não precisa informar uma deficiência para ativar esses recursos.</p>
-                                <label><input type="checkbox" id="preferencia-assistencia-voz"> Ativar assistência por voz</label>
-                                <label><input type="checkbox" id="preferencia-leitura-voz"> Ler novas respostas em voz alta</label>
-                                <label><input type="checkbox" id="preferencia-evitar-leitor-tela" checked> Evitar conflito com leitor de tela</label>
-                                <button class="botao botao-secundario" type="button" id="preferencia-configurar-voz">Configurar voz no atendimento</button>
-                            </section>
-
                             <div class="grupo-botoes">
                                 <button class="botao botao-secundario" type="button" id="salvar-preferencias-acss">
                                     Salvar preferências
@@ -960,8 +739,6 @@
                                     </button>
                                 </div>
 
-                                <p id="estado-edicao-perfil" role="status" aria-live="polite" hidden></p>
-
                             </div>
 
                             <section class="configuracao seguranca-conta" aria-labelledby="titulo-seguranca-conta">
@@ -974,16 +751,20 @@
                                 </div>
                             </section>
 
-                                <section id="moderacao-perfil-usuario" data-moderation-section class="configuracao" aria-labelledby="titulo-moderacao-perfil">
-                                <div><h3 id="titulo-moderacao-perfil">Moderação e recursos</h3><p>A pontuação e o histórico pertencem somente à sua conta. Pontos permanecem após o término de uma restrição temporária.</p></div>
-                                <p data-moderation-status role="status" aria-live="polite">Carregando informações de moderação…</p>
-                                <div data-moderation-content></div>
-                                <details id="moderacao-organizacoes-usuario" class="moderation-profile__organizations" aria-labelledby="titulo-moderacao-organizacoes">
+                                <section id="moderacao-perfil-usuario" data-moderation-section class="moderation-profile__personal" aria-labelledby="titulo-moderacao-perfil">
+                                    <div class="moderation-profile__personal-heading">
+                                        <h3 id="titulo-moderacao-perfil">Moderação e recursos da sua conta</h3>
+                                        <p>A pontuação e o histórico pertencem somente à sua conta. Pontos permanecem após o término de uma restrição temporária.</p>
+                                    </div>
+                                    <p data-moderation-status role="status" aria-live="polite">Carregando informações de moderação…</p>
+                                    <div data-moderation-content></div>
+                                </section>
+
+                                <details id="moderacao-organizacoes-usuario" class="moderation-profile__organizations" aria-labelledby="titulo-moderacao-organizacoes" hidden>
                                     <summary id="titulo-moderacao-organizacoes">Moderação das ONGs que administro</summary>
-                                    <p data-managed-ngo-status role="status" aria-live="polite">Expanda para consultar ONGs com histórico de pontuação.</p>
+                                    <p data-managed-ngo-status role="status" aria-live="polite" hidden></p>
                                     <div data-managed-ngo-content></div>
                                 </details>
-                            </section>
 
                             <dialog id="dialog-alterar-senha" class="dialogo-verificacao-telefone"
                                 aria-labelledby="titulo-dialog-alterar-senha" aria-describedby="estado-alterar-senha">
@@ -1147,8 +928,6 @@
                                 </div>
                             </div>
 
-                            <p id="estado-logout" role="status" aria-live="polite" hidden></p>
-
                             <!-- ================================================== -->
                             <!-- EXCLUSÃO DA CONTA -->
                             <!-- ================================================== -->
@@ -1178,8 +957,6 @@
                                 </div>
 
                             </div>
-
-                            <p id="estado-exclusao-conta" role="status" aria-live="polite" hidden></p>
 
                         </div>
 
@@ -1239,6 +1016,18 @@
             </div>
         </div>
     </div>
+
+    <dialog id="dialogo-remover-foto-perfil" class="dialogo-remocao-imagem" aria-labelledby="titulo-remover-foto-perfil" aria-describedby="descricao-remover-foto-perfil">
+        <form method="dialog">
+            <h2 id="titulo-remover-foto-perfil">Remover foto de perfil?</h2>
+            <p id="descricao-remover-foto-perfil">Sua foto será removida e o perfil voltará a mostrar as iniciais da conta.</p>
+            <div class="dialogo-remocao-imagem__acoes">
+                <button type="submit" value="cancelar" class="dialogo-remocao-imagem__botao dialogo-remocao-imagem__botao--secundario">Manter foto</button>
+                <button type="button" id="confirmar-remover-foto-perfil" class="dialogo-remocao-imagem__botao dialogo-remocao-imagem__botao--perigo">Remover foto</button>
+            </div>
+            <p id="estado-remover-foto-perfil" class="dialogo-remocao-imagem__estado" role="alert" aria-live="assertive" hidden></p>
+        </form>
+    </dialog>
 
     <!-- MODAL DE SELEÇÃO DE OSC -->
     <div class="modal-overlay" id="modal-trocar-osc" role="dialog" aria-modal="true"

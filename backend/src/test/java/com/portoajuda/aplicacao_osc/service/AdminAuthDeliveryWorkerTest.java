@@ -2,6 +2,7 @@ package com.portoajuda.aplicacao_osc.service;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -57,7 +58,22 @@ class AdminAuthDeliveryWorkerTest {
 
         new AdminAuthDeliveryWorker(queue, emailService, smsService).processNextDelivery();
 
-        verify(queue).finish(deliveryId, false);
+        verify(queue).finish(eq(deliveryId), eq(false), eq("EMAIL_DELIVERY_FAILED"), isNull(), eq(true), isNull());
+        verify(smsService, never()).enviarSms(anyString(), anyString(), anyString());
+    }
+
+    @Test
+    void entregaEmailAceitaFinalizaOutboxSemChamarSms() {
+        UUID deliveryId = UUID.randomUUID();
+        UUID challengeId = UUID.randomUUID();
+        when(queue.claimNext()).thenReturn(new AdminAuthDeliveryQueueService.ClaimedDelivery(
+                deliveryId, challengeId, Channel.EMAIL, "synthetic-admin@example.invalid", "246810"));
+
+        new AdminAuthDeliveryWorker(queue, emailService, smsService).processNextDelivery();
+
+        verify(emailService).enviarCodigoAutenticacaoAdministrativa(
+                "synthetic-admin@example.invalid", "246810");
+        verify(queue).finish(deliveryId, true, null, null, false, null);
         verify(smsService, never()).enviarSms(anyString(), anyString(), anyString());
     }
 
@@ -72,7 +88,7 @@ class AdminAuthDeliveryWorkerTest {
 
         new AdminAuthDeliveryWorker(queue, emailService, smsService).processNextDelivery();
 
-        verify(queue).finish(deliveryId, false);
+        verify(queue).finish(eq(deliveryId), eq(false), eq("SMS_DELIVERY_FAILED"), isNull(), eq(true), isNull());
         verify(emailService, never()).enviarCodigoAutenticacaoAdministrativa(anyString(), anyString());
     }
 
@@ -87,6 +103,35 @@ class AdminAuthDeliveryWorkerTest {
 
         new AdminAuthDeliveryWorker(queue, emailService, smsService).processNextDelivery();
 
-        verify(queue).finish(deliveryId, true);
+        verify(queue).finish(deliveryId, true, null, null, false, null);
+    }
+
+    @Test
+    void smsTimeoutWithUnknownProviderOutcomeDoesNotSendAgain() {
+        UUID deliveryId = UUID.randomUUID();
+        UUID challengeId = UUID.randomUUID();
+        when(queue.claimNext()).thenReturn(new AdminAuthDeliveryQueueService.ClaimedDelivery(
+                deliveryId, challengeId, Channel.SMS, "5511912345678", "135790"));
+        org.mockito.Mockito.doThrow(SmsDeliveryException.timeout())
+                .when(smsService).enviarSms(eq("5511912345678"), anyString(), eq(challengeId + ":sms"));
+
+        new AdminAuthDeliveryWorker(queue, emailService, smsService).processNextDelivery();
+
+        verify(queue).finish(eq(deliveryId), eq(false), eq("SMS_TIMEOUT"), isNull(), eq(false), isNull());
+    }
+
+    @Test
+    void erroHttp503DoProvedorFazRetryComCategoriaESemExporResposta() {
+        UUID deliveryId = UUID.randomUUID();
+        UUID challengeId = UUID.randomUUID();
+        when(queue.claimNext()).thenReturn(new AdminAuthDeliveryQueueService.ClaimedDelivery(
+                deliveryId, challengeId, Channel.SMS, "5511912345678", "135790"));
+        org.mockito.Mockito.doThrow(SmsDeliveryException.providerRejected(503))
+                .when(smsService).enviarSms(eq("5511912345678"), anyString(), eq(challengeId + ":sms"));
+
+        new AdminAuthDeliveryWorker(queue, emailService, smsService).processNextDelivery();
+
+        verify(queue).finish(eq(deliveryId), eq(false), eq("SMS_PROVIDER_REJECTED"),
+                eq(503), eq(true), isNull());
     }
 }

@@ -2,6 +2,7 @@ package com.portoajuda.aplicacao_osc.controller;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 public class PageController {
@@ -47,8 +48,12 @@ public class PageController {
     }
 
     @GetMapping("/doacao-ong")
-    public String doacaoOng() {
-        return "forward:/pages/doacao-ong.html";
+    public String doacaoOng(@RequestParam(required=false) String campanha,
+            @RequestParam(required=false) String id,@RequestParam(required=false) String campaign) {
+        String requested=campanha!=null?campanha:id!=null?id:campaign;
+        if(requested!=null&&requested.matches("[1-9][0-9]{0,18}"))
+            return "redirect:/catalogo?categoria=doacoes&campanha="+requested;
+        return "redirect:/catalogo?categoria=doacoes";
     }
 
     @GetMapping("/perfil")

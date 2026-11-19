@@ -58,8 +58,8 @@ function obterNomeStore(tipo) {
 
 function obterLabelTipo(tipo) {
     const mapa = {
-        osc: "ONG's",
-        voluntariacao: "Voluntariações",
+        osc: "ONGs",
+        voluntariacao: "Oportunidades de voluntariado",
         doacao: "Doações"
     };
     return mapa[tipo] || tipo;

@@ -97,24 +97,47 @@ test("empty public pages settle into an accessible empty state with disabled arr
     assert.equal(pager.getState().canNext, false);
 });
 
-test("homepage uses category-specific public paged APIs and a verified-donations empty state", async () => {
+test("homepage uses public feeds and loads campaign cards from the public campaign API", async () => {
     const home = await readFile(resolve(__dirname, "../../public/components/home-showcases.js"), "utf8");
     const html = await readFile(resolve(__dirname, "../../public/pages/Porto-Ajuda.html"), "utf8");
     assert.match(home, /endpoint: "\/osc\/list"/);
     assert.match(home, /endpoint: "\/post\/publicos"/);
     assert.match(home, /endpoint: "\/post\/voluntariados"/);
     assert.doesNotMatch(home, /endpoint:.*doa[cç][aã]o/i);
-    assert.match(home, /Ainda não há campanhas de arrecadação verificadas/);
+    assert.match(home, /\/donation-campaigns/);
+    assert.match(home, /item\?\.state === "ACTIVE"/);
+    assert.match(home, /createCampaignCard/);
+    assert.doesNotMatch(home, /prepararEstadoVazioDoacoes/);
     assert.match(html, /href="\/catalogo\?categoria=ongs"[^>]*>Ver todas as ONGs/);
     assert.match(html, /href="\/catalogo\?categoria=publicacoes"[^>]*>Ver todas as publicações/);
     assert.match(html, /href="\/catalogo\?categoria=voluntariado"[^>]*>Ver todos os voluntariados/);
     assert.match(html, /href="\/catalogo\?categoria=doacoes"[^>]*>Ver todas as doações/);
 });
 
+test("homepage and NGO profile share public campaign cards bound to the canonical campaign URL", async () => {
+    const [card, home, profile, html, styles] = await Promise.all([
+        readFile(resolve(__dirname, "../../public/components/campaign-card.js"), "utf8"),
+        readFile(resolve(__dirname, "../../public/components/home-showcases.js"), "utf8"),
+        readFile(resolve(__dirname, "../../public/components/ong-profile.js"), "utf8"),
+        readFile(resolve(__dirname, "../../public/pages/ong-profile.html"), "utf8"),
+        readFile(resolve(__dirname, "../../public/styles/ong-profile.css"), "utf8")
+    ]);
+    assert.match(home, /createCampaignCard\(item, \{ context: "home", onOpen:/);
+    assert.match(profile, /createCampaignCard\(item, \{\s*context: "ngo-profile", onOpen:/);
+    assert.match(profile, /Number\(item\?\.oscId\) === Number\(id\)/);
+    assert.match(profile, /item\?\.state === "ACTIVE"/);
+    assert.match(card, /catalogo\?categoria=doacoes&campanha=/);
+    assert.match(card, /campaignMoney\(item\.raisedNetCents\)/);
+    assert.match(card, /campaignMoney\(item\.goalNetCents\)/);
+    assert.match(card, /Ver vaquinha/);
+    assert.match(html, /id="campanhas-publicas-lista"[^>]+role="list"/);
+    assert.match(styles, /\.campaign-profile-grid\{display:grid/);
+});
+
 test("homepage showcase controls and states are keyboard-accessible and category-specific", async () => {
     const html = await readFile(resolve(__dirname, "../../public/pages/Porto-Ajuda.html"), "utf8");
     const source = await readFile(resolve(__dirname, "../../public/components/home-showcases.js"), "utf8");
-    const modal = await readFile(resolve(__dirname, "../../public/components/crud.js"), "utf8");
+    const modal = await readFile(resolve(__dirname, "../../public/components/conteudo-publico-modal.js"), "utf8");
     assert.match(html, /id="ongs-status"[^>]+role="status"[^>]+aria-live="polite"/);
     assert.match(html, /id="publicacoes-status"[^>]+role="status"[^>]+aria-live="polite"/);
     assert.match(html, /id="voluntariado-status"[^>]+role="status"[^>]+aria-live="polite"/);
@@ -134,10 +157,34 @@ test("homepage showcase controls and states are keyboard-accessible and category
     assert.match(modal, /origemModalConteudoPublico\.focus\(\)/);
 });
 
+test("home management entry points use the authenticated NGO membership flow, not IndexedDB editing", async () => {
+    const [html, manager, logic, crud, oscsPage] = await Promise.all([
+        readFile(resolve(__dirname, "../../public/pages/Porto-Ajuda.html"), "utf8"),
+        readFile(resolve(__dirname, "../../public/components/gerenciar-ong-home.js"), "utf8"),
+        readFile(resolve(__dirname, "../../public/components/gerenciar-ong-home-logic.js"), "utf8"),
+        readFile(resolve(__dirname, "../../public/components/crud.js"), "utf8"),
+        readFile(resolve(__dirname, "../../public/pages/oscs-page.html"), "utf8")
+    ]);
+    assert.match(html, /data-home-manage="ong"/);
+    assert.match(html, /data-home-manage="conteudo"/);
+    assert.doesNotMatch(html, /abrirModalEdicao\(/);
+    assert.doesNotMatch(html, /Editar Doações/);
+    assert.doesNotMatch(html, /components\/crud\.js/);
+    assert.match(html, /components\/gerenciar-ong-home\.js/);
+    assert.match(manager, /fetchAutenticado\("\/osc\/minhas"/);
+    assert.match(manager, /dialog\.showModal\(\)/);
+    assert.match(manager, /window\.location\.assign\(destino\)/);
+    assert.match(logic, /function rotaGerenciamentoOng/);
+    assert.match(logic, /gestao-conteudo/);
+    assert.match(crud, /indexedDB\.open\("crudPosts"/);
+    assert.match(oscsPage, /components\/crud\.js/, "the existing local-draft reader remains on its legacy caller");
+});
+
 test("category catalog routes, bounded public feeds, filters, and location controls are present", async () => {
     const html = await readFile(resolve(__dirname, "../../public/pages/catalogo.html"), "utf8");
     const script = await readFile(resolve(__dirname, "../../public/components/catalogo.js"), "utf8");
     const home = await readFile(resolve(__dirname, "../../public/pages/Porto-Ajuda.html"), "utf8");
+    const campaignDialog = await readFile(resolve(__dirname, "../../public/components/campaign-donation-dialog.js"), "utf8");
     const vercel = JSON.parse(await readFile(resolve(__dirname, "../../vercel.json"), "utf8"));
     assert.equal(vercel.cleanUrls, true);
     assert.ok(vercel.rewrites.some(({ source, destination }) => source === "/catalogo" && destination === "/pages/catalogo"));
@@ -156,7 +203,7 @@ test("category catalog routes, bounded public feeds, filters, and location contr
     assert.match(script, /page < Math\.min\(sourceTotalPages, batchLimit\)/);
     assert.match(script, /abrirModalConteudoPublico/);
     assert.match(script, /catalogo-doacoes-vazio/);
-    assert.doesNotMatch(script, /payment|stripe|checkout/i);
+    assert.match(campaignDialog, /payment-availability/);
 });
 
 test("NGO expansion stays in a fixed two-row layout and is disabled as a hover interaction on touch", async () => {

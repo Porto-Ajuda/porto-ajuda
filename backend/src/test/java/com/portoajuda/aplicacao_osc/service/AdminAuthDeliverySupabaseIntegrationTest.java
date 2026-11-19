@@ -250,9 +250,9 @@ class AdminAuthDeliverySupabaseIntegrationTest {
     }
 
     @Test
-    void concurrentWorkersClaimDistinctChannelsAndInvalidationKeepsChallengeUnusable() throws Exception {
+    void concurrentWorkersSerializeRequiredChannelsForOneChallenge() throws Exception {
         UUID challengeId = startChallenge();
-        CountDownLatch providersStarted = new CountDownLatch(2);
+        CountDownLatch providersStarted = new CountDownLatch(1);
         CountDownLatch releaseProviders = new CountDownLatch(1);
         doAnswer(invocation -> {
             providersStarted.countDown();
@@ -269,14 +269,8 @@ class AdminAuthDeliverySupabaseIntegrationTest {
         Future<?> first = workers.submit(() -> manualWorker().processNextDelivery());
         Future<?> second = workers.submit(() -> manualWorker().processNextDelivery());
         try {
-            assertTrue(providersStarted.await(60, TimeUnit.SECONDS),
-                    "Independent workers must claim both distinct outbox channels.");
-            new TransactionTemplate(transactionManager).executeWithoutResult(status -> {
-                assertEquals(1, challenges.invalidatePendingForUser(
-                        fixture.getId(), Instant.now(), AdminAuthChallenge.State.INVALIDATED,
-                        List.of(AdminAuthChallenge.State.ISSUING, AdminAuthChallenge.State.PENDING)));
-                queue.clearInvalidatedForUser(fixture.getId());
-            });
+            assertTrue(providersStarted.await(10, TimeUnit.SECONDS),
+                    "One worker must claim a channel while the sibling waits behind the same challenge.");
             releaseProviders.countDown();
             first.get(20, TimeUnit.SECONDS);
             second.get(20, TimeUnit.SECONDS);
@@ -286,10 +280,17 @@ class AdminAuthDeliverySupabaseIntegrationTest {
             workers.awaitTermination(5, TimeUnit.SECONDS);
         }
 
-        assertEquals("INVALIDATED", scalar("SELECT state FROM public.admin_auth_challenges WHERE id = ?", challengeId));
-        assertEquals(2, number("SELECT count(*) FROM public.admin_auth_deliveries WHERE challenge_id = ? AND state = 'FAILED'",
+        assertEquals(1, number("SELECT count(*) FROM public.admin_auth_deliveries WHERE challenge_id = ? AND state = 'SENT'",
                 challengeId));
-        assertEquals(0, number("SELECT count(*) FROM public.admin_auth_deliveries WHERE challenge_id = ? AND state = 'SENT'",
+        assertEquals(1, number("SELECT count(*) FROM public.admin_auth_deliveries WHERE challenge_id = ? AND state = 'PENDING'",
+                challengeId));
+        assertEquals(0, number("SELECT count(*) FROM public.admin_auth_deliveries WHERE challenge_id = ? AND state = 'FAILED'",
+                challengeId));
+
+        manualWorker().processNextDelivery();
+
+        assertEquals("PENDING", scalar("SELECT state FROM public.admin_auth_challenges WHERE id = ?", challengeId));
+        assertEquals(2, number("SELECT count(*) FROM public.admin_auth_deliveries WHERE challenge_id = ? AND state = 'SENT'",
                 challengeId));
         verify(mockedEmailService, times(1)).enviarCodigoAutenticacaoAdministrativa(eq(email), anyString());
         verify(mockedSmsService, times(1)).enviarSms(eq("5511987654321"), anyString(), eq(challengeId + ":sms"));

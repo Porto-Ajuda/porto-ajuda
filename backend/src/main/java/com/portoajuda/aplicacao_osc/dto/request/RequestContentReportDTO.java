@@ -9,6 +9,6 @@ public record RequestContentReportDTO(
         @NotNull Integer alvoId,
         @NotNull Motivo motivo,
         @NotBlank @Size(max = 1000) String justificativa) {
-    public enum TipoAlvo { OSC, PUBLICACAO, VOLUNTARIADO }
+    public enum TipoAlvo { OSC, PUBLICACAO, VOLUNTARIADO, CAMPANHA }
     public enum Motivo { MISLEADING, INAPPROPRIATE, FRAUD, PRIVACY, OTHER }
 }

@@ -8,6 +8,7 @@ import com.portoajuda.aplicacao_osc.enums.CargoOsc;
 import com.portoajuda.aplicacao_osc.enums.CausaSocial;
 import com.portoajuda.aplicacao_osc.enums.StatusOsc;
 import com.portoajuda.aplicacao_osc.service.OscService;
+import com.portoajuda.aplicacao_osc.service.OscDashboardService;
 import com.portoajuda.aplicacao_osc.service.OscStatusService;
 import com.portoajuda.aplicacao_osc.service.ValidacaoCnpjOscService;
 import org.junit.jupiter.api.Test;
@@ -34,6 +35,7 @@ class OscPerfilControllerTest {
 
                 OscController controller = new OscController(
                                 service,
+                                mock(OscDashboardService.class),
                                 mock(OscStatusService.class),
                                 mock(ValidacaoCnpjOscService.class));
 
@@ -73,6 +75,7 @@ class OscPerfilControllerTest {
 
                 OscController controller = new OscController(
                                 service,
+                                mock(OscDashboardService.class),
                                 mock(OscStatusService.class),
                                 mock(ValidacaoCnpjOscService.class));
 

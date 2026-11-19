@@ -59,7 +59,8 @@ public class SecurityConfiguration {
                                 .csrf(csrf -> csrf
                                                 .csrfTokenRepository(csrfRepository)
                                                 .csrfTokenRequestHandler(
-                                                                new CsrfTokenRequestAttributeHandler()))
+                                                                new CsrfTokenRequestAttributeHandler())
+                                                .ignoringRequestMatchers("/stripe/campaign-webhook"))
 
                                 .cors(cors -> {
                                 })
@@ -93,6 +94,7 @@ public class SecurityConfiguration {
                                                                 "/ong-profile",
                                                                 "/stripe/success",
                                                                 "/stripe/cancel",
+                                                                "/stripe/campaign-webhook",
                                                                 "/cadastro-osc",
                                                                 "/pages/**",
                                                                 "/assets/**",
@@ -134,6 +136,9 @@ public class SecurityConfiguration {
                                                 .requestMatchers(HttpMethod.POST, "/admin/auth/**")
                                                 .permitAll()
 
+                                                .requestMatchers(HttpMethod.GET, "/admin/auth/sandbox/challenges/*/code")
+                                                .permitAll()
+
                                                 // Documentação
                                                 .requestMatchers(
                                                                 "/swagger-ui.html",
@@ -154,7 +159,10 @@ public class SecurityConfiguration {
 
                                                 .requestMatchers(HttpMethod.GET,
                                                                 "/support-assistant/intro",
-                                                                "/support-assistant/public-search")
+                                                                "/support-assistant/public-search",
+                                                                "/donation-campaigns",
+                                                                "/donation-campaigns/*",
+                                                                "/donation-campaigns/*/payment-availability")
                                                 .permitAll()
 
                                                 // Preflight CORS

@@ -2,6 +2,7 @@ package com.portoajuda.aplicacao_osc.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -79,12 +80,110 @@ class AdminAuthenticationServiceTest {
                 emailService,
                 adminSessionService,
                 new AdminAuthorizationService(org.mockito.Mockito.mock(AdminAssignmentRepository.class), false),
-                "dummy-password-hash");
+                "dummy-password-hash",
+                true);
         admin = usuario(21, "ADMIN");
         lenient().when(controls.isLocked(anyString(), anyString(), any(Instant.class))).thenReturn(false);
         lenient().when(controls.increment(
                         anyString(), anyString(), any(), any(), anyInt(), any(), anyBoolean()))
                 .thenReturn(1);
+        lenient().when(deliveryRepository.existsByChallenge_IdAndChannel(any(), eq(AdminAuthDelivery.Channel.SMS)))
+                .thenReturn(true);
+    }
+
+    @Test
+    void configuracaoQueDesativaSmsEhRejeitada() {
+        assertThrows(IllegalStateException.class, () -> serviceWithSms(false));
+    }
+
+    @Test
+    void codigoEmailValidoNaoEmiteSessaoSemSms() {
+        UUID challengeId = UUID.randomUUID();
+        AdminAuthChallenge challenge = challenge(challengeId, admin);
+        challenge.setEmailCodeHash(crypto.hashCode(challengeId, "EMAIL", "123456"));
+        challenge.setEmailSnapshotHash(crypto.accountKey(admin.getEmail().valor()));
+        challenge.setPhoneSnapshotHash(crypto.phoneKey(SmsService.normalizarTelefoneBrasileiro(admin.getTelefone())));
+        challenge.setSmsCodeHash(crypto.hashCode(challengeId, "SMS", "654321"));
+        when(challengeRepository.findByIdForUpdate(challengeId)).thenReturn(Optional.of(challenge));
+        when(usuarioRepository.findById(21)).thenReturn(Optional.of(admin));
+        when(usuarioRepository.findById(21)).thenReturn(Optional.of(admin));
+
+        AdminAuthenticationService.VerificationOutcome outcome = service.verificarEEmitirSessao(
+                challengeId, new AdminAuthVerifyRequest("123456", null), "192.0.2.19");
+
+        assertEquals(AdminAuthenticationService.VerificationResult.PENDING, outcome.result());
+        assertNull(outcome.credential());
+        assertEquals(AdminAuthChallenge.State.PENDING, challenge.getState());
+        assertNull(challenge.getEmailCodeHash());
+        verify(adminSessionService, never()).emitir(any(), anyString());
+    }
+
+    @Test
+    void codigoSmsNaoSubstituiEmailMesmoQuandoSmsEstaHabilitado() {
+        UUID challengeId = UUID.randomUUID();
+        AdminAuthChallenge challenge = challenge(challengeId, admin);
+        challenge.setEmailCodeHash(crypto.hashCode(challengeId, "EMAIL", "123456"));
+        challenge.setSmsCodeHash(crypto.hashCode(challengeId, "SMS", "654321"));
+        when(challengeRepository.findByIdForUpdate(challengeId)).thenReturn(Optional.of(challenge));
+        when(usuarioRepository.findById(21)).thenReturn(Optional.of(admin));
+
+        assertEquals(AdminAuthenticationService.VerificationResult.PENDING, service.verificar(
+                challengeId, new AdminAuthVerifyRequest(null, "654321"), "192.0.2.20"));
+        assertNull(challenge.getEmailVerifiedAt());
+        verify(adminSessionService, never()).emitir(any(), anyString());
+    }
+
+    @Test
+    void reenviarCriaNovoCodigoEnfileiradoEIncrementaLimitePersistido() {
+        UUID challengeId = UUID.randomUUID();
+        AdminAuthChallenge challenge = challenge(challengeId, admin);
+        challenge.setEmailCodeHash(crypto.hashCode(challengeId, "EMAIL", "123456"));
+        challenge.setEmailSnapshotHash(crypto.accountKey(admin.getEmail().valor()));
+        challenge.setPhoneSnapshotHash(crypto.phoneKey(SmsService.normalizarTelefoneBrasileiro(admin.getTelefone())));
+        AdminAuthDelivery delivery = new AdminAuthDelivery();
+        delivery.setId(UUID.randomUUID());
+        delivery.setChallenge(challenge);
+        delivery.setChannel(AdminAuthDelivery.Channel.EMAIL);
+        delivery.setState(AdminAuthDelivery.State.SENT);
+        when(challengeRepository.findByIdForUpdate(challengeId)).thenReturn(Optional.of(challenge));
+        when(usuarioRepository.findById(21)).thenReturn(Optional.of(admin));
+        when(deliveryRepository.findAllByChallenge_Id(challengeId)).thenReturn(List.of(delivery));
+        assertTrue(((AdminAuthorizationService) ReflectionTestUtils.getField(service, "adminAuthorization"))
+                .isEligibleForPrivilegedSession(admin));
+
+        assertEquals(AdminAuthenticationService.ResendResult.ACCEPTED,
+                service.reenviar(challengeId, "EMAIL", "192.0.2.30"));
+        assertEquals(AdminAuthChallenge.State.ISSUING, challenge.getState());
+        assertEquals(1, challenge.getResendAttempts());
+        assertNotEquals(crypto.hashCode(challengeId, "EMAIL", "123456"), challenge.getEmailCodeHash());
+        assertEquals(AdminAuthDelivery.State.PENDING, delivery.getState());
+        assertNotNull(delivery.getEncryptedCode());
+    }
+
+    @Test
+    void codigoSandboxRetornaEcoCifradoDoProvedorENaoFicaDisponivelAposVerificacao() {
+        UUID challengeId = UUID.randomUUID();
+        AdminAuthChallenge challenge = challenge(challengeId, admin);
+        AdminAuthDelivery sms = new AdminAuthDelivery();
+        sms.setChannel(AdminAuthDelivery.Channel.SMS);
+        sms.setState(AdminAuthDelivery.State.SENT);
+        sms.setSandboxMessageCiphertext(crypto.encryptDeliveryCode(
+                challengeId, "SMS", "Porto Ajuda: seu codigo de acesso e 123456."));
+        when(challengeRepository.findById(challengeId)).thenReturn(Optional.of(challenge));
+        when(deliveryRepository.findByChallenge_IdAndChannel(challengeId, AdminAuthDelivery.Channel.SMS))
+                .thenReturn(Optional.of(sms));
+
+        assertEquals("123456", service.obterCodigoSandbox(challengeId));
+        challenge.setState(AdminAuthChallenge.State.VERIFIED);
+        assertNull(service.obterCodigoSandbox(challengeId));
+    }
+
+    private AdminAuthenticationService serviceWithSms(boolean enabled) {
+        return new AdminAuthenticationService(
+                usuarioRepository, challengeRepository, deliveryRepository, crypto, controls, audit,
+                passwordEncoder, emailService, adminSessionService,
+                new AdminAuthorizationService(org.mockito.Mockito.mock(AdminAssignmentRepository.class), false),
+                "dummy-password-hash", enabled);
     }
 
     @Test
@@ -101,6 +200,8 @@ class AdminAuthenticationServiceTest {
         AdminAuthChallenge challenge = captor.getValue();
         assertEquals(challengeId, challenge.getId());
         assertEquals(AdminAuthChallenge.State.ISSUING, challenge.getState());
+        assertTrue(challenge.isEmailRequired());
+        assertTrue(challenge.isSmsRequired());
         assertNotEquals(challenge.getEmailCodeHash(), challenge.getSmsCodeHash());
         assertTrue(challenge.getEmailCodeHash().matches("[0-9a-f]{64}"));
         assertTrue(challenge.getSmsCodeHash().matches("[0-9a-f]{64}"));
@@ -169,10 +270,10 @@ class AdminAuthenticationServiceTest {
         assertTrue(challenge.getCompletedAt() != null);
         verify(controls).reset(eq("ACCOUNT_FAILURE"), eq(challenge.getAccountKeyHash()), any(Instant.class));
 
-        assertEquals(AdminAuthenticationService.VerificationResult.REJECTED, service.verificar(
-                challengeId,
-                new AdminAuthVerifyRequest("123456", "654321"),
-                "192.0.2.10"));
+        AdminAuthenticationService.VerificationOutcome reused = service.verificarEEmitirSessao(
+                challengeId, new AdminAuthVerifyRequest("123456", "654321"), "192.0.2.10");
+        assertEquals(AdminAuthenticationService.VerificationResult.REJECTED, reused.result());
+        assertEquals(AdminAuthenticationService.VerificationFailure.CODE_ALREADY_USED, reused.failure());
     }
 
     @Test
@@ -210,6 +311,84 @@ class AdminAuthenticationServiceTest {
         assertEquals(AdminAuthenticationService.VerificationResult.PENDING, result.result());
         assertNull(result.credential());
         verify(adminSessionService, never()).emitir(any(), anyString());
+    }
+
+    @Test
+    void codigoCorretoDuranteConfirmacaoDaEntregaNaoEConsumidoNemContaComoTentativa() {
+        UUID challengeId = UUID.randomUUID();
+        AdminAuthChallenge challenge = challenge(challengeId, admin);
+        challenge.setState(AdminAuthChallenge.State.ISSUING);
+        challenge.setEmailCodeHash(crypto.hashCode(challengeId, "EMAIL", "123456"));
+        when(challengeRepository.findByIdForUpdate(challengeId)).thenReturn(Optional.of(challenge));
+
+        AdminAuthenticationService.VerificationOutcome outcome = service.verificarEEmitirSessao(
+                challengeId, new AdminAuthVerifyRequest("123456", null), "192.0.2.22");
+
+        assertEquals(AdminAuthenticationService.VerificationResult.PENDING, outcome.result());
+        assertEquals("DELIVERY", outcome.nextFactor());
+        assertNull(outcome.failure());
+        assertEquals(0, challenge.getEmailAttempts());
+        assertEquals(0, challenge.getFailedAttempts());
+        assertNotNull(challenge.getEmailCodeHash());
+        verify(adminSessionService, never()).emitir(any(), anyString());
+    }
+
+    @Test
+    void codigoErradoRetornaMotivoSemEmitirSessao() {
+        UUID challengeId = UUID.randomUUID();
+        AdminAuthChallenge challenge = challenge(challengeId, admin);
+        challenge.setEmailCodeHash(crypto.hashCode(challengeId, "EMAIL", "123456"));
+        when(challengeRepository.findByIdForUpdate(challengeId)).thenReturn(Optional.of(challenge));
+        when(usuarioRepository.findById(21)).thenReturn(Optional.of(admin));
+
+        AdminAuthenticationService.VerificationOutcome outcome = service.verificarEEmitirSessao(
+                challengeId, new AdminAuthVerifyRequest("000000", null), "192.0.2.23");
+
+        assertEquals(AdminAuthenticationService.VerificationResult.REJECTED, outcome.result());
+        assertEquals(AdminAuthenticationService.VerificationFailure.INVALID_CODE, outcome.failure());
+        verify(adminSessionService, never()).emitir(any(), anyString());
+    }
+
+    @Test
+    void smsDeliveryFailedReturnsServiceUnavailableBeforeCodeVerification() {
+        UUID challengeId = UUID.randomUUID();
+        AdminAuthChallenge challenge = challenge(challengeId, admin);
+        challenge.setState(AdminAuthChallenge.State.FAILED);
+        challenge.setDeliveryFailureAt(Instant.now());
+        challenge.setEmailCodeHash(crypto.hashCode(challengeId, "EMAIL", "123456"));
+        challenge.setSmsCodeHash(crypto.hashCode(challengeId, "SMS", "654321"));
+        when(challengeRepository.findByIdForUpdate(challengeId)).thenReturn(Optional.of(challenge));
+
+        AdminAuthenticationService.VerificationOutcome outcome = service.verificarEEmitirSessao(
+                challengeId, new AdminAuthVerifyRequest("123456", null), "192.0.2.38");
+
+        assertEquals(AdminAuthenticationService.VerificationResult.REJECTED, outcome.result());
+        assertEquals(AdminAuthenticationService.VerificationFailure.DELIVERY_FAILED, outcome.failure());
+        assertNull(outcome.credential());
+        assertNull(challenge.getEmailVerifiedAt());
+        assertNull(challenge.getSmsVerifiedAt());
+        verify(adminSessionService, never()).emitir(any(), anyString());
+    }
+
+    @Test
+    void desafioSubstituidoRetornaMotivoEExpiradoNaoEConfundidoComCodigoErrado() {
+        UUID replacedId = UUID.randomUUID();
+        AdminAuthChallenge replaced = challenge(replacedId, admin);
+        replaced.setState(AdminAuthChallenge.State.INVALIDATED);
+        when(challengeRepository.findByIdForUpdate(replacedId)).thenReturn(Optional.of(replaced));
+
+        var replacedOutcome = service.verificarEEmitirSessao(
+                replacedId, new AdminAuthVerifyRequest("123456", null), "192.0.2.24");
+        assertEquals(AdminAuthenticationService.VerificationFailure.CHALLENGE_REPLACED,
+                replacedOutcome.failure());
+
+        UUID expiredId = UUID.randomUUID();
+        AdminAuthChallenge expired = challenge(expiredId, admin);
+        expired.setExpiresAt(Instant.now().minusSeconds(1));
+        when(challengeRepository.findByIdForUpdate(expiredId)).thenReturn(Optional.of(expired));
+        var expiredOutcome = service.verificarEEmitirSessao(
+                expiredId, new AdminAuthVerifyRequest("123456", null), "192.0.2.25");
+        assertEquals(AdminAuthenticationService.VerificationFailure.EXPIRED_CODE, expiredOutcome.failure());
     }
 
     @Test
@@ -268,10 +447,10 @@ class AdminAuthenticationServiceTest {
         challenge.setExpiresAt(Instant.now().minusSeconds(1));
         when(challengeRepository.findByIdForUpdate(challengeId)).thenReturn(Optional.of(challenge));
 
-        assertEquals(AdminAuthenticationService.VerificationResult.REJECTED, service.verificar(
-                challengeId,
-                new AdminAuthVerifyRequest("123456", "654321"),
-                "192.0.2.10"));
+        AdminAuthenticationService.VerificationOutcome expiredOutcome = service.verificarEEmitirSessao(
+                challengeId, new AdminAuthVerifyRequest("123456", "654321"), "192.0.2.10");
+        assertEquals(AdminAuthenticationService.VerificationResult.REJECTED, expiredOutcome.result());
+        assertEquals(AdminAuthenticationService.VerificationFailure.EXPIRED_CODE, expiredOutcome.failure());
 
         assertEquals(AdminAuthChallenge.State.FAILED, challenge.getState());
         assertNull(challenge.getEmailCodeHash());
@@ -334,6 +513,9 @@ class AdminAuthenticationServiceTest {
 
         assertEquals(AdminAuthChallenge.State.FAILED, challenge.getState());
         assertNull(challenge.getEmailCodeHash());
+        AdminAuthenticationService.VerificationOutcome locked = service.verificarEEmitirSessao(
+                challengeId, new AdminAuthVerifyRequest("000000", null), "192.0.2.16");
+        assertEquals(AdminAuthenticationService.VerificationFailure.TOO_MANY_ATTEMPTS, locked.failure());
         verify(emailService).enviarAlertaIncidenteAutenticacaoAdmin(
                 eq(EMAIL), anyString(), any(Instant.class), anyString());
     }

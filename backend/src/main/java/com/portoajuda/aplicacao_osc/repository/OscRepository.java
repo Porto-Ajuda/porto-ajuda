@@ -102,4 +102,9 @@ public interface OscRepository extends JpaRepository<Osc, Integer> {
             @Param("usuarioId") Integer usuarioId);
 
     boolean existsByCnpj(Cnpj cnpj);
+
+    boolean existsByLogo(String logo);
+
+    @Query("select o.logo from Osc o where o.logo is not null")
+    List<String> listarUrlsDeLogotipos();
 }

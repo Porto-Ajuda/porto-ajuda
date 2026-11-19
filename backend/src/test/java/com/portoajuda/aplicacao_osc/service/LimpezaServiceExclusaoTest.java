@@ -57,6 +57,7 @@ class LimpezaServiceExclusaoTest {
     @Mock private PreferenciasAcessibilidadeRepository preferenciasRepository;
     @Mock private AdminAssignmentService adminAssignmentService;
     @Mock private AdminRbacInvariantService adminRbacInvariantService;
+    @Mock private ManagedImageCleanupService managedImageCleanup;
 
     @InjectMocks
     private LimpezaService limpezaService;
@@ -92,6 +93,22 @@ class LimpezaServiceExclusaoTest {
         ordem.verify(postRepository).desvincularAutorPorUsuarioId(42);
         ordem.verify(usuarioRepository).excluirPorIdSemCascade(42);
         verify(usuarioRepository, never()).delete(usuario);
+    }
+
+    @Test
+    void contaExcluidaAposPrazoAgendaSomenteSuaFotoParaLimpezaAposCommit() {
+        Usuario usuario = usuarioVencido(42);
+        String foto = "https://storage.example/storage/v1/object/public/images/usuarios/42/foto-perfil-00000000-0000-0000-0000-000000000042.png";
+        when(usuario.getFotoPerfilUrl()).thenReturn(foto);
+        ReflectionTestUtils.setField(limpezaService, "managedImageCleanup", managedImageCleanup);
+        prepararCandidata(usuario);
+        when(oscRepository.findAllByUsuario_Id(42)).thenReturn(List.of());
+        when(doacaoRepository.existsByUsuario_Id(42)).thenReturn(false);
+
+        assertEquals(1, limpezaService.excluirContasComPrazoVencido());
+
+        verify(managedImageCleanup).afterCommitIfUnreferenced(foto);
+        verify(usuarioRepository).excluirPorIdSemCascade(42);
     }
 
     @Test

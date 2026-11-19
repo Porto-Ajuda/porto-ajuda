@@ -96,7 +96,7 @@ const API_URL = await getAPI_URL();
 
             {
                 seletor: "#cards-osc",
-                titulo: "ONG's em destaque",
+                titulo: "ONGs em destaque",
                 texto:
                     "Aqui aparecem organizações da sociedade civil que estão em destaque no Porto Ajuda."
             },

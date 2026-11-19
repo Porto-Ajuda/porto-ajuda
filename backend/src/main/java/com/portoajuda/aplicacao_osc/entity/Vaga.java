@@ -7,6 +7,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.time.Instant;
+import java.math.BigDecimal;
 @Setter
 @Getter
 @Entity
@@ -58,4 +60,16 @@ public class Vaga {
     @Column(name = "status", nullable = false)
     @Enumerated(EnumType.STRING)
     private StatusVaga status;
+
+    @Column(name = "data_inicio_real")
+    private LocalDate dataInicioReal;
+
+    @Column(name = "data_fim_real")
+    private LocalDate dataFimReal;
+
+    @Column(name = "data_conclusao")
+    private Instant dataConclusao;
+
+    @Column(name = "horas_totais_realizadas", precision = 8, scale = 2)
+    private BigDecimal horasTotaisRealizadas;
 }

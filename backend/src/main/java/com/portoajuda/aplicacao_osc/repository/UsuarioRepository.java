@@ -40,6 +40,11 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
 
         boolean existsByCpf(com.portoajuda.aplicacao_osc.utils.Cpf cpf);
 
+        boolean existsByFotoPerfilUrl(String fotoPerfilUrl);
+
+        @Query("select u.fotoPerfilUrl from Usuario u where u.fotoPerfilUrl is not null")
+        List<String> listarUrlsDeFotosDePerfil();
+
         List<Usuario> findByEmailVerificadoFalseAndDataCriacaoBefore(
                         LocalDateTime limite);
 

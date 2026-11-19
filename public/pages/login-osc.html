@@ -10,7 +10,6 @@
     <link rel="stylesheet" href="../styles/login-osc.css">
     <link rel="stylesheet" href="../styles/geral.css">
 
-    <script type="module" src="../components/login-osc.js"></script>
     <script type="module" src="../components/header_footer.js" defer></script>
 </head>
 
@@ -23,7 +22,7 @@
         <div class="shape">
             <h1 class="title">Porto <span>Ajuda</span></h1>
             <p class="subtitulo">
-                Acesse a conta da sua ONG e gerencie as suas <span>iniciativas sociais</span>.
+                Acesse as organizações vinculadas à sua conta e gerencie suas <span>iniciativas sociais</span>.
             </p>
         </div>
     </div>
@@ -31,39 +30,14 @@
     <div class="frame frame-login" id="frame">
         <div class="panel">
 
-            <form id="form-login-osc" class="form-login-osc" novalidate>
-
-                <h2>Entrar</h2>
-                <p class="descricao-etapa">Use o CNPJ e a senha cadastrados para acessar a conta da ONG.</p>
-
-                <div class="campo">
-                    <label for="login-cnpj">CNPJ</label>
-                    <input type="text" id="login-cnpj" name="cnpj" placeholder="00.AAA.AAA/AAAA-00" maxlength="18" inputmode="text" autocomplete="username" required>
-                </div>
-
-                <div class="campo">
-                    <label for="login-senha">Senha</label>
-                    <div class="campo-senha">
-                        <input type="password" id="login-senha" name="senha" placeholder="Digite sua senha" autocomplete="current-password" required>
-                        <button type="button" class="btn-olho" data-alvo="login-senha" aria-label="Mostrar senha">
-                            <i class="fa-solid fa-eye"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="links-login links-login-direita">
-                    <a href="contato.html">Precisa de ajuda com acesso?</a>
-                </div>
-
-                <p class="msg-error msg-login" id="erro-login" role="alert" hidden></p>
-
-                <button type="submit" class="botao botao-cadastrar botao-entrar" id="btn-entrar">Entrar</button>
-
+            <section class="form-login-osc" aria-labelledby="titulo-login-osc">
+                <h2 id="titulo-login-osc">Acesso de integrante</h2>
+                <p class="descricao-etapa">O acesso às ferramentas da ONG usa sua conta pessoal do Porto Ajuda. Entre e selecione uma organização à qual você esteja vinculado.</p>
+                <a class="botao botao-cadastrar botao-entrar" href="../login">Entrar com minha conta</a>
                 <div class="links-login">
                     Ainda não tem cadastro? <a href="cadastro-osc.html">Cadastrar ONG</a>
                 </div>
-
-            </form>
+            </section>
         </div>
     </div>
 

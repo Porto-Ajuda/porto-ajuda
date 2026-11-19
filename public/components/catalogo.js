@@ -1,16 +1,33 @@
 import { getAPI_URL } from "./modoBack.js";
 import { urlImagemSegura } from "./ong-content.js";
 import { fetchAutenticado } from "./api.js";
+import { campaignMoney } from "./campaign-money.js";
+import { createCampaignDonationDialog } from "./campaign-donation-dialog.js";
 import { distanceKm, geocodingFailureMessage, parseCatalogLocation, validCatalogCoordinates } from "./catalog-location.js";
 
+function normalizeLegacyDonationUrl() {
+  if (location.pathname !== "/doacao-ong") return;
+  const legacy = new URLSearchParams(location.search);
+  const campaignId = legacy.get("campanha") || legacy.get("campaign") || legacy.get("id");
+  const next = new URLSearchParams();
+  next.set("categoria", "doacoes");
+  if (campaignId) next.set("campanha", campaignId);
+  const amount = legacy.get("valor");
+  if (amount) next.set("valor", amount);
+  const search = legacy.get("q");
+  if (search) next.set("q", search);
+  history.replaceState({ legacyDonation: true }, "", `/catalogo?${next}`);
+}
+normalizeLegacyDonationUrl();
+
 const API = getAPI_URL();
-const params = new URLSearchParams(location.search);
+let params = new URLSearchParams(location.search);
 const category = (params.get("categoria") || "ongs").toLowerCase();
 const CONFIG = {
   ongs: { title: "Explorar ONGs", description: "Conheça organizações ativas e publicamente visíveis.", endpoint: "/osc/list", kind: "ongs", items: "content" },
   publicacoes: { title: "Explorar Publicações", description: "Publicações públicas recentes de organizações parceiras.", endpoint: "/post/catalogo/publicacoes", kind: "posts", items: "content" },
   voluntariado: { title: "Explorar Voluntariado", description: "Oportunidades abertas e disponíveis para participar.", endpoint: "/post/catalogo/voluntariados", kind: "volunteer", items: "content" },
-  doacoes: { title: "Explorar Doações", description: "Campanhas públicas verificadas do Porto Ajuda.", kind: "donations" }
+  doacoes: { title: "Vaquinhas das ONGs", description: "Acompanhe campanhas públicas e contribua com o valor líquido que deseja destinar à ONG.", endpoint: "/donation-campaigns", kind: "donations" }
 };
 const config = CONFIG[category] || CONFIG.ongs;
 const $ = id => document.getElementById(id);
@@ -30,6 +47,7 @@ let requestVersion = 0;
 let sourceNextPage = 0;
 let sourceTotalPages = 0;
 let sourceTotalElements = 0;
+const campaignDialog = createCampaignDonationDialog();
 
 function text(value) { return String(value ?? "").trim(); }
 function norm(value) { return text(value).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("pt-BR"); }
@@ -47,10 +65,13 @@ function setUpPage() {
   $("catalogo-titulo").textContent = config.title;
   $("catalogo-descricao").textContent = config.description;
   if (config.kind === "donations") {
-    $("catalogo-filtros").hidden = true;
-    $("catalogo-status").hidden = true;
+    $("catalogo-filter-row").hidden = true;
     $("catalogo-descobertas").hidden = true;
-    $("catalogo-doacoes-vazio").hidden = false;
+    $("catalogo-doacoes-vazio").hidden = true;
+    $("catalogo-doacoes-vazio").querySelector("h2").textContent = "Ainda não há vaquinhas ativas";
+    $("catalogo-doacoes-vazio").querySelector("p").textContent = "As campanhas aparecerão aqui quando estiverem ativas e disponíveis para o público.";
+    $("catalogo-resultados-titulo").textContent = "Vaquinhas ativas";
+    hydrateFiltersFromUrl();
     return;
   }
   $("catalogo-filtro-a-label").firstChild.textContent = config.kind === "ongs" ? "Causa social" : config.kind === "volunteer" ? "Modalidade" : "Causa social";
@@ -92,7 +113,7 @@ function apiPage(page) {
   url.searchParams.set("page", String(page));
   url.searchParams.set("size", String(API_PAGE_SIZE));
   return fetch(url, { headers: { Accept: "application/json" }, cache: "no-store" }).then(async response => {
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    if (!response.ok) throw new Error("N?o foi poss?vel carregar este cat?logo. Tente novamente.");
     return response.json();
   });
 }
@@ -106,6 +127,18 @@ async function loadBounded() {
   $("catalogo-repetir").hidden = true;
   $("catalogo-carregar-mais").hidden = true;
   try {
+    if (config.kind === "donations") {
+      const response = await fetch(new URL(config.endpoint, API), { headers:{Accept:"application/json"}, cache:"no-store" });
+      if (!response.ok) throw new Error(`Campaign list unavailable (${response.status})`);
+      const campaigns = await response.json();
+      if (version !== requestVersion) return;
+      sourceItems = Array.isArray(campaigns) ? campaigns.filter(item => item?.state === "ACTIVE") : [];
+      sourceTotalElements = sourceItems.length;
+      sourceTotalPages = 1;
+      sourceNextPage = 1;
+      applyFilters(false);
+      return;
+    }
     const first = await apiPage(0);
     const all = [...(first.content || [])];
     sourceTotalPages = Number(first.totalPages) || 1;
@@ -172,12 +205,14 @@ async function loadMoreBounded() {
 }
 function setStatus(value) { $("catalogo-status").textContent = value; }
 function searchable(item) {
+  if (config.kind === "donations") return [item.title,item.description,item.ngoName].join(" ");
   return config.kind === "ongs"
     ? [item.nome, item.cidade, item.estado, item.causaPrincipal, ...(item.causas || []), ...(item.causasSecundarias || []), ...(item.ods || []).map(String)].join(" ")
     : [item.titulo, item.conteudo, item.nomeOsc, item.causaPrincipalOsc, item.cidadeOsc, item.estadoOsc, item.tipo, item.vaga?.cidade, item.vaga?.bairro, item.vaga?.modalidadeVoluntariado, item.vaga?.requisitos].join(" ");
 }
 function matchesFilter(item, term, selected, local) {
   if (term && !norm(searchable(item)).includes(term)) return false;
+  if (config.kind === "donations") return item.state === "ACTIVE";
   if (selected) {
     if (config.kind === "volunteer" && item.vaga?.modalidadeVoluntariado !== selected) return false;
     if (config.kind === "ongs" && ![item.causaPrincipal, ...(item.causas || []), ...(item.causasSecundarias || [])].includes(selected)) return false;
@@ -209,7 +244,7 @@ function applyFilters(updateUrl = true) {
   const local = norm([locationCity, locationState].filter(Boolean).join(" "));
   resultItems = sourceItems.filter(item => matchesFilter(item, term, selected, local));
   const order = $("catalogo-ordem").value;
-  resultItems.sort((a, b) => {
+  if (config.kind !== "donations") resultItems.sort((a, b) => {
     if (order === "nome") return text(a.nome).localeCompare(text(b.nome), "pt-BR");
     if (order === "relevancia" && term) {
       const titleA = norm(a.nome || a.titulo), titleB = norm(b.nome || b.titulo);
@@ -229,6 +264,20 @@ function applyFilters(updateUrl = true) {
   resultPage = 0;
   if (updateUrl) {
     const url = new URL(location.href);
+    if (config.kind === "donations") {
+      const campaignId = url.searchParams.get("campanha");
+      const amount = url.searchParams.get("valorCentavos");
+      url.search = "";
+      url.searchParams.set("categoria", "doacoes");
+      if ($("catalogo-termo").value.trim()) url.searchParams.set("q", $("catalogo-termo").value.trim());
+      if (campaignId) url.searchParams.set("campanha", campaignId);
+      if (amount) url.searchParams.set("valorCentavos", amount);
+      history.pushState({}, "", url);
+      params = new URLSearchParams(url.search);
+      renderResultPage();
+      atualizarIndicadorLocal();
+      return;
+    }
     for (const [key, value] of [["q", $("catalogo-termo").value.trim()], ["filtro", selected], ["ong", $("catalogo-ong").value], ["ods", $("catalogo-ods").value], ["vagas", $("catalogo-vagas").value === "0" ? "" : $("catalogo-vagas").value], ["local", locationSource.startsWith("current") ? "atual" : locationLabel], ["estado", locationSource.startsWith("current") ? "" : locationState], ["distancia", locationSource.startsWith("current") || (locationSource === "manual" && locationPoint && config.kind !== "volunteer") ? $("catalogo-distancia").value : ""], ["ordem", order], ["de", $("catalogo-data-inicio").value], ["ate", $("catalogo-data-fim").value]]) value ? url.searchParams.set(key, value) : url.searchParams.delete(key);
     history.pushState({}, "", url);
   }
@@ -237,7 +286,26 @@ function applyFilters(updateUrl = true) {
   atualizarIndicadorLocal();
 }
 function safeImage(src) { return src && urlImagemSegura(src) ? src : ""; }
+function createDonationCard(item) {
+  const card = document.createElement("button"); card.type = "button"; card.className = "catalogo-card catalogo-doacao-card";
+  card.setAttribute("role", "listitem"); card.setAttribute("aria-haspopup", "dialog");
+  card.setAttribute("aria-label", `Abrir vaquinha ${text(item.title)} da ONG ${text(item.ngoName)}`);
+  const media = document.createElement("div"); media.className = "catalogo-card-media";
+  const imageUrl = safeImage(item.imageUrl);
+  if (imageUrl) { const image = document.createElement("img"); image.src = imageUrl; image.alt = ""; image.loading = "lazy"; image.referrerPolicy = "no-referrer"; media.append(image); }
+  else { const fallback = document.createElement("span"); fallback.className = "catalogo-card-fallback"; fallback.textContent = "Vaquinha da ONG"; media.append(fallback); }
+  const info = document.createElement("div"); info.className = "catalogo-card-info";
+  const ngo = document.createElement("span"); ngo.className = "catalogo-doacao-ong"; ngo.textContent = text(item.ngoName) || "ONG";
+  const title = document.createElement("strong"); title.textContent = text(item.title) || "Vaquinha";
+  const raised = document.createElement("span"); raised.className = "catalogo-doacao-raised"; raised.textContent = `${campaignMoney(item.raisedNetCents)} arrecadados de ${campaignMoney(item.goalNetCents)} líquidos`;
+  const progress = document.createElement("progress"); progress.max = 100; progress.value = Math.min(100, Math.floor(100 * Number(item.raisedNetCents || 0) / Math.max(1,Number(item.goalNetCents || 1)))); progress.setAttribute("aria-label", `${progress.value}% da meta líquida`);
+  const action = document.createElement("span"); action.className = "catalogo-doacao-cta"; action.textContent = "Conhecer e contribuir";
+  info.append(ngo,title,raised,progress,action); card.append(media,info);
+  card.addEventListener("click", () => campaignDialog.open(item, card));
+  return card;
+}
 function createCard(item) {
+  if (config.kind === "donations") return createDonationCard(item);
   const isNgo = config.kind === "ongs";
   const card = document.createElement(isNgo ? "a" : "button");
   if (isNgo) { card.href = `/ong-profile?id=${encodeURIComponent(item.id)}`; }
@@ -261,17 +329,29 @@ function createCard(item) {
 function renderResultPage() {
   const start = resultPage * PAGE_SIZE;
   const items = resultItems.slice(start, start + PAGE_SIZE);
-  const section = $("catalogo-resultados"); section.hidden = false;
+  const section = $("catalogo-resultados"); section.hidden = config.kind === "donations" && resultItems.length === 0;
   const grid = $("catalogo-grade"); grid.replaceChildren(...items.map(createCard));
   const locationApplied = Boolean(locationPoint || (locationSource === "manual" && config.kind === "volunteer"));
   const filtered = Boolean($("catalogo-termo").value || $("catalogo-filtro-a").value || $("catalogo-ong").value || $("catalogo-ods").value || Number($("catalogo-vagas").value) || locationApplied || $("catalogo-data-inicio").value || $("catalogo-data-fim").value);
-  $("catalogo-resultados-titulo").textContent = filtered ? `Resultados (${resultItems.length})` : "Conteúdo recente";
+  $("catalogo-resultados-titulo").textContent = config.kind === "donations"
+    ? (filtered ? `Vaquinhas encontradas (${resultItems.length})` : "Vaquinhas ativas")
+    : filtered ? `Resultados (${resultItems.length})` : "Conteúdo recente";
   const totalPages = Math.ceil(resultItems.length / PAGE_SIZE);
   $("catalogo-pagina").textContent = totalPages ? `Página ${resultPage + 1} de ${totalPages}` : "";
   $("catalogo-anterior").disabled = resultPage <= 0;
   $("catalogo-proximo").disabled = resultPage + 1 >= totalPages;
-  setStatus(resultItems.length ? `Exibindo ${resultItems.length} resultados entre ${sourceItems.length} itens públicos carregados de ${sourceTotalElements}.` : "Nenhum resultado corresponde aos filtros escolhidos.");
+  if (config.kind === "donations") {
+    $("catalogo-doacoes-vazio").hidden = resultItems.length > 0;
+    if (resultItems.length === 0) {
+      const title = $("catalogo-doacoes-vazio").querySelector("h2");
+      const description = $("catalogo-doacoes-vazio").querySelector("p");
+      title.textContent = $("catalogo-termo").value.trim() ? "Nenhuma vaquinha corresponde à busca" : "Ainda não há vaquinhas ativas";
+      description.textContent = $("catalogo-termo").value.trim() ? "Tente outro termo para encontrar uma campanha." : "As campanhas aparecerão aqui quando estiverem ativas e disponíveis para o público.";
+    }
+    setStatus("");
+  } else setStatus(resultItems.length ? `Exibindo ${resultItems.length} resultados entre ${sourceItems.length} itens públicos carregados de ${sourceTotalElements}.` : "Nenhum resultado corresponde aos filtros escolhidos.");
 }
+
 function row(title, records) {
   if (!records.length) return null;
   const section = document.createElement("section"); section.className = "catalogo-discovery-row";
@@ -288,6 +368,7 @@ function row(title, records) {
 }
 function renderDiscoveryRows() {
   const root = $("catalogo-descobertas"); root.replaceChildren();
+  if (config.kind === "donations") { root.hidden = true; return; }
   if ($("catalogo-termo").value || $("catalogo-filtro-a").value || $("catalogo-ong").value || $("catalogo-ods").value || Number($("catalogo-vagas").value) || locationPoint || (locationSource === "manual" && config.kind === "volunteer") || $("catalogo-data-inicio").value || $("catalogo-data-fim").value) { root.hidden = true; return; }
   root.hidden = false;
   const recent = [...sourceItems].sort((a, b) => itemDate(b) - itemDate(a));
@@ -481,6 +562,7 @@ function bind() {
   $("catalogo-remover-localizacao").addEventListener("click", () => limparLocalizacao());
   $("catalogo-usar-cep").addEventListener("click", () => void usarCepCadastrado());
   window.addEventListener("popstate", () => {
+    if (config.kind === "donations") return;
     const current = new URLSearchParams(location.search);
     $("catalogo-termo").value = current.get("q") || "";
     $("catalogo-filtro-a").value = current.get("filtro") || "";
@@ -509,4 +591,5 @@ function bind() {
 }
 
 setUpPage();
-if (config.kind !== "donations") { bind(); void loadBounded(); }
+bind();
+void loadBounded();

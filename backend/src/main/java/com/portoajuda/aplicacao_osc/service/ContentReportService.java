@@ -52,6 +52,8 @@ public class ContentReportService {
     private OscMembrosRepository members;
     @Autowired(required = false)
     private ModerationPointsService moderationPoints;
+    @Autowired(required = false)
+    private org.springframework.jdbc.core.JdbcTemplate jdbc;
 
     @Autowired
     public ContentReportService(
@@ -96,13 +98,27 @@ public class ContentReportService {
         if (!abuse.permitirDenuncia(reporter.getId(), remoteAddress))
             throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, "Limite de denúncias atingido. Tente novamente mais tarde.");
 
-        String type = request.tipo() == RequestContentReportDTO.TipoAlvo.OSC ? "OSC" : "POST";
+        boolean campaignReport=request.tipo()==RequestContentReportDTO.TipoAlvo.CAMPANHA;
+        String type = request.tipo() == RequestContentReportDTO.TipoAlvo.OSC ? "OSC" : campaignReport ? "CAMPAIGN" : "POST";
         String contentKind = request.tipo() == RequestContentReportDTO.TipoAlvo.OSC ? "OSC"
-                : request.tipo() == RequestContentReportDTO.TipoAlvo.VOLUNTARIADO ? "VOLUNTEERING" : "PUBLICATION";
+                : campaignReport ? "CAMPAIGN" : request.tipo() == RequestContentReportDTO.TipoAlvo.VOLUNTARIADO ? "VOLUNTEERING" : "PUBLICATION";
         Osc osc; Post post = null;
         if ("OSC".equals(type)) {
             osc = oscs.findForUpdateById(request.alvoId()).orElseThrow(ContentReportService::inaccessible);
             requirePublicOrganization(osc);
+        } else if(campaignReport) {
+            if(request.alvoId()>Integer.MAX_VALUE||jdbc==null)throw inaccessible();
+            List<Integer> organization=jdbc.query("""
+                    SELECT osc_id FROM donation_campaigns
+                     WHERE id=? AND state='ACTIVE' AND NOT moderation_suspended
+                       AND (deadline IS NULL OR deadline>CURRENT_TIMESTAMP)
+                    """,(rs,n)->rs.getInt(1),request.alvoId());
+            if(organization.isEmpty())throw inaccessible();
+            osc=oscs.findForUpdateById(organization.getFirst()).orElseThrow(ContentReportService::inaccessible);
+            requirePublicOrganization(osc);
+            Integer locked=jdbc.query("SELECT id FROM donation_campaigns WHERE id=? AND state='ACTIVE' AND NOT moderation_suspended FOR UPDATE",
+                    (rs,n)->rs.getInt(1),request.alvoId()).stream().findFirst().orElse(null);
+            if(locked==null)throw inaccessible();
         } else {
             // Lock order matches content/application paths: organization first, then post.
             Post reference = posts.findById(request.alvoId()).orElseThrow(ContentReportService::inaccessible);
@@ -248,6 +264,12 @@ public class ContentReportService {
 
     private void lockTarget(String type, Integer id) {
         if ("OSC".equals(type)) oscs.findForUpdateById(id).orElseThrow(ContentReportService::inaccessible);
+        else if("CAMPAIGN".equals(type)) {
+            if(jdbc==null)throw inaccessible();
+            Integer oscId=jdbc.query("SELECT osc_id FROM donation_campaigns WHERE id=?",(rs,n)->rs.getInt(1),id).stream().findFirst().orElseThrow(ContentReportService::inaccessible);
+            oscs.findForUpdateById(oscId).orElseThrow(ContentReportService::inaccessible);
+            jdbc.query("SELECT id FROM donation_campaigns WHERE id=? FOR UPDATE",(rs,n)->rs.getLong(1),id).stream().findFirst().orElseThrow(ContentReportService::inaccessible);
+        }
         else {
             if(moderationPoints!=null&&moderationPoints.isEnabled())moderationPoints.lockDecisionSubject(type,id);
             Post post = posts.findById(id).orElseThrow(ContentReportService::inaccessible);
@@ -284,7 +306,8 @@ public class ContentReportService {
     private static String normalizeTypeRequired(String type) {
         String canonical = type.trim().toUpperCase(Locale.ROOT);
         if (canonical.equals("PUBLICACAO") || canonical.equals("VOLUNTARIADO")) canonical = "POST";
-        if (!canonical.equals("OSC") && !canonical.equals("POST")) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tipo de conteúdo inválido.");
+        if(canonical.equals("CAMPANHA"))canonical="CAMPAIGN";
+        if (!canonical.equals("OSC") && !canonical.equals("POST") && !canonical.equals("CAMPAIGN")) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tipo de conteúdo inválido.");
         return canonical;
     }
     private static String sanitize(String value) {

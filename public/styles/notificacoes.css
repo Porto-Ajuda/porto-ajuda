@@ -1,0 +1,50 @@
+#porto-ajuda-toast-region {
+  position: fixed;
+  z-index: 2200;
+  top: calc(82px + env(safe-area-inset-top));
+  right: clamp(12px, 2vw, 28px);
+  display: grid;
+  width: min(430px, calc(100vw - 24px));
+  max-height: calc(100vh - 98px - env(safe-area-inset-top));
+  max-height: calc(100dvh - 98px - env(safe-area-inset-top));
+  gap: 10px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 2px;
+  pointer-events: none;
+}
+
+.toast-notificacao {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) 34px;
+  align-items: start;
+  gap: 10px;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 13px 14px;
+  border: 1px solid rgba(249, 200, 107, .55);
+  border-radius: 11px;
+  color: #f8f4ff;
+  background: #30234a;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, .34);
+  font: 500 0.92rem/1.5 Poppins, sans-serif;
+  pointer-events: auto;
+  animation: toast-entrada .18s ease-out both;
+}
+.toast-notificacao[data-tipo="sucesso"] { border-color: #68bd8d; background: #183d2d; }
+.toast-notificacao[data-tipo="erro"] { border-color: #df7884; background: #4c2029; color: #fff2f3; }
+.toast-notificacao[data-tipo="aviso"] { border-color: #efbf57; background: #4b3a19; color: #fff5dc; }
+.toast-notificacao[data-tipo="informacao"] { border-color: #9f8bd0; background: #30234a; }
+.toast-notificacao__icone { display:grid; place-items:center; width:22px; height:22px; margin-top:1px; border:1px solid currentColor; border-radius:50%; font-weight:800; }
+.toast-notificacao__texto { min-width:0; margin:0; overflow-wrap:anywhere; }
+.toast-notificacao__fechar { display:grid; place-items:center; width:34px; min-width:34px; height:34px; margin:-5px -5px 0 0; padding:0; border:1px solid transparent; border-radius:8px; color:inherit; background:transparent; font:600 1.25rem/1 Poppins,sans-serif; cursor:pointer; }
+.toast-notificacao__fechar:hover { border-color:currentColor; background:rgba(255,255,255,.08); }
+.toast-notificacao :is(button,a):focus-visible { outline:3px solid #f9c86b; outline-offset:2px; }
+@keyframes toast-entrada { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:none; } }
+@media (prefers-reduced-motion: reduce) {
+  .toast-notificacao { animation:none; }
+}
+@media (max-width: 600px) {
+  #porto-ajuda-toast-region { top:calc(72px + env(safe-area-inset-top)); right:12px; width:calc(100vw - 24px); max-height:calc(100dvh - 84px - env(safe-area-inset-top)); }
+  .toast-notificacao { padding:12px; font-size:.9rem; }
+}

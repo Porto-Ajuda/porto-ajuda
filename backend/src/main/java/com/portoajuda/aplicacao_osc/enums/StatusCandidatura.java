@@ -6,7 +6,9 @@ public enum StatusCandidatura {
     PENDENTE,
     APROVADA,
     RECUSADA,
-    DESISTIU;
+    DESISTIU,
+    CONCLUIDA,
+    CANCELADA_PELA_ONG;
 
     @JsonCreator
     public static StatusCandidatura fromString(String valor) {

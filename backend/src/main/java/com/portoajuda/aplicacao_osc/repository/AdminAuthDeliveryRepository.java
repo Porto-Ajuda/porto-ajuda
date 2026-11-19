@@ -20,17 +20,41 @@ public interface AdminAuthDeliveryRepository extends JpaRepository<AdminAuthDeli
              WHERE c.state = 'ISSUING'
                AND c.expires_at > CURRENT_TIMESTAMP
                AND d.attempt_count < 3
+               AND NOT EXISTS (
+                    SELECT 1
+                      FROM public.admin_auth_deliveries active
+                     WHERE active.challenge_id = c.id
+                       AND active.id <> d.id
+                       AND active.state = 'PROCESSING'
+                       AND active.lease_until > CURRENT_TIMESTAMP
+               )
                AND (d.state = 'PENDING'
                     OR (d.state = 'PROCESSING' AND d.lease_until <= CURRENT_TIMESTAMP))
              ORDER BY d.created_at, d.id
-             FOR UPDATE OF d SKIP LOCKED
+             FOR UPDATE OF c, d SKIP LOCKED
              LIMIT 1
             """, nativeQuery = true)
     Optional<AdminAuthDelivery> claimNextPending();
 
     long countByChallenge_IdAndState(UUID challengeId, State state);
 
+    long countByChallenge_Id(UUID challengeId);
+
+    boolean existsByChallenge_IdAndChannel(UUID challengeId, AdminAuthDelivery.Channel channel);
+
     List<AdminAuthDelivery> findAllByChallenge_Id(UUID challengeId);
+
+    @Modifying
+    @Query("update AdminAuthDelivery d set d.sandboxMessageCiphertext = null where d.challenge.id = :challengeId")
+    int clearSandboxMessages(@Param("challengeId") UUID challengeId);
+
+    @Modifying
+    @Query(value = "UPDATE public.admin_auth_deliveries d SET sandbox_message_ciphertext = NULL "
+            + "FROM public.admin_auth_challenges c WHERE c.id = d.challenge_id "
+            + "AND c.expires_at <= :now AND d.sandbox_message_ciphertext IS NOT NULL", nativeQuery = true)
+    int clearExpiredSandboxMessages(@Param("now") Instant now);
+
+    Optional<AdminAuthDelivery> findByChallenge_IdAndChannel(UUID challengeId, AdminAuthDelivery.Channel channel);
 
     @Modifying
     @Query("""
@@ -38,6 +62,8 @@ public interface AdminAuthDeliveryRepository extends JpaRepository<AdminAuthDeli
                set d.state = :failedState,
                    d.encryptedCode = null,
                    d.leaseUntil = null,
+                   d.failureCategory = :failureCategory,
+                   d.providerStatus = null,
                    d.updatedAt = :now
              where d.challenge.id = :challengeId
                and d.state in :activeStates
@@ -46,6 +72,7 @@ public interface AdminAuthDeliveryRepository extends JpaRepository<AdminAuthDeli
             @Param("challengeId") UUID challengeId,
             @Param("activeStates") List<State> activeStates,
             @Param("failedState") State failedState,
+            @Param("failureCategory") String failureCategory,
             @Param("now") Instant now);
 
     @Modifying

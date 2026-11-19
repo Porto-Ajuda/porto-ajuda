@@ -111,8 +111,8 @@ public class ContentReportJdbcRepository {
         String typeFilter = type == null ? "" : " AND r.target_type = ? ";
         String sql = """
                 SELECT r.target_type, r.target_id,
-                       coalesce(o.nome, p.titulo, '[conteudo indisponivel]') AS titulo,
-                       coalesce(o.nome, p.titulo, '[conteudo indisponivel]') AS responsavel,
+                       coalesce(c.title, p.titulo, o.nome, '[conteudo indisponivel]') AS titulo,
+                       coalesce(o.nome, p.titulo, c.title, '[conteudo indisponivel]') AS responsavel,
                        count(*) AS pendentes,
                        count(*) FILTER (WHERE r.created_at >= CURRENT_TIMESTAMP -
                          ((CASE WHEN r.target_type='OSC' THEN ? WHEN r.content_kind='VOLUNTEERING' THEN ? ELSE ? END) * INTERVAL '1 hour')) AS qualificadas,
@@ -122,8 +122,9 @@ public class ContentReportJdbcRepository {
                   FROM public.content_reports r
                   LEFT JOIN public.oscs o ON r.target_type='OSC' AND o.id=r.target_id
                   LEFT JOIN public.post p ON r.target_type='POST' AND p.id=r.target_id
+                  LEFT JOIN public.donation_campaigns c ON r.target_type='CAMPAIGN' AND c.id=r.target_id
                  WHERE r.status='PENDING' """ + typeFilter + """
-                 GROUP BY r.target_type, r.target_id, r.content_kind, o.nome, p.titulo
+                 GROUP BY r.target_type, r.target_id, r.content_kind, o.nome, p.titulo, c.title
                  ORDER BY auto_active DESC, oldest ASC
                  LIMIT ? OFFSET ?
                 """;
@@ -153,8 +154,8 @@ public class ContentReportJdbcRepository {
         String filter = type == null ? "" : " AND r.target_type=? ";
         String sql = """
                 SELECT r.target_type,r.target_id,
-                       coalesce(o.nome,p.titulo,'[conteudo indisponivel]') AS titulo,
-                       coalesce(o.nome,p.titulo,'[conteudo indisponivel]') AS responsavel,
+                       coalesce(c.title,p.titulo,o.nome,'[conteudo indisponivel]') AS titulo,
+                       coalesce(o.nome,p.titulo,c.title,'[conteudo indisponivel]') AS responsavel,
                        0::bigint AS pendentes,0::bigint AS qualificadas,
                        EXISTS (SELECT 1 FROM public.content_moderation_blocks b WHERE b.target_type=r.target_type AND b.target_id=r.target_id AND b.source='AUTOMATIC_PROTECTION' AND b.active) AS auto_active,
                        EXISTS (SELECT 1 FROM public.content_moderation_blocks b WHERE b.target_type=r.target_type AND b.target_id=r.target_id AND b.source='ADMIN_RESTRICTION' AND b.active) AS admin_active,
@@ -162,8 +163,9 @@ public class ContentReportJdbcRepository {
                   FROM public.content_reports r
                   LEFT JOIN public.oscs o ON r.target_type='OSC' AND o.id=r.target_id
                   LEFT JOIN public.post p ON r.target_type='POST' AND p.id=r.target_id
+                  LEFT JOIN public.donation_campaigns c ON r.target_type='CAMPAIGN' AND c.id=r.target_id
                  WHERE r.status<>'PENDING' """ + filter + """
-                 GROUP BY r.target_type,r.target_id,o.nome,p.titulo
+                 GROUP BY r.target_type,r.target_id,o.nome,p.titulo,c.title
                  ORDER BY oldest DESC LIMIT ? OFFSET ?
                 """;
         if (type == null) return jdbc.query(sql, this::queueRow, limit, offset);
@@ -175,8 +177,8 @@ public class ContentReportJdbcRepository {
         String filter = type == null ? "" : " AND b.target_type=? ";
         String sql = """
                 SELECT b.target_type,b.target_id,
-                       coalesce(o.nome,p.titulo,'[conteudo indisponivel]') AS titulo,
-                       coalesce(o.nome,p.titulo,'[conteudo indisponivel]') AS responsavel,
+                       coalesce(c.title,p.titulo,o.nome,'[conteudo indisponivel]') AS titulo,
+                       coalesce(o.nome,p.titulo,c.title,'[conteudo indisponivel]') AS responsavel,
                        (SELECT count(*) FROM public.content_reports r WHERE r.target_type=b.target_type AND r.target_id=b.target_id AND r.status='PENDING') AS pendentes,
                        (SELECT count(*) FROM public.content_reports r WHERE r.target_type=b.target_type AND r.target_id=b.target_id AND r.status='PENDING' AND r.created_at >= CURRENT_TIMESTAMP - ((CASE WHEN r.target_type='OSC' THEN ? WHEN r.content_kind='VOLUNTEERING' THEN ? ELSE ? END) * INTERVAL '1 hour')) AS qualificadas,
                        bool_or(b.source='AUTOMATIC_PROTECTION') AS auto_active,
@@ -185,8 +187,9 @@ public class ContentReportJdbcRepository {
                   FROM public.content_moderation_blocks b
                   LEFT JOIN public.oscs o ON b.target_type='OSC' AND o.id=b.target_id
                   LEFT JOIN public.post p ON b.target_type='POST' AND p.id=b.target_id
+                  LEFT JOIN public.donation_campaigns c ON b.target_type='CAMPAIGN' AND c.id=b.target_id
                  WHERE b.active """ + filter + """
-                 GROUP BY b.target_type,b.target_id,o.nome,p.titulo
+                 GROUP BY b.target_type,b.target_id,o.nome,p.titulo,c.title
                  ORDER BY oldest ASC LIMIT ? OFFSET ?
                 """;
         List<Object> args = new ArrayList<>(List.of(oscHours, volunteerHours, publicationHours));
@@ -206,9 +209,16 @@ public class ContentReportJdbcRepository {
                        (p.ativo AND o.status='ATIVA' AND o.data_arquivamento IS NULL),
                        EXISTS (SELECT 1 FROM public.content_moderation_blocks b WHERE b.target_type='POST' AND b.target_id=p.id AND b.source='AUTOMATIC_PROTECTION' AND b.active)
                   FROM public.post p JOIN public.oscs o ON o.id=p.id_osc WHERE ?='POST' AND p.id=?
+                UNION ALL
+                SELECT 'CAMPAIGN',c.id::integer,c.title,c.description,
+                       (c.state='ACTIVE' AND NOT c.moderation_suspended AND o.status='ATIVA' AND o.data_arquivamento IS NULL
+                         AND (c.deadline IS NULL OR c.deadline>CURRENT_TIMESTAMP)),
+                       EXISTS (SELECT 1 FROM public.content_moderation_blocks b WHERE b.target_type='CAMPAIGN' AND b.target_id=c.id::integer AND b.source='AUTOMATIC_PROTECTION' AND b.active)
+                  FROM public.donation_campaigns c JOIN public.oscs o ON o.id=c.osc_id
+                 WHERE ?='CAMPAIGN' AND c.id<=2147483647 AND c.id=?
                 """, (rs, row) -> new AdminContentReportDetailDTO(
                 rs.getString("type"), rs.getInt("target_id"), rs.getString("title"), rs.getString("body"),
-                rs.getBoolean("available"), rs.getBoolean("auto_active"), List.of(), List.of(), List.of()), type, id, type, id);
+                rs.getBoolean("available"), rs.getBoolean("auto_active"), List.of(), List.of(), List.of()), type, id, type, id, type, id);
         if (target.isEmpty()) return null;
         List<AdminContentReportDetailDTO.Denuncia> reports = jdbc.query("""
                 SELECT id, reason, details, status, created_at FROM public.content_reports

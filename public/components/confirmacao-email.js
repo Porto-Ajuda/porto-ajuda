@@ -51,7 +51,7 @@ async function lerRespostaJSON(resposta) {
         return JSON.parse(texto);
     } catch {
         throw new Error(
-            `A API retornou uma resposta inválida. HTTP ${resposta.status}.`
+            "Não foi possível validar a resposta. Tente novamente."
         );
     }
 }
@@ -105,7 +105,7 @@ async function autenticarAutomaticamente() {
 
         if (!respostaCSRF.ok) {
             throw new Error(
-                `Não foi possível obter o token CSRF. HTTP ${respostaCSRF.status}.`
+                "Não foi possível iniciar a confirmação. Atualize a página e tente novamente."
             );
         }
 
@@ -134,7 +134,7 @@ async function autenticarAutomaticamente() {
         if (!resposta.ok) {
             throw new Error(
                 dados.mensagem ||
-                `Não foi possível autenticar. HTTP ${resposta.status}.`
+                "Não foi possível concluir a entrada após a confirmação. Faça login para continuar."
             );
         }
 
@@ -241,7 +241,7 @@ formReenvio.addEventListener("submit", async (evento) => {
         if (!resposta.ok) {
             throw new Error(
                 dados.mensagem ||
-                `Não foi possível processar a solicitação. HTTP ${resposta.status}.`
+                "Não foi possível processar a solicitação. Tente novamente mais tarde."
             );
         }
 

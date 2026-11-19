@@ -63,6 +63,15 @@ public class AdminAuthChallenge {
     @Column(name = "sms_attempts", nullable = false)
     private int smsAttempts;
 
+    @Column(name = "email_required", nullable = false)
+    private boolean emailRequired = true;
+
+    @Column(name = "sms_required", nullable = false)
+    private boolean smsRequired = true;
+
+    @Column(name = "resend_attempts", nullable = false)
+    private int resendAttempts;
+
     @Column(name = "failed_attempts", nullable = false)
     private int failedAttempts;
 

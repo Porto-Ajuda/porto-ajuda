@@ -155,7 +155,7 @@
                 </form>
 
                 <p class="sw" id="link-cadastro">
-                    Ainda n?o possui uma conta?
+                    Ainda não possui uma conta?
                     <a href="#cadastro" id="goCad">Criar conta</a>
                 </p>
             </div>
@@ -174,7 +174,7 @@
                     e faça parte dessa transformação.
                 </p>
 
-                <form class="formulario" id="form-cadastro" autocomplete="off">
+                <form class="formulario" id="form-cadastro" autocomplete="off" novalidate>
 
                     <!-- ETAPA 1 -->
                     <div class="row2">
@@ -198,7 +198,8 @@
                         <input class="inp" id="cpf" type="text" placeholder="CPF" maxlength="14" autocomplete="off"
                             required>
 
-                        <input class="inp" type="email" placeholder="E-mail" required>
+                        <input class="inp" type="email" id="email-cadastro" name="email" placeholder="E-mail"
+                            autocomplete="email" required>
 
                     </div>
 

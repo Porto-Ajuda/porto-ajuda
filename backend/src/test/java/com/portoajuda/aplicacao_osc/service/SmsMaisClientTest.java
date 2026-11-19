@@ -49,7 +49,7 @@ class SmsMaisClientTest {
     @BeforeEach
     void iniciarServidorHttpFalso() throws IOException {
         resposta.set("""
-                [{"id":98765,"to":"5511912345678","msg":"Código de teste","externalId":"%s"}]
+                [{"id":98765,"to":"5511912345678","msg":"Codigo de teste","externalId":"%s"}]
                 """.formatted(IDENTIFICADOR));
         status.set(200);
         atrasoMs.set(0L);
@@ -111,6 +111,8 @@ class SmsMaisClientTest {
 
         assertEquals("98765", result.providerMessageId());
         assertEquals(IDENTIFICADOR, result.externalId());
+        assertEquals("Codigo de teste", result.messageEcho());
+        assertFalse(result.toString().contains("Codigo de teste"));
         RequisicaoCapturada request = requisicaoCapturada.get();
         assertEquals("POST", request.method());
         assertEquals("/send", request.path());

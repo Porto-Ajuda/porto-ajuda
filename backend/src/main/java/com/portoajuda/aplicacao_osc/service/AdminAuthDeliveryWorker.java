@@ -65,25 +65,44 @@ public class AdminAuthDeliveryWorker {
         }
 
         boolean delivered = false;
+        String failureCategory = null;
+        Integer providerStatus = null;
+        boolean retryable = false;
+        String sandboxMessageEcho = null;
         try {
             if (delivery.channel() == Channel.EMAIL) {
                 emailService.enviarCodigoAutenticacaoAdministrativa(
                         delivery.destination(), delivery.code());
             } else {
-                smsService.enviarSms(
+                SmsMaisSendResult result = smsService.enviarSms(
                         delivery.destination(),
                         "Porto Ajuda: seu código de acesso administrativo é " + delivery.code()
                                 + ". Expira em 5 minutos. Não compartilhe.",
                         delivery.challengeId() + ":sms");
+                if (smsService.isSandboxMode()) sandboxMessageEcho = result.messageEcho();
             }
             delivered = true;
-        } catch (RuntimeException ignoredDeliveryFailure) {
+        } catch (RuntimeException deliveryFailure) {
             // Provider exceptions can contain destination or message details; log no exception data.
-            LOGGER.warn("Falha de entrega OTP pelo canal {}; detalhes sensíveis omitidos.", delivery.channel());
+            if (deliveryFailure instanceof SmsDeliveryException smsFailure) {
+                failureCategory = "SMS_" + smsFailure.getReason().name();
+                providerStatus = smsFailure.getProviderStatus();
+                // A response timeout has an unknown outcome: SMSMais may already have
+                // accepted the request. Retrying it produced duplicate sandbox records.
+                retryable = smsFailure.getReason() == SmsDeliveryException.Reason.PROVIDER_UNAVAILABLE
+                        || (smsFailure.getReason() == SmsDeliveryException.Reason.PROVIDER_REJECTED
+                                && providerStatus != null
+                                && (providerStatus == 408 || providerStatus == 429 || providerStatus >= 500));
+            } else {
+                failureCategory = delivery.channel().name() + "_DELIVERY_FAILED";
+                retryable = true;
+            }
+            LOGGER.warn("Admin OTP provider call failed; challengeId={}, channel={}, category={}, providerStatus={}",
+                    delivery.challengeId(), delivery.channel(), failureCategory, providerStatus);
         }
 
         try {
-            queue.finish(delivery.deliveryId(), delivered);
+            queue.finish(delivery.deliveryId(), delivered, failureCategory, providerStatus, retryable, sandboxMessageEcho);
             persistenceRecovered();
         } catch (RuntimeException persistenceFailure) {
             // On rollback the PROCESSING lease and encrypted payload remain available for recovery.

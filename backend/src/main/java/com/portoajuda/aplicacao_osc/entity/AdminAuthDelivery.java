@@ -56,6 +56,15 @@ public class AdminAuthDelivery {
     @Column(name = "attempt_count", nullable = false)
     private int attemptCount;
 
+    @Column(name = "failure_category", length = 40)
+    private String failureCategory;
+
+    @Column(name = "provider_status")
+    private Integer providerStatus;
+
+    @Column(name = "sandbox_message_ciphertext", columnDefinition = "bytea")
+    private byte[] sandboxMessageCiphertext;
+
     @Column(name = "lease_until")
     private Instant leaseUntil;
 

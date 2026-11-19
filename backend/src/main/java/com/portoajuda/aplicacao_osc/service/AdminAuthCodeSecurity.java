@@ -87,6 +87,10 @@ public class AdminAuthCodeSecurity {
         }
     }
 
+    public String decryptSandboxMessage(UUID challengeId, byte[] ciphertext) {
+        return decryptDeliveryCode(challengeId, "SMS", ciphertext);
+    }
+
     public String decryptDeliveryCode(UUID challengeId, String channel, byte[] encryptedCode) {
         requirePepper();
         if (encryptedCode == null || encryptedCode.length <= GCM_NONCE_BYTES) {

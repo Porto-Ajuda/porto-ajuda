@@ -32,6 +32,17 @@ public class AdminAuthenticationService {
         VERIFIED
     }
 
+    public enum VerificationFailure {
+        INVALID_CODE,
+        EXPIRED_CODE,
+        CHALLENGE_INVALIDATED,
+        CHALLENGE_REPLACED,
+        CODE_ALREADY_USED,
+        TOO_MANY_ATTEMPTS,
+        DELIVERY_FAILED,
+        INVALID_CHALLENGE
+    }
+
     private static final Duration CHALLENGE_LIFETIME = Duration.ofMinutes(5);
     private static final Duration LOCKOUT = Duration.ofHours(1);
     private static final Duration RATE_WINDOW = Duration.ofMinutes(15);
@@ -51,6 +62,7 @@ public class AdminAuthenticationService {
     private final AdminPrivilegedSessionService adminSessionService;
     private final AdminAuthorizationService adminAuthorization;
     private final String dummyPasswordHash;
+    private final boolean smsVerificationEnabled;
 
     public AdminAuthenticationService(
             UsuarioRepository usuarioRepository,
@@ -63,7 +75,8 @@ public class AdminAuthenticationService {
             EmailService emailService,
             AdminPrivilegedSessionService adminSessionService,
             AdminAuthorizationService adminAuthorization,
-            @Value("${admin-auth.dummy-password-hash:}") String configuredDummyHash) {
+            @Value("${admin-auth.dummy-password-hash:}") String configuredDummyHash,
+            @Value("${admin-auth.sms-verification-enabled:true}") boolean smsVerificationEnabled) {
         this.usuarioRepository = usuarioRepository;
         this.challengeRepository = challengeRepository;
         this.deliveryRepository = deliveryRepository;
@@ -74,6 +87,10 @@ public class AdminAuthenticationService {
         this.emailService = emailService;
         this.adminSessionService = adminSessionService;
         this.adminAuthorization = adminAuthorization;
+        if (!smsVerificationEnabled) {
+            throw new IllegalStateException("Admin authentication requires both email and SMS verification.");
+        }
+        this.smsVerificationEnabled = true;
         this.dummyPasswordHash = configuredDummyHash == null || configuredDummyHash.isBlank()
                 ? passwordEncoder.encode(UUID.randomUUID().toString())
                 : configuredDummyHash;
@@ -139,10 +156,10 @@ public class AdminAuthenticationService {
 
         UUID challengeId = UUID.randomUUID();
         String emailCode = crypto.generateCode();
-        String smsCode;
-        do {
+        String smsCode = smsVerificationEnabled ? crypto.generateCode() : null;
+        while (smsVerificationEnabled && emailCode.equals(smsCode)) {
             smsCode = crypto.generateCode();
-        } while (emailCode.equals(smsCode));
+        }
 
         AdminAuthChallenge challenge = new AdminAuthChallenge();
         challenge.setId(challengeId);
@@ -151,8 +168,12 @@ public class AdminAuthenticationService {
         challenge.setIpKeyHash(ipHash);
         challenge.setEmailSnapshotHash(crypto.accountKey(usuario.getEmail().valor()));
         challenge.setPhoneSnapshotHash(crypto.phoneKey(phone));
+        challenge.setEmailRequired(true);
+        challenge.setSmsRequired(true);
         challenge.setEmailCodeHash(crypto.hashCode(challengeId, "EMAIL", emailCode));
-        challenge.setSmsCodeHash(crypto.hashCode(challengeId, "SMS", smsCode));
+        challenge.setSmsCodeHash(smsVerificationEnabled
+                ? crypto.hashCode(challengeId, "SMS", smsCode)
+                : null);
         challenge.setEmailAttempts(0);
         challenge.setSmsAttempts(0);
         challenge.setFailedAttempts(0);
@@ -160,36 +181,186 @@ public class AdminAuthenticationService {
         challenge.setCreatedAt(now);
         challenge.setExpiresAt(now.plus(CHALLENGE_LIFETIME));
         challengeRepository.saveAndFlush(challenge);
-        deliveryRepository.saveAll(List.of(
-                criarEntrega(challenge, Channel.EMAIL, emailCode, now),
-                criarEntrega(challenge, Channel.SMS, smsCode, now)));
+        List<AdminAuthDelivery> deliveries = new java.util.ArrayList<>();
+        deliveries.add(criarEntrega(challenge, Channel.EMAIL, emailCode, now));
+        if (smsVerificationEnabled) {
+            deliveries.add(criarEntrega(challenge, Channel.SMS, smsCode, now));
+        }
+        deliveryRepository.saveAll(deliveries);
         return challengeId;
+    }
+
+    /** Used only to render the server-selected next step; verification remains enforced here. */
+    public boolean isSmsVerificationEnabled() {
+        return true;
+    }
+
+    public enum ResendResult { ACCEPTED, CHALLENGE_UNAVAILABLE, FACTOR_COMPLETE, LIMIT_REACHED, DELIVERY_IN_PROGRESS }
+
+    @Transactional
+    public ResendResult reenviar(UUID challengeId, String channelName, String remoteAddress) {
+        Instant now = Instant.now();
+        AdminAuthChallenge challenge = challengeRepository.findByIdForUpdate(challengeId).orElse(null);
+        if (challenge == null || challenge.getState() != AdminAuthChallenge.State.PENDING
+                || challenge.getExpiresAt() == null || !challenge.getExpiresAt().isAfter(now)) {
+            return ResendResult.CHALLENGE_UNAVAILABLE;
+        }
+        Channel channel;
+        try {
+            channel = Channel.valueOf(channelName == null ? "" : channelName.trim().toUpperCase(java.util.Locale.ROOT));
+        } catch (IllegalArgumentException invalidChannel) {
+            return ResendResult.CHALLENGE_UNAVAILABLE;
+        }
+        if ((channel == Channel.EMAIL && (!challenge.isEmailRequired() || challenge.getEmailVerifiedAt() != null))
+                || (channel == Channel.SMS && (!challenge.isSmsRequired() || challenge.getSmsVerifiedAt() != null))) {
+            return ResendResult.FACTOR_COMPLETE;
+        }
+        if (challenge.getResendAttempts() >= 3) {
+            return ResendResult.LIMIT_REACHED;
+        }
+        Usuario usuario = challenge.getUsuario() == null ? null
+                : usuarioRepository.findById(challenge.getUsuario().getId()).orElse(null);
+        if (!elegivel(usuario)
+                || !crypto.accountKey(usuario.getEmail().valor()).equals(challenge.getEmailSnapshotHash())
+                || !telefoneAindaCorresponde(usuario, challenge)) {
+            invalidar(challenge, "ADMIN_AUTH_RESEND_CONTACT_CHANGED");
+            return ResendResult.CHALLENGE_UNAVAILABLE;
+        }
+        AdminAuthDelivery delivery = deliveryRepository.findAllByChallenge_Id(challengeId).stream()
+                .filter(candidate -> candidate.getChannel() == channel).findFirst().orElse(null);
+        if (delivery == null) {
+            invalidar(challenge, "ADMIN_AUTH_RESEND_REQUIRED_DELIVERY_MISSING");
+            return ResendResult.CHALLENGE_UNAVAILABLE;
+        }
+        if (delivery.getState() == State.PROCESSING) {
+            return ResendResult.DELIVERY_IN_PROGRESS;
+        }
+        if (delivery.getState() != State.SENT) {
+            return ResendResult.CHALLENGE_UNAVAILABLE;
+        }
+        String previousHash = channel == Channel.EMAIL ? challenge.getEmailCodeHash() : challenge.getSmsCodeHash();
+        String code;
+        do {
+            code = crypto.generateCode();
+        } while (java.util.Objects.equals(previousHash, crypto.hashCode(challengeId, channel.name(), code)));
+        if (channel == Channel.EMAIL) {
+            challenge.setEmailCodeHash(crypto.hashCode(challengeId, "EMAIL", code));
+            challenge.setEmailAttempts(0);
+        } else {
+            challenge.setSmsCodeHash(crypto.hashCode(challengeId, "SMS", code));
+            challenge.setSmsAttempts(0);
+        }
+        challenge.setState(AdminAuthChallenge.State.ISSUING);
+        challenge.setResendAttempts(challenge.getResendAttempts() + 1);
+        delivery.setEncryptedCode(crypto.encryptDeliveryCode(challengeId, channel.name(), code));
+        delivery.setState(State.PENDING);
+        delivery.setAttemptCount(0);
+        delivery.setFailureCategory(null);
+        delivery.setProviderStatus(null);
+        delivery.setLeaseUntil(null);
+        delivery.setUpdatedAt(now);
+        deliveryRepository.save(delivery);
+        challengeRepository.save(challenge);
+        audit.registrar("ADMIN_AUTH_CODE_RESENT_" + channel.name(),
+                challenge.getUsuario() == null ? null : challenge.getUsuario().getId(),
+                challengeId, null, remoteAddress);
+        return ResendResult.ACCEPTED;
+    }
+
+    @Transactional(readOnly = true)
+    public String obterCodigoSandbox(UUID challengeId) {
+        AdminAuthChallenge challenge = challengeRepository.findById(challengeId).orElse(null);
+        if (challenge == null || !challenge.isSmsRequired() || !challenge.isPendingAt(Instant.now())) return null;
+        AdminAuthDelivery sms = deliveryRepository.findByChallenge_IdAndChannel(challengeId, Channel.SMS)
+                .orElse(null);
+        if (sms == null || sms.getState() != State.SENT || sms.getSandboxMessageCiphertext() == null) return null;
+        String echoedMessage = crypto.decryptSandboxMessage(challengeId, sms.getSandboxMessageCiphertext());
+        java.util.regex.Matcher code = java.util.regex.Pattern.compile("(?<![0-9])[0-9]{6}(?![0-9])")
+                .matcher(echoedMessage == null ? "" : echoedMessage);
+        return code.find() ? code.group() : null;
     }
 
     @Transactional
     VerificationResult verificar(UUID challengeId, AdminAuthVerifyRequest request, String remoteAddress) {
+        return verificarComDetalhe(challengeId, request, remoteAddress).result();
+    }
+
+    private VerificationOutcome verificarComDetalhe(
+            UUID challengeId, AdminAuthVerifyRequest request, String remoteAddress) {
         Instant now = Instant.now();
         String ipHash = crypto.ipKey(remoteAddress);
         if (controls.isLocked("VERIFY_IP", ipHash, now)) {
-            return VerificationResult.REJECTED;
+            return new VerificationOutcome(
+                    VerificationResult.REJECTED, null, VerificationFailure.TOO_MANY_ATTEMPTS, null);
         }
         controls.increment("VERIFY_IP", ipHash, now, RATE_WINDOW,
                 61, RATE_WINDOW, true);
         if (controls.isLocked("VERIFY_IP", ipHash, now)) {
-            return VerificationResult.REJECTED;
+            return new VerificationOutcome(
+                    VerificationResult.REJECTED, null, VerificationFailure.TOO_MANY_ATTEMPTS, null);
         }
         AdminAuthChallenge challenge = challengeRepository.findByIdForUpdate(challengeId).orElse(null);
         if (challenge == null) {
             audit.registrar("ADMIN_AUTH_UNKNOWN_CHALLENGE", null, challengeId, null, remoteAddress);
-            return VerificationResult.REJECTED;
+            return new VerificationOutcome(
+                    VerificationResult.REJECTED, null, VerificationFailure.INVALID_CHALLENGE, null);
         }
         if (!challenge.isPendingAt(now)) {
-            if (challenge.getState() == AdminAuthChallenge.State.PENDING
-                    && challenge.getExpiresAt() != null
-                    && !challenge.getExpiresAt().isAfter(now)) {
-                invalidar(challenge, "ADMIN_AUTH_CHALLENGE_EXPIRED");
+            if (challenge.getState() == AdminAuthChallenge.State.VERIFIED) {
+                return new VerificationOutcome(
+                        VerificationResult.REJECTED, null, VerificationFailure.CODE_ALREADY_USED, null);
             }
-            return VerificationResult.REJECTED;
+            if (challenge.getState() == AdminAuthChallenge.State.INVALIDATED) {
+                return new VerificationOutcome(
+                        VerificationResult.REJECTED, null, VerificationFailure.CHALLENGE_REPLACED, null);
+            }
+            if (challenge.getState() == AdminAuthChallenge.State.FAILED
+                    && (challenge.getEmailAttempts() >= MAX_CODE_ATTEMPTS
+                            || challenge.getSmsAttempts() >= MAX_CODE_ATTEMPTS
+                            || challenge.getFailedAttempts() >= MAX_CONSECUTIVE_FAILURES)) {
+                return new VerificationOutcome(
+                        VerificationResult.REJECTED, null, VerificationFailure.TOO_MANY_ATTEMPTS, null);
+            }
+            if (challenge.getExpiresAt() != null && !challenge.getExpiresAt().isAfter(now)) {
+                if (challenge.getState() == AdminAuthChallenge.State.PENDING
+                        || challenge.getState() == AdminAuthChallenge.State.ISSUING) {
+                    invalidar(challenge, "ADMIN_AUTH_CHALLENGE_EXPIRED");
+                }
+                return new VerificationOutcome(
+                        VerificationResult.REJECTED, null, VerificationFailure.EXPIRED_CODE, null);
+            }
+            if (challenge.getState() == AdminAuthChallenge.State.ISSUING
+                    && challenge.getExpiresAt() != null
+                    && challenge.getExpiresAt().isAfter(now)) {
+                // A provider can accept the email immediately before the outbox transaction
+                // marks the challenge PENDING. Do not consume the code or count an attempt in
+                // this small delivery-confirmation window.
+                return new VerificationOutcome(
+                        VerificationResult.PENDING, null, null, "DELIVERY");
+            }
+            if (challenge.getState() == AdminAuthChallenge.State.FAILED
+                    && challenge.getDeliveryFailureAt() != null) {
+                return new VerificationOutcome(
+                        VerificationResult.REJECTED, null, VerificationFailure.DELIVERY_FAILED, null);
+            }
+            VerificationFailure failure = switch (challenge.getState()) {
+                case INVALIDATED -> VerificationFailure.CHALLENGE_REPLACED;
+                case VERIFIED -> VerificationFailure.CODE_ALREADY_USED;
+                case FAILED -> VerificationFailure.CHALLENGE_INVALIDATED;
+                case DECOY -> VerificationFailure.INVALID_CHALLENGE;
+                case ISSUING, PENDING -> VerificationFailure.INVALID_CHALLENGE;
+            };
+            return new VerificationOutcome(VerificationResult.REJECTED, null, failure, null);
+        }
+
+        // The persisted outbox defines the factors for this challenge. This remains stable if
+        // the process configuration changes while a challenge is in progress.
+        boolean emailRequired = challenge.isEmailRequired();
+        boolean smsRequired = challenge.isSmsRequired();
+        if (!emailRequired || !smsRequired) {
+            invalidar(challenge, "ADMIN_AUTH_REQUIRED_FACTORS_INVALID");
+            return new VerificationOutcome(
+                    VerificationResult.REJECTED, null, VerificationFailure.INVALID_CHALLENGE, null);
         }
 
         Usuario usuario = challenge.getUsuario() == null
@@ -202,7 +373,8 @@ public class AdminAuthenticationService {
             if (challenge.getUsuario() != null) {
                 invalidarDesafiosAtivos(challenge.getUsuario().getId(), now);
             }
-            return VerificationResult.REJECTED;
+            return new VerificationOutcome(
+                    VerificationResult.REJECTED, null, VerificationFailure.CHALLENGE_INVALIDATED, null);
         }
 
         boolean hadInput = false;
@@ -222,7 +394,7 @@ public class AdminAuthenticationService {
             failed = true;
         }
 
-        if (challenge.getSmsVerifiedAt() == null && naoVazio(request.smsCode())) {
+        if (smsRequired && challenge.getSmsVerifiedAt() == null && naoVazio(request.smsCode())) {
             hadInput = true;
             if (crypto.matchesCode(challengeId, "SMS", request.smsCode(), challenge.getSmsCodeHash())) {
                 challenge.setSmsVerifiedAt(now);
@@ -231,7 +403,7 @@ public class AdminAuthenticationService {
                 challenge.setSmsAttempts(challenge.getSmsAttempts() + 1);
                 failed = true;
             }
-        } else if (challenge.getSmsVerifiedAt() != null && naoVazio(request.smsCode())) {
+        } else if ((challenge.getSmsVerifiedAt() != null || !smsRequired) && naoVazio(request.smsCode())) {
             hadInput = true;
             challenge.setSmsAttempts(challenge.getSmsAttempts() + 1);
             failed = true;
@@ -241,7 +413,7 @@ public class AdminAuthenticationService {
             if (challenge.getEmailVerifiedAt() == null) {
                 challenge.setEmailAttempts(challenge.getEmailAttempts() + 1);
             }
-            if (challenge.getSmsVerifiedAt() == null) {
+            if (smsRequired && challenge.getSmsVerifiedAt() == null) {
                 challenge.setSmsAttempts(challenge.getSmsAttempts() + 1);
             }
             failed = true;
@@ -250,7 +422,7 @@ public class AdminAuthenticationService {
         if (failed) {
             challenge.setFailedAttempts(challenge.getFailedAttempts() + 1);
             boolean channelExhausted = challenge.getEmailAttempts() >= MAX_CODE_ATTEMPTS
-                    || challenge.getSmsAttempts() >= MAX_CODE_ATTEMPTS;
+                    || (smsRequired && challenge.getSmsAttempts() >= MAX_CODE_ATTEMPTS);
             String accountHash = challenge.getAccountKeyHash();
             int consecutiveFailures = controls.increment("ACCOUNT_FAILURE", accountHash, now, null,
                     MAX_CONSECUTIVE_FAILURES, LOCKOUT, false);
@@ -274,50 +446,72 @@ public class AdminAuthenticationService {
                         usuario.getEmail().valor(), remoteAddress);
             }
             challengeRepository.save(challenge);
-            return VerificationResult.REJECTED;
+            VerificationFailure failure = channelExhausted || accountLocked
+                    || challenge.getFailedAttempts() >= MAX_CONSECUTIVE_FAILURES
+                    ? VerificationFailure.TOO_MANY_ATTEMPTS
+                    : VerificationFailure.INVALID_CODE;
+            return new VerificationOutcome(VerificationResult.REJECTED, null, failure, null);
         }
 
-        if (challenge.getEmailVerifiedAt() != null && challenge.getSmsVerifiedAt() != null) {
+        if (challenge.getEmailVerifiedAt() != null
+                && challenge.getSmsVerifiedAt() != null) {
             challenge.setState(AdminAuthChallenge.State.VERIFIED);
             challenge.setCompletedAt(now);
             challengeRepository.save(challenge);
             controls.reset("ACCOUNT_FAILURE", challenge.getAccountKeyHash(), now);
             audit.registrar("ADMIN_AUTH_MFA_VERIFIED", usuario.getId(), challengeId,
                     usuario.getEmail().valor(), remoteAddress);
-            return VerificationResult.VERIFIED;
+            deliveryRepository.clearSandboxMessages(challengeId);
+            return new VerificationOutcome(VerificationResult.VERIFIED, null, null, null);
         }
 
         challengeRepository.save(challenge);
-        return VerificationResult.PENDING;
+        String nextFactor = challenge.getEmailVerifiedAt() == null ? "EMAIL" : "SMS";
+        return new VerificationOutcome(VerificationResult.PENDING, null, null, nextFactor);
     }
 
     /** Completes both factors and creates the privileged session in the same DB transaction. */
     @Transactional
     public VerificationOutcome verificarEEmitirSessao(
             UUID challengeId, AdminAuthVerifyRequest request, String remoteAddress) {
-        VerificationResult result = verificar(challengeId, request, remoteAddress);
+        VerificationOutcome verification = verificarComDetalhe(challengeId, request, remoteAddress);
+        VerificationResult result = verification.result();
         if (result != VerificationResult.VERIFIED) {
-            return new VerificationOutcome(result, null);
+            return verification;
         }
         AdminPrivilegedSessionService.IssuedCredential credential =
                 adminSessionService.emitir(challengeId, remoteAddress);
-        return new VerificationOutcome(result, credential);
+        return new VerificationOutcome(result, credential, null, null);
     }
 
     /** No credential-bearing toString or JSON serialization. */
     public static final class VerificationOutcome {
         private final VerificationResult result;
         private final AdminPrivilegedSessionService.IssuedCredential credential;
+        private final VerificationFailure failure;
+        private final String nextFactor;
 
         VerificationOutcome(
                 VerificationResult result,
                 AdminPrivilegedSessionService.IssuedCredential credential) {
+            this(result, credential, null, null);
+        }
+
+        public VerificationOutcome(
+                VerificationResult result,
+                AdminPrivilegedSessionService.IssuedCredential credential,
+                VerificationFailure failure,
+                String nextFactor) {
             this.result = result;
             this.credential = credential;
+            this.failure = failure;
+            this.nextFactor = nextFactor;
         }
 
         public VerificationResult result() { return result; }
         public AdminPrivilegedSessionService.IssuedCredential credential() { return credential; }
+        public VerificationFailure failure() { return failure; }
+        public String nextFactor() { return nextFactor; }
     }
 
     private void registrarFalha(
@@ -365,7 +559,9 @@ public class AdminAuthenticationService {
         challenge.setSmsCodeHash(null);
         challengeRepository.save(challenge);
         deliveryRepository.failChallengeDeliveries(
-                challenge.getId(), List.of(State.PENDING, State.PROCESSING), State.FAILED, now);
+                challenge.getId(), List.of(State.PENDING, State.PROCESSING), State.FAILED,
+                "CHALLENGE_" + event.replace("ADMIN_AUTH_", ""), now);
+        deliveryRepository.clearSandboxMessages(challenge.getId());
         audit.registrar(event,
                 challenge.getUsuario() == null ? null : challenge.getUsuario().getId(),
                 challenge.getId(),

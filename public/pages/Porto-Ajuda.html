@@ -11,16 +11,18 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
   <link rel="stylesheet" href="../styles/Porto-Ajuda.css">
+  <link rel="stylesheet" href="../styles/campaign-donation-dialog.css">
   <link rel="stylesheet" href="../styles/geral.css">
   <link rel="stylesheet" href="../styles/carrossel-amostra.css">
   <link rel="stylesheet" href="../styles/denunciar-conteudo.css">
 
   <script type="module" src="../components/header_footer.js" defer></script>
+  <script type="module" src="../components/conteudo-publico-modal.js" defer></script>
+  <script type="module" src="../components/gerenciar-ong-home.js" defer></script>
   <script type="module" src="../components/home-showcases.js"></script>
   <script type="module" src="../components/candidaturas.js"></script>
   <script type="module" src="../components/denunciar-conteudo.js"></script>
 
-  <script src="../components/crud.js" defer></script>
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
@@ -239,10 +241,9 @@
 
         <img src="../assets/criancinha.jpg">
 
-        <!-- BOTÃO DE EDIÇÃO OSC -->
-        <button class="btn-editar-secao" data-tipo="osc" onclick="abrirModalEdicao('osc')">
-          <i class="fa-solid fa-pen-to-square"></i>
-          Editar ONG's
+        <button class="btn-editar-secao" type="button" data-home-manage="ong" aria-haspopup="dialog" aria-controls="dialogo-gerenciar-ongs-home">
+          <i class="fa-solid fa-users" aria-hidden="true"></i>
+          Gerenciar minhas ONGs
         </button>
 
       </div>
@@ -250,7 +251,7 @@
       <div class="section-content">
 
         <h2>
-          ONG's
+          ONGs
           <span>Destaques</span>
         </h2>
 
@@ -354,10 +355,9 @@
 
         <img src="../assets/voluntariados.webp">
 
-        <!-- BOTÃO DE EDIÇÃO VOLUNTARIAÇÃO -->
-        <button class="btn-editar-secao" data-tipo="voluntariacao" onclick="abrirModalEdicao('voluntariacao')">
-          <i class="fa-solid fa-pen-to-square"></i>
-          Editar Voluntariados
+        <button class="btn-editar-secao" type="button" data-home-manage="conteudo" aria-haspopup="dialog" aria-controls="dialogo-gerenciar-ongs-home">
+          <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
+          Gerenciar oportunidades
         </button>
 
       </div>
@@ -390,12 +390,6 @@
 
         <img src="../assets/doacoes.jpeg">
 
-        <!-- BOTÃO DE EDIÇÃO DOAÇÕES -->
-        <button class="btn-editar-secao" data-tipo="doacao" onclick="abrirModalEdicao('doacao')">
-          <i class="fa-solid fa-pen-to-square"></i>
-          Editar Doações
-        </button>
-
       </div>
 
       <div class="section-content">
@@ -409,9 +403,9 @@
           <button type="button" id="doacoes-anterior" aria-label="Doações anteriores" disabled>‹</button>
           <button type="button" id="doacoes-proximo" aria-label="Próximas doações" disabled>›</button>
         </div>
-        <p class="showcase-status" id="doacoes-status" role="status" aria-live="polite">Ainda não há campanhas de arrecadação verificadas para exibir.</p>
+        <p class="showcase-status" id="doacoes-status" role="status" aria-live="polite">Ainda não há vaquinhas ativas para exibir.</p>
         <button type="button" class="showcase-retry" id="doacoes-tentar-novamente" hidden>Tentar novamente</button>
-        <div class="showcase-grid" id="cards-doacao" data-home-showcase="true" role="list" aria-label="Campanhas de doação verificadas"></div>
+        <div class="showcase-grid" id="cards-doacao" data-home-showcase="true" role="list" aria-label="Vaquinhas públicas das ONGs"></div>
 
         <a href="/catalogo?categoria=doacoes" class="section-link">Ver todas as doações →</a>
 
@@ -428,101 +422,22 @@
   <footer id="footer"></footer>
 
   <!-- ========================= -->
-  <!-- MODAL DE EDIÇÃO DE POSTS -->
-  <!-- ========================= -->
-
-  <div class="modal-overlay" id="modal-overlay" onclick="fecharModalEdicao(event)">
-
-    <div class="modal-container" id="modal-container">
-
-      <div class="modal-header">
-        <h3 class="modal-titulo" id="modal-titulo">Gerenciar Posts</h3>
-        <button class="modal-fechar" onclick="fecharModal()">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
+  <dialog class="home-organization-dialog" id="dialogo-gerenciar-ongs-home" aria-labelledby="gerenciar-ongs-home-titulo" aria-describedby="gerenciar-ongs-home-descricao">
+    <section class="home-organization-dialog__card">
+      <h2 id="gerenciar-ongs-home-titulo">Selecione uma ONG</h2>
+      <p id="gerenciar-ongs-home-descricao">Você será direcionada ao perfil da organização. As ações de publicação dependem do seu vínculo, cargo, status da ONG e restrições atuais.</p>
+      <p id="gerenciar-ongs-home-estado" class="home-organization-dialog__state" role="status" aria-live="polite">Carregando…</p>
+      <div id="gerenciar-ongs-home-lista" class="home-organization-dialog__list" role="list" aria-busy="false"></div>
+      <div class="home-organization-dialog__links">
+        <a id="gerenciar-ongs-home-entrar" href="/login" hidden>Entrar para consultar suas ONGs</a>
+        <a id="gerenciar-ongs-home-cadastrar" href="/cadastro-osc" hidden>Cadastrar uma ONG</a>
       </div>
-
-      <div class="modal-corpo">
-
-        <!-- FORMULÁRIO DE POST -->
-        <form class="modal-form" id="formPost">
-
-          <input type="hidden" id="postId">
-          <input type="hidden" id="postTipo">
-
-          <div class="form-linha">
-
-            <div class="form-grupo">
-              <label class="form-label">Título</label>
-              <input class="form-input" type="text" id="postTitulo" placeholder="Título do post" required>
-            </div>
-
-            <div class="form-grupo">
-              <label class="form-label">Nome do Usuário</label>
-              <input class="form-input" type="text" id="postNomeUsuario" placeholder="Nome do responsável" required>
-            </div>
-
-          </div>
-
-          <div class="form-linha">
-
-            <div class="form-grupo">
-              <label class="form-label">Nome da ONG</label>
-              <input class="form-input" type="text" id="postNomeOsc" placeholder="Nome da organização" required>
-            </div>
-
-            <div class="form-grupo form-grupo-ativo">
-              <label class="form-label">Ativo</label>
-              <label class="toggle-label">
-                <input type="checkbox" id="postAtivo">
-                <span class="toggle-slider"></span>
-                <span class="toggle-texto">Publicar</span>
-              </label>
-            </div>
-
-          </div>
-
-          <div class="form-grupo form-grupo-full">
-            <label class="form-label">Conteúdo</label>
-            <textarea class="form-input form-textarea" id="postConteudo" placeholder="Descreva o post..."
-              required></textarea>
-          </div>
-
-          <div class="form-grupo form-grupo-full">
-            <label class="form-label">Imagem</label>
-            <div class="upload-area" id="uploadArea" onclick="document.getElementById('postImagem').click()">
-              <i class="fa-solid fa-cloud-arrow-up upload-icone"></i>
-              <span class="upload-texto">Clique para enviar uma imagem</span>
-              <img class="upload-preview" id="uploadPreview" src="" alt="Preview">
-            </div>
-            <input type="file" id="postImagem" accept="image/*" style="display:none">
-          </div>
-
-          <div class="form-acoes">
-            <button type="button" class="btn-cancelar" onclick="limparFormPost()">Cancelar</button>
-            <button type="submit" class="btn-salvar">
-              <i class="fa-solid fa-floppy-disk"></i>
-              Salvar Post
-            </button>
-          </div>
-
-        </form>
-
-        <!-- LISTA DE POSTS -->
-        <div class="modal-lista-titulo">
-          <i class="fa-solid fa-list"></i>
-          Posts cadastrados
-        </div>
-
-        <div class="modal-lista" id="modalListaPosts"></div>
-
+      <div class="home-organization-dialog__actions">
+        <button class="btn btn-secundario" id="gerenciar-ongs-home-tentar-novamente" type="button" hidden>Tentar novamente</button>
+        <button class="btn btn-secundario" id="gerenciar-ongs-home-fechar" type="button">Fechar</button>
       </div>
-
-    </div>
-
-  </div>
-
-  <!-- ========================= -->
+    </section>
+  </dialog>
   <!-- MODAL DE VISUALIZAÇÃO DE CARD -->
   <!-- ========================= -->
 

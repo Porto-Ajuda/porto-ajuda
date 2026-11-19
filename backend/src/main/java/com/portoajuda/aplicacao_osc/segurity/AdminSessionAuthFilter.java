@@ -45,11 +45,15 @@ public class AdminSessionAuthFilter extends OncePerRequestFilter {
         if ("/admin/auth/logout".equals(path)) {
             return true;
         }
+        if ("GET".equalsIgnoreCase(request.getMethod())
+                && path.matches("^/admin/auth/sandbox/challenges/[0-9a-fA-F-]{36}/code$")) {
+            return true;
+        }
         if (!"POST".equalsIgnoreCase(request.getMethod())) {
             return false;
         }
         return "/admin/auth/challenges".equals(path)
-                || path.matches("^/admin/auth/challenges/[0-9a-fA-F-]{36}/verify$");
+                || path.matches("^/admin/auth/challenges/[0-9a-fA-F-]{36}/(?:verify|resend)$");
     }
 
     @Override

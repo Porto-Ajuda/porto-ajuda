@@ -22,6 +22,7 @@ import com.portoajuda.aplicacao_osc.utils.Email;
 import com.portoajuda.aplicacao_osc.dto.request.RequestAtualizarPerfilDTO;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -55,6 +56,8 @@ public class UsuarioService {
         private final EmailService emailService;
         private final SessaoUsuarioService sessaoUsuarioService;
         private final SupabaseStorageService supabaseStorageService;
+    @Autowired(required = false)
+    private ManagedImageCleanupService managedImageCleanup;
         private final AdminAuthChallengeRepository adminAuthChallengeRepository;
         private final AdminAuthDeliveryQueueService adminAuthDeliveryQueueService;
         private final AdminPrivilegedSessionService adminPrivilegedSessionService;
@@ -382,22 +385,41 @@ public class UsuarioService {
                         byte[] arquivo,
                         String contentType) {
 
-                Usuario usuario = usuarioRepository.findById(usuarioId)
+                Usuario usuario = usuarioRepository.findByIdForUpdate(usuarioId)
                                 .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado."));
 
                 if (!usuario.isEnabled()) {
                         throw new IllegalStateException("Usuário inativo.");
                 }
 
+                String anterior = usuario.getFotoPerfilUrl();
                 String fotoPerfilUrl = supabaseStorageService.enviarFotoPerfil(
                                 usuarioId,
                                 arquivo,
                                 contentType);
+                if (managedImageCleanup != null) managedImageCleanup.afterRollback(fotoPerfilUrl);
 
                 usuario.setFotoPerfilUrl(fotoPerfilUrl);
                 usuarioRepository.save(usuario);
+                if (managedImageCleanup != null) {
+                        if (!java.util.Objects.equals(anterior, fotoPerfilUrl)) {
+                                managedImageCleanup.afterCommitIfUnreferenced(anterior);
+                        }
+                }
 
                 return fotoPerfilUrl;
+        }
+
+        @Transactional
+        public void removerFotoPerfil(Integer usuarioId) {
+                Usuario usuario = usuarioRepository.findByIdForUpdate(usuarioId)
+                                .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado."));
+                if (!usuario.isEnabled()) throw new IllegalStateException("Usuário inativo.");
+                String anterior = usuario.getFotoPerfilUrl();
+                if (anterior == null || anterior.isBlank()) return;
+                usuario.setFotoPerfilUrl(null);
+                usuarioRepository.save(usuario);
+                if (managedImageCleanup != null) managedImageCleanup.afterCommitIfUnreferenced(anterior);
         }
 
         @Transactional

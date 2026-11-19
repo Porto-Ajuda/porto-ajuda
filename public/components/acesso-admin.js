@@ -1,4 +1,5 @@
 import { getAPI_URL } from "./modoBack.js";
+import { adminAuthFailureMessage, adminAuthNextFactor } from "./admin-auth-feedback.js";
 
 (() => {
     'use strict';
@@ -49,21 +50,20 @@ import { getAPI_URL } from "./modoBack.js";
         <section id="etapa-aviso-admin">
 
             <div class="modal-body">
-                <h2>VOCÊ NÃO DEVERIA ESTAR AQUI.</h2>
+                <h2>VOCÊ ESTÁ EM UMA ÁREA RESTRITA.</h2>
 
                 <p>
-                    Uma sequência não autorizada foi identificada.
-                    Esta área não está disponível para acessos públicos.
+                    Esta área exige autenticação administrativa.
                 </p>
 
-                <p>Sua presença nesta área foi registrada.</p>
+                <p>Continue somente se você estiver autorizado a acessar a administração.</p>
 
                 <h2 class="alerta-acesso-admin">
                     TEM CERTEZA DE QUE DESEJA CONTINUAR?
                 </h2>
 
                 <p class="status-acesso-admin">
-                    AGUARDANDO DECISÃO... // SYS://UNKNOWN
+                    Aguardando sua decisão.
                 </p>
             </div>
 
@@ -73,7 +73,7 @@ import { getAPI_URL } from "./modoBack.js";
                     class="confirm-modal"
                     id="continuar-acesso-admin"
                 >
-                    CONTINUAR MESMO ASSIM
+                    Continuar para o login administrativo
                 </button>
             </div>
 
@@ -85,12 +85,12 @@ import { getAPI_URL } from "./modoBack.js";
             <div class="modal-body">
 
                 <div class="login-admin-identificacao">
-                    <span>AUTHENTICATION REQUIRED</span>
-                    <span>LEVEL 01 // ADMIN ACCESS</span>
+                    <span>Autenticação necessária</span>
+                    <span>Acesso administrativo</span>
                 </div>
 
                 <h2 class="titulo-login-admin">
-                    IDENTIFIQUE-SE.
+                    Identifique-se
                 </h2>
 
                 <p class="descricao-login-admin">
@@ -170,7 +170,7 @@ import { getAPI_URL } from "./modoBack.js";
         <section id="etapa-email-admin" hidden>
             <div class="modal-body">
                 <div class="login-admin-identificacao">
-                    <span>AUTHENTICATION REQUIRED</span>
+                    <span>Autenticação necessária</span>
                     <span>LEVEL 02 // EMAIL VERIFICATION</span>
                 </div>
                 <h2 class="titulo-login-admin">CONFIRME SEU E-MAIL.</h2>
@@ -183,6 +183,7 @@ import { getAPI_URL } from "./modoBack.js";
                     <p id="mensagem-email-admin" class="mensagem-login-admin" role="alert" aria-live="polite" hidden></p>
                     <div class="acoes-login-admin">
                         <button type="button" class="botao-voltar-admin" data-voltar-login>VOLTAR</button>
+                        <button type="button" class="botao-voltar-admin" data-resend-channel="EMAIL">REENVIAR CODIGO</button>
                         <button type="submit" class="confirm-modal">VALIDAR CÓDIGO</button>
                     </div>
                 </form>
@@ -192,10 +193,11 @@ import { getAPI_URL } from "./modoBack.js";
         <section id="etapa-sms-admin" hidden>
             <div class="modal-body">
                 <div class="login-admin-identificacao">
-                    <span>AUTHENTICATION REQUIRED</span>
+                    <span>Autenticação necessária</span>
                     <span>LEVEL 03 // SMS VERIFICATION</span>
                 </div>
                 <h2 class="titulo-login-admin">CONFIRME SEU TELEFONE.</h2>
+                <p class="descricao-login-admin">Informe o codigo SMS enviado ao telefone cadastrado. Em localhost, use "OBTER CODIGO SMS DE TESTE" para ler o campo msg da resposta SMSMais do POST /send sandbox; o painel do provedor mostra historico/status.</p>
                 <p class="descricao-login-admin">Informe o código enviado ao telefone cadastrado.</p>
                 <form id="form-sms-admin" autocomplete="off">
                     <div class="campo-login-admin">
@@ -205,6 +207,8 @@ import { getAPI_URL } from "./modoBack.js";
                     <p id="mensagem-sms-admin" class="mensagem-login-admin" role="alert" aria-live="polite" hidden></p>
                     <div class="acoes-login-admin">
                         <button type="button" class="botao-voltar-admin" data-reiniciar-login>REINICIAR</button>
+                        <button type="button" class="botao-voltar-admin" data-resend-channel="SMS">REENVIAR CODIGO</button>
+                        <button type="button" class="botao-voltar-admin" id="obter-codigo-sandbox-admin" hidden>OBTER CODIGO SMS DE TESTE</button>
                         <button type="submit" class="confirm-modal">VALIDAR CÓDIGO</button>
                     </div>
                 </form>
@@ -280,10 +284,32 @@ import { getAPI_URL } from "./modoBack.js";
         const mensagemEmail = document.querySelector('#mensagem-email-admin');
         const mensagemSms = document.querySelector('#mensagem-sms-admin');
         const mensagemSessao = document.querySelector('#mensagem-sessao-admin');
+        const botaoCodigoSandbox = document.querySelector('#obter-codigo-sandbox-admin');
         let challengeId = null;
         let flowGeneration = 0;
         let activeRequestController = null;
         const etapas = [etapaAviso, etapaLogin, etapaEmail, etapaSms, etapaSessao];
+        if (botaoCodigoSandbox && ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname)) {
+            botaoCodigoSandbox.hidden = false;
+            botaoCodigoSandbox.addEventListener('click', async () => {
+                if (!challengeId) return;
+                botaoCodigoSandbox.disabled = true;
+                try {
+                    const resposta = await fetch(`${API_URL}/admin/auth/sandbox/challenges/${encodeURIComponent(challengeId)}/code`, {
+                        method: 'GET', credentials: 'include', cache: 'no-store', headers: { Accept: 'application/json' }
+                    });
+                    if (!resposta.ok) throw new Error('sandbox-code');
+                    const dados = await resposta.json();
+                    if (!/^\d{6}$/.test(dados.smsCode || '')) throw new Error('sandbox-code');
+                    document.querySelector('#codigo-sms-admin').value = dados.smsCode;
+                    mostrarMensagem(mensagemSms, 'Codigo de teste obtido da resposta de simulacao da SMSMais.');
+                } catch {
+                    mostrarMensagem(mensagemSms, 'Codigo ainda indisponivel. Aguarde a confirmacao do envio SMSMais e tente novamente.');
+                } finally {
+                    botaoCodigoSandbox.disabled = false;
+                }
+            });
+        }
 
         function iniciarRequisicao() {
             if (activeRequestController) return null;
@@ -310,11 +336,31 @@ import { getAPI_URL } from "./modoBack.js";
             elemento.hidden = true;
         }
 
-        function mensagemDeFalha(status) {
-            if (status === 401) return 'Código inválido ou expirado. Confira e tente novamente.';
-            if (status === 403) return 'A solicitação foi recusada. Reabra o acesso e tente novamente.';
-            if (status === 429) return 'Muitas tentativas. Aguarde antes de tentar novamente.';
-            return 'Não foi possível concluir a solicitação. Tente novamente em instantes.';
+        async function codigoDeErro(resposta) {
+            try {
+                const corpo = await resposta.json();
+                return typeof corpo?.codigo === 'string' ? corpo.codigo : null;
+            } catch {
+                return null;
+            }
+        }
+
+        function mostrarProximaEtapa(resposta, mensagem) {
+            const next = adminAuthNextFactor(resposta);
+            if (next === 'SMS') {
+                mostrarEtapa(etapaSms, '#codigo-sms-admin');
+                return;
+            }
+            if (next === 'DELIVERY' || resposta?.codigo === 'DELIVERY_PENDING') {
+                mostrarMensagem(mensagem, 'A entrega está sendo confirmada. Aguarde alguns segundos e valide o mesmo código novamente.');
+                return;
+            }
+            if (next === 'EMAIL') {
+                mostrarEtapa(etapaEmail, '#codigo-email-admin');
+                mostrarMensagem(mensagem, 'Confirme primeiro o código enviado ao e-mail cadastrado.');
+                return;
+            }
+            mostrarMensagem(mensagem, 'A verificação ainda está pendente. Aguarde e tente novamente.');
         }
 
         async function obterCsrf(signal) {
@@ -410,6 +456,27 @@ import { getAPI_URL } from "./modoBack.js";
             limparMensagem(mensagemLogin);
         });
 
+        document.querySelectorAll('[data-resend-channel]').forEach(botao => {
+            botao.addEventListener('click', async () => {
+                if (!challengeId) return;
+                const channel = botao.dataset.resendChannel;
+                const mensagem = channel === 'EMAIL' ? mensagemEmail : mensagemSms;
+                botao.disabled = true;
+                try {
+                    const resposta = await enviarPost(`/admin/auth/challenges/${encodeURIComponent(challengeId)}/resend`, { channel });
+                    const dados = await resposta.json();
+                    mostrarMensagem(mensagem, dados.mensagem || 'Solicitacao processada.');
+                    if (resposta.status === 202) {
+                        document.querySelector(channel === 'EMAIL' ? '#codigo-email-admin' : '#codigo-sms-admin').value = '';
+                    }
+                } catch {
+                    mostrarMensagem(mensagem, 'Nao foi possivel solicitar o reenvio. Tente novamente.');
+                } finally {
+                    botao.disabled = false;
+                }
+            });
+        });
+
         formularioLogin.addEventListener('submit', async event => {
             event.preventDefault();
             const controller = iniciarRequisicao();
@@ -426,7 +493,7 @@ import { getAPI_URL } from "./modoBack.js";
                 }, controller.signal);
                 if (generation !== flowGeneration) return;
                 if (resposta.status !== 202) {
-                    mostrarMensagem(mensagemLogin, mensagemDeFalha(resposta.status));
+                    mostrarMensagem(mensagemLogin, adminAuthFailureMessage(resposta.status));
                     return;
                 }
                 const dados = await resposta.json();
@@ -464,14 +531,17 @@ import { getAPI_URL } from "./modoBack.js";
                     emailCode: document.querySelector('#codigo-email-admin').value.trim()
                 }, controller.signal);
                 if (generation !== flowGeneration) return;
-                if (resposta.status === 202) mostrarEtapa(etapaSms, '#codigo-sms-admin');
+                if (resposta.status === 202) mostrarProximaEtapa(await resposta.json(), mensagemEmail);
                 else if (resposta.status === 204) {
                     challengeId = null;
                     await mostrarSessaoSeValida(mensagemEmail, generation, controller.signal);
                 }
                 else {
-                    mostrarMensagem(mensagemEmail, mensagemDeFalha(resposta.status));
-                    if (resposta.status === 401) document.querySelector('#codigo-email-admin').value = '';
+                    const codigo = await codigoDeErro(resposta);
+                    mostrarMensagem(mensagemEmail, adminAuthFailureMessage(resposta.status, codigo));
+                    if ([401, 409, 410, 429, 503].includes(resposta.status)) {
+                        document.querySelector('#codigo-email-admin').value = '';
+                    }
                 }
             } catch {
                 if (generation === flowGeneration) {
@@ -507,11 +577,11 @@ import { getAPI_URL } from "./modoBack.js";
                     challengeId = null;
                     await mostrarSessaoSeValida(mensagemSms, generation, controller.signal);
                 } else if (resposta.status === 202) {
-                    mostrarEtapa(etapaEmail, '#codigo-email-admin');
-                    mostrarMensagem(mensagemEmail, 'Ainda falta confirmar o outro canal de verificação.');
+                    mostrarProximaEtapa(await resposta.json(), mensagemSms);
                 } else {
-                    mostrarMensagem(mensagemSms, mensagemDeFalha(resposta.status));
-                    if (resposta.status === 401) document.querySelector('#codigo-sms-admin').value = '';
+                    const codigo = await codigoDeErro(resposta);
+                    mostrarMensagem(mensagemSms, adminAuthFailureMessage(resposta.status, codigo));
+                    if ([401, 409, 410, 429, 503].includes(resposta.status)) document.querySelector('#codigo-sms-admin').value = '';
                 }
             } catch {
                 if (generation === flowGeneration) {
@@ -580,7 +650,7 @@ import { getAPI_URL } from "./modoBack.js";
                     formularioLogin.reset();
                     window.dispatchEvent(new Event('porto-ajuda:admin-session-ended'));
                     mostrarEtapa(etapaLogin, '#email-login-admin');
-                } else mostrarMensagem(mensagemSessao, mensagemDeFalha(resposta.status));
+                } else mostrarMensagem(mensagemSessao, adminAuthFailureMessage(resposta.status));
             } catch {
                 if (generation === flowGeneration) {
                     mostrarMensagem(mensagemSessao, 'A resposta do logout não chegou. A sessão pode ter sido encerrada; reabra o modal para consultar o estado atual.');

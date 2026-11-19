@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.math.BigDecimal;
 
 @Entity
 @Getter
@@ -33,4 +34,13 @@ public class CandidaturasVoluntariado {
 
     @Column(name = "data_candidatura", nullable = false)
     private LocalDate dataCandidatura;
+
+    @Column(name = "data_conclusao")
+    private LocalDate dataConclusao;
+
+    @Column(name = "horas_realizadas", precision = 8, scale = 2)
+    private BigDecimal horasRealizadas;
+
+    @Column(name = "certificado_object_key", columnDefinition = "TEXT")
+    private String certificadoObjectKey;
 }

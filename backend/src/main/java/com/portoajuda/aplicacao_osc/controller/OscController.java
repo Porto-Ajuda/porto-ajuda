@@ -17,6 +17,7 @@ import com.portoajuda.aplicacao_osc.dto.response.OscEdicaoDTO;
 import com.portoajuda.aplicacao_osc.entity.Usuario;
 
 import com.portoajuda.aplicacao_osc.service.OscService;
+import com.portoajuda.aplicacao_osc.service.OscDashboardService;
 import com.portoajuda.aplicacao_osc.service.OscStatusService;
 import com.portoajuda.aplicacao_osc.service.ValidacaoCnpjOscService;
 
@@ -47,8 +48,17 @@ import java.util.List;
 public class OscController {
 
     private final OscService oscService;
+    private final OscDashboardService dashboardService;
     private final OscStatusService oscStatusService;
     private final ValidacaoCnpjOscService validacaoCnpjOscService;
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/{oscId}/dashboard")
+    public ResponseEntity<java.util.Map<String, Object>> dashboard(
+            @PathVariable Integer oscId, @RequestParam(required = false) java.time.LocalDate de,
+            @RequestParam(required = false) java.time.LocalDate ate, @AuthenticationPrincipal Usuario actor) {
+        return ResponseEntity.ok(dashboardService.dashboard(oscId, actor, de, ate));
+    }
 
     // =====================================================
     // CADASTRO
@@ -107,6 +117,22 @@ public class OscController {
         return ResponseEntity
                 .status(HttpStatus.NO_CONTENT)
                 .build();
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping(value = "/{oscId}/logo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> atualizarLogo(@PathVariable Integer oscId,
+            @RequestParam("logo") MultipartFile logo,
+            @AuthenticationPrincipal Usuario usuario) {
+        return ResponseEntity.ok(java.util.Map.of("logo", oscService.atualizarLogo(oscId, usuario, logo)));
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @DeleteMapping("/{oscId}/logo")
+    public ResponseEntity<Void> removerLogo(@PathVariable Integer oscId,
+            @AuthenticationPrincipal Usuario usuario) {
+        oscService.removerLogo(oscId, usuario);
+        return ResponseEntity.noContent().build();
     }
 
     @PreAuthorize("isAuthenticated()")

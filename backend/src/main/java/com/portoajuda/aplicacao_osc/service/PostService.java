@@ -75,6 +75,8 @@ public class PostService {
     private ModerationPointsService moderationPoints;
     @Autowired(required = false)
     private VerificacaoRepresentanteService verificationService;
+    @Autowired(required = false)
+    private ManagedImageCleanupService managedImageCleanup;
 
     @Transactional
     public void create(RequestCreatePostDTO request, Usuario usuarioAuth){
@@ -153,7 +155,7 @@ public class PostService {
         }
         if (imagem != null) {
             SupabaseStorageService.ArquivoEnviado enviada = enviarImagemConteudo(oscId, post, imagem);
-            agendarLimpezaSeRollback(oscId, post, enviada.caminho());
+            agendarLimpezaSeRollback(oscId, post, enviada);
             post.setImagemUrl(enviada.url());
             postRepository.save(post);
         }
@@ -194,7 +196,7 @@ public class PostService {
         if (request == null || request.id() == null || request.post() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Informe os dados do post.");
         }
-        Post post = buscarPostDaOsc(osc, request.id());
+        Post post = buscarPostDaOscParaAtualizacao(osc, request.id());
         if (!podeModificar(post, osc, usuarioAuth, cargo)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                     "Seu cargo nao permite alterar este conteudo.");
@@ -222,6 +224,10 @@ public class PostService {
         Integer vagaExistenteId = null;
         if (post.getTipo() == TipoPost.VOLUNTARIADO) {
             Vaga existente = vagaRepository.findByPost(post).orElse(null);
+            if (existente != null && existente.getDataConclusao() != null) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "Esta oportunidade foi finalizada e não pode ser reaberta ou alterada.");
+            }
             vagaExistenteId = existente == null ? null : existente.getId();
             vaga = existente == null
                     ? new Vaga()
@@ -252,7 +258,7 @@ public class PostService {
         }
         if (imagem != null) {
             SupabaseStorageService.ArquivoEnviado enviada = enviarImagemConteudo(oscId, post, imagem);
-            agendarLimpezaSeRollback(oscId, post, enviada.caminho());
+            agendarLimpezaSeRollback(oscId, post, enviada);
             post.setImagemUrl(enviada.url());
             postRepository.save(post);
             if (!Objects.equals(imagemAnterior, enviada.url())) {
@@ -293,7 +299,7 @@ public class PostService {
         if(moderationPoints!=null) moderationPoints.requireBusinessMutationAllowed(usuarioAuth==null?null:usuarioAuth.getId(),oscId);
         Osc osc = buscarOscParaGestaoParaAtualizacao(oscId, usuarioAuth);
         CargoOsc cargo = oscService.obterCargoUsuario(osc, usuarioAuth);
-        Post post = buscarPostDaOsc(osc, postId);
+        Post post = buscarPostDaOscParaAtualizacao(osc, postId);
         if (!podeModificar(post, osc, usuarioAuth, cargo)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                     "Seu cargo nao permite excluir este conteudo.");
@@ -586,6 +592,15 @@ public class PostService {
         return post;
     }
 
+    private Post buscarPostDaOscParaAtualizacao(Osc osc, Integer postId) {
+        Post post = postRepository.findForUpdateById(postId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post nao encontrado."));
+        if (post.getOsc() == null || !Objects.equals(post.getOsc().getId(), osc.getId())) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Post nao encontrado nesta organizacao.");
+        }
+        return post;
+    }
+
     private boolean podeModificar(Post post, Osc osc, Usuario ator, CargoOsc cargoAtor) {
         if (post.getTipo() == TipoPost.NOTICIA) {
             return false;
@@ -693,7 +708,12 @@ public class PostService {
         }
     }
 
-    private void agendarLimpezaSeRollback(Integer oscId, Post post, String caminho) {
+    private void agendarLimpezaSeRollback(Integer oscId, Post post, SupabaseStorageService.ArquivoEnviado enviada) {
+        if (managedImageCleanup != null) {
+            managedImageCleanup.afterRollback(enviada.url());
+            return;
+        }
+        String caminho = enviada.caminho();
         if (!TransactionSynchronizationManager.isSynchronizationActive()) {
             removerImagemAposFalha(oscId, post, caminho);
             throw new IllegalStateException("O upload de conteúdo exige uma transação ativa.");
@@ -719,6 +739,10 @@ public class PostService {
     }
 
     private void agendarLimpezaImagemSeNaoReferenciada(Integer oscId, Post post, String imagemAnterior) {
+        if (managedImageCleanup != null) {
+            managedImageCleanup.afterCommitIfUnreferenced(imagemAnterior);
+            return;
+        }
         if (imagemAnterior == null || imagemAnterior.isBlank()
                 || !TransactionSynchronizationManager.isSynchronizationActive()) return;
         boolean voluntariado = post.getTipo() == TipoPost.VOLUNTARIADO;
@@ -850,7 +874,9 @@ public class PostService {
         }
         return vaga != null && vaga.getStatus() == StatusVaga.ABERTA
                 && vaga.getQuantidadeVagas() != null && vaga.getQuantidadeVagas() > 0
-                && vaga.getDataFim() != null && !vaga.getDataFim().isBefore(LocalDate.now());
+                && vaga.getDataFim() != null && !vaga.getDataFim().isBefore(LocalDate.now())
+                && vaga.getDataConclusao() == null
+                && candidaturasRepository.countByVaga_IdAndStatus(vaga.getId(), com.portoajuda.aplicacao_osc.enums.StatusCandidatura.APROVADA) < vaga.getQuantidadeVagas();
     }
 
     private boolean protecaoAtiva(String tipo, Integer id) {

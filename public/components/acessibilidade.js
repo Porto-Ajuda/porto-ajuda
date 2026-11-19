@@ -1,4 +1,5 @@
 import { getAPI_URL } from "./modoBack.js";
+import { normalizarTamanhoFonte, TAMANHOS_FONTE } from "./acessibilidade-logic.js";
 
 // ==========================
 // CONFIGURAÇÃO
@@ -69,16 +70,6 @@ fechar?.addEventListener("click", () => {
 // NORMALIZAR PREFERÊNCIAS
 // ==========================
 
-function normalizarTamanhoFonte(valor) {
-    const numero = Number(valor);
-
-    if (!Number.isFinite(numero)) {
-        return 100;
-    }
-
-    return Math.min(150, Math.max(80, numero));
-}
-
 function normalizarPreferencias(dados = {}) {
     return {
         tamanhoFonte: normalizarTamanhoFonte(
@@ -96,18 +87,14 @@ function normalizarPreferencias(dados = {}) {
 
 function sincronizarControlesConfiguracao() {
     // Tamanho da letra
+    const nivelFonte = preferencias.tamanhoFonte <= 95 ? "pequeno"
+        : preferencias.tamanhoFonte <= 110 ? "medio"
+            : preferencias.tamanhoFonte <= 130 ? "grande" : "extra-grande";
+    document.querySelectorAll('input[name="acss-tamanho-letra"]').forEach(opcao => {
+        opcao.checked = opcao.value === nivelFonte;
+    });
     if (configTamanhoLetra) {
-        const tamanho = preferencias.tamanhoFonte;
-
-        if (tamanho <= 95) {
-            configTamanhoLetra.value = "pequeno";
-        } else if (tamanho <= 110) {
-            configTamanhoLetra.value = "medio";
-        } else if (tamanho <= 130) {
-            configTamanhoLetra.value = "grande";
-        } else {
-            configTamanhoLetra.value = "extra-grande";
-        }
+        configTamanhoLetra.value = nivelFonte;
     }
 
     // Modo de exibição
@@ -179,6 +166,10 @@ function salvarPreferenciasLocais() {
 // ==========================
 
 function atualizarFonte() {
+    aplicarTamanhoFonte(true);
+}
+
+function aplicarTamanhoFonte(persistir) {
     tamanhoFonte = normalizarTamanhoFonte(tamanhoFonte);
 
     document.documentElement.style.fontSize =
@@ -190,18 +181,24 @@ function atualizarFonte() {
 
     preferencias.tamanhoFonte = tamanhoFonte;
 
-    salvarPreferenciasLocais();
+    if (persistir) salvarPreferenciasLocais();
 }
 
-const tamanhosFonte = {
-    "pequeno": 90,
-    "medio": 100,
-    "grande": 120,
-    "extra-grande": 140
-};
+/** Shared entry point for profile settings and the accessibility panel. */
+export function definirTamanhoFonte(valor, { persistir = true } = {}) {
+    tamanhoFonte = normalizarTamanhoFonte(valor);
+    aplicarTamanhoFonte(persistir);
+    if (configTamanhoLetra) {
+        configTamanhoLetra.value = Object.keys(TAMANHOS_FONTE)
+            .find(nome => TAMANHOS_FONTE[nome] === tamanhoFonte) || "medio";
+    }
+    document.querySelectorAll('input[name="acss-tamanho-letra"]').forEach(opcao => {
+        opcao.checked = Number(TAMANHOS_FONTE[opcao.value]) === tamanhoFonte;
+    });
+}
 
 configTamanhoLetra?.addEventListener("change", () => {
-    const novoTamanho = tamanhosFonte[configTamanhoLetra.value];
+    const novoTamanho = TAMANHOS_FONTE[configTamanhoLetra.value];
 
     if (novoTamanho === undefined) {
         return;
@@ -535,9 +532,12 @@ async function carregarPreferenciasBackend() {
             }
         );
 
+        // Preferências pessoais são opcionais para visitantes; 401 é esperado.
+        if (resposta.status === 401) return false;
+
         if (!resposta.ok) {
             throw new Error(
-                `Falha ao carregar preferências: HTTP ${resposta.status} `
+                "Não foi possível carregar as preferências de acessibilidade."
             );
         }
 
@@ -625,7 +625,7 @@ export async function salvarPreferenciasNoBackend() {
 
     if (!resposta.ok) {
         throw new Error(
-            `Não foi possível salvar as preferências (HTTP ${resposta.status}).`
+            "Não foi possível salvar as preferências de acessibilidade. Tente novamente."
         );
     }
 

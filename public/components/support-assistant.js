@@ -169,6 +169,10 @@ function syncVoiceControls() {
     ["preferencia-evitar-leitor-tela", voicePreference.avoidScreenReaderAnnouncements]
   ];
   for (const [id, checked] of pairs) { const input = document.getElementById(id); if (input) input.checked = checked; }
+  const profileVoiceOptions = document.getElementById("preferencias-voz-opcoes");
+  if (profileVoiceOptions) profileVoiceOptions.hidden = !voicePreference.enabled;
+  const profileVoiceToggle = document.getElementById("preferencia-assistencia-voz");
+  if (profileVoiceToggle) profileVoiceToggle.setAttribute("aria-expanded", String(voicePreference.enabled));
   const rate = document.getElementById("support-voice-rate"); if (rate) rate.value = String(voicePreference.rate);
   const selector = document.getElementById("support-voice-select"); if (selector) selector.value = voicePreference.voiceURI;
   const exit = document.getElementById("acss-voz-sair"); if (exit) exit.hidden = !voiceModeActive;
@@ -716,6 +720,11 @@ for (const [id, property] of [["support-voice-enabled", "enabled"], ["support-re
   ["preferencia-leitura-voz", "readAloud"], ["preferencia-evitar-leitor-tela", "avoidScreenReaderAnnouncements"]]) {
   document.getElementById(id)?.addEventListener("change", event => {
     const checked = event.target.checked;
+    if (property === "enabled") {
+      const options = document.getElementById("preferencias-voz-opcoes");
+      if (options) options.hidden = !checked;
+      event.target.setAttribute("aria-expanded", String(checked));
+    }
     void (async () => {
       await resolveVoiceScope();
       Object.assign(voicePreference, readVoicePreference(voiceStorage(), preferenceKey()) || DEFAULT_VOICE_PREFERENCE);

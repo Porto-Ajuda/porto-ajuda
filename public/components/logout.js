@@ -1,20 +1,15 @@
 
 import { getAPI_URL } from "./modoBack.js";
 import { marcarSessaoAnonima } from "./auth.js";
+import { notificarToast } from "./notificacoes.js";
 
 const API_URL = await getAPI_URL();
 
 document.addEventListener("DOMContentLoaded", () => {
     const botaoLogout = document.getElementById("botao-logout");
-    const estadoLogout = document.getElementById("estado-logout");
 
-    if (!botaoLogout || !estadoLogout) {
+    if (!botaoLogout) {
         return;
-    }
-
-    function mostrarEstado(mensagem) {
-        estadoLogout.textContent = mensagem;
-        estadoLogout.hidden = false;
     }
 
     async function obterTokenCSRF() {
@@ -36,7 +31,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     botaoLogout.addEventListener("click", async () => {
         botaoLogout.disabled = true;
-        mostrarEstado("Encerrando sua sessão...");
+        botaoLogout.textContent = "Saindo…";
+        botaoLogout.setAttribute("aria-busy", "true");
 
         try {
             const csrf = await obterTokenCSRF();
@@ -53,22 +49,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (!resposta.ok) {
                 throw new Error(
-                    `Não foi possível encerrar a sessão (HTTP ${resposta.status}).`
+                    "Não foi possível confirmar o encerramento da sessão. Tente novamente."
                 );
             }
 
             marcarSessaoAnonima();
-            mostrarEstado("Sessão encerrada com sucesso.");
 
             // Redireciona para a página inicial após o logout.
             window.location.href = "/";
         } catch (erro) {
-            console.error("Erro ao sair da conta:", erro);
-            mostrarEstado(
-                erro.message || "Erro inesperado ao encerrar a sessão."
-            );
+            notificarToast(erro.message || "Não foi possível encerrar a sessão. Tente novamente.", { tipo: "erro" });
         } finally {
             botaoLogout.disabled = false;
+            botaoLogout.textContent = "Sair da conta";
+            botaoLogout.removeAttribute("aria-busy");
         }
     });
 });

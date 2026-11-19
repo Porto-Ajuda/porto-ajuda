@@ -8,7 +8,7 @@ const read = path => readFile(resolve(__dirname, "../..", path), "utf8");
 test("public NGO, publication, and volunteer viewers open the shared CSRF-protected report form", async () => {
     const [report, home, profile, profileHtml, catalog, sharedApi] = await Promise.all([
         read("public/components/denunciar-conteudo.js"),
-        read("public/components/crud.js"),
+        read("public/components/conteudo-publico-modal.js"),
         read("public/components/ong-profile.js"),
         read("public/pages/ong-profile.html"),
         read("public/pages/catalogo.html"),

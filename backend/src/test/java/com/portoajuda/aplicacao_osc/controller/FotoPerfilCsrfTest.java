@@ -11,7 +11,9 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -22,6 +24,7 @@ import com.portoajuda.aplicacao_osc.admin.AdminAuthorizationService;
 import com.portoajuda.aplicacao_osc.entity.Usuario;
 import com.portoajuda.aplicacao_osc.controller.PhoneVerificationController;
 import com.portoajuda.aplicacao_osc.controller.AdminDashboardController;
+import com.portoajuda.aplicacao_osc.controller.OscController;
 import com.portoajuda.aplicacao_osc.entity.Role;
 import com.portoajuda.aplicacao_osc.dto.response.AdminDashboardActivityDTO;
 import com.portoajuda.aplicacao_osc.dto.response.AdminDashboardOverviewDTO;
@@ -36,9 +39,13 @@ import com.portoajuda.aplicacao_osc.service.CodigoAutenticacaoService;
 import com.portoajuda.aplicacao_osc.service.SessaoUsuarioService;
 import com.portoajuda.aplicacao_osc.service.UsuarioService;
 import com.portoajuda.aplicacao_osc.service.AdminAuthenticationService;
+import com.portoajuda.aplicacao_osc.dto.request.AdminAuthStartRequest;
 import com.portoajuda.aplicacao_osc.service.AutenticacaoAbusoUsuarioService;
 import com.portoajuda.aplicacao_osc.service.AdminPrivilegedSessionService;
 import com.portoajuda.aplicacao_osc.service.PhoneVerificationService;
+import com.portoajuda.aplicacao_osc.service.OscService;
+import com.portoajuda.aplicacao_osc.service.OscStatusService;
+import com.portoajuda.aplicacao_osc.service.ValidacaoCnpjOscService;
 import com.portoajuda.aplicacao_osc.service.AdminDashboardService;
 import com.portoajuda.aplicacao_osc.service.RecuperacaoSenhaService;
 import com.portoajuda.aplicacao_osc.segurity.ClientIpResolver;
@@ -54,6 +61,8 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import java.util.List;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Import;
@@ -61,7 +70,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 @WebMvcTest(controllers = { AuthController.class, UsuarioController.class, AdminAuthController.class,
-                PhoneVerificationController.class, AdminDashboardController.class })
+                PhoneVerificationController.class, AdminDashboardController.class, OscController.class })
 @Import({ SecurityConfiguration.class, CorsConfig.class, JwtAuthFilter.class,
                 AdminSessionAuthFilter.class, AdminSessionCookie.class,
                 AdminAuthorizationService.class })
@@ -117,6 +126,10 @@ class FotoPerfilCsrfTest {
         @MockitoBean
         private AdminDashboardService adminDashboardService;
 
+        @MockitoBean private OscService oscService;
+        @MockitoBean private OscStatusService oscStatusService;
+        @MockitoBean private ValidacaoCnpjOscService validacaoCnpjOscService;
+
         @MockitoBean
         private AdminAssignmentRepository adminAssignmentRepository;
 
@@ -159,6 +172,41 @@ class FotoPerfilCsrfTest {
 
                 verify(usuarioService).atualizarFotoPerfil(
                                 eq(123), any(byte[].class), eq("image/png"));
+        }
+
+        @Test
+        void removerFotoExigeCsrfESessaoEUsaSomenteIdentidadeAutenticada() throws Exception {
+                mockMvc.perform(delete("/usuario/foto-perfil").with(user("123")))
+                                .andExpect(status().isForbidden());
+                TokenCsrf csrf = obterTokenCsrf();
+                mockMvc.perform(delete("/usuario/foto-perfil").cookie(csrf.cookie())
+                                .header(csrf.headerName(), csrf.token()).with(user("123")))
+                                .andExpect(status().isNoContent());
+                verify(usuarioService).removerFotoPerfil(123);
+        }
+
+        @Test
+        void ngoLogoMutationsKeepCsrfAndSessionRequirements() throws Exception {
+                TokenCsrf csrf = obterTokenCsrf();
+                Usuario actor = mock(Usuario.class);
+                when(actor.getId()).thenReturn(123);
+                var principalAuthentication = new UsernamePasswordAuthenticationToken(actor, null,
+                                java.util.List.of(new SimpleGrantedAuthority("ROLE_USUARIO")));
+                when(oscService.atualizarLogo(eq(81), eq(actor), any())).thenReturn("https://storage.invalid/new-logo.png");
+
+                mockMvc.perform(multipart("/osc/81/logo")
+                                .file(new MockMultipartFile("logo", "logo.png", "image/png", new byte[]{1}))
+                                .cookie(csrf.cookie()).header(csrf.headerName(), csrf.token())
+                                .with(authentication(principalAuthentication)))
+                                .andExpect(status().isOk());
+                verify(oscService).atualizarLogo(eq(81), eq(actor), any());
+
+                mockMvc.perform(delete("/osc/81/logo").with(authentication(principalAuthentication)))
+                                .andExpect(status().isForbidden());
+                mockMvc.perform(delete("/osc/81/logo").cookie(csrf.cookie())
+                                .header(csrf.headerName(), csrf.token()).with(authentication(principalAuthentication)))
+                                .andExpect(status().isNoContent());
+                verify(oscService).removerLogo(81, actor);
         }
 
         @Test
@@ -331,6 +379,72 @@ class FotoPerfilCsrfTest {
                                 .andExpect(status().isUnauthorized());
 
                 verify(phoneVerificationService, never()).iniciar(anyInt(), any(), any());
+        }
+
+        @Test
+        void inicioDeLoginAdminSemCsrfERejeitado() throws Exception {
+                mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                                .post("/admin/auth/challenges")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"email\":\"synthetic-admin@example.invalid\",\"senha\":\"synthetic\"}"))
+                                .andExpect(status().isForbidden());
+
+                verify(adminAuthenticationService, never()).iniciar(any(), any());
+        }
+
+        @Test
+        void inicioDeLoginAdminAceitaCsrfEMostraSomenteFatorDecididoPeloServidor() throws Exception {
+                TokenCsrf csrf = obterTokenCsrf();
+                var challengeId = java.util.UUID.fromString("33333333-3333-4333-8333-333333333333");
+                when(clientIpResolver.resolve(any())).thenReturn("192.0.2.121");
+                when(adminAuthenticationService.iniciar(any(AdminAuthStartRequest.class), eq("192.0.2.121")))
+                                .thenReturn(challengeId);
+                when(adminAuthenticationService.isSmsVerificationEnabled()).thenReturn(false);
+
+                mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                                .post("/admin/auth/challenges")
+                                .cookie(csrf.cookie())
+                                .header(csrf.headerName(), csrf.token())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"email\":\"synthetic-admin@example.invalid\",\"senha\":\"synthetic\"}"))
+                                .andExpect(status().isAccepted())
+                                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
+                                                .jsonPath("$.challengeId").value(challengeId.toString()))
+                                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
+                                                .jsonPath("$.smsRequired").value(false));
+
+                verify(adminAuthenticationService).iniciar(any(AdminAuthStartRequest.class), eq("192.0.2.121"));
+        }
+
+        @Test
+        void verificacaoDeCodigoAdminExigeCsrfEARespostaPublicaClassificaCodigoIncorreto() throws Exception {
+                var challengeId = java.util.UUID.fromString("44444444-4444-4444-8444-444444444444");
+                String body = "{\"emailCode\":\"000000\"}";
+                mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                                .post("/admin/auth/challenges/" + challengeId + "/verify")
+                                .contentType(MediaType.APPLICATION_JSON).content(body))
+                                .andExpect(status().isForbidden());
+                verify(adminAuthenticationService, never()).verificarEEmitirSessao(any(), any(), any());
+
+                TokenCsrf csrf = obterTokenCsrf();
+                when(clientIpResolver.resolve(any())).thenReturn("192.0.2.122");
+                when(adminAuthenticationService.verificarEEmitirSessao(eq(challengeId), any(), eq("192.0.2.122")))
+                                .thenReturn(new com.portoajuda.aplicacao_osc.service.AdminAuthenticationService.VerificationOutcome(
+                                                com.portoajuda.aplicacao_osc.service.AdminAuthenticationService.VerificationResult.REJECTED,
+                                                null,
+                                                com.portoajuda.aplicacao_osc.service.AdminAuthenticationService.VerificationFailure.INVALID_CODE,
+                                                null));
+
+                mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                                .post("/admin/auth/challenges/" + challengeId + "/verify")
+                                .cookie(csrf.cookie()).header(csrf.headerName(), csrf.token())
+                                .contentType(MediaType.APPLICATION_JSON).content(body))
+                                .andExpect(status().isUnauthorized())
+                                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
+                                                .jsonPath("$.codigo").value("INVALID_CODE"))
+                                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
+                                                .jsonPath("$.mensagem").value("O código está incorreto. Confira e tente novamente."));
+                verify(adminAuthenticationService).verificarEEmitirSessao(eq(challengeId), any(), eq("192.0.2.122"));
         }
 
         @Test

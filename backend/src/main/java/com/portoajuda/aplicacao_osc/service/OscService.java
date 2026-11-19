@@ -74,6 +74,8 @@ public class OscService {
     private ModerationPointsService moderationPoints;
     @Autowired(required = false)
     private VerificacaoRepresentanteService verificationService;
+    @Autowired(required = false)
+    private ManagedImageCleanupService managedImageCleanup;
 
     // =====================================================
     // PERMISSÕES
@@ -309,6 +311,46 @@ public class OscService {
             org.slf4j.LoggerFactory.getLogger(OscService.class)
                     .warn("Falha ao limpar logo temporário após erro de persistência.");
         }
+    }
+
+    @Transactional
+    public String atualizarLogo(Integer oscId, Usuario actor, MultipartFile file) {
+        if (moderationPoints != null) moderationPoints.requireBusinessMutationAllowed(actor == null ? null : actor.getId(), oscId);
+        Osc osc = oscRepository.findForUpdateById(oscId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Organização não encontrada."));
+        if (moderationPoints != null) moderationPoints.requireBusinessMutationAllowed(null, oscId);
+        exigirCargo(osc, actor, CargoOsc.CRIADOR, CargoOsc.ADMINISTRADOR, CargoOsc.EDITOR);
+        if (file == null || file.isEmpty()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Selecione uma imagem.");
+        byte[] bytes;
+        try { bytes = file.getBytes(); }
+        catch (IOException error) { throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Não foi possível ler a imagem."); }
+
+        String previous = osc.getLogo();
+        SupabaseStorageService.ArquivoEnviado uploaded;
+        try { uploaded = supabaseStorageService.enviarLogoOsc(actor.getId(), bytes, file.getContentType()); }
+        catch (IllegalArgumentException error) { throw new ResponseStatusException(HttpStatus.BAD_REQUEST, error.getMessage()); }
+        catch (RestClientException error) { throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Não foi possível enviar a imagem agora. Tente novamente."); }
+        if (managedImageCleanup != null) managedImageCleanup.afterRollback(uploaded.url());
+        osc.setLogo(uploaded.url());
+        oscRepository.save(osc);
+        if (managedImageCleanup != null && !java.util.Objects.equals(previous, uploaded.url())) {
+            managedImageCleanup.afterCommitIfUnreferenced(previous);
+        }
+        return uploaded.url();
+    }
+
+    @Transactional
+    public void removerLogo(Integer oscId, Usuario actor) {
+        if (moderationPoints != null) moderationPoints.requireBusinessMutationAllowed(actor == null ? null : actor.getId(), oscId);
+        Osc osc = oscRepository.findForUpdateById(oscId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Organização não encontrada."));
+        if (moderationPoints != null) moderationPoints.requireBusinessMutationAllowed(null, oscId);
+        exigirCargo(osc, actor, CargoOsc.CRIADOR, CargoOsc.ADMINISTRADOR, CargoOsc.EDITOR);
+        String previous = osc.getLogo();
+        if (previous == null || previous.isBlank()) return;
+        osc.setLogo(null);
+        oscRepository.save(osc);
+        if (managedImageCleanup != null) managedImageCleanup.afterCommitIfUnreferenced(previous);
     }
 
     // =====================================================

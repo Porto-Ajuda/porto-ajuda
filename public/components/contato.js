@@ -206,7 +206,7 @@ if (formulario) {
 
             if (!csrfResponse.ok) {
                 throw new Error(
-                    `Não foi possível obter o token CSRF: HTTP ${csrfResponse.status}`
+                    "Não foi possível enviar sua mensagem agora. Tente novamente mais tarde."
                 );
             }
 
@@ -245,7 +245,7 @@ if (formulario) {
                 throw new Error(
                     data.mensagem ||
                     data.message ||
-                    `Falha no envio do contato: HTTP ${response.status}`
+                    "Não foi possível enviar sua mensagem. Tente novamente mais tarde."
                 );
             }
 

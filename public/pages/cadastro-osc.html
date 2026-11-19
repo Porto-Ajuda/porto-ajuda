@@ -8,7 +8,9 @@
 
     <link rel="stylesheet" href="../styles/cadastro-osc.css">
     <link rel="stylesheet" href="../styles/geral.css">
+    <link rel="stylesheet" href="../styles/ajuste-imagem.css">
 
+    <script type="module" src="../components/ajuste-imagem.js" defer></script>
     <script type="module" src="../components/cadastro-osc.js" defer></script>
     <script type="module" src="../components/header_footer.js" defer></script>
 </head>
@@ -86,7 +88,10 @@
 
                     <div class="campo">
                         <label for="logo">Logo da organização</label>
-                        <input type="file" id="logo" name="logo" accept="image/png, image/jpeg, image/webp">
+                        <input type="file" id="logo" name="logo" accept="image/png, image/jpeg, image/webp"
+                            data-image-adjustment data-aspect-ratio="1" data-image-feedback="logo-ajuste-feedback"
+                            data-image-title="Ajustar logotipo da ONG">
+                        <p id="logo-ajuste-feedback" role="status" aria-live="polite"></p>
                     </div>
                 </div>
 

@@ -2,6 +2,7 @@ import { fetchAutenticado } from "./api.js";
 import { getAPI_URL } from "./modoBack.js";
 import { obterTokenCSRF } from "./auth.js";
 import { confirmarAcao } from "./confirm-modal.js";
+import { definirAbaDisponivel } from "./abas-perfil.js";
 
 const API = getAPI_URL();
 const PAGE_SIZE = 10;
@@ -17,7 +18,7 @@ function dataPt(value) {
     return new Date(ano, mes - 1, dia).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
 }
 function rotuloStatus(status) {
-    return ({ PENDENTE: "Pendente", APROVADA: "Aprovada", RECUSADA: "Recusada", DESISTIU: "Cancelada" })[status] || "Status indisponível";
+    return ({ PENDENTE: "Pendente", APROVADA: "Aprovada", RECUSADA: "Recusada", DESISTIU: "Cancelada", CONCLUIDA: "Concluída", CANCELADA_PELA_ONG: "Cancelada pela ONG" })[status] || "Status indisponível";
 }
 function definirEstado(mensagem, erro = false) {
     const node = $("candidaturas-usuario-status");
@@ -59,6 +60,10 @@ function cardCandidatura(item) {
     applied.className = "candidatura-usuario-card__data";
     applied.textContent = `Candidatura enviada em ${dataPt(item.dataCandidatura)}`;
     article.append(header, ngo, details, applied);
+    if (item.status === "CONCLUIDA") {
+        article.append(linhaMeta("Conclusão registrada em", dataPt(item.dataConclusao)));
+        if (item.horasRealizadas != null) article.append(linhaMeta("Horas efetivamente realizadas", String(item.horasRealizadas)));
+    }
     if (item.mensagem) {
         const message = document.createElement("p");
         message.className = "candidatura-usuario-mensagem";
@@ -83,6 +88,13 @@ function cardCandidatura(item) {
         cancel.addEventListener("click", () => void cancelar(item.id, cancel));
         actions.append(cancel);
     }
+    if (item.status === "CONCLUIDA" && item.certificadoDisponivel) {
+        const certificate = document.createElement("a");
+        certificate.href = `${API.replace(/\/+$/, "")}/usuario/candidaturas/${encodeURIComponent(item.id)}/certificado`;
+        certificate.textContent = "Baixar certificado";
+        certificate.className = "botao botao-secundario";
+        actions.append(certificate);
+    }
     article.append(actions);
     return article;
 }
@@ -99,16 +111,22 @@ async function carregar(paginaSolicitada = pagina) {
             $("candidaturas-usuario-lista").replaceChildren();
             return;
         }
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        if (!response.ok) throw new Error("Não foi possível carregar suas candidaturas. Tente novamente.");
         const page = await response.json();
-        const items = Array.isArray(page.content) ? page.content : [];
+        if (!Array.isArray(page?.content)) throw new Error("A resposta de candidaturas está inválida.");
+        const totalElementos = page.totalElements;
+        if (!Number.isSafeInteger(totalElementos) || totalElementos < 0) {
+            throw new Error("A resposta de candidaturas está inválida.");
+        }
+        const items = page.content;
+        definirAbaDisponivel("aba-candidaturas", totalElementos > 0);
         pagina = Number(page.number) || 0;
         totalPaginas = Number(page.totalPages) || 0;
         $("candidaturas-usuario-pagina").textContent = totalPaginas ? `Página ${pagina + 1} de ${totalPaginas}` : "";
         $("candidaturas-usuario-anterior").disabled = pagina <= 0;
         $("candidaturas-usuario-proximo").disabled = pagina + 1 >= totalPaginas;
         $("candidaturas-usuario-lista").replaceChildren(...items.map(cardCandidatura));
-        definirEstado(items.length ? `${page.totalElements} candidatura(s) registrada(s).` : "Você ainda não enviou candidaturas.");
+        definirEstado("");
     } catch {
         definirEstado("Não foi possível carregar as candidaturas. Tente novamente.", true);
         $("candidaturas-usuario-lista").replaceChildren();
@@ -153,6 +171,6 @@ $("aba-candidaturas")?.addEventListener("click", () => void carregar(0));
 $("candidaturas-usuario-anterior")?.addEventListener("click", () => { if (pagina > 0) void carregar(pagina - 1); });
 $("candidaturas-usuario-proximo")?.addEventListener("click", () => { if (pagina + 1 < totalPaginas) void carregar(pagina + 1); });
 document.addEventListener("porto:application-created", () => {
-    if ($("painel-candidaturas") && !$("painel-candidaturas").hidden) void carregar(pagina);
+    void carregar(0);
 });
-if (window.location.hash === "#candidaturas") void carregar(0);
+void carregar(0);

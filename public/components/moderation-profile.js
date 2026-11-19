@@ -1,8 +1,9 @@
 import { fetchAutenticado } from "./api.js";
+import { possuiDadosDeModeracao, possuiHistoricoModeracaoOng } from "./moderation-profile-logic.js";
 
 const formatDate = new Intl.DateTimeFormat("pt-BR", { dateStyle: "medium", timeStyle: "short" });
 const restrictionRefreshTimers = new WeakMap();
-const organizationDetails = new WeakMap();
+const organizationStates = new WeakMap();
 
 export async function carregarModeracaoPerfil(section, endpoint) {
     if (!section) return null;
@@ -16,7 +17,12 @@ export async function carregarModeracaoPerfil(section, endpoint) {
             ? "Você não tem permissão para consultar esta pontuação."
             : "Não foi possível carregar as informações de moderação.");
         const subject = await response.json();
-        renderSubject(content, subject, endpoint);
+        const visible = renderSubject(content, subject, endpoint);
+        section.hidden = !visible;
+        if (!visible) {
+            status.textContent = "";
+            return subject;
+        }
         scheduleRestrictionRefresh(section, endpoint, subject);
         status.textContent = "";
         return subject;
@@ -28,6 +34,7 @@ export async function carregarModeracaoPerfil(section, endpoint) {
 
 function renderSubject(container, subject, endpoint) {
     container.replaceChildren();
+    if (!possuiDadosDeModeracao(subject)) return false;
     const summary = document.createElement("p");
     const temporary = subject.temporaryRestrictionEndsAt
         ? "Período temporário " + (subject.temporaryRestrictionActive ? "ativo até " : "encerrado em ") + formatDate.format(Date.parse(subject.temporaryRestrictionEndsAt)) + "."
@@ -49,16 +56,18 @@ function renderSubject(container, subject, endpoint) {
         if (entry.decisionHistoryId) netByDecision.set(entry.decisionHistoryId,
             (netByDecision.get(entry.decisionHistoryId) || 0) + entry.delta);
     }
-    const heading = document.createElement("h4");
-    heading.textContent = "Histórico de pontuação";
-    container.append(heading);
-    const list = document.createElement("ul");
-    list.className = "moderation-profile__history";
-    for (const entry of subject.pointsHistory || []) {
+    const historyEntries = Array.isArray(subject.pointsHistory) ? subject.pointsHistory : [];
+    if (historyEntries.length) {
+        const heading = document.createElement("h4");
+        heading.textContent = "Histórico de pontuação";
+        container.append(heading);
+        const list = document.createElement("ul");
+        list.className = "moderation-profile__history";
+        for (const entry of historyEntries) {
         const item = document.createElement("li");
         const detail = document.createElement("p");
         const reference = entry.decisionHistoryId ? " · Decisão #" + entry.decisionHistoryId : "";
-        detail.textContent = (entry.delta > 0 ? "+" : "") + entry.delta + " ponto(s) "+c(0xb7)+" "
+        detail.textContent = (entry.delta > 0 ? "+" : "") + entry.delta + " ponto(s) · "
             + labelOrigin(entry.origin) + reference + " \u00b7 "
             + (entry.occurredAt ? formatDate.format(Date.parse(entry.occurredAt)) : "data não informada");
         const explanation = document.createElement("p");
@@ -73,21 +82,19 @@ function renderSubject(container, subject, endpoint) {
             appeal.addEventListener("click", () => submitAppeal(appeal, entry.decisionHistoryId, container, endpoint));
             item.append(appeal);
         }
-        list.append(item);
+            list.append(item);
+        }
+        container.append(list);
     }
-    if (!list.children.length) {
-        const empty = document.createElement("li");
-        empty.textContent = "Ainda não há alterações de pontuação registradas.";
-        list.append(empty);
-    }
-    container.append(list);
 
-    const appealsHeading = document.createElement("h4");
-    appealsHeading.textContent = "Recursos";
-    container.append(appealsHeading);
-    const appealList = document.createElement("ul");
-    appealList.className = "moderation-profile__history";
-    for (const appeal of subject.appeals || []) {
+    const appeals = Array.isArray(subject.appeals) ? subject.appeals : [];
+    if (appeals.length) {
+        const appealsHeading = document.createElement("h4");
+        appealsHeading.textContent = "Recursos";
+        container.append(appealsHeading);
+        const appealList = document.createElement("ul");
+        appealList.className = "moderation-profile__history";
+        for (const appeal of appeals) {
         const item = document.createElement("li");
         const title = document.createElement("p");
         title.textContent = "Recurso #" + appeal.id + " \u00b7 " + labelAppeal(appeal.status) + " \u00b7 "
@@ -95,14 +102,11 @@ function renderSubject(container, subject, endpoint) {
         const explanation = document.createElement("p");
         explanation.textContent = appeal.response || appeal.justification;
         item.append(title, explanation);
-        appealList.append(item);
+            appealList.append(item);
+        }
+        container.append(appealList);
     }
-    if (!appealList.children.length) {
-        const empty = document.createElement("li");
-        empty.textContent = "Nenhum recurso enviado.";
-        appealList.append(empty);
-    }
-    container.append(appealList);
+    return true;
 }
 
 function renderMutationRestrictionNotices(container, subjectOrSubjects) {
@@ -256,12 +260,19 @@ async function submitAppeal(button, decisionHistoryId, container, endpoint) {
         });
         if (!submitted) return;
         const section = container.closest("[data-moderation-section]");
-        const status = section?.querySelector("[data-moderation-status]");
+        const status = section?.querySelector("[data-moderation-status]")
+            || document.querySelector("#moderacao-organizacoes-usuario [data-managed-ngo-status]");
         if (status) status.textContent = "Recurso enviado para an\u00e1lise.";
-        await carregarModeracaoPerfil(section, endpoint);
+        if (section) await carregarModeracaoPerfil(section, endpoint);
+        else {
+            const response = await fetchAutenticado(endpoint, { headers: { Accept: "application/json" } });
+            if (!response.ok) throw new Error("O recurso foi enviado, mas o histórico não pôde ser atualizado.");
+            renderSubject(container, await response.json(), endpoint);
+        }
     } catch (error) {
         const section = container.closest("[data-moderation-section]");
-        const status = section?.querySelector("[data-moderation-status]");
+        const status = section?.querySelector("[data-moderation-status]")
+            || document.querySelector("#moderacao-organizacoes-usuario [data-managed-ngo-status]");
         if (status) status.textContent = error?.message || "N\u00e3o foi poss\u00edvel enviar o recurso.";
     } finally {
         if (button.isConnected) {
@@ -382,6 +393,7 @@ function initializeModerationProfile() {
         if (organizations.open) void carregarResumoOrganizacoes(organizations, state);
         else fecharHistoricoOrganizacao(organizations, state);
     });
+    void carregarResumoOrganizacoes(organizations, state);
 }
 
 async function carregarResumoOrganizacoes(section, state) {
@@ -399,19 +411,21 @@ async function carregarResumoOrganizacoes(section, state) {
             if (!Array.isArray(summaries)) throw new Error("Resposta de organiza\u00e7\u00f5es inv\u00e1lida.");
             state.loaded = true;
             content.replaceChildren();
-            const eligible = summaries.filter(subject => subject.hasPointHistory === true);
+            const eligible = summaries.filter(possuiHistoricoModeracaoOng);
             for (const subject of eligible) criarLinhaOrganizacao(section, state, subject, content);
-            status.textContent = eligible.length
-                ? "Somente ONGs que voc\u00ea administra e possuem hist\u00f3rico de pontos s\u00e3o exibidas. Os detalhes s\u00e3o carregados ao expandir cada ONG."
-                : "Voc\u00ea n\u00e3o administra ONGs com hist\u00f3rico de pontos.";
+            status.textContent = "";
+            status.hidden = true;
+            section.hidden = eligible.length === 0;
         } catch (error) {
             content.replaceChildren();
             status.textContent = error?.message || "N\u00e3o foi poss\u00edvel carregar as ONGs administradas.";
+            status.hidden = false;
+            section.hidden = false;
             const retry = document.createElement("button");
             retry.type = "button";
             retry.className = "botao botao-secundario";
             retry.textContent = "Tentar novamente";
-            retry.addEventListener("click", () => { state.loading = null; void carregarResumoOrganizacoes(section, state); });
+            retry.addEventListener("click", () => { state.loading = null; state.loaded = false; void carregarResumoOrganizacoes(section, state); });
             content.append(retry);
         } finally {
             state.loading = null;
@@ -493,7 +507,7 @@ async function alternarHistoricoOrganizacao(section, state, summary, button, pan
         const detail = await request;
         state.requests.delete(id);
         if (state.openId !== id) return;
-        renderSubject(content, detail, "/moderation/appeals");
+        renderSubject(content, detail, "/osc/" + encodeURIComponent(id) + "/moderation");
         status.textContent = "";
     } catch (error) {
         state.requests.delete(id);

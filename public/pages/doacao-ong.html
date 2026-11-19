@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Vaquinhas das ONGs | Porto Ajuda</title>
+  <script>
+    const legacy = new URLSearchParams(location.search);
+    const campaignId = legacy.get("campanha") || legacy.get("campaign") || legacy.get("id");
+    const destination = new URLSearchParams({ categoria: "doacoes" });
+    if (campaignId) destination.set("campanha", campaignId);
+    if (legacy.has("valor")) destination.set("valor", legacy.get("valor"));
+    location.replace(`/catalogo?${destination}`);
+  </script>
+</head>
+<body><p>Você está sendo direcionado às <a href="/catalogo?categoria=doacoes">vaquinhas das ONGs</a>.</p></body>
+</html>

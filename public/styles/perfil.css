@@ -434,6 +434,7 @@ body {
 }
 
 
+
 .campo-perfil input {
     width: 100%;
 
@@ -679,7 +680,7 @@ body {
     display: grid;
 
     grid-template-columns:
-        repeat(3, 1fr) auto;
+        repeat(3, minmax(0, 1fr));
 
     gap: 12px;
 
@@ -687,6 +688,33 @@ body {
 
     margin-bottom: 10px;
 }
+
+.registro-historico-explicacao,
+.registro-historico-indisponivel:not([hidden]) {
+    grid-column: 1 / -1;
+    margin: 0;
+    padding: 12px 15px;
+    border-left: 3px solid var(--gold);
+    border-radius: 8px;
+    color: var(--text-soft);
+    background: rgba(255, 255, 255, .045);
+    line-height: 1.5;
+}
+
+.registro-historico-indisponivel[hidden] { display: none; }
+.registro-historico-sem-atividades { margin: 0; padding: 16px 18px; color: var(--text-soft); background: rgba(255,255,255,.045); border-left: 3px solid var(--gold); border-radius: 9px; line-height: 1.55; }
+.registro-historico-sem-atividades[hidden],
+[data-activity-history-content][hidden],
+.filtros-registro[hidden] { display: none !important; }
+.registro-voluntariado-link { color: var(--gold-light); text-underline-offset: 3px; }
+.registro-voluntariado-link:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+.registro-atividade-cabecalho { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:5px; }
+.registro-atividade-cabecalho h3 { min-width:0; flex:1 1 220px; overflow-wrap:anywhere; }
+.registro-atividade-cabecalho .etiqueta { flex:0 0 auto; margin:0; }
+.registro-voluntariado-ong,
+.registro-voluntariado-detalhes,
+.registro-voluntariado-periodo,
+.registro-voluntariado-candidatura { margin: 7px 0 0; color: var(--text-soft); line-height: 1.5; }
 
 
 .estatistica {
@@ -804,6 +832,13 @@ body {
 .moderation-profile__history li { padding:12px; border:1px solid var(--border-soft,rgba(255,255,255,.14)); border-radius:10px; }
 .moderation-profile__history p { margin:4px 0; overflow-wrap:anywhere; }
 
+.moderation-profile__personal { width:100%; margin-top:18px; padding:0; color:var(--text); }
+.moderation-profile__personal-heading { margin-bottom:12px; }
+.moderation-profile__personal-heading h3 { margin:0 0 5px; color:var(--text); font-size:1rem; }
+.moderation-profile__personal-heading p { margin:0; color:var(--text-soft); line-height:1.5; }
+.moderation-profile__personal > [data-moderation-status]:empty { display:none; }
+.moderation-profile__personal[hidden],
+.moderation-profile__organizations[hidden] { display:none !important; }
 .moderation-profile__score-summary { padding:14px 16px; color:var(--text); background:rgba(124,92,207,.16); border:1px solid rgba(169,149,240,.3); border-radius:12px; line-height:1.6; }
 .moderation-profile__restriction-notices { display:grid; gap:12px; margin:14px 0; }
 .moderation-profile__restriction { display:grid; gap:8px; padding:14px 16px; color:var(--text); background:rgba(124,92,207,.2); border:1px solid rgba(169,149,240,.45); border-left:4px solid var(--gold); border-radius:10px; }
@@ -813,8 +848,12 @@ body {
 .moderation-profile__restriction ul { display:grid; gap:6px; margin:0; padding-left:20px; overflow-wrap:anywhere; }
 .moderation-profile__history-link { justify-self:start; color:var(--gold-light); font-weight:600; text-decoration:underline; text-underline-offset:3px; }
 .moderation-profile__history-link:focus-visible,.moderation-profile__ngo-toggle:focus-visible { outline:2px solid var(--gold); outline-offset:3px; }
-.moderation-profile__organizations { margin-top:18px; padding:16px; color:var(--text); background:rgba(46,28,80,.82); border:1px solid rgba(169,149,240,.35); border-radius:12px; }
-.moderation-profile__organizations > summary { color:var(--gold-light); font-weight:600; cursor:pointer; }
+.moderation-profile__organizations { display:block; width:100%; box-sizing:border-box; margin-top:14px; padding:0; color:var(--text); background:transparent; border:0; }
+.moderation-profile__organizations > summary { display:flex; width:100%; min-height:50px; box-sizing:border-box; align-items:center; justify-content:space-between; gap:12px; padding:12px 16px; color:var(--gold-light); background:rgba(46,28,80,.82); border:1px solid rgba(169,149,240,.35); border-radius:10px; font:inherit; font-weight:600; line-height:1.35; cursor:pointer; overflow-wrap:anywhere; }
+.moderation-profile__organizations > summary:hover { border-color:rgba(245,181,46,.62); background:rgba(62,40,113,.75); }
+.moderation-profile__organizations > summary:focus-visible { outline:2px solid var(--gold); outline-offset:3px; }
+.moderation-profile__organizations > summary::marker { color:var(--gold); }
+.moderation-profile__organizations[open] > summary { border-bottom-right-radius:0; border-bottom-left-radius:0; }
 .moderation-profile__organizations > [data-managed-ngo-status] { color:var(--text-soft); line-height:1.55; }
 .moderation-profile__ngo { margin:10px 0; border:1px solid rgba(169,149,240,.28); border-radius:10px; overflow:hidden; }
 .moderation-profile__ngo-toggle { display:flex; width:100%; align-items:center; justify-content:space-between; gap:14px; padding:13px 15px; color:var(--text); background:rgba(124,92,207,.17); border:0; text-align:left; font:inherit; cursor:pointer; }
@@ -839,8 +878,9 @@ body {
 .moderation-profile__appeal-submit:disabled,.moderation-profile__retry-restrictions:disabled { opacity:.6; cursor:wait; }
 
 @media(max-width:560px) {
-  .moderation-profile__organizations { padding:12px; }
-  .moderation-profile__ngo-toggle { align-items:flex-start; flex-direction:column; gap:4px; }
+  .moderation-profile__organizations > summary { padding:12px; }
+  .moderation-profile__ngo-toggle { align-items:center; flex-direction:row; gap:8px; padding:12px; }
+  .moderation-profile__ngo-score { white-space:nowrap; }
   .moderation-profile__appeal-actions { flex-direction:column-reverse; }
   .moderation-profile__appeal-actions button { width:100%; }
 }
@@ -1038,7 +1078,8 @@ body {
    ========================================================== */
 
 .data-registro {
-    margin-bottom: 5px;
+    display: block;
+    margin: 4px 0 0;
 
     color: var(--text-muted);
 
@@ -1059,6 +1100,8 @@ body {
 
     font-weight: 600;
 }
+
+.registro-atividade-cabecalho .registro-atividade-titulo { font-size: 1.05rem; line-height: 1.35; }
 
 
 /* ==========================================================
@@ -1333,6 +1376,12 @@ body {
     box-shadow:
         0 0 0 3px rgba(245, 181, 46, 0.25);
 }
+
+.preferencias-voz-opcoes { display:grid; gap:11px; width:100%; box-sizing:border-box; padding:14px 16px; border-left:3px solid var(--gold); border-radius:8px; background:rgba(255,255,255,.045); }
+.preferencias-voz-opcoes[hidden] { display:none !important; }
+.preferencias-voz-opcoes label { display:flex; align-items:flex-start; gap:10px; color:var(--text-soft); font-size:.85rem; line-height:1.45; cursor:pointer; }
+.preferencias-voz-opcoes input[type="checkbox"] { flex:0 0 auto; width:18px; height:18px; margin:1px 0 0; accent-color:var(--gold); }
+.preferencias-voz-opcoes .botao { justify-self:start; width:min(100%,280px); }
 
 /* ==========================================================
    CONFIGURAÇÕES GERAIS
@@ -2566,6 +2615,16 @@ body {
     .configuracao {
         grid-template-columns: minmax(0, 1fr);
         gap: 12px;
+    }
+
+    .acss-configuracao {
+        grid-template-columns: minmax(0, 1fr) 44px;
+        gap: 12px;
+    }
+
+    .acss-interruptor {
+        justify-self: end;
+        margin-left: 0;
     }
 
     .configuracao .botao {

@@ -231,7 +231,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 );
 
                 if (!resposta.ok) {
-                    throw new Error(`Erro HTTP ${resposta.status}`);
+                    throw new Error("N?o foi poss?vel consultar o CNPJ. Tente novamente mais tarde.");
                 }
 
                 const resultado = await resposta.json();

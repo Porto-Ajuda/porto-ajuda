@@ -1,3 +1,4 @@
+import { labelModerationOrigin, labelModerationStatus, labelModerationSubject } from "./moderation-labels.js";
 import { getAPI_URL } from "./modoBack.js";
 import {
     AdminRequestError,
@@ -467,7 +468,10 @@ import { initializeAdminSupport } from "./admin-support.js";
         const controller = new AbortController();
         activeController = controller;
         window.clearTimeout(expirationTimer);
-        limparDadosProtegidos();
+        // Preserve self-service logout while a previously validated admin
+        // navigates between protected modules. New/expired sessions still hide
+        // it until the session endpoint confirms access below.
+        limparDadosProtegidos({ keepLogout: sessionWasValidated });
         esconderEstados();
         elements.overviewPage.hidden = requestedPage !== "dashboard";
         elements.assignmentsPage.hidden = true;
@@ -482,6 +486,7 @@ import { initializeAdminSupport } from "./admin-support.js";
             const session = await obterSessao(controller.signal);
             if (currentVersion !== requestVersion) return;
             sessionValidated = true;
+            elements.logout.hidden = false;
             agendarExpiracao(session);
 
             let verificationConfigUnavailable = false;
@@ -1115,10 +1120,11 @@ import { initializeAdminSupport } from "./admin-support.js";
     function criarItemEntidade(item){
         const card=document.createElement("article");card.className="admin-report-card admin-moderation-entity-card";
         const info=document.createElement("div"),title=document.createElement("h2"),related=document.createElement("p"),state=document.createElement("p"),points=document.createElement("p");
-        title.textContent=item.label||`${item.type} #${item.id}`;
-        related.textContent=item.type==="USER"?`Usuário #${item.id}`:item.type==="OSC"?`ONG #${item.id}`:`${item.relatedLabel||"ONG indisponível"} · ${item.authorLabel?`Publicador: ${item.authorLabel}`:"Publicador indisponível"}`;
+        title.textContent=item.label||`${labelModerationSubject(item.type)} #${item.id}`;
+        related.textContent=item.type==="USER"?`Pessoa #${item.id}`:item.type==="OSC"?`ONG #${item.id}`:`${item.relatedLabel||"ONG indisponível"} · ${item.authorLabel?`Publicador: ${item.authorLabel}`:"Publicador indisponível"}`;
         if(item.type==="VOLUNTEERING")related.textContent+=` · ${item.opportunityModality||"Modalidade não informada"} · ${item.opportunityLocation||"Local não informado"} · ${item.opportunityVacancies??0} vaga(s)`;
-        state.textContent=`Status: ${item.status||"não informado"}${item.statusOrigin?` · origem: ${item.statusOrigin}`:""}${item.archived?" · arquivada":""}`;
+        const originLabel = labelModerationOrigin(item.statusOrigin);
+        state.textContent = `Status: ${labelModerationStatus(item.status)}${originLabel ? ` · ${originLabel}` : ""}${item.archived ? " · arquivada" : ""}`;
         const temporaryRestriction=item.temporaryRestrictionEndsAt?`Período temporário ${item.temporaryRestrictionActive?"ativo até":"encerrado em"} ${formatarDataHora.format(Date.parse(item.temporaryRestrictionEndsAt))}`:"";
         const restriction=[item.permanentRestrictionActive?"Restrição permanente por pontuação":"",temporaryRestriction].filter(Boolean).join(" · ")||"Sem restrição por pontos ativa";
         const reporting=item.automaticProtectionActive?"Proteção preventiva de conteúdo ativa":item.administrativeContentRestrictionActive?"Restrição administrativa de conteúdo ativa":"Sem bloqueio independente de conteúdo";
@@ -1283,7 +1289,7 @@ import { initializeAdminSupport } from "./admin-support.js";
         }catch(error){if(requestId!==appealRequest)return;elements.appealStatus.textContent=error?.message||"Não foi possível carregar recursos.";elements.appealList.replaceChildren();}finally{if(requestId===appealRequest)elements.appealList.setAttribute("aria-busy","false");}
     }
     const appealStatusLabels = Object.freeze({ PENDING: "Pendente", REJECTED: "Rejeitado", PARTIAL: "Parcialmente aceito", ACCEPTED: "Aceito" });
-    function criarItemRecurso(item){const card=document.createElement("article");card.className="admin-report-card";const info=document.createElement("div"),title=document.createElement("h2"),detail=document.createElement("p"),reason=document.createElement("p"),state=document.createElement("p");title.textContent=`${item.subjectLabel||item.subjectType} · ${item.subjectType} #${item.subjectId}`;detail.textContent=`Solicitado por ${item.appellantLabel||"conta indisponível"} · decisão #${item.decisionHistoryId}`;reason.textContent=item.justification||"Sem justificativa disponível.";state.textContent=`Status: ${appealStatusLabels[item.status]||"Status desconhecido"} · Pontos ainda reversíveis: ${item.pointsRemaining}`;info.append(title,detail,reason,state);card.append(info);if(item.status==="PENDING"&&authorization.hasPermission("APPEAL_RESOLVE")){const button=document.createElement("button");button.type="button";button.className="admin-primary-button";button.textContent="Analisar recurso";button.addEventListener("click",()=>abrirDetalheRecurso(item,button));card.append(button);}return card;}
+    function criarItemRecurso(item){const card=document.createElement("article");card.className="admin-report-card";const info=document.createElement("div"),title=document.createElement("h2"),detail=document.createElement("p"),reason=document.createElement("p"),state=document.createElement("p");const subjectType=labelModerationSubject(item.subjectType);title.textContent=`${item.subjectLabel||subjectType} · ${subjectType} #${item.subjectId}`;detail.textContent=`Solicitado por ${item.appellantLabel||"conta indisponível"} · decisão #${item.decisionHistoryId}`;reason.textContent=item.justification||"Sem justificativa disponível.";state.textContent=`Status: ${appealStatusLabels[item.status]||"Status desconhecido"} · Pontos ainda reversíveis: ${item.pointsRemaining}`;info.append(title,detail,reason,state);card.append(info);if(item.status==="PENDING"&&authorization.hasPermission("APPEAL_RESOLVE")){const button=document.createElement("button");button.type="button";button.className="admin-primary-button";button.textContent="Analisar recurso";button.addEventListener("click",()=>abrirDetalheRecurso(item,button));card.append(button);}return card;}
     async function abrirDetalheRecurso(item,trigger){trigger.disabled=true;try{const response=await fetch(`${API_URL}/admin/moderation/appeals/${encodeURIComponent(item.id)}`,{credentials:"include",cache:"no-store",headers:{Accept:"application/json"}});if(response.status===401)return encerrarComSessaoExpirada();if(response.status===403)throw new Error("Seu perfil não pode consultar os detalhes deste recurso.");if(!response.ok)throw new Error("Não foi possível carregar os detalhes do recurso.");abrirDecisaoRecurso(await response.json(),trigger);}catch(error){elements.appealStatus.textContent=error?.message||"Falha ao carregar o recurso.";}finally{trigger.disabled=false;}}
     function abrirDecisaoRecurso(item, trigger) {
         const dialog = document.createElement("dialog");
@@ -1299,7 +1305,7 @@ import { initializeAdminSupport } from "./admin-support.js";
         context.id = "contexto-decisao-recurso";
         context.className = "admin-operation-review";
         for (const text of [
-            "Sujeito: " + item.subjectLabel + " \u00b7 " + item.subjectType + " #" + item.subjectId,
+            "Sujeito: " + item.subjectLabel + " \u00b7 " + labelModerationSubject(item.subjectType) + " #" + item.subjectId,
             "Decis\u00e3o original #" + item.decisionHistoryId + ": " + item.originalDecisionJustification,
             "Pontos originais: " + item.originalPoints + " \u00b7 revertidos: " + item.pointsReversed + " \u00b7 restantes: " + item.pointsRemaining,
             "Recurso de " + item.appellantLabel + ": " + item.appealJustification

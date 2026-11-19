@@ -114,9 +114,11 @@ public class ModerationPointsRepository {
     public DecisionEvidence decision(long id) {
         List<DecisionEvidence> rows=jdbc.query("""
                 SELECT h.id,h.target_type,h.target_id,h.decision,h.justification,h.actor_user_id_snapshot,
-                       CASE WHEN h.target_type='POST' THEN p.id_usuario END AS author_id
+                       CASE WHEN h.target_type='POST' THEN p.id_usuario
+                            WHEN h.target_type='CAMPAIGN' THEN c.osc_id END AS author_id
                   FROM public.content_report_review_history h
                   LEFT JOIN public.post p ON h.target_type='POST' AND p.id=h.target_id
+                  LEFT JOIN public.donation_campaigns c ON h.target_type='CAMPAIGN' AND c.id=h.target_id
                  WHERE h.id=?
                 """,(rs,n)->new DecisionEvidence(rs.getLong("id"),rs.getString("target_type"),rs.getInt("target_id"),
                 rs.getString("decision"),rs.getString("justification"),rs.getInt("actor_user_id_snapshot"),
@@ -124,6 +126,11 @@ public class ModerationPointsRepository {
         return rows.stream().findFirst().orElseThrow(()->new IllegalArgumentException("Decisão não encontrada."));
     }
     public DecisionEvidence decisionTarget(String targetType,int targetId){
+        if("CAMPAIGN".equals(targetType)){
+            List<DecisionEvidence> rows=jdbc.query("SELECT id,osc_id FROM public.donation_campaigns WHERE id=?",
+                    (rs,n)->new DecisionEvidence(0,"CAMPAIGN",rs.getInt("id"),null,null,0,rs.getInt("osc_id")),targetId);
+            return rows.stream().findFirst().orElseThrow(()->new IllegalArgumentException("Campanha não encontrada."));
+        }
         if("POST".equals(targetType)){
             List<DecisionEvidence> rows=jdbc.query("SELECT id AS target_id,id_usuario AS author_id FROM public.post WHERE id=?",
                     (rs,n)->new DecisionEvidence(0,"POST",rs.getInt("target_id"),null,null,0,nullableInt(rs,"author_id")),targetId);

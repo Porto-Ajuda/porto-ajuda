@@ -18,14 +18,18 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.mock.web.MockMultipartFile;
 
 import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -72,12 +76,12 @@ class OscServiceUpdateTest {
         osc.setCausasSecundarias(Set.of(CausaSocial.SAUDE));
         osc.setOds(Set.of(4, 10));
 
-        when(oscRepository.findForUpdateByCnpj(any())).thenReturn(Optional.of(osc));
+        org.mockito.Mockito.lenient().when(oscRepository.findForUpdateByCnpj(any())).thenReturn(Optional.of(osc));
         OscMembros vinculo = new OscMembros();
         vinculo.setOsc(osc);
         vinculo.setUsuario(usuario);
         vinculo.setCargoOsc(CargoOsc.CRIADOR);
-        when(membrosRepository.findByOsc_IdAndUsuario_Id(81, 25)).thenReturn(Optional.of(vinculo));
+        org.mockito.Mockito.lenient().when(membrosRepository.findByOsc_IdAndUsuario_Id(81, 25)).thenReturn(Optional.of(vinculo));
     }
 
     @Test
@@ -114,6 +118,63 @@ class OscServiceUpdateTest {
 
         assertEquals(422, erro.getStatusCode().value());
         verify(oscRepository, never()).save(any(Osc.class));
+    }
+
+    @Test
+    void criadorPodeSubstituirLogoAposUploadDoArquivoNovo() throws Exception {
+        when(oscRepository.findForUpdateById(81)).thenReturn(Optional.of(osc));
+        when(supabaseStorageService.enviarLogoOsc(any(), any(), any()))
+                .thenReturn(new SupabaseStorageService.ArquivoEnviado("https://storage.example/new.png", "oscs/25/logo-new.png"));
+        MockMultipartFile image = new MockMultipartFile("logo", "logo.png", "image/png", new byte[]{1, 2, 3});
+
+        String logo = service.atualizarLogo(81, usuario, image);
+
+        assertEquals("https://storage.example/new.png", logo);
+        assertEquals(logo, osc.getLogo());
+        verify(supabaseStorageService).enviarLogoOsc(25, new byte[]{1, 2, 3}, "image/png");
+        verify(oscRepository).save(osc);
+    }
+
+    @Test
+    void membroSemPermissaoNaoPodeAlterarOuRemoverLogo() {
+        when(oscRepository.findForUpdateById(81)).thenReturn(Optional.of(osc));
+        OscMembros link = new OscMembros();
+        link.setOsc(osc); link.setUsuario(usuario); link.setCargoOsc(CargoOsc.MEMBRO);
+        when(membrosRepository.findByOsc_IdAndUsuario_Id(81, 25)).thenReturn(Optional.of(link));
+
+        assertThrows(ResponseStatusException.class, () -> service.atualizarLogo(81, usuario,
+                new MockMultipartFile("logo", "logo.png", "image/png", new byte[]{1})));
+        assertThrows(ResponseStatusException.class, () -> service.removerLogo(81, usuario));
+        verify(supabaseStorageService, never()).enviarLogoOsc(any(), any(), any());
+        verify(oscRepository, never()).save(any());
+    }
+
+    @Test
+    void moderatorRestrictionBlocksLogoReplacementAndRemovalBeforeStorageMutation() {
+        var moderation = org.mockito.Mockito.mock(ModerationPointsService.class);
+        ReflectionTestUtils.setField(service, "moderationPoints", moderation);
+        doThrow(new ResponseStatusException(org.springframework.http.HttpStatus.FORBIDDEN,
+                "Restrição sintética.")).when(moderation).requireBusinessMutationAllowed(25, 81);
+
+        assertThrows(ResponseStatusException.class, () -> service.atualizarLogo(81, usuario,
+                new MockMultipartFile("logo", "logo.png", "image/png", new byte[]{1})));
+        assertThrows(ResponseStatusException.class, () -> service.removerLogo(81, usuario));
+        verifyNoInteractions(supabaseStorageService);
+        verify(oscRepository, never()).save(any());
+    }
+
+    @Test
+    void removerLogoLimpaAReferenciaSemReverterOutrosDadosDaOng() {
+        when(oscRepository.findForUpdateById(81)).thenReturn(Optional.of(osc));
+        osc.setLogo("https://legacy-cdn.example/old-logo.png");
+        osc.setNome("ONG sintética");
+
+        service.removerLogo(81, usuario);
+
+        assertNull(osc.getLogo());
+        assertEquals("ONG sintética", osc.getNome());
+        verify(oscRepository).save(osc);
+        verifyNoInteractions(supabaseStorageService);
     }
 
     @Test

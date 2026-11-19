@@ -99,6 +99,28 @@ class AdminAuthorizationServiceTest {
     }
 
     @Test
+    void capabilitiesRequireRbacAndUseThePersistedProfileWithoutGrantingOrdinaryUsers() {
+        AdminAuthorizationService legacy = new AdminAuthorizationService(assignments, false);
+        SecurityContextHolder.getContext().setAuthentication(authentication(true, true, false));
+        AccessDeniedException disabled = assertThrows(AccessDeniedException.class, legacy::capabilities);
+        assertEquals("RBAC administrativo ainda não está ativo.", disabled.getMessage());
+
+        AdminAuthorizationService enforced = new AdminAuthorizationService(assignments, true);
+        when(assignments.findActiveByUserId(44)).thenReturn(Optional.of(assignment(AdminProfile.SUPER_ADMIN)));
+        SecurityContextHolder.getContext().setAuthentication(authentication(true, true, true));
+        AdminCapabilitiesDTO capabilities = enforced.capabilities();
+        assertEquals(AdminProfile.SUPER_ADMIN, capabilities.profile());
+        assertTrue(capabilities.permissions().contains(AdminPermission.DASHBOARD_READ));
+        assertTrue(capabilities.permissions().contains(AdminPermission.SUPPORT_MANAGE));
+        assertTrue(capabilities.permissions().contains(AdminPermission.NGO_VERIFICATION_REVIEW));
+        assertTrue(capabilities.permissions().contains(AdminPermission.REPORT_REVIEW));
+        assertTrue(capabilities.permissions().contains(AdminPermission.APPEAL_RESOLVE));
+
+        SecurityContextHolder.getContext().setAuthentication(authentication(false, true, true));
+        assertThrows(AccessDeniedException.class, enforced::capabilities);
+    }
+
+    @Test
     void telefoneVerificadoForaDoFormatoMfaNaoEConsideradoElegivelComRbacAtivo() {
         AdminAuthorizationService authorization = new AdminAuthorizationService(assignments, true);
         Usuario user = mock(Usuario.class);

@@ -146,14 +146,17 @@ test("NGO profile exposes one accessible tab bar with public tabs and gated memb
     assert.match(html, /id="aba-informacoes"[^>]*aria-selected="true"[^>]*>Informações/);
     assert.match(html, /id="aba-publicacoes"[^>]*hidden>Publicações/);
     assert.match(html, /id="aba-voluntariado-publico"[^>]*hidden>Voluntariado/);
+    assert.match(html, /id="aba-vaquinhas-publicas"[^>]*hidden>Vaquinhas/);
     assert.match(html, /id="painel-publicacoes"[^>]*role="tabpanel"[^>]*hidden/);
     assert.match(html, /id="painel-voluntariado-publico"[^>]*role="tabpanel"[^>]*hidden/);
+    assert.match(html, /id="painel-vaquinhas-publicas"[^>]*role="tabpanel"[^>]*hidden/);
     const infoPanelStart = html.indexOf('id="painel-publico"');
     const infoPanelEnd = html.indexOf('id="painel-publicacoes"', infoPanelStart);
     assert.ok(infoPanelEnd > infoPanelStart);
     assert.doesNotMatch(html.slice(infoPanelStart, infoPanelEnd), /posts-publicos-lista|oportunidades-publicas-lista/);
     assert.match(html, /id="gestao-osc"[^>]*hidden/);
     assert.match(html, /id="aba-conteudo"[^>]*data-hash="gestao-conteudo"[^>]*hidden>Posts e voluntariado/);
+    assert.match(html, /id="aba-dashboard"[^>]*data-hash="dashboard"[^>]*hidden>Dashboard/);
     assert.match(html, /id="aba-membros"[^>]*data-hash="membros"[^>]*hidden>Membros/);
     assert.match(html, /id="aba-dados"[^>]*data-hash="configuracoes"[^>]*hidden>Configura/);
     assert.match(html, /id="gestao-osc"[^>]*hidden/);
@@ -162,7 +165,8 @@ test("NGO profile exposes one accessible tab bar with public tabs and gated memb
     assert.match(source, /const resposta = await requisicaoAutenticada\("\/osc\/minhas"\)/);
     assert.match(source, /if \(!vinculo\?\.cargo \|\| oscAtual\?\.arquivada\)/);
     assert.match(source, /if \(abaPrivada && !membroOscConfirmado\) return false/);
-    assert.match(source, /if \(!privada && abaSolicitada\.id !== "aba-informacoes" && !verificacaoConteudoPublicoConcluida\) return/);
+    assert.match(source, /if \(abaSolicitada\.id === "aba-vaquinhas-publicas" && !verificacaoCampanhasPublicasConcluida\) return/);
+    assert.match(source, /if \(abaSelecionada\.id === "aba-dashboard" && !\["CRIADOR", "ADMINISTRADOR"\]\.includes\(cargoAtual\)\) return false/);
     assert.match(source, /if \(navegacao\.dataset\.inicializada === "true"\) return/);
     assert.match(source, /abas\[i\]\.setAttribute\("aria-selected", String\(ativa\)\)/);
     assert.match(source, /paineis\[i\]\.hidden = !ativa/);
@@ -184,8 +188,8 @@ test("NGO profile exposes one accessible tab bar with public tabs and gated memb
     assert.match(source, /put-com-imagem/);
     assert.match(source, /create-com-imagem/);
     assert.match(source, /fetchAutenticado\(caminho, opcoes\)/);
-    assert.match(html, /id="post-imagem-arquivo-osc" type="file" accept="image\/jpeg,image\/png"/);
-    assert.match(html, /id="oportunidade-imagem-arquivo-osc" type="file" accept="image\/jpeg,image\/png"/);
+    assert.match(html, /id="post-imagem-arquivo-osc" type="file" accept="image\/jpeg,image\/png,image\/webp"[^>]+data-image-adjustment/);
+    assert.match(html, /id="oportunidade-imagem-arquivo-osc" type="file" accept="image\/jpeg,image\/png,image\/webp"[^>]+data-image-adjustment/);
     assert.doesNotMatch(html, /URL da imagem|id="post-imagem-osc"|id="oportunidade-imagem-osc"/);
     const renderStart = source.indexOf("function criarCartaoConteudo");
     const renderEnd = source.indexOf("async function carregarMembros", renderStart);

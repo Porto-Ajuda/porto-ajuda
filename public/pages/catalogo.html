@@ -8,9 +8,10 @@
   <link rel="stylesheet" href="../styles/geral.css">
   <link rel="stylesheet" href="../styles/Porto-Ajuda.css">
   <link rel="stylesheet" href="../styles/catalogo.css">
+  <link rel="stylesheet" href="../styles/campaign-donation-dialog.css">
   <link rel="stylesheet" href="../styles/denunciar-conteudo.css">
   <script type="module" src="../components/header_footer.js" defer></script>
-  <script src="../components/crud.js" defer></script>
+  <script type="module" src="../components/conteudo-publico-modal.js" defer></script>
   <script type="module" src="../components/catalogo.js" defer></script>
   <script type="module" src="../components/candidaturas.js" defer></script>
   <script type="module" src="../components/denunciar-conteudo.js" defer></script>
@@ -33,7 +34,7 @@
         </label>
         <button type="submit" class="catalogo-aplicar">Buscar</button>
       </div>
-      <div class="catalogo-filter-row" aria-label="Filtros principais">
+      <div id="catalogo-filter-row" class="catalogo-filter-row" aria-label="Filtros principais">
         <button type="button" id="catalogo-local-toggle" class="catalogo-filter-trigger" aria-expanded="false" aria-controls="catalogo-localizacao">
           <span>Localização</span><span id="catalogo-local-indicador">Qualquer lugar</span>
         </button>
@@ -98,8 +99,8 @@
     </section>
     <section id="catalogo-descobertas" class="catalogo-descobertas" aria-label="Sugestões para explorar"></section>
     <section id="catalogo-doacoes-vazio" class="catalogo-doacoes-vazio" hidden>
-      <h2>Campanhas verificadas em breve</h2>
-      <p>O sistema ainda não possui um catálogo público de campanhas com metas e valores verificados. Nenhum valor de arrecadação será estimado ou exibido sem uma fonte oficial.</p>
+      <h2>Ainda não há vaquinhas ativas</h2>
+      <p>As campanhas aparecerão aqui quando estiverem ativas e disponíveis para o público.</p>
     </section>
   </main>
   <footer class="footer"></footer>
@@ -110,6 +111,7 @@
       <div class="modal-card-info"><span class="modal-card-tag" id="modal-card-tag"></span><h2 class="modal-card-titulo" id="modal-card-titulo"></h2><p class="modal-card-osc" id="modal-card-osc"></p><p class="modal-card-conteudo" id="modal-card-conteudo"></p><dl class="modal-card-vaga-detalhes" id="modal-card-vaga-detalhes" hidden></dl><button type="button" id="btn-modal-candidatar" class="botao botao-primario" hidden>Quero participar</button><p id="estado-candidatura-modal" role="status" aria-live="polite" hidden></p><div class="modal-card-rodape"><span class="modal-card-usuario" id="modal-card-usuario" hidden></span><span class="modal-card-data" id="modal-card-data"></span></div></div>
     </div>
   </div>
+
   <dialog class="dialogo-candidatura" id="dialogo-candidatura" aria-labelledby="titulo-dialogo-candidatura">
     <form method="dialog" class="dialogo-candidatura__conteudo">
       <button type="submit" class="dialogo-candidatura__fechar" aria-label="Fechar confirmação">×</button>

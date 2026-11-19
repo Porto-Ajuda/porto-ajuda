@@ -19,6 +19,14 @@ public interface CandidaturasVoluntariadoRepository
 
     long countByVaga_IdAndStatus(Integer vagaId, StatusCandidatura status);
 
+    @EntityGraph(attributePaths = {"vaga", "vaga.post", "usuario"})
+    java.util.List<CandidaturasVoluntariado> findAllByVaga_IdOrderByIdAsc(Integer vagaId);
+
+    @EntityGraph(attributePaths = {"vaga", "vaga.post", "usuario"})
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT c FROM CandidaturasVoluntariado c WHERE c.vaga.id=:vagaId ORDER BY c.id")
+    java.util.List<CandidaturasVoluntariado> findAllByVagaIdForUpdate(@Param("vagaId") Integer vagaId);
+
     java.util.Optional<CandidaturasVoluntariado> findFirstByVaga_IdAndUsuario_IdOrderByDataCandidaturaDesc(
             Integer vagaId, Integer usuarioId);
 
@@ -44,6 +52,23 @@ public interface CandidaturasVoluntariadoRepository
             @Param("oscId") Integer oscId,
             @Param("status") StatusCandidatura status,
             Pageable pageable);
+
+    @EntityGraph(attributePaths = {"vaga", "vaga.post", "usuario"})
+    @Query(value = """
+            SELECT c FROM CandidaturasVoluntariado c
+             WHERE c.vaga.post.osc.id = :oscId
+               AND (:status IS NULL OR c.status = :status)
+               AND (:vagaId IS NULL OR c.vaga.id = :vagaId)
+             ORDER BY c.dataCandidatura DESC, c.id DESC
+            """,
+            countQuery = """
+            SELECT COUNT(c) FROM CandidaturasVoluntariado c
+             WHERE c.vaga.post.osc.id = :oscId
+               AND (:status IS NULL OR c.status = :status)
+               AND (:vagaId IS NULL OR c.vaga.id = :vagaId)
+            """)
+    Page<CandidaturasVoluntariado> listarPorOscVagaEStatus(@Param("oscId") Integer oscId,
+            @Param("vagaId") Integer vagaId, @Param("status") StatusCandidatura status, Pageable pageable);
 
     @EntityGraph(attributePaths = {"vaga", "vaga.post", "usuario"})
     java.util.Optional<CandidaturasVoluntariado> findByIdAndVaga_Post_Osc_Id(Integer id, Integer oscId);

@@ -38,6 +38,7 @@ build/
 
 ### VS Code ###
 .vscode/
+/backend/logs/
 
 # ==========================================
 # SCRIPTS OPERACIONAIS DE PRODUÇÃO

@@ -25,9 +25,13 @@ class SupportConversationRetentionJobTest {
     }
 
     @Test void retentionSchedulerIsEnabledOnlyWithTheSupportMasterFlag() {
-        var condition=SupportConversationRetentionJob.class.getAnnotation(ConditionalOnProperty.class);
-        assertEquals("app.support-assistant",condition.prefix());
-        assertArrayEquals(new String[] {"enabled"},condition.name());
-        assertEquals("true",condition.havingValue());
+        var conditions=SupportConversationRetentionJob.class.getAnnotationsByType(ConditionalOnProperty.class);
+        assertEquals(2,conditions.length);
+        assertEquals("app.support-assistant",conditions[0].prefix());
+        assertArrayEquals(new String[] {"enabled"},conditions[0].name());
+        assertEquals("true",conditions[0].havingValue());
+        assertEquals("app.support-assistant.retention-worker",conditions[1].prefix());
+        assertArrayEquals(new String[] {"enabled"},conditions[1].name());
+        assertEquals("true",conditions[1].havingValue());
     }
 }

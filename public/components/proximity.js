@@ -228,7 +228,7 @@ async function buscarOngs() {
             headers: { Accept: "application/json" }
         });
         if (!resposta.ok) {
-            throw new Error(`Falha ao carregar OSCs: HTTP ${resposta.status}`);
+            throw new Error("Não foi possível carregar as organizações próximas. Tente novamente.");
         }
 
         const pagina = await resposta.json();

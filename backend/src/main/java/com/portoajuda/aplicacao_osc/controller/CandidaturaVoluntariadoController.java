@@ -2,6 +2,7 @@ package com.portoajuda.aplicacao_osc.controller;
 
 import com.portoajuda.aplicacao_osc.dto.request.RequestCandidaturaDTO;
 import com.portoajuda.aplicacao_osc.dto.request.RequestDecisaoCandidaturaDTO;
+import com.portoajuda.aplicacao_osc.dto.request.RequestFinalizarVoluntariadoDTO;
 import com.portoajuda.aplicacao_osc.dto.response.CandidaturaOngDTO;
 import com.portoajuda.aplicacao_osc.dto.response.CandidaturaUsuarioDTO;
 import com.portoajuda.aplicacao_osc.dto.response.DisponibilidadeCandidaturaDTO;
@@ -24,7 +25,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.http.MediaType;
+import org.springframework.http.CacheControl;
+import java.net.URI;
 
 @RestController
 @RequiredArgsConstructor
@@ -77,10 +83,36 @@ public class CandidaturaVoluntariadoController {
     public ResponseEntity<PaginaVitrineDTO<CandidaturaOngDTO>> listarDaOsc(
             @PathVariable Integer oscId,
             @RequestParam(required = false) StatusCandidatura status,
+            @RequestParam(required = false) Integer vagaId,
             Pageable pageable,
             @AuthenticationPrincipal Usuario usuario) {
         return ResponseEntity.ok(PaginaVitrineDTO.de(
-                candidaturaService.listarDaOsc(oscId, status, usuario, pageable)));
+                candidaturaService.listarDaOsc(oscId, vagaId, status, usuario, pageable)));
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/osc/{oscId}/voluntariado/{vagaId}/finalizar")
+    public ResponseEntity<java.util.Map<String, Object>> finalizar(
+            @PathVariable Integer oscId, @PathVariable Integer vagaId,
+            @Valid @RequestBody RequestFinalizarVoluntariadoDTO request,
+            @AuthenticationPrincipal Usuario usuario) {
+        return ResponseEntity.ok(candidaturaService.finalizarVoluntariado(oscId, vagaId, request, usuario));
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping(value = "/osc/{oscId}/candidaturas/{candidaturaId}/certificado", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Void> uploadCertificate(@PathVariable Integer oscId, @PathVariable Integer candidaturaId,
+            @RequestPart("certificado") MultipartFile certificate, @AuthenticationPrincipal Usuario usuario) {
+        candidaturaService.uploadCertificate(oscId, candidaturaId, certificate, usuario);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/usuario/candidaturas/{candidaturaId}/certificado")
+    public ResponseEntity<Void> downloadCertificate(@PathVariable Integer candidaturaId,
+            @AuthenticationPrincipal Usuario usuario) {
+        return ResponseEntity.status(303).location(URI.create(candidaturaService.certificateUrl(candidaturaId, usuario)))
+                .cacheControl(CacheControl.noStore()).build();
     }
 
     @PreAuthorize("isAuthenticated()")

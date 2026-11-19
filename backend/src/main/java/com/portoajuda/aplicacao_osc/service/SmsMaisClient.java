@@ -32,6 +32,11 @@ public class SmsMaisClient {
         this.properties = properties;
     }
 
+    public boolean isSandbox() {
+        return properties.getEnvironment() != null
+                && "sandbox".equalsIgnoreCase(properties.getEnvironment().trim());
+    }
+
     public SmsMaisSendResult enviar(String telefone, String mensagem, String externalId) {
         validarConfiguracao();
         validarRequisicao(telefone, mensagem, externalId);
@@ -125,7 +130,7 @@ public class SmsMaisClient {
             if (Objects.equals(externalId, respostaExternalId)
                     && providerId != null
                     && !providerId.isBlank()) {
-                return new SmsMaisSendResult(providerId, respostaExternalId);
+                return new SmsMaisSendResult(providerId, respostaExternalId, texto(item, "msg"));
             }
         }
         throw SmsDeliveryException.invalidResponse();

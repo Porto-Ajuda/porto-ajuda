@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 /** Purges only closed conversations past their closure-based retention deadline. */
 @Component
 @ConditionalOnProperty(prefix="app.support-assistant", name="enabled", havingValue="true")
+@ConditionalOnProperty(prefix="app.support-assistant.retention-worker", name="enabled", havingValue="true")
 public class SupportConversationRetentionJob {
     private static final Logger log=LoggerFactory.getLogger(SupportConversationRetentionJob.class);
     private static final int BATCH_SIZE=100;

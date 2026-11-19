@@ -72,7 +72,7 @@ async function carregarTokenCSRF() {
 
     if (!csrfResponse.ok) {
         throw new Error(
-            `Não foi possível obter o token CSRF (HTTP ${csrfResponse.status}).`
+            "Não foi possível preparar a solicitação. Atualize a página e tente novamente."
         );
     }
 
@@ -260,7 +260,7 @@ function agendarRenovacaoPeriodica() {
             const status = resultado.response?.status;
             console.warn(
                 status
-                    ? `Falha temporária ao renovar a sessão (HTTP ${status}).`
+                    ? "Falha temporária ao renovar a sessão. Tente novamente."
                     : "Falha temporária ao renovar a sessão."
             );
         }

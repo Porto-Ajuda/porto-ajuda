@@ -44,7 +44,7 @@
     },
     {
       "source": "/doacao-ong",
-      "destination": "/pages/doacao-ong"
+      "destination": "/pages/catalogo"
     },
     {
       "source": "/perfil",

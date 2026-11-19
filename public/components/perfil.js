@@ -4,6 +4,11 @@ import {
     sessaoInvalidaConfirmada
 } from "./api.js";
 import { marcarSessaoAnonima, obterTokenCSRF } from "./auth.js";
+import { resetarAjusteImagem } from "./ajuste-imagem.js";
+import { definirTamanhoFonte } from "./acessibilidade.js";
+import { TAMANHOS_FONTE } from "./acessibilidade-logic.js";
+import { fotoRemovidaNoPerfil, mensagemErroRemocaoFoto } from "./perfil-foto-logic.js";
+import { notificarToast } from "./notificacoes.js";
 
 /* =========================================================
    CONSTANTES
@@ -513,6 +518,8 @@ function atualizarExibicaoFoto(url, iniciais = "?") {
 
     if (!url) {
         foto.textContent = iniciais || "?";
+        const remove = document.getElementById("remover-foto-perfil");
+        if (remove) remove.hidden = true;
         return;
     }
 
@@ -528,6 +535,8 @@ function atualizarExibicaoFoto(url, iniciais = "?") {
     }, { once: true });
 
     foto.appendChild(imagem);
+    const remove = document.getElementById("remover-foto-perfil");
+    if (remove) remove.hidden = false;
 }
 
 /* =========================================================
@@ -541,6 +550,73 @@ function configurarUploadFoto() {
     if (!inputFoto) {
         return;
     }
+
+    const removerFoto = document.getElementById("remover-foto-perfil");
+    const dialogoRemover = document.getElementById("dialogo-remover-foto-perfil");
+    const confirmarRemocao = document.getElementById("confirmar-remover-foto-perfil");
+    const erroRemocao = document.getElementById("estado-remover-foto-perfil");
+    removerFoto?.addEventListener("click", () => {
+        if (!dialogoRemover?.showModal) return;
+        if (erroRemocao) { erroRemocao.hidden = true; erroRemocao.textContent = ""; }
+        if (confirmarRemocao) confirmarRemocao.textContent = "Remover foto";
+        dialogoRemover.showModal();
+        dialogoRemover.querySelector('[value="cancelar"]')?.focus();
+    });
+    confirmarRemocao?.addEventListener("click", async () => {
+        if (!dialogoRemover || confirmarRemocao.disabled) return;
+        confirmarRemocao.disabled = true;
+        confirmarRemocao.textContent = "Removendo…";
+        if (erroRemocao) { erroRemocao.hidden = true; erroRemocao.textContent = ""; }
+        try {
+            const response = await fetchAutenticado("/usuario/foto-perfil", { method: "DELETE" });
+            if (sessaoInvalidaConfirmada(response)) { window.location.replace("/login"); return; }
+            if (!response.ok) {
+                const failure = new Error(mensagemErroRemocaoFoto(response.status));
+                failure.status = response.status;
+                throw failure;
+            }
+            const title = document.getElementById("perfil-nome");
+            const initials = (title?.textContent?.trim() || "Usuário").split(/\s+/).filter(Boolean)
+                .slice(0, 2).map(part => part[0].toLocaleUpperCase("pt-BR")).join("");
+            atualizarExibicaoFoto(null, initials);
+            window.dispatchEvent(new CustomEvent("perfil:atualizado", { detail: { fotoPerfilUrl: null } }));
+            if (estadoFoto) estadoFoto.textContent = "";
+            notificarToast("Foto removida. Você pode enviar outra quando quiser.", { tipo: "sucesso" });
+            dialogoRemover.close("removida");
+        } catch (error) {
+            // A resposta pode ter se perdido depois do commit; confirme o estado autoritativo antes de avisar falha.
+            let removidaNoServidor = false;
+            try {
+                const atual = await fetchAutenticado("/usuario/perfil", { headers: { Accept: "application/json" } });
+                if (sessaoInvalidaConfirmada(atual)) { window.location.replace("/login"); return; }
+                if (atual.ok) {
+                    const perfilAtual = await atual.json();
+                    if (fotoRemovidaNoPerfil(perfilAtual)) {
+                        const title = document.getElementById("perfil-nome");
+                        const initials = (title?.textContent?.trim() || "Usuário").split(/\s+/).filter(Boolean)
+                            .slice(0, 2).map(part => part[0].toLocaleUpperCase("pt-BR")).join("");
+                        atualizarExibicaoFoto(null, initials);
+                        window.dispatchEvent(new CustomEvent("perfil:atualizado", { detail: { fotoPerfilUrl: null } }));
+                        if (estadoFoto) estadoFoto.textContent = "";
+                        notificarToast("Foto removida. Você pode enviar outra quando quiser.", { tipo: "sucesso" });
+                        dialogoRemover.close("removida");
+                        removidaNoServidor = true;
+                    }
+                }
+            } catch { /* mantém o aviso de falha sem registrar dados da conta */ }
+            if (!removidaNoServidor) {
+                const message = error?.status
+                    ? error.message
+                    : "Não foi possível confirmar a remoção. Atualize o perfil e tente novamente.";
+                if (erroRemocao) { erroRemocao.textContent = message; erroRemocao.hidden = false; }
+                notificarToast(message, { tipo: "erro" });
+                confirmarRemocao.textContent = "Tentar novamente";
+                confirmarRemocao.focus();
+            }
+        } finally {
+            if (confirmarRemocao) confirmarRemocao.disabled = false;
+        }
+    });
 
     inputFoto.addEventListener("change", async () => {
         const arquivo = inputFoto.files?.[0];
@@ -595,10 +671,13 @@ function configurarUploadFoto() {
             const resultado = await resposta.json().catch(() => ({}));
 
             if (!resposta.ok) {
-                throw new Error(
+                const failure = new Error(
                     resultado.mensagem ||
-                    `Falha no upload (HTTP ${resposta.status}).`
+                    "Não foi possível enviar a foto. Tente novamente."
                 );
+                failure.status = resposta.status;
+                failure.validacaoCampo = resposta.status === 400 || resposta.status === 413;
+                throw failure;
             }
 
             if (!resultado.fotoPerfilUrl) {
@@ -625,21 +704,18 @@ function configurarUploadFoto() {
                 })
             );
 
-            if (estadoFoto) {
-                estadoFoto.textContent =
-                    "Foto de perfil atualizada com sucesso.";
-            }
+            if (estadoFoto) estadoFoto.textContent = "";
+            notificarToast("Foto de perfil atualizada com sucesso.", { tipo: "sucesso" });
         } catch (erro) {
-            console.error("Erro ao enviar foto de perfil:", erro);
-
-            if (estadoFoto) {
-                estadoFoto.textContent =
-                    erro.message ||
-                    "Não foi possível enviar a foto. Tente novamente.";
+            if (erro.validacaoCampo) {
+                if (estadoFoto) estadoFoto.textContent = erro.message || "A imagem não foi aceita. Verifique o arquivo.";
+            } else {
+                if (estadoFoto) estadoFoto.textContent = "";
+                notificarToast(erro.message || "Não foi possível enviar a foto. Tente novamente.", { tipo: "erro" });
             }
         } finally {
             inputFoto.disabled = false;
-            inputFoto.value = "";
+            resetarAjusteImagem(inputFoto);
         }
     });
 }
@@ -674,9 +750,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         if (!respostaPerfil.ok) {
-            throw new Error(
-                `Erro ao carregar perfil: HTTP ${respostaPerfil.status}`
-            );
+            throw new Error("Não foi possível carregar seu perfil. Tente novamente.");
         }
 
         const usuario = await respostaPerfil.json();
@@ -690,7 +764,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 
         const botaoExcluirConta = document.getElementById("excluir-conta");
-        const estadoExclusaoConta = document.getElementById("estado-exclusao-conta");
 
         const modalExclusao = document.getElementById("modal-exclusao-conta");
         const botaoFecharModal = document.getElementById("fechar-modal-exclusao");
@@ -750,11 +823,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             botaoConfirmarModal.textContent = "Processando...";
 
-            if (estadoExclusaoConta) {
-                estadoExclusaoConta.hidden = false;
-                estadoExclusaoConta.textContent = "Registrando solicitação...";
-            }
-
             try {
                 const resposta = await fetchAutenticado("/usuario/delete", {
                     method: "DELETE"
@@ -771,7 +839,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 if (!resposta.ok) {
                     throw new Error(
                         resultado.mensagem ||
-                        `Não foi possível solicitar a exclusão (HTTP ${resposta.status}).`
+                        "Não foi possível solicitar a exclusão da conta. Tente novamente."
                     );
                 }
 
@@ -787,11 +855,10 @@ document.addEventListener("DOMContentLoaded", async () => {
                 fecharModalExclusao();
                 marcarSessaoAnonima();
 
-                if (estadoExclusaoConta) {
-                    estadoExclusaoConta.textContent =
-                        `Conta desativada. A exclusão está agendada para ${dataFormatada}. ` +
-                        "Você pode cancelar pelo acesso de recuperação na página de login.";
-                }
+                notificarToast(
+                    `Conta desativada. A exclusão está agendada para ${dataFormatada}. Você pode cancelar pelo acesso de recuperação na página de login.`,
+                    { tipo: "sucesso" }
+                );
 
                 window.setTimeout(() => {
                     window.location.replace("/login?exclusao=solicitada");
@@ -800,11 +867,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             } catch (erro) {
                 console.error("Erro ao solicitar exclusão da conta:", erro);
 
-                if (estadoExclusaoConta) {
-                    estadoExclusaoConta.hidden = false;
-                    estadoExclusaoConta.textContent =
-                        erro.message || "Não foi possível solicitar a exclusão da conta.";
-                }
+                notificarToast(erro.message || "Não foi possível solicitar a exclusão da conta.", { tipo: "erro" });
             } finally {
                 botaoConfirmarModal.disabled = false;
                 botaoCancelarModal.disabled = false;
@@ -839,8 +902,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         const campoPerfil = document.querySelector(".campo-perfil");
         const acoesEdicao = document.querySelectorAll(".acoes-edicao-perfil");
-        const estadoEdicao = document.getElementById("estado-edicao-perfil");
-
         const botaoEditar = document.getElementById("alterar-dados-perfil");
         const botaoSalvar = document.getElementById("salvar-dados-perfil");
         const botaoCancelar = document.getElementById("cancelar-edicao-perfil");
@@ -848,11 +909,24 @@ document.addEventListener("DOMContentLoaded", async () => {
         let editandoPerfil = false;
         let valoresOriginais = {};
 
-        function mostrarEstadoEdicao(mensagem) {
-            if (!estadoEdicao) return;
-
-            estadoEdicao.textContent = mensagem;
-            estadoEdicao.hidden = !mensagem;
+        function mostrarEstadoEdicao(mensagem, tipo = "erro") {
+            if (!mensagem) {
+                if (botaoSalvar) {
+                    botaoSalvar.textContent = "Salvar alterações";
+                    botaoSalvar.removeAttribute("aria-busy");
+                }
+                campoPerfil?.removeAttribute("aria-busy");
+                return;
+            }
+            if (/^Salvando/i.test(mensagem)) {
+                if (botaoSalvar) {
+                    botaoSalvar.textContent = "Salvando…";
+                    botaoSalvar.setAttribute("aria-busy", "true");
+                }
+                campoPerfil?.setAttribute("aria-busy", "true");
+                return;
+            }
+            notificarToast(mensagem, { tipo });
         }
 
         function iniciarEdicaoPerfil() {
@@ -1011,17 +1085,16 @@ document.addEventListener("DOMContentLoaded", async () => {
                 atualizarSegurancaAdministrativa(resultado);
 
                 cancelarEdicaoPerfil();
-                mostrarEstadoEdicao("Alterações salvas com sucesso.");
+                mostrarEstadoEdicao("Alterações salvas com sucesso.", "sucesso");
 
             } catch (erro) {
                 console.error("Erro ao salvar perfil:", erro);
-                mostrarEstadoEdicao(
-                    erro.message || "Erro ao salvar as alterações."
-                );
+                mostrarEstadoEdicao(erro.message || "Não foi possível salvar as alterações.", "erro");
             } finally {
                 if (botaoSalvar) {
                     botaoSalvar.disabled = false;
                 }
+                mostrarEstadoEdicao("");
             }
         }
 
@@ -1043,13 +1116,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         /* =============================================
            6. ACESSIBILIDADE — NÍVEIS, TEMAS, ONGs
            ============================================= */
-
-        const TAMANHOS_LETRA = {
-            pequeno: 90,
-            medio: 100,
-            grande: 120,
-            "extra-grande": 140
-        };
 
         const MODOS_EXIBICAO = ["escuro", "claro", "alto-contraste"];
 
@@ -1086,14 +1152,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             .querySelectorAll('input[name="acss-tamanho-letra"]')
             .forEach(opcao => {
                 opcao.addEventListener("change", () => {
-                    document.body.classList.remove(
-                        "texto-pequeno",
-                        "texto-medio",
-                        "texto-grande",
-                        "texto-extra-grande"
-                    );
-
-                    document.body.classList.add(`texto-${opcao.value}`);
+                    const tamanho = TAMANHOS_FONTE[opcao.value];
+                    if (tamanho !== undefined) definirTamanhoFonte(tamanho, { persistir: false });
                 });
             });
 
@@ -1141,8 +1201,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             );
 
             if (salvas) {
-                const nomeTamanho = Object.keys(TAMANHOS_LETRA).find(
-                    chave => TAMANHOS_LETRA[chave] === salvas.tamanhoFonte
+                const nomeTamanho = Object.keys(TAMANHOS_FONTE).find(
+                    chave => TAMANHOS_FONTE[chave] === salvas.tamanhoFonte
                 );
 
                 if (nomeTamanho) {
@@ -1174,7 +1234,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const estadoPreferenciasAcss = document.getElementById("estado-preferencias-acss");
 
         botaoSalvarAcss?.addEventListener("click", async () => {
-            const tamanhoFonte = TAMANHOS_LETRA[lerEscolha("acss-tamanho-letra")];
+            const tamanhoFonte = TAMANHOS_FONTE[lerEscolha("acss-tamanho-letra")];
             const modo = lerEscolha("acss-modo-exibicao");
 
             if (tamanhoFonte === undefined || !MODOS_EXIBICAO.includes(modo)) {
@@ -1183,6 +1243,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                 estadoPreferenciasAcss.hidden = false;
                 return;
             }
+            estadoPreferenciasAcss.textContent = "";
+            estadoPreferenciasAcss.hidden = true;
 
             const dados = {
                 tamanhoFonte,
@@ -1195,8 +1257,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             };
 
             botaoSalvarAcss.disabled = true;
-            estadoPreferenciasAcss.textContent = "Salvando preferências...";
-            estadoPreferenciasAcss.hidden = false;
+            botaoSalvarAcss.textContent = "Salvando…";
+            botaoSalvarAcss.setAttribute("aria-busy", "true");
 
             try {
                 const resposta = await fetchAutenticado(
@@ -1220,7 +1282,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     throw new Error(
                         resultado?.mensagem ||
                         resultado?.message ||
-                        `Não foi possível salvar as preferências (HTTP ${resposta.status}).`
+                        "Não foi possível salvar as preferências. Tente novamente."
                     );
                 }
 
@@ -1229,17 +1291,17 @@ document.addEventListener("DOMContentLoaded", async () => {
                     "portoAjudaPreferencias",
                     JSON.stringify(dados)
                 );
+                definirTamanhoFonte(tamanhoFonte, { persistir: false });
 
-                estadoPreferenciasAcss.textContent =
-                    "Preferências de acessibilidade salvas com sucesso.";
+                notificarToast("Preferências de acessibilidade salvas com sucesso.", { tipo: "sucesso" });
 
             } catch (erro) {
                 console.error("Erro ao salvar preferências:", erro);
-
-                estadoPreferenciasAcss.textContent =
-                    erro.message || "Não foi possível salvar as preferências.";
+                notificarToast(erro.message || "Não foi possível salvar as preferências.", { tipo: "erro" });
             } finally {
                 botaoSalvarAcss.disabled = false;
+                botaoSalvarAcss.textContent = "Salvar preferências";
+                botaoSalvarAcss.removeAttribute("aria-busy");
             }
         });
 
@@ -1366,7 +1428,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     throw new Error(
                         resultado?.mensagem ||
                         resultado?.message ||
-                        `Não foi possível carregar suas organizações (HTTP ${resposta.status}).`
+                        "Não foi possível carregar suas organizações. Tente novamente."
                     );
                 }
 

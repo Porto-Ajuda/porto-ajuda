@@ -2270,6 +2270,14 @@ Lista escondida
   transition: transform 280ms ease, border-color 280ms ease, box-shadow 280ms ease;
 }
 
+.showcase-card-campaign { color: inherit; text-decoration: none; cursor: pointer; }
+.campaign-showcase-info { gap: 7px; }
+.campaign-showcase-raised { margin-top: 2px; font-weight: 600; }
+.campaign-showcase-progress { width: 100%; height: 9px; overflow: hidden; margin: 3px 0 1px; border: 1px solid rgb(249 200 107 / 55%); border-radius: 99px; background: rgb(10 8 20 / 45%); }
+.campaign-showcase-progress span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg,#ddaA41,#f9c86b); }
+.campaign-showcase-action { display: inline-flex; align-items: center; justify-content: center; min-height: 34px; margin-top: auto; padding: 6px 12px; border: 1px solid #f9c86b; border-radius: 8px; color: #fce0a1; font-size: .78rem; font-weight: 700; }
+.campaign-showcase-fallback { min-height: 100%; background: linear-gradient(135deg,var(--bg-card),var(--bg-section)); }
+
 .showcase-grid > [role="listitem"] {
   min-width: 0;
 }
@@ -2516,4 +2524,57 @@ Lista escondida
   .showcase-grid {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+.home-organization-dialog {
+  width: min(560px, calc(100vw - 28px));
+  max-width: none;
+  max-height: min(88vh, 760px);
+  padding: 0;
+  border: 0;
+  overflow: visible;
+  color: #f8f4ff;
+  background: transparent;
+}
+.home-organization-dialog::backdrop { background: rgba(10, 7, 18, .68); }
+.home-organization-dialog__card {
+  display: grid;
+  gap: 14px;
+  max-height: min(88vh, 760px);
+  overflow: auto;
+  padding: clamp(20px, 4vw, 30px);
+  border: 1px solid rgba(249, 200, 107, .55);
+  border-radius: 16px;
+  background: linear-gradient(145deg, #2e1c50, #191528);
+  box-shadow: 0 22px 64px rgba(0, 0, 0, .45);
+}
+.home-organization-dialog__card h2,
+.home-organization-dialog__card p { margin: 0; }
+.home-organization-dialog__card h2 { color: #f9c86b; }
+.home-organization-dialog__card p { line-height: 1.55; }
+.home-organization-dialog__state { min-height: 1.5em; color: #ded8e9; }
+.home-organization-dialog__state.erro { color: #ffc3c3; }
+.home-organization-dialog__list { display: grid; gap: 9px; }
+.home-organization-dialog__item {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  min-width: 0;
+  padding: 13px 15px;
+  border: 1px solid rgba(249, 200, 107, .42);
+  border-radius: 10px;
+  color: #fff;
+  background: rgba(255, 255, 255, .045);
+  text-align: left;
+  cursor: pointer;
+}
+.home-organization-dialog__item:hover { border-color: #f9c86b; background: rgba(249, 200, 107, .1); }
+.home-organization-dialog__item span { color: #d8d1e2; font-size: .9rem; }
+.home-organization-dialog__links,
+.home-organization-dialog__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.home-organization-dialog__links a { color: #f9c86b; text-decoration: underline; text-underline-offset: 3px; }
+.home-organization-dialog :is(button, a):focus-visible { outline: 3px solid #f9c86b; outline-offset: 3px; }
+.home-organization-dialog__actions { justify-content: flex-end; }
+@media (max-width: 520px) {
+  .home-organization-dialog__actions { flex-direction: column-reverse; align-items: stretch; }
+  .home-organization-dialog__actions button { width: 100%; }
 }

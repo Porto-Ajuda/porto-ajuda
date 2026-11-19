@@ -110,6 +110,11 @@ class AdminPrivilegedSessionServiceTest {
         verifiedChallenge.setState(AdminAuthChallenge.State.VERIFIED);
         when(challengeRepository.findByIdForUpdate(verifiedChallenge.getId()))
                 .thenReturn(Optional.of(verifiedChallenge));
+        verifiedChallenge.setSmsRequired(false);
+        assertThrows(IllegalStateException.class,
+                () -> service.emitir(verifiedChallenge.getId(), "192.0.2.42"));
+        verify(sessionRepository, never()).saveAndFlush(any());
+        verifiedChallenge.setSmsRequired(true);
         Usuario regular = new Usuario();
         ReflectionTestUtils.setField(regular, "id", 42);
         regular.setEmail(new Email("admin@example.invalid"));

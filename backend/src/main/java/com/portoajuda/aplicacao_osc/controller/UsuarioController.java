@@ -27,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriUtils;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.access.prepost.PreAuthorize;
 // import com.portoajuda.aplicacao_osc.dto.response.ResponsePerfilUsuarioDTO;
 
 import com.portoajuda.aplicacao_osc.dto.request.RequestAtualizarPerfilDTO;
@@ -447,20 +448,14 @@ public class UsuarioController {
                 String contentType = foto.getContentType();
 
                 if (contentType == null
-                                || !Set.of("image/jpeg", "image/png", "image/webp")
+                                || !Set.of("image/jpeg", "image/png")
                                                 .contains(contentType.toLowerCase(java.util.Locale.ROOT))) {
                         return ResponseEntity.badRequest()
-                                        .body(Map.of("mensagem", "Formato permitido: JPEG, PNG ou WebP."));
+                                        .body(Map.of("mensagem", "Envie a imagem ajustada em formato JPEG ou PNG."));
                 }
 
                 try {
                         byte[] arquivo = foto.getBytes();
-
-                        if (!assinaturaImagemValida(arquivo, contentType)) {
-                                return ResponseEntity.badRequest()
-                                                .body(Map.of("mensagem",
-                                                                "O conteúdo não corresponde a uma imagem válida."));
-                        }
 
                         Integer usuarioId = Integer.valueOf(authentication.getName());
 
@@ -493,42 +488,22 @@ public class UsuarioController {
                 }
         }
 
-        private boolean assinaturaImagemValida(byte[] dados, String contentType) {
-                if (dados == null) {
-                        return false;
+        @PreAuthorize("isAuthenticated()")
+        @DeleteMapping("/foto-perfil")
+        public ResponseEntity<Void> removerFotoPerfil(Authentication authentication) {
+                if (authentication == null || !authentication.isAuthenticated()
+                                || authentication instanceof AnonymousAuthenticationToken) {
+                        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
                 }
-
-                return switch (contentType.toLowerCase(java.util.Locale.ROOT)) {
-                        case "image/jpeg" ->
-                                dados.length >= 3
-                                                && (dados[0] & 0xFF) == 0xFF
-                                                && (dados[1] & 0xFF) == 0xD8
-                                                && (dados[2] & 0xFF) == 0xFF;
-
-                        case "image/png" ->
-                                dados.length >= 8
-                                                && (dados[0] & 0xFF) == 0x89
-                                                && dados[1] == 0x50
-                                                && dados[2] == 0x4E
-                                                && dados[3] == 0x47
-                                                && dados[4] == 0x0D
-                                                && dados[5] == 0x0A
-                                                && dados[6] == 0x1A
-                                                && dados[7] == 0x0A;
-
-                        case "image/webp" ->
-                                dados.length >= 12
-                                                && dados[0] == 'R'
-                                                && dados[1] == 'I'
-                                                && dados[2] == 'F'
-                                                && dados[3] == 'F'
-                                                && dados[8] == 'W'
-                                                && dados[9] == 'E'
-                                                && dados[10] == 'B'
-                                                && dados[11] == 'P';
-
-                        default -> false;
-                };
+                try {
+                        usuarioService.removerFotoPerfil(Integer.valueOf(authentication.getName()));
+                        return ResponseEntity.noContent()
+                                        .cacheControl(org.springframework.http.CacheControl.noStore()).build();
+                } catch (NumberFormatException error) {
+                        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+                } catch (IllegalArgumentException | IllegalStateException error) {
+                        return ResponseEntity.badRequest().build();
+                }
         }
 
         /*

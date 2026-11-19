@@ -35,6 +35,9 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
 
     boolean existsByImagemUrl(String imagemUrl);
 
+    @Query("select p.imagemUrl from Post p where p.imagemUrl is not null")
+    List<String> listarUrlsDeImagens();
+
     boolean existsByImagemUrlAndIdNot(String imagemUrl, Integer id);
 
     List<Post> findByTipo(TipoPost tipo);
@@ -76,17 +79,27 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
             LEFT JOIN p.osc o
             WHERE p.ativo = true
               AND (p.osc IS NULL OR (o.status = :statusOsc AND o.dataArquivamento IS NULL))
+              AND (p.tipo <> com.portoajuda.aplicacao_osc.enums.TipoPost.VOLUNTARIADO OR EXISTS (
+                    SELECT v.id FROM Vaga v WHERE v.post = p AND v.status = com.portoajuda.aplicacao_osc.enums.StatusVaga.ABERTA
+                      AND v.dataFim >= CURRENT_DATE AND v.dataConclusao IS NULL AND v.quantidadeVagas > 0
+                      AND v.quantidadeVagas > (SELECT COUNT(c) FROM CandidaturasVoluntariado c WHERE c.vaga.id=v.id AND c.status=com.portoajuda.aplicacao_osc.enums.StatusCandidatura.APROVADA)))
             """)
     Page<Post> findPublicos(@Param("statusOsc") StatusOsc statusOsc, Pageable pageable);
 
     @Query(value = """
             SELECT p.* FROM public.post p LEFT JOIN public.oscs o ON o.id=p.id_osc
              WHERE p.ativo=TRUE AND (p.id_osc IS NULL OR (o.status=:statusOsc AND o.data_arquivamento IS NULL))
+               AND (p.tipo<>'VOLUNTARIADO' OR EXISTS (SELECT 1 FROM public.vagas_voluntariado v WHERE v.id_post=p.id
+                    AND v.status='ABERTA' AND v.data_fim>=CURRENT_DATE AND v.data_conclusao IS NULL AND v.quantidade_vagas>0
+                    AND v.quantidade_vagas>(SELECT count(*) FROM public.candidaturas_voluntariado c WHERE c.id_vaga=v.id AND c.status='APROVADA')))
                AND NOT EXISTS (SELECT 1 FROM public.content_moderation_blocks b WHERE b.active
                  AND ((b.target_type='OSC' AND b.target_id=o.id) OR (b.target_type='POST' AND b.target_id=p.id)))
             """, countQuery = """
             SELECT count(*) FROM public.post p LEFT JOIN public.oscs o ON o.id=p.id_osc
              WHERE p.ativo=TRUE AND (p.id_osc IS NULL OR (o.status=:statusOsc AND o.data_arquivamento IS NULL))
+               AND (p.tipo<>'VOLUNTARIADO' OR EXISTS (SELECT 1 FROM public.vagas_voluntariado v WHERE v.id_post=p.id
+                    AND v.status='ABERTA' AND v.data_fim>=CURRENT_DATE AND v.data_conclusao IS NULL AND v.quantidade_vagas>0
+                    AND v.quantidade_vagas>(SELECT count(*) FROM public.candidaturas_voluntariado c WHERE c.id_vaga=v.id AND c.status='APROVADA')))
                AND NOT EXISTS (SELECT 1 FROM public.content_moderation_blocks b WHERE b.active
                  AND ((b.target_type='OSC' AND b.target_id=o.id) OR (b.target_type='POST' AND b.target_id=p.id)))
             """, nativeQuery = true)
@@ -97,12 +110,18 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
              WHERE p.ativo=TRUE AND (p.id_osc IS NULL OR
                    (o.status=:statusOsc AND o.data_arquivamento IS NULL
                     AND public.ngo_representative_is_publicly_eligible(o.id)))
+               AND (p.tipo<>'VOLUNTARIADO' OR EXISTS (SELECT 1 FROM public.vagas_voluntariado v WHERE v.id_post=p.id
+                    AND v.status='ABERTA' AND v.data_fim>=CURRENT_DATE AND v.data_conclusao IS NULL AND v.quantidade_vagas>0
+                    AND v.quantidade_vagas>(SELECT count(*) FROM public.candidaturas_voluntariado c WHERE c.id_vaga=v.id AND c.status='APROVADA')))
              ORDER BY p.data_criacao DESC, p.id DESC
             """, countQuery = """
             SELECT count(*) FROM public.post p LEFT JOIN public.oscs o ON o.id=p.id_osc
              WHERE p.ativo=TRUE AND (p.id_osc IS NULL OR
                    (o.status=:statusOsc AND o.data_arquivamento IS NULL
                     AND public.ngo_representative_is_publicly_eligible(o.id)))
+               AND (p.tipo<>'VOLUNTARIADO' OR EXISTS (SELECT 1 FROM public.vagas_voluntariado v WHERE v.id_post=p.id
+                    AND v.status='ABERTA' AND v.data_fim>=CURRENT_DATE AND v.data_conclusao IS NULL AND v.quantidade_vagas>0
+                    AND v.quantidade_vagas>(SELECT count(*) FROM public.candidaturas_voluntariado c WHERE c.id_vaga=v.id AND c.status='APROVADA')))
             """, nativeQuery = true)
     Page<Post> findPublicosComVerificacao(@Param("statusOsc") String statusOsc, Pageable pageable);
 
@@ -111,6 +130,9 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
              WHERE p.ativo=TRUE AND (p.id_osc IS NULL OR
                    (o.status=:statusOsc AND o.data_arquivamento IS NULL
                     AND public.ngo_representative_is_publicly_eligible(o.id)))
+               AND (p.tipo<>'VOLUNTARIADO' OR EXISTS (SELECT 1 FROM public.vagas_voluntariado v WHERE v.id_post=p.id
+                    AND v.status='ABERTA' AND v.data_fim>=CURRENT_DATE AND v.data_conclusao IS NULL AND v.quantidade_vagas>0
+                    AND v.quantidade_vagas>(SELECT count(*) FROM public.candidaturas_voluntariado c WHERE c.id_vaga=v.id AND c.status='APROVADA')))
                AND NOT EXISTS (SELECT 1 FROM public.content_moderation_blocks b WHERE b.active
                     AND ((b.target_type='POST' AND b.target_id=p.id) OR
                          (b.target_type='OSC' AND b.target_id=o.id)))
@@ -120,6 +142,9 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
              WHERE p.ativo=TRUE AND (p.id_osc IS NULL OR
                    (o.status=:statusOsc AND o.data_arquivamento IS NULL
                     AND public.ngo_representative_is_publicly_eligible(o.id)))
+               AND (p.tipo<>'VOLUNTARIADO' OR EXISTS (SELECT 1 FROM public.vagas_voluntariado v WHERE v.id_post=p.id
+                    AND v.status='ABERTA' AND v.data_fim>=CURRENT_DATE AND v.data_conclusao IS NULL AND v.quantidade_vagas>0
+                    AND v.quantidade_vagas>(SELECT count(*) FROM public.candidaturas_voluntariado c WHERE c.id_vaga=v.id AND c.status='APROVADA')))
                AND NOT EXISTS (SELECT 1 FROM public.content_moderation_blocks b WHERE b.active
                     AND ((b.target_type='POST' AND b.target_id=p.id) OR
                          (b.target_type='OSC' AND b.target_id=o.id)))
@@ -202,6 +227,7 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
                AND o.dataArquivamento IS NULL
                AND v.status = :statusVaga
                AND v.quantidadeVagas > 0
+               AND v.quantidadeVagas > (SELECT COUNT(c) FROM CandidaturasVoluntariado c WHERE c.vaga.id = v.id AND c.status = com.portoajuda.aplicacao_osc.enums.StatusCandidatura.APROVADA)
                AND v.dataFim >= :dataAtual
              ORDER BY p.dataCriacao DESC, p.id DESC
             """)
@@ -218,6 +244,7 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
              WHERE p.ativo=TRUE AND p.tipo=:tipoVoluntariado AND o.status=:statusOsc
                AND o.data_arquivamento IS NULL AND v.status=:statusVaga
                AND v.quantidade_vagas>0 AND v.data_fim>=:dataAtual
+               AND v.quantidade_vagas > (SELECT count(*) FROM public.candidaturas_voluntariado c WHERE c.id_vaga=v.id AND c.status='APROVADA')
                AND NOT EXISTS (SELECT 1 FROM public.content_moderation_blocks b WHERE b.active
                  AND ((b.target_type='OSC' AND b.target_id=o.id) OR (b.target_type='POST' AND b.target_id=p.id)))
              ORDER BY p.data_criacao DESC, p.id DESC
@@ -227,6 +254,7 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
              WHERE p.ativo=TRUE AND p.tipo=:tipoVoluntariado AND o.status=:statusOsc
                AND o.data_arquivamento IS NULL AND v.status=:statusVaga
                AND v.quantidade_vagas>0 AND v.data_fim>=:dataAtual
+               AND v.quantidade_vagas > (SELECT count(*) FROM public.candidaturas_voluntariado c WHERE c.id_vaga=v.id AND c.status='APROVADA')
                AND NOT EXISTS (SELECT 1 FROM public.content_moderation_blocks b WHERE b.active
                  AND ((b.target_type='OSC' AND b.target_id=o.id) OR (b.target_type='POST' AND b.target_id=p.id)))
             """, nativeQuery = true)
@@ -240,6 +268,7 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
              WHERE p.ativo=TRUE AND p.tipo=:tipoVoluntariado AND o.status=:statusOsc
                AND o.data_arquivamento IS NULL AND v.status=:statusVaga
                AND v.quantidade_vagas>0 AND v.data_fim>=:dataAtual
+               AND v.quantidade_vagas > (SELECT count(*) FROM public.candidaturas_voluntariado c WHERE c.id_vaga=v.id AND c.status='APROVADA')
                AND public.ngo_representative_is_publicly_eligible(o.id)
              ORDER BY p.data_criacao DESC, p.id DESC
             """, countQuery = """
@@ -248,6 +277,7 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
              WHERE p.ativo=TRUE AND p.tipo=:tipoVoluntariado AND o.status=:statusOsc
                AND o.data_arquivamento IS NULL AND v.status=:statusVaga
                AND v.quantidade_vagas>0 AND v.data_fim>=:dataAtual
+               AND v.quantidade_vagas > (SELECT count(*) FROM public.candidaturas_voluntariado c WHERE c.id_vaga=v.id AND c.status='APROVADA')
                AND public.ngo_representative_is_publicly_eligible(o.id)
             """, nativeQuery = true)
     Page<Post> findVoluntariadosHomeVerificados(@Param("statusOsc") String statusOsc,
@@ -260,6 +290,7 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
              WHERE p.ativo=TRUE AND p.tipo=:tipoVoluntariado AND o.status=:statusOsc
                AND o.data_arquivamento IS NULL AND v.status=:statusVaga
                AND v.quantidade_vagas>0 AND v.data_fim>=:dataAtual
+               AND v.quantidade_vagas > (SELECT count(*) FROM public.candidaturas_voluntariado c WHERE c.id_vaga=v.id AND c.status='APROVADA')
                AND public.ngo_representative_is_publicly_eligible(o.id)
                AND NOT EXISTS (SELECT 1 FROM public.content_moderation_blocks b WHERE b.active
                     AND ((b.target_type='OSC' AND b.target_id=o.id) OR (b.target_type='POST' AND b.target_id=p.id)))
@@ -270,6 +301,7 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
              WHERE p.ativo=TRUE AND p.tipo=:tipoVoluntariado AND o.status=:statusOsc
                AND o.data_arquivamento IS NULL AND v.status=:statusVaga
                AND v.quantidade_vagas>0 AND v.data_fim>=:dataAtual
+               AND v.quantidade_vagas > (SELECT count(*) FROM public.candidaturas_voluntariado c WHERE c.id_vaga=v.id AND c.status='APROVADA')
                AND public.ngo_representative_is_publicly_eligible(o.id)
                AND NOT EXISTS (SELECT 1 FROM public.content_moderation_blocks b WHERE b.active
                     AND ((b.target_type='OSC' AND b.target_id=o.id) OR (b.target_type='POST' AND b.target_id=p.id)))

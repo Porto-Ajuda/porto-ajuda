@@ -2,6 +2,7 @@ package com.portoajuda.aplicacao_osc.service;
 
 import com.portoajuda.aplicacao_osc.dto.request.RequestCandidaturaDTO;
 import com.portoajuda.aplicacao_osc.dto.request.RequestDecisaoCandidaturaDTO;
+import com.portoajuda.aplicacao_osc.dto.request.RequestFinalizarVoluntariadoDTO;
 import com.portoajuda.aplicacao_osc.entity.CandidaturasVoluntariado;
 import com.portoajuda.aplicacao_osc.entity.Osc;
 import com.portoajuda.aplicacao_osc.entity.Post;
@@ -24,11 +25,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.mock.web.MockMultipartFile;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
+import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -45,6 +49,7 @@ class CandidaturaVoluntariadoServiceTest {
     @Mock private OscRepository oscs;
     @Mock private OscService oscService;
     @Mock private EntityManager entityManager;
+    @Mock private VolunteerCertificateStorage certificateStorage;
     @InjectMocks private CandidaturaVoluntariadoService service;
 
     private Usuario applicant;
@@ -55,6 +60,7 @@ class CandidaturaVoluntariadoServiceTest {
 
     @BeforeEach
     void setup() {
+        ReflectionTestUtils.setField(service, "certificateStorage", certificateStorage);
         applicant = mock(Usuario.class);
         lenient().when(applicant.getId()).thenReturn(11);
         lenient().when(applicant.isEnabled()).thenReturn(true);
@@ -88,6 +94,22 @@ class CandidaturaVoluntariadoServiceTest {
         lenient().when(vagas.findById(41)).thenReturn(Optional.of(vaga));
     }
 
+    @Test
+    void listarMinhasUsesOnlyTheAuthenticatedApplicantId() {
+        var page = new PageImpl<CandidaturasVoluntariado>(java.util.List.of(),
+                org.springframework.data.domain.PageRequest.of(0, 10), 0);
+        when(candidaturas.findAllByUsuario_IdOrderByDataCandidaturaDesc(
+                eq(11), any(org.springframework.data.domain.Pageable.class))).thenReturn(page);
+
+        var result = service.listarMinhas(applicant,
+                org.springframework.data.domain.PageRequest.of(0, 10));
+
+        assertEquals(0, result.getTotalElements());
+        verify(candidaturas).findAllByUsuario_IdOrderByDataCandidaturaDesc(
+                eq(11), any(org.springframework.data.domain.Pageable.class));
+        verify(candidaturas, never()).findAllByUsuario_IdOrderByDataCandidaturaDesc(
+                eq(22), any(org.springframework.data.domain.Pageable.class));
+    }
     @Test
     void criaCandidaturaComUsuarioDaSessaoEDataDoServidor() {
         when(vagas.findForUpdateById(41)).thenReturn(Optional.of(vaga));
@@ -193,20 +215,50 @@ class CandidaturaVoluntariadoServiceTest {
                             org.springframework.data.domain.PageRequest.of(0, 20)));
             assertEquals(403, error.getStatusCode().value());
         }
-        verify(candidaturas, never()).listarPorOscEStatus(anyInt(), any(), any());
+        verify(candidaturas, never()).listarPorOscVagaEStatus(anyInt(), any(), any(), any());
     }
 
     @Test
     void administratorCanReadCandidateManagementData() {
         when(oscService.obterCargoUsuario(osc, manager)).thenReturn(CargoOsc.ADMINISTRADOR);
-        when(candidaturas.listarPorOscEStatus(eq(7), isNull(), any()))
+        when(candidaturas.listarPorOscVagaEStatus(eq(7), isNull(), isNull(), any()))
                 .thenReturn(new PageImpl<>(java.util.List.of()));
 
         var result = service.listarDaOsc(7, null, manager,
                 org.springframework.data.domain.PageRequest.of(0, 20));
 
         assertTrue(result.isEmpty());
-        verify(candidaturas).listarPorOscEStatus(eq(7), isNull(), any());
+        verify(candidaturas).listarPorOscVagaEStatus(eq(7), isNull(), isNull(), any());
+    }
+
+    @Test
+    void candidateManagementCanBeScopedToOneOpportunity() {
+        when(oscService.obterCargoUsuario(osc, manager)).thenReturn(CargoOsc.ADMINISTRADOR);
+        when(vagas.findById(41)).thenReturn(Optional.of(vaga));
+        when(candidaturas.listarPorOscVagaEStatus(eq(7), eq(41), isNull(), any()))
+                .thenReturn(new PageImpl<>(List.of()));
+
+        var result = service.listarDaOsc(7, 41, null, manager,
+                org.springframework.data.domain.PageRequest.of(0, 20));
+
+        assertTrue(result.isEmpty());
+        verify(candidaturas).listarPorOscVagaEStatus(eq(7), eq(41), isNull(), any());
+    }
+
+    @Test
+    void candidateFilterCannotCrossNgoScope() {
+        when(oscService.obterCargoUsuario(osc, manager)).thenReturn(CargoOsc.ADMINISTRADOR);
+        Vaga outside = new Vaga();
+        Post outsidePost = new Post();
+        Osc otherOsc = new Osc(); ReflectionTestUtils.setField(otherOsc, "id", 99);
+        outsidePost.setOsc(otherOsc); outside.setPost(outsidePost);
+        when(vagas.findById(55)).thenReturn(Optional.of(outside));
+
+        ResponseStatusException failure = assertThrows(ResponseStatusException.class,
+                () -> service.listarDaOsc(7, 55, null, manager, org.springframework.data.domain.PageRequest.of(0,20)));
+
+        assertEquals(404, failure.getStatusCode().value());
+        verify(candidaturas, never()).listarPorOscVagaEStatus(anyInt(), any(), any(), any());
     }
 
     @Test
@@ -218,7 +270,7 @@ class CandidaturaVoluntariadoServiceTest {
                         org.springframework.data.domain.PageRequest.of(0, 20)));
 
         assertEquals(404, error.getStatusCode().value());
-        verify(candidaturas, never()).listarPorOscEStatus(anyInt(), any(), any());
+        verify(candidaturas, never()).listarPorOscVagaEStatus(anyInt(), any(), any(), any());
     }
 
     @Test
@@ -272,9 +324,33 @@ class CandidaturaVoluntariadoServiceTest {
     }
 
     @Test
+    void pendingApplicationsDoNotConsumePublicCapacity() {
+        when(vagas.findById(41)).thenReturn(Optional.of(vaga));
+        when(candidaturas.countByVaga_IdAndStatus(41, StatusCandidatura.APROVADA)).thenReturn(0L);
+
+        assertTrue(service.disponibilidadePublica(41).aceitaCandidaturas());
+        verify(candidaturas).countByVaga_IdAndStatus(41, StatusCandidatura.APROVADA);
+    }
+
+    @Test
+    void twoSlotsOneAcceptedAndOnePendingStillHasOnePublicSlot() {
+        CandidaturasVoluntariado accepted = candidatura(StatusCandidatura.APROVADA);
+        CandidaturasVoluntariado pending = candidatura(StatusCandidatura.PENDENTE);
+        assertEquals(2, List.of(accepted, pending).size());
+        when(vagas.findById(41)).thenReturn(Optional.of(vaga));
+        when(candidaturas.countByVaga_IdAndStatus(41, StatusCandidatura.APROVADA)).thenReturn(1L);
+
+        var availability = service.disponibilidadePublica(41);
+
+        assertTrue(availability.aceitaCandidaturas());
+        assertEquals(1, vaga.getQuantidadeVagas() - 1L);
+        verify(candidaturas).countByVaga_IdAndStatus(41, StatusCandidatura.APROVADA);
+        verify(candidaturas, never()).countByVaga_IdAndStatus(41, StatusCandidatura.PENDENTE);
+    }
+
+    @Test
     void fullCapacityAlsoStopsNewApplications() {
         when(vagas.findForUpdateById(41)).thenReturn(Optional.of(vaga));
-        when(candidaturas.existsByVaga_IdAndUsuario_IdAndStatusIn(eq(41), eq(11), anyCollection())).thenReturn(false);
         when(candidaturas.countByVaga_IdAndStatus(41, StatusCandidatura.APROVADA)).thenReturn(2L);
 
         ResponseStatusException error = assertThrows(ResponseStatusException.class,
@@ -282,6 +358,95 @@ class CandidaturaVoluntariadoServiceTest {
 
         assertEquals(409, error.getStatusCode().value());
         verify(candidaturas, never()).save(any());
+    }
+
+    @Test
+    void completionRecordsOnlySelectedAcceptedParticipantsAndClosesPendingApplications() {
+        CandidaturasVoluntariado completed = candidatura(StatusCandidatura.APROVADA);
+        CandidaturasVoluntariado notCompleted = candidatura(StatusCandidatura.APROVADA);
+        ReflectionTestUtils.setField(notCompleted, "id", 100);
+        CandidaturasVoluntariado pending = candidatura(StatusCandidatura.PENDENTE);
+        ReflectionTestUtils.setField(pending, "id", 101);
+        when(oscService.obterCargoUsuario(osc, manager)).thenReturn(CargoOsc.ADMINISTRADOR);
+        when(vagas.findForUpdateById(41)).thenReturn(Optional.of(vaga));
+        when(candidaturas.findAllByVagaIdForUpdate(41)).thenReturn(List.of(completed, notCompleted, pending));
+        var request = new RequestFinalizarVoluntariadoDTO(LocalDate.now().minusDays(2), LocalDate.now().minusDays(1),
+                List.of(new RequestFinalizarVoluntariadoDTO.Participante(99, true, new BigDecimal("3.50"))));
+
+        var result = service.finalizarVoluntariado(7, 41, request, manager);
+
+        assertEquals(StatusCandidatura.CONCLUIDA, completed.getStatus());
+        assertEquals(new BigDecimal("3.50"), completed.getHorasRealizadas());
+        assertEquals(StatusCandidatura.CANCELADA_PELA_ONG, notCompleted.getStatus());
+        assertEquals(StatusCandidatura.CANCELADA_PELA_ONG, pending.getStatus());
+        assertEquals(StatusVaga.ENCERRADA, vaga.getStatus());
+        assertNotNull(vaga.getDataConclusao());
+        assertEquals(1, result.get("completedCount"));
+        assertEquals(1, result.get("canceledPendingCount"));
+        verify(candidaturas).saveAll(anyList());
+        verify(vagas).save(vaga);
+    }
+
+    @Test
+    void completionCannotBeSubmittedTwice() {
+        vaga.setStatus(StatusVaga.ENCERRADA);
+        vaga.setDataConclusao(java.time.Instant.now());
+        when(oscService.obterCargoUsuario(osc, manager)).thenReturn(CargoOsc.CRIADOR);
+        when(vagas.findForUpdateById(41)).thenReturn(Optional.of(vaga));
+        var request = new RequestFinalizarVoluntariadoDTO(LocalDate.now().minusDays(2), LocalDate.now().minusDays(1), List.of());
+
+        ResponseStatusException error = assertThrows(ResponseStatusException.class,
+                () -> service.finalizarVoluntariado(7, 41, request, manager));
+
+        assertEquals(409, error.getStatusCode().value());
+        verify(candidaturas, never()).saveAll(anyList());
+    }
+
+    @Test
+    void certificateAccessIsLimitedToTheParticipantOrAuthorizedNgoManager() {
+        CandidaturasVoluntariado completed = candidatura(StatusCandidatura.CONCLUIDA);
+        completed.setCertificadoObjectKey("certificates/7/99/test.pdf");
+        when(oscs.findById(7)).thenReturn(Optional.of(osc));
+        when(candidaturas.findByIdAndUsuario_Id(99, 11)).thenReturn(Optional.of(completed));
+        when(certificateStorage.createShortLivedAccess(completed.getCertificadoObjectKey()))
+                .thenReturn(new VolunteerCertificateStorage.SignedAccess("https://private.example/signed", java.time.Instant.now().plusSeconds(60)));
+
+        assertEquals("https://private.example/signed", service.certificateUrl(99, applicant));
+        verify(certificateStorage).createShortLivedAccess("certificates/7/99/test.pdf");
+
+        when(candidaturas.findByIdAndUsuario_Id(99, 22)).thenReturn(Optional.empty());
+        when(candidaturas.findById(99)).thenReturn(Optional.of(completed));
+        when(oscService.obterCargoUsuario(osc, manager)).thenReturn(CargoOsc.ADMINISTRADOR);
+        assertEquals("https://private.example/signed", service.certificateUrl(99, manager));
+
+        Usuario unrelated = mock(Usuario.class);
+        when(unrelated.getId()).thenReturn(33);
+        when(unrelated.isEnabled()).thenReturn(true);
+        when(candidaturas.findByIdAndUsuario_Id(99, 33)).thenReturn(Optional.empty());
+        when(candidaturas.findById(99)).thenReturn(Optional.of(completed));
+        when(oscService.obterCargoUsuario(osc, unrelated)).thenReturn(CargoOsc.MEMBRO);
+        assertEquals(403, assertThrows(ResponseStatusException.class, () -> service.certificateUrl(99, unrelated)).getStatusCode().value());
+    }
+
+    @Test
+    void certificateUploadRequiresManagerAndValidPrivateFile() {
+        CandidaturasVoluntariado completed = candidatura(StatusCandidatura.CONCLUIDA);
+        when(oscService.obterCargoUsuario(osc, manager)).thenReturn(CargoOsc.ADMINISTRADOR);
+        when(oscs.findById(7)).thenReturn(Optional.of(osc));
+        when(candidaturas.findByIdAndVaga_Post_Osc_Id(99, 7)).thenReturn(Optional.of(completed));
+        when(certificateStorage.store(eq(7), eq(99), eq("pdf"), eq("application/pdf"), any(byte[].class)))
+                .thenReturn("certificates/7/99/sample.pdf");
+        MockMultipartFile file = new MockMultipartFile("certificado", "certificado.pdf", "application/pdf",
+                new byte[] { 0x25, 0x50, 0x44, 0x46, 0x2d, 0x31 });
+
+        service.uploadCertificate(7, 99, file, manager);
+
+        assertEquals("certificates/7/99/sample.pdf", completed.getCertificadoObjectKey());
+        verify(candidaturas).save(completed);
+        completed.setCertificadoObjectKey(null);
+        MockMultipartFile invalid = new MockMultipartFile("certificado", "fake.pdf", "application/pdf", new byte[] { 1, 2, 3 });
+        assertEquals(400, assertThrows(ResponseStatusException.class,
+                () -> service.uploadCertificate(7, 99, invalid, manager)).getStatusCode().value());
     }
 
     @Test

@@ -1,0 +1,106 @@
+/* Shared image dialogs: scoped so page-level form/button rules cannot resize them. */
+dialog.dialogo-ajuste-imagem,
+dialog.dialogo-remocao-imagem {
+  box-sizing: border-box;
+  height: fit-content;
+  min-height: 0;
+  position: fixed;
+  inset: 0;
+  transform: none;
+  margin: auto;
+  color: #fff;
+  background: #241a35;
+  border: 1px solid #735a91;
+  box-shadow: 0 22px 70px #08050ec7;
+  font: inherit;
+  overscroll-behavior: contain;
+}
+
+dialog.dialogo-ajuste-imagem {
+  width: max-content;
+  max-width: calc(100vw - 24px);
+  max-height: calc(100vh - 24px);
+  max-height: calc(100dvh - 24px);
+  padding: 0;
+  overflow: auto;
+  border-radius: 18px;
+}
+
+.dialogo-ajuste-imagem::backdrop,
+.dialogo-remocao-imagem::backdrop { background: #10091bd1; }
+
+.ajuste-imagem-cartao {
+  display: grid;
+  width: min(760px, calc(100vw - 56px));
+  min-width: 0;
+  min-height: 0;
+  box-sizing: border-box;
+  gap: 14px;
+  padding: clamp(16px, 3vw, 26px);
+}
+
+.ajuste-imagem-cabecalho { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.ajuste-imagem-cabecalho h2 { margin: 0; color: #f0ce76; font-size: 1.35em; line-height: 1.2; }
+.ajuste-imagem-cabecalho p { margin: 6px 0 0; color: #d9d2e5; line-height: 1.45; }
+.ajuste-imagem-fechar { flex: 0 0 42px; width: 42px; min-height: 42px; height: 42px; padding: 0; border: 1px solid #705a87; border-radius: 50%; color: #fff; background: #39274e; font: inherit; font-size: 1.5em; cursor: pointer; }
+.ajuste-imagem-viewport { width: 100%; max-height: 50dvh; margin: 0 auto; overflow: hidden; aspect-ratio: var(--crop-ratio, 16 / 9); background: #120d1c; border: 1px solid #67527e; border-radius: 12px; }
+.ajuste-imagem-viewport canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; outline: 0; }
+.ajuste-imagem-viewport canvas:active { cursor: grabbing; }
+.dialogo-ajuste-imagem--circular .ajuste-imagem-cartao { width: min(500px, calc(100vw - 56px)); }
+.dialogo-ajuste-imagem--circular .ajuste-imagem-viewport { --crop-ratio: 1 / 1; width: min(100%, 440px); max-height: 46dvh; border-radius: 50%; }
+.ajuste-imagem-controles { display: flex; min-width: 0; align-items: center; gap: 12px; flex-wrap: wrap; }
+.ajuste-imagem-controles label { color: #f3e8c9; font-weight: 700; }
+.ajuste-imagem-controles input[type="range"] { flex: 1 1 150px; min-width: 120px; min-height: 44px; accent-color: #e3bf55; }
+.ajuste-imagem-estado { min-height: 1.4em; margin: 0; color: #dfd5ec; line-height: 1.45; overflow-wrap: anywhere; }
+.ajuste-imagem-acoes,
+.dialogo-remocao-imagem__acoes { display: flex; justify-content: flex-end; align-items: center; gap: 10px; flex-wrap: wrap; }
+.ajuste-imagem-acoes,
+.dialogo-remocao-imagem__acoes { position: sticky; z-index: 1; bottom: 0; padding: 8px 0; background: linear-gradient(180deg, rgba(36,26,53,.9), #241a35 30%); }
+.ajuste-imagem-botao,
+.dialogo-remocao-imagem__botao { display: inline-flex; min-width: 128px; min-height: 44px; box-sizing: border-box; align-items: center; justify-content: center; padding: 10px 16px; border: 1px solid transparent; border-radius: 10px; font: inherit; font-weight: 600; line-height: 1.25; text-align: center; text-decoration: none; cursor: pointer; overflow-wrap: anywhere; }
+.ajuste-imagem-botao--secundario,
+.dialogo-remocao-imagem__botao--secundario { color: #f6e6bf; background: #3b2b50; border-color: #806b99; }
+.ajuste-imagem-botao--secundario:hover,
+.dialogo-remocao-imagem__botao--secundario:hover { background: #514064; }
+.ajuste-imagem-botao--primario { color: #261a34; background: #f2aa1a; border-color: #f9c86b; }
+.ajuste-imagem-botao--primario:hover { background: #f9c86b; }
+.dialogo-remocao-imagem__botao--perigo { color: #fff; background: #8d3043; border-color: #da7484; }
+.dialogo-remocao-imagem__botao--perigo:hover { background: #a33c51; }
+.dialogo-ajuste-imagem :is(button, input, canvas):focus-visible,
+.dialogo-remocao-imagem :is(button, input):focus-visible { outline: 3px solid #f1ce68; outline-offset: 3px; }
+.ajuste-imagem-botao:disabled,
+.dialogo-remocao-imagem__botao:disabled { opacity: .62; cursor: wait; }
+
+dialog.dialogo-remocao-imagem {
+  width: max-content;
+  max-width: min(460px, calc(100vw - 24px));
+  max-height: calc(100vh - 24px);
+  max-height: calc(100dvh - 24px);
+  padding: clamp(18px, 4vw, 26px);
+  overflow: auto;
+  border-radius: 16px;
+}
+.dialogo-remocao-imagem > form { display: grid; width: min(408px, calc(100vw - 64px)); min-width: 0; min-height: 0; height: auto; gap: 12px; }
+.dialogo-remocao-imagem h2 { margin: 0; color: #f0ce76; font-size: 1.3em; line-height: 1.25; overflow-wrap: anywhere; }
+.dialogo-remocao-imagem p { margin: 0; color: #e6e1ee; line-height: 1.55; overflow-wrap: anywhere; }
+.dialogo-remocao-imagem__acoes { margin-top: 6px; }
+.dialogo-remocao-imagem__estado { padding: 10px 12px; color: #ffd1d8 !important; background: rgba(141, 48, 67, .22); border-left: 3px solid #da7484; border-radius: 6px; }
+.dialogo-remocao-imagem__estado[hidden] { display: none; }
+
+@media (max-width: 600px) {
+  dialog.dialogo-ajuste-imagem { max-width: calc(100vw - 16px); max-height: calc(100vh - 16px); max-height: calc(100dvh - 16px); border-radius: 14px; }
+  .ajuste-imagem-cartao,
+  .dialogo-ajuste-imagem--circular .ajuste-imagem-cartao { width: calc(100vw - 44px); max-width: 500px; gap: 11px; padding: 14px; }
+  .ajuste-imagem-viewport { max-height: 36dvh; }
+  .dialogo-ajuste-imagem--circular .ajuste-imagem-viewport { width: min(100%, 38dvh); max-height: 38dvh; }
+  .ajuste-imagem-acoes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ajuste-imagem-botao { min-width: 0; width: 100%; }
+  dialog.dialogo-remocao-imagem { max-width: calc(100vw - 24px); max-height: calc(100vh - 24px); max-height: calc(100dvh - 24px); }
+  .dialogo-remocao-imagem > form { width: calc(100vw - 76px); max-width: 400px; }
+  .dialogo-remocao-imagem__acoes { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .dialogo-remocao-imagem__botao { width: 100%; }
+}
+
+@media (max-width: 360px) {
+  .ajuste-imagem-acoes { grid-template-columns: minmax(0, 1fr); }
+}

@@ -60,9 +60,10 @@ public class ModerationPointsService {
     /** Used before report-review target locks so POST author and NGO locks follow USER -> OSC -> POST. */
     @Transactional
     public void lockDecisionSubject(String targetType,int targetId) {
-        if(!enabled||!"POST".equals(targetType))return;
+        if(!enabled||(!"POST".equals(targetType)&&!"CAMPAIGN".equals(targetType)))return;
         ModerationPointsRepository.DecisionEvidence evidence=repository.decisionTarget(targetType,targetId);
-        if(evidence.authorId()!=null)repository.lockUser(evidence.authorId());
+        if("POST".equals(targetType)&&evidence.authorId()!=null)repository.lockUser(evidence.authorId());
+        if("CAMPAIGN".equals(targetType)&&evidence.authorId()!=null)repository.lockSubject("OSC",evidence.authorId());
     }
 
     @Transactional
@@ -73,6 +74,7 @@ public class ModerationPointsService {
         if(!"UPHOLD".equals(evidence.decision()))throw badRequest("A decisão não pode gerar pontos.");
         String subjectType;Integer subjectId;
         if("OSC".equals(evidence.targetType())){subjectType="OSC";subjectId=evidence.targetId();}
+        else if("CAMPAIGN".equals(evidence.targetType())){subjectType="OSC";subjectId=evidence.authorId();}
         else {subjectType="USER";subjectId=evidence.authorId();}
         if(subjectId==null)throw new ResponseStatusException(HttpStatus.CONFLICT,
                 "Não foi possível determinar a conta autora persistida para atribuir os pontos.");

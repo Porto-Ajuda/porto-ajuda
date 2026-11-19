@@ -31,7 +31,6 @@ public class AdminAuthDeliveryQueueService {
     private final AdminAuthCodeSecurity crypto;
     private final AdminAuthAuditService audit;
     private final AdminAuthorizationService adminAuthorization;
-
     @Transactional
     public ClaimedDelivery claimNext() {
         Instant now = Instant.now();
@@ -59,8 +58,16 @@ public class AdminAuthDeliveryQueueService {
                         usuarioId(challenge), challenge.getId(), null, null);
                 invalidate(challenge, "ADMIN_AUTH_DELIVERY_NO_LONGER_ELIGIBLE", now);
             } else {
-                failDelivery(delivery, now);
+                failDelivery(delivery, now, "CHALLENGE_MISSING");
             }
+            return null;
+        }
+
+        if (challenge.isEmailRequired() != deliveryRepository.existsByChallenge_IdAndChannel(
+                        challenge.getId(), Channel.EMAIL)
+                || challenge.isSmsRequired() != deliveryRepository.existsByChallenge_IdAndChannel(
+                        challenge.getId(), Channel.SMS)) {
+            invalidate(challenge, "ADMIN_AUTH_REQUIRED_DELIVERY_MISSING", now);
             return null;
         }
 
@@ -81,6 +88,23 @@ public class AdminAuthDeliveryQueueService {
 
     @Transactional
     public void finish(UUID deliveryId, boolean delivered) {
+        finish(deliveryId, delivered, null, null, false);
+    }
+
+    @Transactional
+    public void finish(
+            UUID deliveryId, boolean delivered, String failureCategory, Integer providerStatus, boolean retryable) {
+        finish(deliveryId, delivered, failureCategory, providerStatus, retryable, null);
+    }
+
+    @Transactional
+    public void finish(
+            UUID deliveryId,
+            boolean delivered,
+            String failureCategory,
+            Integer providerStatus,
+            boolean retryable,
+            String sandboxMessageEcho) {
         Instant now = Instant.now();
         AdminAuthDelivery delivery = deliveryRepository.findById(deliveryId).orElse(null);
         if (delivery == null || delivery.getState() != State.PROCESSING) {
@@ -88,27 +112,76 @@ public class AdminAuthDeliveryQueueService {
         }
         AdminAuthChallenge challenge = challengeRepository.findById(delivery.getChallenge().getId())
                 .orElse(null);
-        if (!delivered || challenge == null
+        if (challenge == null
                 || challenge.getState() != AdminAuthChallenge.State.ISSUING
                 || challenge.getExpiresAt() == null
                 || !challenge.getExpiresAt().isAfter(now)) {
             if (challenge != null && challenge.getState() == AdminAuthChallenge.State.ISSUING) {
+                String category = challenge == null ? "CHALLENGE_MISSING"
+                        : challenge.getState() != AdminAuthChallenge.State.ISSUING ? "CHALLENGE_NOT_ISSUING"
+                                : "CHALLENGE_EXPIRED";
+                delivery.setFailureCategory(category);
+                delivery.setProviderStatus(null);
+                delivery.setState(State.FAILED);
+                delivery.setEncryptedCode(null);
+                delivery.setLeaseUntil(null);
+                delivery.setUpdatedAt(now);
+                deliveryRepository.saveAndFlush(delivery);
                 invalidate(challenge, "ADMIN_AUTH_DELIVERY_FAILURE", now);
             } else {
-                failDelivery(delivery, now);
+                failDelivery(delivery, now, "CHALLENGE_NOT_ISSUING");
             }
+            return;
+        }
+
+        if (!delivered) {
+            delivery.setFailureCategory(failureCategory == null ? "DELIVERY_FAILED" : failureCategory);
+            delivery.setProviderStatus(providerStatus);
+            delivery.setUpdatedAt(now);
+            if (retryable && delivery.getAttemptCount() < 3) {
+                delivery.setState(State.PENDING);
+                delivery.setLeaseUntil(null);
+                deliveryRepository.save(delivery);
+                audit.registrar("ADMIN_AUTH_DELIVERY_RETRY_" + delivery.getChannel().name(),
+                        usuarioId(challenge), challenge.getId(), null, null);
+                LOGGER.warn("Admin OTP delivery retry scheduled; challengeId={}, channel={}, category={}, providerStatus={}",
+                        challenge.getId(), delivery.getChannel(), delivery.getFailureCategory(), providerStatus);
+                return;
+            }
+            delivery.setState(State.FAILED);
+            delivery.setEncryptedCode(null);
+            delivery.setLeaseUntil(null);
+            deliveryRepository.saveAndFlush(delivery);
+            audit.registrar("ADMIN_AUTH_DELIVERY_FAILED_" + delivery.getChannel().name(),
+                    usuarioId(challenge), challenge.getId(), null, null);
+            LOGGER.warn("Admin OTP delivery exhausted; challengeId={}, channel={}, category={}, providerStatus={}",
+                    challenge.getId(), delivery.getChannel(), delivery.getFailureCategory(), providerStatus);
+            invalidate(challenge, "ADMIN_AUTH_DELIVERY_FAILURE", now);
             return;
         }
 
         delivery.setState(State.SENT);
         delivery.setEncryptedCode(null);
+        delivery.setFailureCategory(null);
+        delivery.setProviderStatus(null);
+        delivery.setSandboxMessageCiphertext(sandboxMessageEcho == null || delivery.getChannel() != Channel.SMS
+                ? null : crypto.encryptDeliveryCode(challenge.getId(), "SMS", sandboxMessageEcho));
         delivery.setLeaseUntil(null);
         delivery.setUpdatedAt(now);
-        // Flush before counting SENT rows; the next delivery may finish in this same transaction,
-        // and the challenge must become PENDING as soon as both provider calls have succeeded.
+        // Flush before counting SENT rows; a challenge becomes PENDING only after every
+        // delivery recorded for its required factors has succeeded.
         deliveryRepository.saveAndFlush(delivery);
 
-        if (deliveryRepository.countByChallenge_IdAndState(challenge.getId(), State.SENT) == 2) {
+        long requiredDeliveries = (challenge.isEmailRequired() ? 1 : 0)
+                + (challenge.isSmsRequired() ? 1 : 0);
+        if (!challenge.isEmailRequired() || !challenge.isSmsRequired()
+                || deliveryRepository.countByChallenge_Id(challenge.getId()) != requiredDeliveries) {
+            invalidate(challenge, "ADMIN_AUTH_REQUIRED_DELIVERY_MISSING", now);
+            return;
+        }
+        if (requiredDeliveries > 0
+                && deliveryRepository.countByChallenge_IdAndState(challenge.getId(), State.SENT)
+                        == requiredDeliveries) {
             challenge.setState(AdminAuthChallenge.State.PENDING);
             challengeRepository.save(challenge);
             audit.registrar("ADMIN_AUTH_CHALLENGE_ISSUED", usuarioId(challenge), challenge.getId(), null, null);
@@ -118,6 +191,7 @@ public class AdminAuthDeliveryQueueService {
     @Transactional
     public void expireStaleDeliveries() {
         Instant now = Instant.now();
+        deliveryRepository.clearExpiredSandboxMessages(now);
         List<UUID> expired = deliveryRepository.findExpiredIssuingChallengeIds(now);
         deliveryRepository.expireDeliveries(now);
         for (UUID challengeId : expired) {
@@ -142,7 +216,7 @@ public class AdminAuthDeliveryQueueService {
     @Transactional
     public void invalidateDeliveries(UUID challengeId, Instant now) {
         deliveryRepository.failChallengeDeliveries(
-                challengeId, ACTIVE_DELIVERY_STATES, State.FAILED, now);
+                challengeId, ACTIVE_DELIVERY_STATES, State.FAILED, "CHALLENGE_INVALIDATED", now);
     }
 
     String eligibilityRejectionReason(
@@ -198,12 +272,16 @@ public class AdminAuthDeliveryQueueService {
         challenge.setSmsCodeHash(null);
         challengeRepository.save(challenge);
         deliveryRepository.failChallengeDeliveries(
-                challenge.getId(), ACTIVE_DELIVERY_STATES, State.FAILED, now);
+                challenge.getId(), ACTIVE_DELIVERY_STATES, State.FAILED,
+                "CHALLENGE_" + event.replace("ADMIN_AUTH_", ""), now);
+        deliveryRepository.clearSandboxMessages(challenge.getId());
         audit.registrar(event, usuarioId(challenge), challenge.getId(), null, null);
     }
 
-    private void failDelivery(AdminAuthDelivery delivery, Instant now) {
+    private void failDelivery(AdminAuthDelivery delivery, Instant now, String category) {
         delivery.setState(State.FAILED);
+        delivery.setFailureCategory(category);
+        delivery.setProviderStatus(null);
         delivery.setEncryptedCode(null);
         delivery.setLeaseUntil(null);
         delivery.setUpdatedAt(now);

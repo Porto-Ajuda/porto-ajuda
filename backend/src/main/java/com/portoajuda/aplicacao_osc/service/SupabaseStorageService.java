@@ -2,12 +2,15 @@
 package com.portoajuda.aplicacao_osc.service;
 
 import java.util.UUID;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.util.Iterator;
-import javax.imageio.ImageIO;
-import javax.imageio.ImageReader;
-import javax.imageio.stream.ImageInputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.core.ParameterizedTypeReference;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -16,25 +19,35 @@ import org.springframework.web.client.RestClient;
 
 @Service
 public class SupabaseStorageService {
-
-    private static final long TAMANHO_MAXIMO = 10L * 1024 * 1024;
-    private static final long PIXELS_MAXIMOS = 12_000_000L;
-    private static final int DIMENSAO_MAXIMA = 6000;
+    private static final String UUID_PATTERN = "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}";
 
     private final RestClient restClient;
+    private final RestClient deleteClient;
     private final String supabaseUrl;
     private final String secretKey;
     private final String bucket;
+    private final ImageUploadProcessor imageProcessor;
 
+    @Autowired
     public SupabaseStorageService(
             @Value("${supabase.url}") String supabaseUrl,
             @Value("${supabase.secret-key}") String secretKey,
-            @Value("${supabase.bucket-publico:imagens-publicas}") String bucket) {
+            @Value("${supabase.bucket-publico:imagens-publicas}") String bucket,
+            ImageUploadProcessor imageProcessor) {
 
         this.restClient = RestClient.builder().build();
+        this.deleteClient = RestClient.builder().requestFactory(
+                new org.springframework.http.client.HttpComponentsClientHttpRequestFactory(
+                        org.apache.hc.client5.http.impl.classic.HttpClients.custom().disableAutomaticRetries().build()))
+                .build();
         this.supabaseUrl = supabaseUrl.replaceAll("/+$", "");
         this.secretKey = secretKey;
         this.bucket = bucket;
+        this.imageProcessor = imageProcessor;
+    }
+
+    public SupabaseStorageService(String supabaseUrl, String secretKey, String bucket) {
+        this(supabaseUrl, secretKey, bucket, new ImageUploadProcessor());
     }
 
     public String enviarFotoPerfil(
@@ -46,27 +59,9 @@ public class SupabaseStorageService {
             throw new IllegalArgumentException("Usuário inválido.");
         }
 
-        if (arquivo == null || arquivo.length == 0) {
-            throw new IllegalArgumentException(
-                    "O arquivo enviado está vazio.");
-        }
-
-        if (arquivo.length > TAMANHO_MAXIMO) {
-            throw new IllegalArgumentException(
-                    "A imagem não pode ultrapassar 10 MB.");
-        }
-
-        String tipo = contentType == null
-                ? ""
-                : contentType.toLowerCase(java.util.Locale.ROOT);
-
-        String extensao = switch (tipo) {
-            case "image/jpeg" -> "jpg";
-            case "image/png" -> "png";
-            case "image/webp" -> "webp";
-            default -> throw new IllegalArgumentException(
-                    "Formato de imagem não permitido.");
-        };
+        ImageUploadProcessor.ProcessedImage processed = imageProcessor.process(arquivo, contentType);
+        String tipo = processed.mediaType();
+        String extensao = processed.extension();
 
         String caminho = "usuarios/" + usuarioId
                 + "/foto-perfil-" + UUID.randomUUID()
@@ -76,14 +71,14 @@ public class SupabaseStorageService {
                 + "/storage/v1/object/"
                 + bucket + "/" + caminho;
 
-        restClient.post()
-                .uri(endpoint)
-                .header("apikey", secretKey)
-                .header(HttpHeaders.CONTENT_TYPE, tipo)
-                .header("x-upsert", "false")
-                .body(arquivo)
-                .retrieve()
-                .toBodilessEntity();
+        try {
+            restClient.post().uri(endpoint).header("apikey", secretKey)
+                    .header(HttpHeaders.CONTENT_TYPE, tipo).header("x-upsert", "false")
+                    .body(processed.bytes()).retrieve().toBodilessEntity();
+        } catch (RuntimeException error) {
+            try { removerObjeto(caminho); } catch (RuntimeException cleanupFailure) { error.addSuppressed(cleanupFailure); }
+            throw error;
+        }
 
         return supabaseUrl
                 + "/storage/v1/object/public/"
@@ -94,22 +89,23 @@ public class SupabaseStorageService {
             Integer usuarioId,
             byte[] arquivo,
             String contentType) {
-        validarImagem(usuarioId, arquivo, contentType);
+        if (usuarioId == null || usuarioId <= 0) throw new IllegalArgumentException("Usuário inválido.");
+        ImageUploadProcessor.ProcessedImage processed = imageProcessor.process(arquivo, contentType);
 
-        String tipo = contentType.toLowerCase(java.util.Locale.ROOT);
-        String extensao = extensaoImagem(tipo);
+        String tipo = processed.mediaType();
+        String extensao = processed.extension();
         String caminho = "oscs/" + usuarioId
                 + "/logo-" + UUID.randomUUID() + "." + extensao;
         String endpoint = supabaseUrl + "/storage/v1/object/" + bucket + "/" + caminho;
 
-        restClient.post()
-                .uri(endpoint)
-                .header("apikey", secretKey)
-                .header(HttpHeaders.CONTENT_TYPE, tipo)
-                .header("x-upsert", "false")
-                .body(arquivo)
-                .retrieve()
-                .toBodilessEntity();
+        try {
+            restClient.post().uri(endpoint).header("apikey", secretKey)
+                    .header(HttpHeaders.CONTENT_TYPE, tipo).header("x-upsert", "false")
+                    .body(processed.bytes()).retrieve().toBodilessEntity();
+        } catch (RuntimeException error) {
+            try { removerLogoOsc(caminho); } catch (RuntimeException cleanupFailure) { error.addSuppressed(cleanupFailure); }
+            throw error;
+        }
 
         String url = supabaseUrl
                 + "/storage/v1/object/public/"
@@ -118,26 +114,13 @@ public class SupabaseStorageService {
     }
 
     public void removerLogoOsc(String caminho) {
-        if (caminho == null || !caminho.startsWith("oscs/")) {
-            return;
-        }
-
-        restClient.delete()
-                .uri(supabaseUrl + "/storage/v1/object/" + bucket + "/" + caminho)
-                .header("apikey", secretKey)
-                .retrieve()
-                .toBodilessEntity();
+        if (caminho == null || !caminho.matches("oscs/\\d+/logo-" + UUID_PATTERN + "\\.(jpg|png|webp)")) return;
+        removerObjeto(caminho);
     }
 
     public void removerLogoOscUrl(String url) {
-        if (url == null || url.isBlank()) return;
-        String marcador = "/" + bucket + "/";
-        int indice = url.indexOf(marcador);
-        if (indice < 0) return;
-        String caminho = url.substring(indice + marcador.length());
-        int query = caminho.indexOf('?');
-        if (query >= 0) caminho = caminho.substring(0, query);
-        removerLogoOsc(caminho);
+        String key = managedImageKey(url);
+        if (key != null && key.matches("oscs/\\d+/logo-" + UUID_PATTERN + "\\.(jpg|png|webp)")) removerObjeto(key);
     }
 
     public ArquivoEnviado enviarImagemConteudoOsc(
@@ -149,8 +132,9 @@ public class SupabaseStorageService {
         if (oscId == null || oscId <= 0 || postId == null || postId <= 0) {
             throw new IllegalArgumentException("Organização ou conteúdo inválido.");
         }
-        String tipo = contentType == null ? "" : contentType.toLowerCase(java.util.Locale.ROOT);
-        String extensao = validarImagemConteudo(arquivo, tipo);
+        ImageUploadProcessor.ProcessedImage processed = imageProcessor.process(arquivo, contentType);
+        String tipo = processed.mediaType();
+        String extensao = processed.extension();
         String categoria = voluntariado ? "voluntariado" : "posts";
         String caminho = "oscs/" + oscId + "/" + categoria + "/" + postId
                 + "/" + UUID.randomUUID() + "." + extensao;
@@ -162,7 +146,7 @@ public class SupabaseStorageService {
                     .header("apikey", secretKey)
                     .header(HttpHeaders.CONTENT_TYPE, tipo)
                     .header("x-upsert", "false")
-                    .body(arquivo)
+                    .body(processed.bytes())
                     .retrieve()
                     .toBodilessEntity();
         } catch (RuntimeException erro) {
@@ -178,6 +162,23 @@ public class SupabaseStorageService {
         return new ArquivoEnviado(url, caminho);
     }
 
+    public ArquivoEnviado enviarImagemCampanhaOsc(Integer oscId, Integer usuarioId, byte[] arquivo, String contentType) {
+        if (oscId == null || oscId <= 0 || usuarioId == null || usuarioId <= 0)
+            throw new IllegalArgumentException("Organização ou usuário inválido.");
+        ImageUploadProcessor.ProcessedImage processed = imageProcessor.process(arquivo, contentType);
+        String caminho = "oscs/" + oscId + "/campanhas/" + UUID.randomUUID() + "." + processed.extension();
+        String endpoint = supabaseUrl + "/storage/v1/object/" + bucket + "/" + caminho;
+        try {
+            restClient.post().uri(endpoint).header("apikey", secretKey)
+                    .header(HttpHeaders.CONTENT_TYPE, processed.mediaType()).header("x-upsert", "false")
+                    .body(processed.bytes()).retrieve().toBodilessEntity();
+        } catch (RuntimeException error) {
+            try { removerObjeto(caminho); } catch (RuntimeException cleanupFailure) { error.addSuppressed(cleanupFailure); }
+            throw error;
+        }
+        return new ArquivoEnviado(supabaseUrl + "/storage/v1/object/public/" + bucket + "/" + caminho, caminho);
+    }
+
     public void removerImagemConteudoOsc(
             Integer oscId, Integer postId, boolean voluntariado, String caminho) {
         if (oscId == null || postId == null || caminho == null) return;
@@ -187,83 +188,122 @@ public class SupabaseStorageService {
         if (!nome.matches("[0-9a-fA-F-]{36}\\.(jpg|png)")) {
             throw new IllegalArgumentException("Caminho de imagem fora do conteúdo autorizado.");
         }
-        restClient.delete()
-                .uri(supabaseUrl + "/storage/v1/object/" + bucket + "/" + caminho)
-                .header("apikey", secretKey)
-                .retrieve()
-                .toBodilessEntity();
+        removerObjeto(caminho);
     }
 
     public void removerImagemConteudoOscUrl(
             Integer oscId, Integer postId, boolean voluntariado, String url) {
-        if (url == null || url.isBlank()) return;
-        String prefixoPublico = supabaseUrl + "/storage/v1/object/public/" + bucket + "/";
-        if (!url.startsWith(prefixoPublico)) return;
-        removerImagemConteudoOsc(oscId, postId, voluntariado,
-                url.substring(prefixoPublico.length()));
+        if (oscId == null || postId == null) return;
+        String categoria = voluntariado ? "voluntariado" : "posts";
+        String key = managedImageKey(url);
+        String expected = "oscs/" + oscId + "/" + categoria + "/" + postId + "/";
+        if (key != null && key.startsWith(expected)
+                && key.substring(expected.length()).matches(UUID_PATTERN + "\\.(jpg|png)")) removerObjeto(key);
     }
 
-    private String validarImagemConteudo(byte[] arquivo, String contentType) {
-        if (arquivo == null || arquivo.length == 0) {
-            throw new IllegalArgumentException("Selecione uma imagem válida.");
-        }
-        if (arquivo.length > TAMANHO_MAXIMO) {
-            throw new IllegalArgumentException("A imagem não pode ultrapassar 10 MB.");
-        }
-        String extensao = switch (contentType) {
-            case "image/jpeg" -> "jpg";
-            case "image/png" -> "png";
-            default -> throw new IllegalArgumentException("Formato permitido: JPEG ou PNG.");
-        };
-        try (ImageInputStream entrada = ImageIO.createImageInputStream(new ByteArrayInputStream(arquivo))) {
-            if (entrada == null) throw new IllegalArgumentException("Arquivo de imagem inválido.");
-            Iterator<ImageReader> leitores = ImageIO.getImageReaders(entrada);
-            if (!leitores.hasNext()) throw new IllegalArgumentException("Arquivo de imagem inválido.");
-            ImageReader leitor = leitores.next();
-            try {
-                leitor.setInput(entrada, true, true);
-                String formato = leitor.getFormatName().toLowerCase(java.util.Locale.ROOT);
-                boolean corresponde = extensao.equals("jpg")
-                        ? formato.equals("jpeg") || formato.equals("jpg")
-                        : formato.equals("png");
-                int largura = leitor.getWidth(0);
-                int altura = leitor.getHeight(0);
-                if (!corresponde || largura < 1 || altura < 1
-                        || largura > DIMENSAO_MAXIMA || altura > DIMENSAO_MAXIMA
-                        || (long) largura * altura > PIXELS_MAXIMOS
-                        || leitor.read(0) == null) {
-                    throw new IllegalArgumentException("Arquivo de imagem inválido ou muito grande.");
+    public String managedImageKey(String url) {
+        if (url == null || url.isBlank()) return null;
+        String prefix = supabaseUrl + "/storage/v1/object/public/" + bucket + "/";
+        if (!url.startsWith(prefix) || url.contains("?") || url.contains("#")) return null;
+        String key = url.substring(prefix.length());
+        return key.matches("usuarios/\\d+/foto-perfil-" + UUID_PATTERN + "\\.(jpg|png|webp)")
+                || key.matches("oscs/\\d+/logo-" + UUID_PATTERN + "\\.(jpg|png|webp)")
+                || key.matches("oscs/\\d+/campanhas/" + UUID_PATTERN + "\\.(jpg|png|webp)")
+                || key.matches("oscs/\\d+/(posts|voluntariado)/\\d+/" + UUID_PATTERN + "\\.(jpg|png)")
+                ? key : null;
+    }
+
+    public String urlPublicaDaImagemGerenciada(String key) {
+        if (!isManagedImageKey(key)) return null;
+        return supabaseUrl + "/storage/v1/object/public/" + bucket + "/" + key;
+    }
+
+    public boolean isManagedImageKey(String key) {
+        if (key == null) return false;
+        return key.matches("usuarios/\\d+/foto-perfil-" + UUID_PATTERN + "\\.(jpg|png|webp)")
+                || key.matches("oscs/\\d+/logo-" + UUID_PATTERN + "\\.(jpg|png|webp)")
+                || key.matches("oscs/\\d+/campanhas/" + UUID_PATTERN + "\\.(jpg|png|webp)")
+                || key.matches("oscs/\\d+/(posts|voluntariado)/\\d+/" + UUID_PATTERN + "\\.(jpg|png)");
+    }
+
+    public void removerImagemGerenciadaKey(String key) {
+        if (isManagedImageKey(key)) removerObjeto(key);
+    }
+
+    public void removerImagemGerenciadaUrl(String url) {
+        String key = managedImageKey(url);
+        if (key != null) removerObjeto(key);
+    }
+
+    /** Read-only inventory of the application's managed namespaces in the public image bucket. */
+    public List<ManagedStoredObject> listarImagensGerenciadas() {
+        List<ManagedStoredObject> objects = new ArrayList<>();
+        listPrefix("usuarios/", objects);
+        listPrefix("oscs/", objects);
+        return List.copyOf(objects);
+    }
+
+    private void listPrefix(String prefix, List<ManagedStoredObject> objects) {
+        int offset = 0;
+        final int limit = 500;
+        while (true) {
+            List<Map<String, Object>> page = restClient.post()
+                    .uri(supabaseUrl + "/storage/v1/object/list/" + bucket)
+                    .header("apikey", secretKey)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + secretKey)
+                    .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                    .body(Map.of("prefix", prefix, "limit", limit, "offset", offset,
+                            "sortBy", Map.of("column", "name", "order", "asc")))
+                    .retrieve().body(new ParameterizedTypeReference<>() { });
+            if (page == null) throw new IllegalStateException("O inventário do armazenamento retornou uma resposta vazia.");
+            for (Map<String, Object> item : page) {
+                Object rawName = item.get("name");
+                if (!(rawName instanceof String name) || name.isBlank() || name.contains("..") || name.startsWith("/")) continue;
+                String key = prefix + name;
+                if (item.get("id") == null) {
+                    listPrefix(key.endsWith("/") ? key : key + "/", objects);
+                } else {
+                    String created = item.get("created_at") instanceof String value ? value : null;
+                    objects.add(new ManagedStoredObject(key, parseCreatedAt(created)));
                 }
-            } finally {
-                leitor.dispose();
             }
-        } catch (IOException | RuntimeException erro) {
-            if (erro instanceof IllegalArgumentException invalid) throw invalid;
-            throw new IllegalArgumentException("Arquivo de imagem inválido.");
+            if (page.size() < limit) break;
+            offset += limit;
         }
-        return extensao;
     }
 
-    private void validarImagem(Integer usuarioId, byte[] arquivo, String contentType) {
-        if (usuarioId == null || usuarioId <= 0) {
-            throw new IllegalArgumentException("Usuário inválido.");
-        }
-        if (arquivo == null || arquivo.length == 0) {
-            throw new IllegalArgumentException("O arquivo enviado está vazio.");
-        }
-        if (arquivo.length > TAMANHO_MAXIMO) {
-            throw new IllegalArgumentException("A imagem não pode ultrapassar 10 MB.");
-        }
-        extensaoImagem(contentType == null ? "" : contentType.toLowerCase(java.util.Locale.ROOT));
+    private Instant parseCreatedAt(String value) {
+        if (value == null || value.isBlank()) return null;
+        try { return OffsetDateTime.parse(value).toInstant(); }
+        catch (RuntimeException ignored) { return null; }
     }
 
-    private String extensaoImagem(String tipo) {
-        return switch (tipo) {
-            case "image/jpeg" -> "jpg";
-            case "image/png" -> "png";
-            case "image/webp" -> "webp";
-            default -> throw new IllegalArgumentException("Formato de imagem não permitido.");
-        };
+    public record ManagedStoredObject(String key, Instant createdAt) { }
+
+    public void removerFotoPerfilUrl(Integer usuarioId, String url) {
+        if (usuarioId == null || usuarioId <= 0) return;
+        String key = managedImageKey(url);
+        if (key != null && key.startsWith("usuarios/" + usuarioId + "/")) removerObjeto(key);
+    }
+
+    private void removerObjeto(String key) {
+        for (int attempt = 1; attempt <= 3; attempt++) {
+            try {
+                deleteClient.delete().uri(supabaseUrl + "/storage/v1/object/" + bucket + "/" + key)
+                        .header("apikey", secretKey).retrieve().toBodilessEntity();
+                return;
+            } catch (HttpStatusCodeException error) {
+                if (error.getStatusCode() == HttpStatus.NOT_FOUND) return;
+                if (attempt == 3) throw error;
+            } catch (RuntimeException error) {
+                if (attempt == 3) throw error;
+            }
+            try { Thread.sleep(100L * attempt); }
+            catch (InterruptedException interrupted) {
+                Thread.currentThread().interrupt();
+                throw new IllegalStateException("Limpeza da imagem interrompida.");
+            }
+        }
     }
 
     public record ArquivoEnviado(String url, String caminho) {

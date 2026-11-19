@@ -59,6 +59,7 @@ public class AdminPrivilegedSessionService {
     public IssuedCredential emitir(UUID challengeId, String remoteAddress) {
         AdminAuthChallenge challenge = challengeRepository.findByIdForUpdate(challengeId).orElse(null);
         if (challenge == null || challenge.getState() != AdminAuthChallenge.State.VERIFIED
+                || !challenge.isEmailRequired() || !challenge.isSmsRequired()
                 || challenge.getEmailVerifiedAt() == null || challenge.getSmsVerifiedAt() == null
                 || challenge.getCompletedAt() == null || challenge.getUsuario() == null) {
             throw new IllegalStateException("Desafio MFA administrativo não pode emitir sessão.");

@@ -6,7 +6,7 @@ const assert = require("node:assert/strict");
 const ler = path => readFile(resolve(__dirname, "../..", path), "utf8");
 
 test("public volunteer viewer exposes participation only for available vacancy records", async () => {
-    const script = await ler("public/components/crud.js");
+    const script = await ler("public/components/conteudo-publico-modal.js");
     const html = await ler("public/pages/Porto-Ajuda.html");
     assert.match(script, /vaga\.status === "ABERTA"/);
     assert.match(script, /Number\(item\.vaga\.quantidadeVagas\) > 0/);
@@ -84,13 +84,57 @@ test("donation amount buttons have styles in the stylesheet loaded by their page
 
 test("NGO applicant management reflects backend decision permission and uses specific NGO-scoped APIs", async () => {
     const source = await ler("public/components/candidaturas-ong.js");
-    assert.match(source, /\/osc\/\$\{getOscId\(\)\}\/candidaturas/);
+    assert.match(source, /\/osc\/\$\{section\.dataset\.oscId \|\| getOscId\(\)\}\/candidaturas/);
     assert.match(source, /item\.status === "PENDENTE" && item\.podeDecidir/);
     assert.match(source, /body: JSON\.stringify\(\{ status \}\)/);
     assert.match(source, /response\.status === 409/);
     assert.match(source, /Atualize a lista para confirmar o estado antes de repetir/);
     assert.match(source, /\[401, 403, 404, 409\]\.includes\(response\.status\)/);
     assert.match(source, /await load\(button\.closest\("\[data-candidaturas-ong\]"\)\)/);
+});
+
+test("management can filter existing candidate flow by opportunity and records actual completion", async () => {
+    const manager = await ler("public/components/candidaturas-ong.js");
+    const profile = await ler("public/components/ong-profile.js");
+    const html = await ler("public/pages/ong-profile.html");
+    const migration = await ler("backend/src/main/resources/db/manual/20261121_volunteer_completion_dashboard.sql");
+    assert.match(profile, /openOpportunityCandidates\(/);
+    assert.match(manager, /query\.set\("vagaId", section\.dataset\.vagaId\)/);
+    assert.match(manager, /CANCELADA_PELA_ONG/);
+    assert.match(html, /id="aba-dashboard"[^>]+hidden/);
+    assert.match(html, /id="dialogo-conclusao-voluntariado"/);
+    assert.match(profile, /dataInicioReal: start, dataFimReal: end, participantes/);
+    assert.match(profile, /canceledPendingCount/);
+    assert.match(profile, /fetchAutenticado\(`\/osc\/\$\{oscAtual\.id\}\/candidaturas\/\$\{row\.dataset\.conclusaoApplication\}\/certificado`/);
+    assert.match(migration, /certificado_object_key/);
+    assert.match(migration, /CANCELADA_PELA_ONG/);
+});
+
+test("candidate management opens a filtered accessible modal in-place and refreshes slot counts", async () => {
+    const manager = await ler("public/components/candidaturas-ong.js");
+    const profile = await ler("public/components/ong-profile.js");
+    const css = await ler("public/styles/candidaturas.css");
+    assert.match(manager, /export function openOpportunityCandidates/);
+    assert.match(manager, /dialog\.showModal\(\)/);
+    assert.match(manager, /data-resumo-aceitos/);
+    assert.match(manager, /data-resumo-disponiveis/);
+    assert.match(manager, /data-resumo-pendentes/);
+    assert.match(manager, /dialog\.close\(\)/);
+    assert.match(manager, /trigger\.focus\(\)/);
+    assert.match(manager, /requestedVacancy !== section\.dataset\.vagaId/);
+    assert.match(manager, /onChanged\(\{ accepted, pending, available/);
+    assert.match(manager, /porto:volunteer-capacity-changed/);
+    assert.match(profile, /onFinalize: \(\) => abrirDialogoConclusao\(item\)/);
+    assert.match(profile, /data-vagas-disponiveis/);
+    assert.match(css, /\.dialogo-candidatos-oportunidade::backdrop/);
+    assert.match(css, /\.candidatos-modal-resumo/);
+});
+
+test("completed candidates receive their persisted hours and private certificate link in their own history", async () => {
+    const source = await ler("public/components/minhas-candidaturas.js");
+    assert.match(source, /CONCLUIDA: "Concluída"/);
+    assert.match(source, /Horas efetivamente realizadas/);
+    assert.match(source, /usuario\/candidaturas\/\$\{encodeURIComponent\(item\.id\)\}\/certificado/);
 });
 
 test("applicant cancellation refreshes stale state after a 404 or 409 conflict", async () => {

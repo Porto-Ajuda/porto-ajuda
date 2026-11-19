@@ -5,7 +5,12 @@ import { confirmarPorDigitacao, notificar as notificarSistema } from "./confirm-
 import { respostaConteudoOscValida, separarConteudoOsc, separarConteudoPublicoOsc, urlImagemSegura, validarArquivoImagem, validarConteudoOsc } from "./ong-content.js";
 import { configurarCamposVoluntariado, converterValorBooleano, enviarAtualizacaoOsc, montarPayloadAtualizacaoOsc } from "./ong-profile-edit.js";
 import { carregarAvisoRestricaoConteudo, carregarModeracaoPerfil } from "./moderation-profile.js";
+import { resetarAjusteImagem } from "./ajuste-imagem.js";
+import { createCampaignCard } from "./campaign-card.js";
+import { createCampaignDonationDialog } from "./campaign-donation-dialog.js";
+import { openOpportunityCandidates } from "./candidaturas-ong.js";
 const API_URL = getAPI_URL();
+const campaignDialog = createCampaignDonationDialog();
 let oscAtual = null;
 let cargoAtual = null;
 let conteudoOscAtual = [];
@@ -23,6 +28,7 @@ let requisicaoConteudoPublicoAtual = 0;
 let membroOscConfirmado = false;
 let verificacaoMembroOscConcluida = false;
 let verificacaoConteudoPublicoConcluida = false;
+let verificacaoCampanhasPublicasConcluida = false;
 let hashInicialPerfil = window.location.hash.slice(1);
 
 // ========================================
@@ -993,6 +999,11 @@ function criarCartaoConteudo(item, oportunidade, gerenciavel) {
             descricao.textContent = valor || "Não informado";
             detalhes.append(termo, descricao);
         }
+        if (gerenciavel && oportunidade) {
+            const termo = document.createElement("dt"); termo.textContent = "Vagas disponíveis";
+            const descricao = document.createElement("dd"); descricao.dataset.vagasDisponiveis = "true"; descricao.textContent = "Abra ‘Ver candidatos’ para atualizar";
+            detalhes.append(termo, descricao);
+        }
         cartao.append(detalhes);
     }
 
@@ -1010,6 +1021,30 @@ function criarCartaoConteudo(item, oportunidade, gerenciavel) {
             ? abrirDialogoOportunidade(item)
             : abrirDialogoPost(item));
         rodape.append(editar);
+        if (oportunidade && item.vaga?.id && ["CRIADOR", "ADMINISTRADOR"].includes(cargoAtual)) {
+            const candidates = document.createElement("button");
+            candidates.type = "button";
+            candidates.className = "btn btn-secundario";
+            candidates.textContent = "Ver candidatos";
+            candidates.setAttribute("aria-haspopup", "dialog");
+            candidates.addEventListener("click", () => openOpportunityCandidates({
+                oscId: oscAtual.id, opportunity: item, trigger: candidates,
+                onFinalize: () => abrirDialogoConclusao(item),
+                onChanged: counts => {
+                    const available = cartao.querySelector("[data-vagas-disponiveis]");
+                    if (available) available.textContent = `${counts.available} de ${item.vaga.quantidadeVagas}`;
+                }
+            }));
+            rodape.append(candidates);
+            if (item.vaga.status === "ABERTA") {
+                const finish = document.createElement("button");
+                finish.type = "button";
+                finish.className = "btn btn-secundario";
+                finish.textContent = "Finalizar voluntariado";
+                finish.addEventListener("click", () => abrirDialogoConclusao(item));
+                rodape.append(finish);
+            }
+        }
     }
     cartao.append(rodape);
     return cartao;
@@ -1173,8 +1208,9 @@ function abaPerfilPorHash(hash) {
 
 function ativarAbaPerfil(abaSelecionada, atualizarHash = true) {
     if (!abaSelecionada || abaSelecionada.hidden) return false;
-    const abaPrivada = ["aba-conteudo", "aba-membros", "aba-dados"].includes(abaSelecionada.id);
+    const abaPrivada = ["aba-dashboard", "aba-conteudo", "aba-membros", "aba-dados"].includes(abaSelecionada.id);
     if (abaPrivada && !membroOscConfirmado) return false;
+    if (abaSelecionada.id === "aba-dashboard" && !["CRIADOR", "ADMINISTRADOR"].includes(cargoAtual)) return false;
 
     const navegacao = document.getElementById("abas-perfil-osc");
     const abas = [...navegacao.querySelectorAll('[role="tab"]')];
@@ -1197,10 +1233,12 @@ function resolverHashInicialPerfil() {
     if (!hashInicialPerfil) return;
     const abaSolicitada = abaPerfilPorHash(hashInicialPerfil);
     if (!abaSolicitada) return;
-    const privada = ["aba-conteudo", "aba-membros", "aba-dados"].includes(abaSolicitada.id);
+    const privada = ["aba-dashboard", "aba-conteudo", "aba-membros", "aba-dados"].includes(abaSolicitada.id);
+    if (abaSolicitada.id === "aba-vaquinhas-publicas" && !verificacaoCampanhasPublicasConcluida) return;
     if (privada && !verificacaoMembroOscConcluida) return;
-    if (!privada && abaSolicitada.id !== "aba-informacoes" && !verificacaoConteudoPublicoConcluida) return;
-    if (abaSolicitada.hidden || (privada && !membroOscConfirmado)) {
+    if (!privada && !["aba-informacoes", "aba-vaquinhas-publicas"].includes(abaSolicitada.id) && !verificacaoConteudoPublicoConcluida) return;
+    if (abaSolicitada.hidden || (privada && !membroOscConfirmado)
+            || (abaSolicitada.id === "aba-dashboard" && !["CRIADOR", "ADMINISTRADOR"].includes(cargoAtual))) {
         ativarAbaPerfil(document.getElementById("aba-informacoes"));
         history.replaceState(null, "", `${location.pathname}${location.search}#informacoes`);
         hashInicialPerfil = "informacoes";
@@ -1242,9 +1280,10 @@ function configurarNavegacaoPerfil() {
 function definirAcessoAbasPrivadas(permitido) {
     membroOscConfirmado = permitido;
     verificacaoMembroOscConcluida = true;
-    const abasPrivadas = ["aba-conteudo", "aba-membros", "aba-dados"]
+    const abasPrivadas = ["aba-dashboard", "aba-conteudo", "aba-membros", "aba-dados"]
         .map(id => document.getElementById(id));
     abasPrivadas.forEach(aba => { aba.hidden = !permitido; });
+    document.getElementById("aba-dashboard").hidden = !permitido || !["CRIADOR", "ADMINISTRADOR"].includes(cargoAtual);
     if (!permitido && abasPrivadas.some(aba => aba.getAttribute("aria-selected") === "true")) {
         ativarAbaPerfil(document.getElementById("aba-informacoes"));
     }
@@ -1274,7 +1313,7 @@ function resetarConteudoPublico() {
     }
     document.getElementById("gestao-osc").hidden = true;
     const info = document.getElementById("aba-informacoes");
-    const publicTabs = [document.getElementById("aba-publicacoes"), document.getElementById("aba-voluntariado-publico")];
+    const publicTabs = [document.getElementById("aba-publicacoes"), document.getElementById("aba-voluntariado-publico"), document.getElementById("aba-vaquinhas-publicas")];
     for (const aba of publicTabs) {
         aba.hidden = true;
         aba.setAttribute("aria-selected", "false");
@@ -1287,11 +1326,20 @@ function resetarConteudoPublico() {
     document.getElementById("painel-publico").hidden = false;
     document.getElementById("painel-publicacoes").hidden = true;
     document.getElementById("painel-voluntariado-publico").hidden = true;
-    for (const id of ["painel-conteudo", "painel-membros", "painel-dados"]) {
+    document.getElementById("painel-vaquinhas-publicas").hidden = true;
+    verificacaoCampanhasPublicasConcluida = false;
+    for (const id of ["painel-dashboard", "painel-conteudo", "painel-membros", "painel-dados"]) {
         document.getElementById(id).hidden = true;
     }
     document.getElementById("posts-publicos-lista").replaceChildren();
     document.getElementById("oportunidades-publicas-lista").replaceChildren();
+    document.getElementById("campanhas-publicas-lista")?.replaceChildren();
+    const campaignStatus = document.getElementById("campanhas-publicas-status");
+    const campaignEmpty = document.getElementById("campanhas-publicas-vazio");
+    const campaignError = document.getElementById("campanhas-publicas-erro");
+    if (campaignStatus) { campaignStatus.hidden = false; campaignStatus.textContent = "Carregando vaquinhas públicas…"; }
+    if (campaignEmpty) campaignEmpty.hidden = true;
+    if (campaignError) campaignError.hidden = true;
     const status = document.getElementById("conteudo-publico-status");
     status.hidden = true;
     status.textContent = "";
@@ -1309,10 +1357,15 @@ async function carregarConteudoPublico(id) {
     const abaOportunidades = document.getElementById("aba-voluntariado-publico");
     const painelPosts = document.getElementById("painel-publicacoes");
     const painelOportunidades = document.getElementById("painel-voluntariado-publico");
+    const abaVaquinhas = document.getElementById("aba-vaquinhas-publicas");
+    const painelVaquinhas = document.getElementById("painel-vaquinhas-publicas");
+    void carregarCampanhasPublicas(id, requisicaoId);
     abaPosts.hidden = true;
     abaOportunidades.hidden = true;
+    abaVaquinhas.hidden = true;
     painelPosts.hidden = true;
     painelOportunidades.hidden = true;
+    painelVaquinhas.hidden = true;
     const abaSelecionada = document.querySelector('#abas-perfil-osc [aria-selected="true"]');
     if (!abaSelecionada || abaSelecionada.hidden) {
         ativarAbaPerfil(document.getElementById("aba-informacoes"));
@@ -1352,6 +1405,48 @@ async function carregarConteudoPublico(id) {
         resolverHashInicialPerfil();
         status.textContent = "Não foi possível verificar as publicações e oportunidades públicas.";
         status.hidden = false;
+    }
+}
+
+async function carregarCampanhasPublicas(id, requisicaoId) {
+    const status = document.getElementById("campanhas-publicas-status");
+    const lista = document.getElementById("campanhas-publicas-lista");
+    const vazio = document.getElementById("campanhas-publicas-vazio");
+    const erro = document.getElementById("campanhas-publicas-erro");
+    if (!status || !lista || !vazio || !erro) return;
+    status.hidden = false;
+    status.textContent = "Carregando vaquinhas públicas…";
+    vazio.hidden = true;
+    erro.hidden = true;
+    lista.replaceChildren();
+    try {
+        if (oscAtual?.status !== "ATIVA" || oscAtual?.arquivada) throw new Error("Organização indisponível.");
+        const response = await fetch(`${API_URL}/donation-campaigns`, {
+            headers: { Accept: "application/json" }, cache: "no-store"
+        });
+        if (!response.ok) throw new Error("Campanhas públicas indisponíveis.");
+        const campaigns = await response.json();
+        if (!Array.isArray(campaigns)) throw new Error("Resposta de campanhas inválida.");
+        if (requisicaoId !== requisicaoConteudoPublicoAtual || Number(id) !== Number(oscAtual?.id)) return;
+        const ownPublicCampaigns = campaigns.filter(item => Number(item?.oscId) === Number(id)
+            && item?.state === "ACTIVE" && item.id != null);
+        lista.replaceChildren(...ownPublicCampaigns.map(item => createCampaignCard(item, {
+            context: "ngo-profile", onOpen: (campaign, trigger) => campaignDialog.open(campaign, trigger)
+        })));
+        verificacaoCampanhasPublicasConcluida = true;
+        document.getElementById("aba-vaquinhas-publicas").hidden = ownPublicCampaigns.length === 0;
+        status.hidden = true;
+        vazio.hidden = ownPublicCampaigns.length > 0;
+        resolverHashInicialPerfil();
+        const activeTab = document.querySelector('#abas-perfil-osc [aria-selected="true"]');
+        if (activeTab?.hidden) ativarAbaPerfil(document.getElementById("aba-informacoes"));
+    } catch {
+        if (requisicaoId !== requisicaoConteudoPublicoAtual || Number(id) !== Number(oscAtual?.id)) return;
+        verificacaoCampanhasPublicasConcluida = true;
+        document.getElementById("aba-vaquinhas-publicas").hidden = true;
+        status.hidden = true;
+        erro.hidden = false;
+        resolverHashInicialPerfil();
     }
 }
 
@@ -1438,6 +1533,118 @@ function abrirDialogoOportunidade(item = null) {
     document.getElementById("oportunidade-titulo-osc").focus();
 }
 
+async function abrirDialogoConclusao(item) {
+    if (!item?.vaga?.id || !["CRIADOR", "ADMINISTRADOR"].includes(cargoAtual)) return;
+    const dialog = document.getElementById("dialogo-conclusao-voluntariado");
+    const form = document.getElementById("form-conclusao-voluntariado");
+    const list = document.getElementById("conclusao-participantes");
+    const feedback = document.getElementById("conclusao-feedback");
+    const save = document.getElementById("salvar-conclusao-voluntariado");
+    const cancel = document.getElementById("cancelar-conclusao-voluntariado");
+    const opener = document.activeElement;
+    form.reset(); list.replaceChildren(); feedback.textContent = "Carregando candidaturas desta oportunidade…";
+    save.disabled = true; cancel.disabled = true; dialog.showModal();
+    try {
+        const applications = [];
+        let page = 0; let pages = 1;
+        while (page < pages) {
+            const query = new URLSearchParams({ vagaId: String(item.vaga.id), page: String(page), size: "50" });
+            const response = await fetchAutenticado(`/osc/${oscAtual.id}/candidaturas?${query}`, { headers: { Accept: "application/json" } });
+            if (!response?.ok) throw new Error(response?.status === 403 ? "Seu cargo não pode finalizar voluntariados." : "Não foi possível carregar as candidaturas desta oportunidade.");
+            const data = await response.json();
+            applications.push(...(Array.isArray(data.content) ? data.content : []));
+            pages = Math.max(1, Number(data.totalPages) || 1); page += 1;
+        }
+        const accepted = applications.filter(application => application.status === "APROVADA");
+        const pending = applications.filter(application => application.status === "PENDENTE");
+        for (const application of accepted) list.append(criarLinhaConclusaoParticipante(application));
+        feedback.textContent = pending.length
+            ? `${pending.length} candidatura(s) pendente(s) serão canceladas ao finalizar. Selecione individualmente quem concluiu.`
+            : "Selecione individualmente quem concluiu a atividade. As demais candidaturas aprovadas serão canceladas ao finalizar.";
+        if (!accepted.length) feedback.textContent += " Não há participantes aprovados para registrar como concluintes.";
+        save.disabled = false;
+        form.onsubmit = async event => {
+            event.preventDefault();
+            if (save.disabled || !form.reportValidity()) return;
+            const start = document.getElementById("conclusao-data-inicio-real").value;
+            const end = document.getElementById("conclusao-data-fim-real").value;
+            if (start > end || end > new Date().toISOString().slice(0, 10)) { feedback.textContent = "Confira o período: o fim deve ser igual ou posterior ao início e não pode estar no futuro."; return; }
+            const rows = [...list.querySelectorAll("[data-conclusao-application]")];
+            const participants = rows.map(row => {
+                const completed = row.querySelector("[data-concluiu]").checked;
+                const hours = row.querySelector("[data-horas]").value;
+                return { candidaturaId: Number(row.dataset.conclusaoApplication), concluiu: completed,
+                    horasRealizadas: completed ? Number(hours) : null };
+            });
+            if (rows.some(row => row.querySelector("[data-concluiu]").checked
+                    && (!row.querySelector("[data-horas]").value || Number(row.querySelector("[data-horas]").value) <= 0))) {
+                feedback.textContent = "Informe as horas realmente trabalhadas para cada pessoa selecionada."; return;
+            }
+            save.disabled = true; cancel.disabled = true; feedback.textContent = "Registrando a conclusão…";
+            try {
+                const response = await fetchAutenticado(`/osc/${oscAtual.id}/voluntariado/${item.vaga.id}/finalizar`, {
+                    method: "POST", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ dataInicioReal: start, dataFimReal: end, participantes })
+                });
+                if (!response?.ok) {
+                    const body = await response.json().catch(() => ({}));
+                    throw new Error(response.status === 409 ? (body.detail || "A oportunidade mudou de estado. Atualize a lista antes de tentar novamente.")
+                        : response.status === 403 ? "Somente o criador e administradores podem finalizar voluntariado."
+                            : body.detail || "Não foi possível finalizar o voluntariado.");
+                }
+                const result = await response.json();
+                const uploadFailures = [];
+                for (const row of rows) {
+                    const fileInput = row.querySelector("[data-certificate]");
+                    const file = fileInput.files?.[0];
+                    if (!row.querySelector("[data-concluiu]").checked || !file) continue;
+                    const data = new FormData(); data.append("certificado", file);
+                    const upload = await fetchAutenticado(`/osc/${oscAtual.id}/candidaturas/${row.dataset.conclusaoApplication}/certificado`, { method: "POST", body: data });
+                    if (!upload?.ok) uploadFailures.push(row.querySelector("[data-participant-name]").textContent);
+                }
+                dialog.close();
+                void carregarConteudoPublico(oscAtual.id);
+                if (membroOscConfirmado) void carregarConteudoGestao();
+                const message = `Voluntariado finalizado. ${result.completedCount || 0} participante(s) concluíram; ${result.canceledPendingCount || 0} candidatura(s) pendente(s) foram canceladas.`
+                    + (uploadFailures.length ? ` Não foi possível anexar o certificado de: ${uploadFailures.join(", ")}.` : "");
+                notificar(null, message, uploadFailures.length ? "erro" : "sucesso");
+            } catch (error) {
+                feedback.textContent = error.message || "Não foi possível finalizar o voluntariado. Seus dados permanecem no formulário.";
+                save.disabled = false; cancel.disabled = false;
+            }
+        };
+    } catch (error) {
+        feedback.textContent = error.message || "Não foi possível carregar candidaturas desta oportunidade.";
+    } finally {
+        save.disabled = !applicationsCanBeFinalized(list);
+        cancel.disabled = false;
+    }
+    cancel.onclick = () => dialog.close("cancelar");
+    dialog.oncancel = event => { event.preventDefault(); dialog.close("escape"); };
+    dialog.onclose = () => { if (opener?.isConnected) opener.focus(); };
+}
+
+function criarLinhaConclusaoParticipante(application) {
+    const row = document.createElement("fieldset"); row.className = "conclusao-participante";
+    row.dataset.conclusaoApplication = String(application.id);
+    const legend = document.createElement("legend"); legend.textContent = application.nomeCandidato || "Participante aprovado";
+    legend.dataset.participantName = "true";
+    const completedLabel = document.createElement("label");
+    const completed = document.createElement("input"); completed.type = "checkbox"; completed.dataset.concluiu = "true";
+    completedLabel.append(completed, document.createTextNode(" Esta pessoa concluiu a atividade"));
+    const hoursLabel = document.createElement("label"); hoursLabel.textContent = "Horas realmente realizadas";
+    const hours = document.createElement("input"); hours.type = "number"; hours.min = "0.01"; hours.step = "0.25"; hours.inputMode = "decimal"; hours.dataset.horas = "true"; hours.disabled = true;
+    hoursLabel.append(hours);
+    const fileLabel = document.createElement("label"); fileLabel.textContent = "Certificado (opcional; PDF, JPEG ou PNG, até 10 MB)";
+    const file = document.createElement("input"); file.type = "file"; file.accept = "application/pdf,image/jpeg,image/png"; file.dataset.certificate = "true"; file.disabled = true;
+    fileLabel.append(file);
+    completed.addEventListener("change", () => { hours.disabled = !completed.checked; file.disabled = !completed.checked; if (!completed.checked) { hours.value = ""; file.value = ""; } });
+    row.append(legend, completedLabel, hoursLabel, fileLabel);
+    return row;
+}
+
+function applicationsCanBeFinalized(list) { return Boolean(list.querySelector("[data-conclusao-application]")); }
+
 function criarPayloadPost(tipo, ativo, titulo, conteudo) {
     return {
         post: { tipo, ativo, titulo: titulo.trim(), conteudo: conteudo.trim(), imagemUrl: null },
@@ -1479,7 +1686,7 @@ function resetarImagemConteudo(tipo, urlAtual = null) {
     estado.urlAtual = urlImagemSegura(urlAtual) ? urlAtual : null;
     const prefixo = tipo === "post" ? "post" : "oportunidade";
     const input = document.getElementById(`${prefixo}-imagem-arquivo-osc`);
-    input.value = "";
+    resetarAjusteImagem(input);
     document.getElementById(`${prefixo}-imagem-feedback-osc`).textContent = "";
     renderizarPreviewImagemConteudo(tipo);
 }
@@ -1788,6 +1995,65 @@ async function carregarMembros() {
     }
 }
 
+function configurarAcoesLogo(podeEditarDados) {
+    const section = document.getElementById("acoes-logo-osc");
+    const input = document.getElementById("input-logo-osc");
+    const removeButton = document.getElementById("remover-logo-osc");
+    const status = document.getElementById("estado-logo-osc");
+    const dialog = document.getElementById("dialogo-remover-logo-osc");
+    const confirmButton = document.getElementById("confirmar-remover-logo-osc");
+    if (!section || !input || !removeButton || !status) return;
+    section.hidden = !podeEditarDados;
+    removeButton.hidden = !podeEditarDados || !oscAtual?.logo;
+    if (input.dataset.logoActionsReady === "true") return;
+
+    input.addEventListener("change", async () => {
+        const file = input.files?.[0];
+        if (!file || !oscAtual?.id) return;
+        const form = new FormData(); form.append("logo", file);
+        input.disabled = true;
+        status.textContent = "Enviando novo logotipo…";
+        try {
+            const response = await requisicaoAutenticada(`/osc/${encodeURIComponent(oscAtual.id)}/logo`, {
+                method: "POST", body: form
+            });
+            if (!response?.ok) throw new Error(await mensagemErroApi(response, "salvar logotipo"));
+            const result = await response.json();
+            if (typeof result.logo !== "string" || !urlSegura(result.logo)) {
+                throw new Error("O servidor não confirmou o logotipo atualizado.");
+            }
+            oscAtual = { ...oscAtual, logo: result.logo };
+            renderizarPerfil(oscAtual);
+            removeButton.hidden = false;
+            status.textContent = "Logotipo atualizado. O anterior só é removido se não estiver em uso.";
+        } catch (error) {
+            status.textContent = error.message || "Não foi possível atualizar o logotipo. Tente novamente.";
+        } finally {
+            input.disabled = false;
+            resetarAjusteImagem(input);
+        }
+    });
+
+    removeButton.addEventListener("click", () => dialog?.showModal());
+    confirmButton?.addEventListener("click", async () => {
+        if (!dialog || confirmButton.disabled || !oscAtual?.id) return;
+        confirmButton.disabled = true;
+        status.textContent = "Removendo logotipo…";
+        try {
+            const response = await requisicaoAutenticada(`/osc/${encodeURIComponent(oscAtual.id)}/logo`, { method: "DELETE" });
+            if (!response?.ok) throw new Error(await mensagemErroApi(response, "remover logotipo"));
+            oscAtual = { ...oscAtual, logo: null };
+            renderizarPerfil(oscAtual);
+            removeButton.hidden = true;
+            status.textContent = "Logotipo removido. Você pode enviar outra imagem quando quiser.";
+            dialog.close("removido");
+        } catch (error) {
+            status.textContent = error.message || "Não foi possível remover o logotipo. Tente novamente.";
+        } finally { confirmButton.disabled = false; }
+    });
+    input.dataset.logoActionsReady = "true";
+}
+
 async function configurarGestao() {
     const admin = ["CRIADOR", "ADMINISTRADOR"].includes(cargoAtual);
     const gestao = document.getElementById("gestao-osc");
@@ -1823,6 +2089,7 @@ async function configurarGestao() {
     void carregarConteudoGestao();
     document.getElementById("form-adicionar-membro").hidden = !admin;
     const podeEditarDados = ["CRIADOR", "ADMINISTRADOR", "EDITOR"].includes(cargoAtual);
+    configurarAcoesLogo(podeEditarDados);
     renderizarResumoConfiguracoes(oscAtual);
     painelEdicao.hidden = true;
     botaoEditarDados.hidden = !podeEditarDados;

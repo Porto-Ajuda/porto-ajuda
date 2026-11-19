@@ -10,13 +10,18 @@
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 
   <link rel="stylesheet" href="../styles/ong-profile.css" />
+  <link rel="stylesheet" href="../styles/ajuste-imagem.css">
   <link rel="stylesheet" href="../styles/denunciar-conteudo.css">
   <link rel="stylesheet" href="../styles/geral.css">
   <script type="module" src="../components/header_footer.js" defer></script>
+  <script type="module" src="../components/ajuste-imagem.js" defer></script>
   <script type="module" src="../components/ong-profile.js" defer></script>
+  <script type="module" src="../components/campanhas-gestao-osc.js" defer></script>
+  <script type="module" src="../components/ong-dashboard.js" defer></script>
   <script type="module" src="../components/verificacao-representante.js" defer></script>
   <script type="module" src="../components/denunciar-conteudo.js" defer></script>
   <link rel="stylesheet" href="../styles/candidaturas.css">
+  <link rel="stylesheet" href="../styles/campaign-donation-dialog.css">
 </head>
 <body>
   <header class="navbar"></header>
@@ -61,6 +66,8 @@
         <button type="button" id="aba-informacoes" role="tab" aria-controls="painel-publico" aria-selected="true" data-hash="informacoes">Informações</button>
         <button type="button" id="aba-publicacoes" role="tab" aria-controls="painel-publicacoes" aria-selected="false" tabindex="-1" data-hash="publicacoes" hidden>Publicações</button>
         <button type="button" id="aba-voluntariado-publico" role="tab" aria-controls="painel-voluntariado-publico" aria-selected="false" tabindex="-1" data-hash="voluntariado" hidden>Voluntariado</button>
+        <button type="button" id="aba-vaquinhas-publicas" role="tab" aria-controls="painel-vaquinhas-publicas" aria-selected="false" tabindex="-1" data-hash="vaquinhas" hidden>Vaquinhas</button>
+        <button type="button" id="aba-dashboard" role="tab" aria-controls="painel-dashboard" aria-selected="false" tabindex="-1" data-hash="dashboard" hidden>Dashboard</button>
         <button type="button" id="aba-conteudo" role="tab" aria-controls="painel-conteudo" aria-selected="false" tabindex="-1" data-hash="gestao-conteudo" hidden>Posts e voluntariado</button>
         <button type="button" id="aba-membros" role="tab" aria-controls="painel-membros" aria-selected="false" tabindex="-1" data-hash="membros" hidden>Membros</button>
         <button type="button" id="aba-dados" role="tab" aria-controls="painel-dados" aria-selected="false" data-hash="configuracoes" hidden>Configurações</button>
@@ -120,11 +127,6 @@
           <p class="texto-ausente">O perfil público ainda não oferece suporte para cadastrar imagens de atividades. O logotipo é exibido separadamente.</p>
         </section>
 
-        <section class="bloco-perfil" id="doacoes">
-          <h2>Doações</h2>
-          <p class="texto-ausente">Doações pela plataforma não estão disponíveis neste perfil porque não há uma integração de pagamento ou dados PIX cadastrados.</p>
-        </section>
-
         <section class="ods-container bloco-perfil" aria-labelledby="titulo-ods">
           <h2 id="titulo-ods">Objetivos de Desenvolvimento Sustentável</h2>
           <div class="ods" id="ods-container"></div>
@@ -145,9 +147,27 @@
         <p id="oportunidades-publicas-vazio" class="texto-ausente" hidden>Não há oportunidades abertas e disponíveis para esta organização.</p>
         <p id="oportunidades-publicas-erro" class="feedback-perfil" role="alert" hidden>Não foi possível carregar as oportunidades.</p>
       </section>
+      <section id="painel-vaquinhas-publicas" class="painel-aba painel-publicacoes-osc" role="tabpanel" aria-labelledby="aba-vaquinhas-publicas" tabindex="0" hidden>
+        <h2>Vaquinhas</h2>
+        <p id="campanhas-publicas-status" class="texto-ausente" role="status" aria-live="polite">Carregando vaquinhas públicas…</p>
+        <div id="campanhas-publicas-lista" class="showcase-grid campaign-profile-grid" role="list" aria-label="Vaquinhas públicas desta organização"></div>
+        <p id="campanhas-publicas-vazio" class="texto-ausente" hidden>Esta organização ainda não tem vaquinhas públicas ativas.</p>
+        <p id="campanhas-publicas-erro" class="feedback-perfil" role="alert" hidden>Não foi possível carregar as vaquinhas públicas.</p>
+      </section>
       <p id="conteudo-publico-status" class="feedback-perfil estado-conteudo-publico" role="status" aria-live="polite" hidden></p>
 
       <section id="gestao-osc" class="gestao-osc" hidden>
+      <section id="painel-dashboard" class="painel-aba painel-gestao-osc" role="tabpanel" aria-labelledby="aba-dashboard" tabindex="0" hidden>
+        <h2>Dashboard da organização</h2>
+        <p class="dashboard-periodo">Os cartões mostram o estado atual. O período selecionado afeta os gráficos de inscrições e lançamentos do ledger; a distribuição mostra o status atual das candidaturas criadas nesse intervalo. Arrecadação líquida confirmada não é saldo disponível para saque.</p>
+        <div class="dashboard-periodo-controles" role="group" aria-label="Período dos gráficos"><button type="button" data-dashboard-period="30">Últimos 30 dias</button><button type="button" data-dashboard-period="90">Últimos 90 dias</button><button type="button" data-dashboard-period="all">Todo o período</button><label>De <input type="date" id="dashboard-de"></label><label>Até <input type="date" id="dashboard-ate"></label><button type="button" data-dashboard-custom>Aplicar período</button></div>
+        <p id="dashboard-status" role="status" aria-live="polite">Carregando indicadores…</p>
+        <p id="dashboard-erro" class="feedback-perfil" role="alert" hidden></p>
+        <div id="dashboard-metricas" class="dashboard-metricas" aria-busy="true"></div>
+        <div class="dashboard-graficos"><section class="bloco-perfil"><h3>Arrecadação líquida confirmada</h3><p>Por mês de lançamento no ledger. Não representa saldo para saque.</p><div id="dashboard-arrecadacao"></div></section><section class="bloco-perfil"><h3>Candidaturas recebidas</h3><p>Por mês de inscrição registrada.</p><div id="dashboard-candidaturas-tempo"></div></section><section class="bloco-perfil"><h3>Status atual das candidaturas do período</h3><p>Distribuição pelo status atual dos registros inscritos no período selecionado.</p><div id="dashboard-status-candidaturas"></div></section><section class="bloco-perfil"><h3>Progresso das vaquinhas</h3><div id="dashboard-progresso-campanhas"></div></section><section class="bloco-perfil"><h3>Membros por cargo</h3><div id="dashboard-membros-cargos"></div></section></div>
+        <section class="bloco-perfil" aria-labelledby="dashboard-acoes-titulo"><h3 id="dashboard-acoes-titulo">Ações pendentes</h3><div id="dashboard-acoes"></div></section>
+        <section class="bloco-perfil" aria-labelledby="dashboard-atividade-titulo"><h3 id="dashboard-atividade-titulo">Atividade recente</h3><ul id="dashboard-atividade" class="lista-perfil"></ul></section>
+      </section>
       <section id="painel-conteudo" class="painel-aba painel-gestao-osc painel-conteudo-gestao" role="tabpanel" aria-labelledby="aba-conteudo" tabindex="0" hidden>
         <h2>Conteúdo da organização</h2>
         <p>As alterações são autorizadas pelo vínculo e cargo atual do membro nesta organização.</p>
@@ -156,6 +176,13 @@
           <div class="cabecalho-conteudo-osc"><div><h3 id="titulo-gestao-posts">Posts</h3><p>Crie e edite publicações de doação. Notícias são gerenciadas pela plataforma.</p></div><button id="criar-post-osc" class="btn" type="button">Criar post</button></div>
           <p id="posts-gestao-status" role="status" aria-live="polite">Carregando posts…</p><div id="posts-gestao-lista" class="grade-conteudo-osc"></div>
           <p id="posts-gestao-vazio" class="texto-ausente" hidden>Nenhum post cadastrado nesta organização.</p><p id="posts-gestao-erro" class="feedback-perfil" role="alert" hidden></p>
+        </section>
+        <section class="bloco-perfil campanhas-gestao" aria-labelledby="titulo-gestao-campanhas">
+          <div class="cabecalho-conteudo-osc"><div><h3 id="titulo-gestao-campanhas">Campanhas de doação</h3><p>Defina a meta líquida que a ONG pretende receber. Atingir a meta não encerra a campanha.</p></div><button id="criar-campanha-doacao" class="btn" type="button">Criar campanha</button></div>
+          <p id="campanhas-gestao-status" role="status" aria-live="polite">Carregando campanhas…</p>
+          <div id="campanhas-gestao-lista" class="campanhas-gestao-lista" aria-busy="true"></div>
+          <p id="campanhas-gestao-vazio" class="texto-ausente" hidden>Nenhuma campanha cadastrada nesta organização.</p>
+          <p id="campanhas-gestao-erro" class="feedback-perfil" role="alert" hidden></p>
         </section>
         <section class="bloco-perfil" aria-labelledby="titulo-gestao-oportunidades">
           <div class="cabecalho-conteudo-osc"><div><h3 id="titulo-gestao-oportunidades">Voluntariado</h3><p>Gerencie oportunidades ligadas a posts de voluntariado.</p></div><button id="criar-oportunidade-osc" class="btn" type="button">Criar oportunidade</button></div>
@@ -305,13 +332,22 @@
                   <label class="campo-largo">Atividades<textarea id="edicao-atividades" rows="4" maxlength="10000"></textarea></label></div></div>
                 </div>
               </section>
-              <p class="campo-ajuda">O perfil ainda não tem campos de história, objetivos, galeria de atividades, doações ou imagem de capa. O logotipo é gerenciado no cadastro e não possui fluxo de troca.</p>
+              <section id="acoes-logo-osc" class="acoes-imagem-osc campo-largo" aria-labelledby="titulo-logo-osc" hidden>
+                <h3 id="titulo-logo-osc">Logotipo da ONG</h3>
+                <p>Escolha uma imagem quadrada. O novo arquivo será salvo antes de substituir o logotipo atual.</p>
+                <label for="input-logo-osc" class="btn btn-secundario">Ajustar e enviar novo logotipo</label>
+                <input id="input-logo-osc" type="file" accept="image/jpeg,image/png,image/webp" data-image-adjustment data-aspect-ratio="1" data-image-feedback="estado-logo-osc" data-image-title="Ajustar logotipo da ONG" hidden>
+                <button id="remover-logo-osc" class="btn btn-secundario" type="button" hidden>Remover logotipo</button>
+                <p id="estado-logo-osc" role="status" aria-live="polite"></p>
+              </section>
+              <p class="campo-ajuda">História, objetivos, galeria de atividades, doações e imagem de capa ainda não têm campos próprios neste perfil. O logotipo pode ser atualizado por pessoas com permissão para editar dados da ONG.</p>
               <div class="acoes-edicao"><button class="btn btn-secundario" id="cancelar-edicao-dados" type="button">Cancelar edição</button><button class="btn btn-secundario" id="edicao-descartar" type="button" disabled>Descartar alterações</button><button class="btn" type="submit">Salvar informações</button></div>
             </fieldset>
             <p id="edicao-feedback" role="status" aria-live="polite"></p>
           </form>
         </section>
         <dialog id="dialogo-descartar" class="dialogo-descartar"><form method="dialog"><h2>Descartar alterações?</h2><p>As informações preenchidas voltarão aos valores carregados anteriormente.</p><div><button class="btn btn-secundario" value="cancelar">Continuar editando</button><button class="btn" value="descartar">Descartar alterações</button></div></form></dialog>
+        <dialog id="dialogo-remover-logo-osc" class="dialogo-remocao-imagem" aria-labelledby="titulo-remover-logo-osc" aria-describedby="descricao-remover-logo-osc"><form method="dialog"><h2 id="titulo-remover-logo-osc">Remover logotipo?</h2><p id="descricao-remover-logo-osc">O perfil passará a exibir o símbolo padrão da organização. A imagem só será removida do armazenamento depois de salvar a alteração e confirmar que não há outro registro usando o arquivo.</p><div class="dialogo-remocao-imagem__acoes"><button class="dialogo-remocao-imagem__botao dialogo-remocao-imagem__botao--secundario" value="cancelar">Manter logotipo</button><button type="button" id="confirmar-remover-logo-osc" class="dialogo-remocao-imagem__botao dialogo-remocao-imagem__botao--perigo">Remover logotipo</button></div></form></dialog>
         <section id="moderacao-configuracoes-osc" data-moderation-section class="bloco-perfil" aria-labelledby="titulo-moderacao-configuracoes-osc" hidden>
           <h2 id="titulo-moderacao-configuracoes-osc">Moderação e recursos</h2>
           <p>A pontuação e o histórico pertencem à ONG. Pontos permanecem após o término de uma restrição temporária.</p>
@@ -372,7 +408,7 @@
       <div class="moderation-write-notice" data-points-write-notice hidden role="status" aria-live="polite"></div>
       <label for="post-titulo-osc">Título</label><input id="post-titulo-osc" maxlength="255" required>
       <label for="post-conteudo-osc">Conteúdo</label><textarea id="post-conteudo-osc" rows="6" maxlength="10000" required></textarea>
-      <label for="post-imagem-arquivo-osc">Imagem (opcional)</label><input id="post-imagem-arquivo-osc" type="file" accept="image/jpeg,image/png" aria-describedby="post-imagem-ajuda-osc post-imagem-feedback-osc"><small id="post-imagem-ajuda-osc" class="campo-ajuda">JPEG ou PNG, até 10 MB.</small>
+      <label for="post-imagem-arquivo-osc">Imagem (opcional)</label><input id="post-imagem-arquivo-osc" type="file" accept="image/jpeg,image/png,image/webp" aria-describedby="post-imagem-ajuda-osc post-imagem-feedback-osc" data-image-adjustment data-aspect-ratio="1.7777778" data-image-feedback="post-imagem-feedback-osc" data-image-title="Ajustar imagem da publicação"><small id="post-imagem-ajuda-osc" class="campo-ajuda">JPEG, PNG ou WebP, até 10 MB. A prévia segue o corte horizontal usado nos cartões.</small>
       <figure id="post-imagem-preview-osc" class="imagem-conteudo-preview" hidden><img alt="Pré-visualização da imagem do post"><figcaption><span></span><button type="button" aria-label="Remover imagem selecionada">Remover seleção</button></figcaption></figure>
       <p id="post-imagem-feedback-osc" class="feedback-imagem-conteudo" role="status" aria-live="polite"></p>
       <label class="controle-ativo-conteudo"><input id="post-ativo-osc" type="checkbox" checked> Publicar quando salvar</label>
@@ -387,7 +423,7 @@
       <div class="moderation-write-notice" data-points-write-notice hidden role="status" aria-live="polite"></div>
       <label for="oportunidade-titulo-osc">Título</label><input id="oportunidade-titulo-osc" maxlength="255" required>
       <label for="oportunidade-conteudo-osc">Descrição</label><textarea id="oportunidade-conteudo-osc" rows="5" maxlength="10000" required></textarea>
-      <label for="oportunidade-imagem-arquivo-osc">Imagem (opcional)</label><input id="oportunidade-imagem-arquivo-osc" type="file" accept="image/jpeg,image/png" aria-describedby="oportunidade-imagem-ajuda-osc oportunidade-imagem-feedback-osc"><small id="oportunidade-imagem-ajuda-osc" class="campo-ajuda">JPEG ou PNG, até 10 MB.</small>
+      <label for="oportunidade-imagem-arquivo-osc">Imagem (opcional)</label><input id="oportunidade-imagem-arquivo-osc" type="file" accept="image/jpeg,image/png,image/webp" aria-describedby="oportunidade-imagem-ajuda-osc oportunidade-imagem-feedback-osc" data-image-adjustment data-aspect-ratio="1.7777778" data-image-feedback="oportunidade-imagem-feedback-osc" data-image-title="Ajustar imagem da oportunidade"><small id="oportunidade-imagem-ajuda-osc" class="campo-ajuda">JPEG, PNG ou WebP, até 10 MB. A prévia segue o corte horizontal usado nos cartões.</small>
       <figure id="oportunidade-imagem-preview-osc" class="imagem-conteudo-preview" hidden><img alt="Pré-visualização da imagem da oportunidade"><figcaption><span></span><button type="button" aria-label="Remover imagem selecionada">Remover seleção</button></figcaption></figure>
       <p id="oportunidade-imagem-feedback-osc" class="feedback-imagem-conteudo" role="status" aria-live="polite"></p>
       <label class="controle-ativo-conteudo"><input id="oportunidade-ativo-osc" type="checkbox" checked> Publicar quando salvar</label>
@@ -405,6 +441,44 @@
       <label for="vaga-status-osc">Status</label><select id="vaga-status-osc" required><option value="ABERTA">Aberta</option><option value="ENCERRADA">Encerrada</option><option value="CANCELADA">Cancelada</option></select>
       <p id="oportunidade-form-feedback-osc" role="status" aria-live="polite"></p>
       <div class="acoes-dialogo-conteudo-osc"><button id="cancelar-oportunidade-osc" class="btn btn-secundario" type="button">Cancelar</button><button id="salvar-oportunidade-osc" class="btn" type="submit">Salvar oportunidade</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="dialogo-campanha-doacao" class="dialogo-conteudo-osc" aria-labelledby="form-campanha-titulo" aria-describedby="campanha-form-descricao">
+    <form id="form-campanha-doacao" class="form-dialogo-conteudo-osc" novalidate>
+      <h2 id="form-campanha-titulo">Criar vaquinha</h2>
+      <p id="campanha-form-descricao">Defina o valor líquido que a ONG pretende arrecadar.</p>
+      <label for="campanha-titulo">Título</label>
+      <input id="campanha-titulo" maxlength="140" required autocomplete="off">
+      <label for="campanha-descricao">Descrição</label>
+      <textarea id="campanha-descricao" maxlength="10000" rows="5" required></textarea>
+      <label for="campanha-meta">Meta da ONG (R$)</label>
+      <input id="campanha-meta" type="text" inputmode="decimal" placeholder="R$ 0,00" aria-describedby="campanha-meta-ajuda campanha-meta-erro" required>
+      <small id="campanha-meta-ajuda" class="campo-ajuda">Valor que a ONG pretende arrecadar, sem incluir as taxas.</small>
+      <p id="campanha-meta-erro" class="feedback-imagem-conteudo" role="alert" hidden></p>
+      <label for="campanha-prazo">Prazo (opcional)</label>
+      <input id="campanha-prazo" type="datetime-local">
+      <label for="campanha-imagem">Imagem da vaquinha</label>
+      <input id="campanha-imagem" type="file" accept="image/jpeg,image/png,image/webp" aria-describedby="campanha-imagem-ajuda campanha-imagem-feedback" data-image-adjustment data-aspect-ratio="1.7777778" data-image-title="Ajustar imagem da vaquinha" data-image-feedback="campanha-imagem-feedback">
+      <small id="campanha-imagem-ajuda" class="campo-ajuda">JPEG, PNG ou WebP, até 10 MB. A prévia segue o corte horizontal dos cartões.</small>
+      <figure id="campanha-imagem-preview" class="imagem-conteudo-preview" hidden><img alt="Prévia da imagem da vaquinha"><figcaption><span></span><button type="button" aria-label="Remover imagem selecionada">Remover seleção</button></figcaption></figure>
+      <p id="campanha-imagem-feedback" class="feedback-imagem-conteudo" role="status" aria-live="polite"></p>
+      <label id="campanha-publicar-controle" class="controle-ativo-conteudo"><input id="campanha-publicar" type="checkbox" checked> Publicar quando salvar</label>
+      <p id="campanha-form-feedback" class="campanha-form-feedback" role="status" aria-live="polite"></p>
+      <div class="acoes-dialogo-conteudo-osc"><button id="cancelar-campanha-doacao" class="btn btn-secundario" type="button">Cancelar</button><button id="salvar-campanha-doacao" class="btn" type="submit">Salvar vaquinha</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="dialogo-conclusao-voluntariado" class="dialogo-conteudo-osc" aria-labelledby="titulo-conclusao-voluntariado" aria-describedby="descricao-conclusao-voluntariado">
+    <form id="form-conclusao-voluntariado" class="form-dialogo-conteudo-osc">
+      <h2 id="titulo-conclusao-voluntariado">Finalizar voluntariado</h2>
+      <p id="descricao-conclusao-voluntariado">Informe o período real da atividade. As datas representam o tempo decorrido; as horas abaixo representam o trabalho efetivamente realizado por cada pessoa.</p>
+      <label for="conclusao-data-inicio-real">Início real</label><input id="conclusao-data-inicio-real" type="date" required>
+      <label for="conclusao-data-fim-real">Fim real</label><input id="conclusao-data-fim-real" type="date" required>
+      <p>Selecione somente quem concluiu. Candidaturas pendentes e participantes aprovados não selecionados serão cancelados ao finalizar a oportunidade.</p>
+      <div id="conclusao-participantes" class="conclusao-participantes" aria-live="polite"></div>
+      <p id="conclusao-feedback" role="status" aria-live="polite"></p>
+      <div class="acoes-dialogo-conteudo-osc"><button id="cancelar-conclusao-voluntariado" class="btn btn-secundario" type="button">Cancelar</button><button id="salvar-conclusao-voluntariado" class="btn" type="submit">Finalizar voluntariado</button></div>
     </form>
   </dialog>
 

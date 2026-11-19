@@ -1,38 +1,7 @@
-const ICONES_NOTIFICACAO = {
-    sucesso: "✓",
-    erro: "×",
-    aviso: "!",
-    informacao: "i"
-};
-
-function obterToast() {
-    let toast = document.getElementById("notificacao-osc");
-    if (!toast) {
-        toast = document.createElement("div");
-        toast.id = "notificacao-osc";
-        toast.className = "notificacao-osc";
-        toast.setAttribute("role", "status");
-        toast.setAttribute("aria-live", "polite");
-        toast.hidden = true;
-        document.body.append(toast);
-    }
-    return toast;
-}
+import { notificarToast } from "./notificacoes.js";
 
 export function notificar(mensagem, tipo = "informacao", duracao = 5000) {
-    const toast = obterToast();
-    clearTimeout(toast._timerNotificacao);
-    toast.replaceChildren();
-    const icone = document.createElement("span");
-    icone.className = "notificacao-osc-icone";
-    icone.setAttribute("aria-hidden", "true");
-    icone.textContent = ICONES_NOTIFICACAO[tipo] || ICONES_NOTIFICACAO.informacao;
-    const texto = document.createElement("span");
-    texto.textContent = mensagem;
-    toast.append(icone, texto);
-    toast.dataset.tipo = tipo;
-    toast.hidden = false;
-    toast._timerNotificacao = setTimeout(() => { toast.hidden = true; }, duracao);
+    return notificarToast(mensagem, { tipo, duracao });
 }
 
 function obterModal() {

@@ -1,6 +1,7 @@
 package com.portoajuda.aplicacao_osc.service;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.mock;
@@ -30,6 +31,83 @@ class AdminAuthDeliveryEligibilityDiagnosticTest {
     private final AdminAuthorizationService authorization = mock(AdminAuthorizationService.class);
 
     @Test
+    void desafioSemEntregaObrigatoriaDeSmsEhInvalidado() {
+        UUID challengeId = UUID.randomUUID();
+        AdminAuthChallenge challenge = challenge(challengeId, AdminAuthChallenge.State.ISSUING);
+        Usuario user = mock(Usuario.class);
+        when(user.getId()).thenReturn(812340);
+        when(user.getEmail()).thenReturn(new Email("synthetic-admin@example.invalid"));
+        when(user.getTelefone()).thenReturn("11987654321");
+        challenge.setUsuario(user);
+        challenge.setEmailSnapshotHash("email-hmac");
+        challenge.setPhoneSnapshotHash("phone-hmac");
+        when(authorization.privilegedSessionEligibility(user))
+                .thenReturn(AdminAuthorizationService.PrivilegedSessionEligibility.ELIGIBLE);
+        when(crypto.accountKey("synthetic-admin@example.invalid")).thenReturn("email-hmac");
+        when(crypto.phoneKey("5511987654321")).thenReturn("phone-hmac");
+        AdminAuthDelivery queuedEmail = delivery(challengeId, challenge);
+        queuedEmail.setId(UUID.randomUUID());
+        when(deliveries.claimNextPending()).thenReturn(Optional.of(queuedEmail));
+        when(challenges.findById(challengeId)).thenReturn(Optional.of(challenge));
+        when(deliveries.existsByChallenge_IdAndChannel(challengeId, AdminAuthDelivery.Channel.EMAIL))
+                .thenReturn(true);
+        when(deliveries.existsByChallenge_IdAndChannel(challengeId, AdminAuthDelivery.Channel.SMS))
+                .thenReturn(false);
+
+        assertNull(createQueue().claimNext());
+
+        assertEquals(AdminAuthChallenge.State.FAILED, challenge.getState());
+        verify(deliveries).failChallengeDeliveries(any(), any(), any(),
+                eq("CHALLENGE_REQUIRED_DELIVERY_MISSING"), any());
+        verify(audit).registrar("ADMIN_AUTH_REQUIRED_DELIVERY_MISSING", 812340, challengeId, null, null);
+    }
+
+    @Test
+    void entregaDeEmailNaoLiberaDesafioQuandoEntregaSmsEstaAusente() {
+        UUID challengeId = UUID.randomUUID();
+        AdminAuthChallenge challenge = challenge(challengeId, AdminAuthChallenge.State.ISSUING);
+        AdminAuthDelivery emailDelivery = delivery(challengeId, challenge);
+        emailDelivery.setId(UUID.randomUUID());
+        emailDelivery.setChannel(AdminAuthDelivery.Channel.EMAIL);
+        emailDelivery.setState(AdminAuthDelivery.State.PROCESSING);
+        emailDelivery.setEncryptedCode(new byte[] {1, 2, 3});
+        when(deliveries.findById(emailDelivery.getId())).thenReturn(Optional.of(emailDelivery));
+        when(challenges.findById(challengeId)).thenReturn(Optional.of(challenge));
+        when(deliveries.countByChallenge_Id(challengeId)).thenReturn(1L);
+        when(deliveries.countByChallenge_IdAndState(challengeId, AdminAuthDelivery.State.SENT)).thenReturn(1L);
+
+        createQueue().finish(emailDelivery.getId(), true);
+
+        assertEquals(AdminAuthDelivery.State.SENT, emailDelivery.getState());
+        assertNull(emailDelivery.getEncryptedCode());
+        assertEquals(AdminAuthChallenge.State.FAILED, challenge.getState());
+        verify(challenges).save(challenge);
+        verify(deliveries).failChallengeDeliveries(any(), any(), any(),
+                eq("CHALLENGE_REQUIRED_DELIVERY_MISSING"), any());
+    }
+
+    @Test
+    void desafioComSmsAindaPendenteNaoAvancaAposSomenteEmail() {
+        UUID challengeId = UUID.randomUUID();
+        AdminAuthChallenge challenge = challenge(challengeId, AdminAuthChallenge.State.ISSUING);
+        AdminAuthDelivery emailDelivery = delivery(challengeId, challenge);
+        emailDelivery.setId(UUID.randomUUID());
+        emailDelivery.setChannel(AdminAuthDelivery.Channel.EMAIL);
+        emailDelivery.setState(AdminAuthDelivery.State.PROCESSING);
+        emailDelivery.setEncryptedCode(new byte[] {1, 2, 3});
+        when(deliveries.findById(emailDelivery.getId())).thenReturn(Optional.of(emailDelivery));
+        when(challenges.findById(challengeId)).thenReturn(Optional.of(challenge));
+        when(deliveries.countByChallenge_Id(challengeId)).thenReturn(2L);
+        when(deliveries.countByChallenge_IdAndState(challengeId, AdminAuthDelivery.State.SENT)).thenReturn(1L);
+
+        createQueue().finish(emailDelivery.getId(), true);
+
+        assertEquals(AdminAuthDelivery.State.SENT, emailDelivery.getState());
+        assertEquals(AdminAuthChallenge.State.ISSUING, challenge.getState());
+        verify(challenges, never()).save(challenge);
+    }
+
+    @Test
     void recordsChallengeStateRejectionWithoutProviderDataOrSecrets() {
         UUID challengeId = UUID.randomUUID();
         AdminAuthChallenge challenge = challenge(challengeId, AdminAuthChallenge.State.INVALIDATED);
@@ -47,7 +125,7 @@ class AdminAuthDeliveryEligibilityDiagnosticTest {
         verify(audit).registrar(
                 "ADMIN_AUTH_DELIVERY_NO_LONGER_ELIGIBLE",
                 812345, challengeId, null, null);
-        verify(deliveries).failChallengeDeliveries(any(), any(), any(), any());
+        verify(deliveries).failChallengeDeliveries(any(), any(), any(), any(), any());
         verifyNoInteractions(crypto);
     }
 

@@ -17,6 +17,10 @@ public class SmsService {
         return smsMaisClient.enviar(normalizarTelefoneBrasileiro(telefone), mensagem, externalId);
     }
 
+    public boolean isSandboxMode() {
+        return smsMaisClient.isSandbox();
+    }
+
     private void validarMensagem(String mensagem) {
         if (mensagem == null || mensagem.isBlank()
                 || mensagem.codePointCount(0, mensagem.length()) > 160) {

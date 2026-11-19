@@ -21,6 +21,7 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -48,6 +49,7 @@ class UsuarioServiceAccountDataTest {
     @Mock EmailService emailService;
     @Mock SessaoUsuarioService sessaoUsuarioService;
     @Mock SupabaseStorageService supabaseStorageService;
+    @Mock ManagedImageCleanupService managedImageCleanup;
     @Mock AdminAuthChallengeRepository adminAuthChallengeRepository;
     @Mock AdminAuthDeliveryQueueService adminAuthDeliveryQueueService;
     @Mock AdminPrivilegedSessionService adminPrivilegedSessionService;
@@ -123,6 +125,37 @@ class UsuarioServiceAccountDataTest {
         assertEquals("registrado@example.invalid", account.getEmail().valor());
         assertEquals("11999990000", account.getTelefone());
         verify(usuarioRepository).save(account);
+    }
+
+    @Test
+    void removePhotoClearsOnlyTheAuthenticatedUsersReferenceAndSchedulesManagedCleanup() {
+        String previous = "https://storage.example/storage/v1/object/public/images/usuarios/19/foto-perfil-00000000-0000-0000-0000-000000000001.png";
+        account.setFotoPerfilUrl(previous);
+        ReflectionTestUtils.setField(service, "managedImageCleanup", managedImageCleanup);
+        when(usuarioRepository.findByIdForUpdate(19)).thenReturn(Optional.of(account));
+
+        service.removerFotoPerfil(19);
+
+        assertEquals(null, account.getFotoPerfilUrl());
+        verify(usuarioRepository).save(account);
+        verify(managedImageCleanup).afterCommitIfUnreferenced(previous);
+    }
+
+    @Test
+    void replacingPhotoLocksTheAuthenticatedUserAndSchedulesNewRollbackAndOldPostCommitCleanup() {
+        String previous = "https://storage.example/storage/v1/object/public/images/usuarios/19/foto-perfil-00000000-0000-0000-0000-000000000001.png";
+        String replacement = "https://storage.example/storage/v1/object/public/images/usuarios/19/foto-perfil-00000000-0000-0000-0000-000000000002.jpg";
+        account.setFotoPerfilUrl(previous);
+        ReflectionTestUtils.setField(service, "managedImageCleanup", managedImageCleanup);
+        when(usuarioRepository.findByIdForUpdate(19)).thenReturn(Optional.of(account));
+        when(supabaseStorageService.enviarFotoPerfil(19, new byte[]{1, 2, 3}, "image/jpeg"))
+                .thenReturn(replacement);
+
+        assertEquals(replacement, service.atualizarFotoPerfil(19, new byte[]{1, 2, 3}, "image/jpeg"));
+        assertEquals(replacement, account.getFotoPerfilUrl());
+        verify(usuarioRepository).findByIdForUpdate(19);
+        verify(managedImageCleanup).afterRollback(replacement);
+        verify(managedImageCleanup).afterCommitIfUnreferenced(previous);
     }
 
     @Test

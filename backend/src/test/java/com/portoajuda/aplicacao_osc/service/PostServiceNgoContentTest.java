@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -38,6 +39,7 @@ import com.portoajuda.aplicacao_osc.repository.RoleRepository;
 import com.portoajuda.aplicacao_osc.repository.UsuarioRepository;
 import com.portoajuda.aplicacao_osc.repository.VagaRepository;
 import org.springframework.mock.web.MockMultipartFile;
+import org.mockito.InOrder;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import java.time.LocalDate;
 import java.util.List;
@@ -167,7 +169,7 @@ class PostServiceNgoContentTest {
         Osc other = new Osc();
         ReflectionTestUtils.setField(other, "id", 202);
         post.setOsc(other);
-        when(postRepository.findById(900)).thenReturn(Optional.of(post));
+        when(postRepository.findForUpdateById(900)).thenReturn(Optional.of(post));
         when(oscService.obterCargoUsuario(osc, actor)).thenReturn(CargoOsc.CRIADOR);
 
         ResponseStatusException error = assertThrows(ResponseStatusException.class,
@@ -232,7 +234,7 @@ class PostServiceNgoContentTest {
     void aMemberCannotModifyContentFromAHigherCurrentRole() {
         Post post = post(TipoPost.DOACAO, 55);
         RequestUpdatePostDTO update = updateRequest(post.getId(), "updated");
-        when(postRepository.findById(900)).thenReturn(Optional.of(post));
+        when(postRepository.findForUpdateById(900)).thenReturn(Optional.of(post));
         when(oscService.obterCargoUsuario(osc, actor)).thenReturn(CargoOsc.EDITOR);
         when(membrosRepository.findByOsc_IdAndUsuario_Id(101, 55)).thenReturn(Optional.of(member(CargoOsc.ADMINISTRADOR)));
 
@@ -249,7 +251,7 @@ class PostServiceNgoContentTest {
     @Test
     void aHigherRoleCanModifyContentFromALowerCurrentRole() {
         Post post = post(TipoPost.DOACAO, 55);
-        when(postRepository.findById(900)).thenReturn(Optional.of(post));
+        when(postRepository.findForUpdateById(900)).thenReturn(Optional.of(post));
         when(oscService.obterCargoUsuario(osc, actor)).thenReturn(CargoOsc.ADMINISTRADOR);
         when(membrosRepository.findByOsc_IdAndUsuario_Id(101, 55)).thenReturn(Optional.of(member(CargoOsc.EDITOR)));
 
@@ -266,7 +268,7 @@ class PostServiceNgoContentTest {
         Vaga existing = vacancy(StatusVaga.ABERTA, LocalDate.now().plusDays(10));
         existing.setPost(post);
         post.setVagaVoluntariado(existing);
-        when(postRepository.findById(900)).thenReturn(Optional.of(post));
+        when(postRepository.findForUpdateById(900)).thenReturn(Optional.of(post));
         when(oscService.obterCargoUsuario(osc, actor)).thenReturn(CargoOsc.MEMBRO);
         when(membrosRepository.findByOsc_IdAndUsuario_Id(101, 55))
                 .thenReturn(Optional.of(member(CargoOsc.MEMBRO)));
@@ -293,7 +295,7 @@ class PostServiceNgoContentTest {
     void editingWithoutReplacementPreservesTheExistingImageAndRejectsNewUrls() {
         Post post = post(TipoPost.DOACAO, 55);
         post.setImagemUrl("https://legacy.example.invalid/existing.jpg");
-        when(postRepository.findById(900)).thenReturn(Optional.of(post));
+        when(postRepository.findForUpdateById(900)).thenReturn(Optional.of(post));
         when(oscService.obterCargoUsuario(osc, actor)).thenReturn(CargoOsc.ADMINISTRADOR);
         when(membrosRepository.findByOsc_IdAndUsuario_Id(101, 55))
                 .thenReturn(Optional.of(member(CargoOsc.EDITOR)));
@@ -337,7 +339,7 @@ class PostServiceNgoContentTest {
         Post post = post(TipoPost.DOACAO, 55);
         post.setUsuario(actor);
         post.setImagemUrl("https://legacy.example.invalid/old.png");
-        when(postRepository.findById(900)).thenReturn(Optional.of(post));
+        when(postRepository.findForUpdateById(900)).thenReturn(Optional.of(post));
         when(oscService.obterCargoUsuario(osc, actor)).thenReturn(CargoOsc.MEMBRO);
         when(storageService.enviarImagemConteudoOsc(eq(101), eq(900), eq(false),
                 any(byte[].class), eq("image/png")))
@@ -352,7 +354,36 @@ class PostServiceNgoContentTest {
 
             assertEquals("https://storage.example.invalid/oscs/101/posts/900/new.png", updated.imagemUrl());
             assertEquals("https://storage.example.invalid/oscs/101/posts/900/new.png", post.getImagemUrl());
+            InOrder lockOrder = inOrder(postRepository, storageService);
+            lockOrder.verify(postRepository).findForUpdateById(900);
+            lockOrder.verify(storageService).enviarImagemConteudoOsc(101, 900, false, image.getBytes(), "image/png");
             verify(storageService).enviarImagemConteudoOsc(101, 900, false, image.getBytes(), "image/png");
+        } finally {
+            TransactionSynchronizationManager.clearSynchronization();
+        }
+    }
+
+    @Test
+    void databaseRollbackSchedulesNewImageCleanupWithoutDeletingTheSavedImage() throws Exception {
+        Post post = post(TipoPost.DOACAO, 55);
+        post.setUsuario(actor);
+        String oldUrl = "https://legacy.example.invalid/old.png";
+        post.setImagemUrl(oldUrl);
+        when(postRepository.findForUpdateById(900)).thenReturn(Optional.of(post));
+        when(oscService.obterCargoUsuario(osc, actor)).thenReturn(CargoOsc.MEMBRO);
+        when(storageService.enviarImagemConteudoOsc(eq(101), eq(900), eq(false), any(byte[].class), eq("image/png")))
+                .thenReturn(new SupabaseStorageService.ArquivoEnviado(
+                        "https://storage.example.invalid/oscs/101/posts/900/pending.png",
+                        "oscs/101/posts/900/00000000-0000-0000-0000-000000000008.png"));
+        MockMultipartFile image = new MockMultipartFile("imagem", "new.png", "image/png", pngValido());
+        TransactionSynchronizationManager.initSynchronization();
+        try {
+            service.atualizarConteudoDaOsc(101, updateRequest(900, "updated"), actor, image);
+            TransactionSynchronizationManager.getSynchronizations().forEach(sync ->
+                    sync.afterCompletion(org.springframework.transaction.support.TransactionSynchronization.STATUS_ROLLED_BACK));
+            verify(storageService).removerImagemConteudoOsc(101, 900, false,
+                    "oscs/101/posts/900/00000000-0000-0000-0000-000000000008.png");
+            verify(storageService, never()).removerImagemConteudoOscUrl(101, 900, false, oldUrl);
         } finally {
             TransactionSynchronizationManager.clearSynchronization();
         }

@@ -16,6 +16,7 @@ import com.portoajuda.aplicacao_osc.admin.AdminAuthorizationService;
 import com.portoajuda.aplicacao_osc.entity.Usuario;
 import com.portoajuda.aplicacao_osc.segurity.AdminSessionAuthFilter;
 import com.portoajuda.aplicacao_osc.dto.request.AdminAuthVerifyRequest;
+import com.portoajuda.aplicacao_osc.dto.request.AdminAuthStartRequest;
 import com.portoajuda.aplicacao_osc.segurity.ClientIpResolver;
 import java.time.Instant;
 import java.util.UUID;
@@ -31,6 +32,103 @@ import org.springframework.web.bind.annotation.GetMapping;
 
 @ExtendWith(MockitoExtension.class)
 class AdminAuthControllerSessionTest {
+
+    @Test
+    void inicioInformaSeSmsFoiExigidoPeloServidor() {
+        UUID challengeId = UUID.randomUUID();
+        when(clientIpResolver.resolve(any())).thenReturn("192.0.2.70");
+        when(authenticationService.iniciar(any(), eq("192.0.2.70"))).thenReturn(challengeId);
+        AdminAuthController controller = new AdminAuthController(
+                authenticationService, clientIpResolver, sessionService, new AdminSessionCookie(true),
+                adminAuthorization);
+
+        var response = controller.iniciar(
+                new AdminAuthStartRequest("admin@example.invalid", "synthetic-password"),
+                new MockHttpServletRequest("POST", "/admin/auth/challenges"));
+
+        assertEquals(HttpStatus.ACCEPTED, response.getStatusCode());
+        assertEquals(challengeId, response.getBody().get("challengeId"));
+        assertEquals(true, response.getBody().get("smsRequired"));
+        assertTrue(response.getHeaders().getCacheControl().contains("no-store"));
+    }
+
+    @Test
+    void verificacaoExplicitaCodigoEstadoTentativasEntregaEReuso() {
+        UUID challengeId = UUID.randomUUID();
+        when(clientIpResolver.resolve(any())).thenReturn("192.0.2.74");
+        when(authenticationService.verificarEEmitirSessao(eq(challengeId), any(), eq("192.0.2.74")))
+                .thenReturn(
+                        new AdminAuthenticationService.VerificationOutcome(
+                                AdminAuthenticationService.VerificationResult.REJECTED, null,
+                                AdminAuthenticationService.VerificationFailure.INVALID_CODE, null),
+                        new AdminAuthenticationService.VerificationOutcome(
+                                AdminAuthenticationService.VerificationResult.REJECTED, null,
+                                AdminAuthenticationService.VerificationFailure.EXPIRED_CODE, null),
+                        new AdminAuthenticationService.VerificationOutcome(
+                                AdminAuthenticationService.VerificationResult.REJECTED, null,
+                                AdminAuthenticationService.VerificationFailure.CHALLENGE_REPLACED, null),
+                        new AdminAuthenticationService.VerificationOutcome(
+                                AdminAuthenticationService.VerificationResult.REJECTED, null,
+                                AdminAuthenticationService.VerificationFailure.CODE_ALREADY_USED, null),
+                        new AdminAuthenticationService.VerificationOutcome(
+                                AdminAuthenticationService.VerificationResult.REJECTED, null,
+                                AdminAuthenticationService.VerificationFailure.TOO_MANY_ATTEMPTS, null),
+                        new AdminAuthenticationService.VerificationOutcome(
+                                AdminAuthenticationService.VerificationResult.REJECTED, null,
+                                AdminAuthenticationService.VerificationFailure.DELIVERY_FAILED, null));
+        AdminAuthController controller = new AdminAuthController(
+                authenticationService, clientIpResolver, sessionService, new AdminSessionCookie(true),
+                adminAuthorization);
+        var request = new MockHttpServletRequest("POST", "/admin/auth/challenges/verify");
+        var verifyRequest = new AdminAuthVerifyRequest("synthetic-code", null);
+        var expected = java.util.List.of(
+                new Object[] {HttpStatus.UNAUTHORIZED, "INVALID_CODE"},
+                new Object[] {HttpStatus.GONE, "EXPIRED_CODE"},
+                new Object[] {HttpStatus.CONFLICT, "CHALLENGE_REPLACED"},
+                new Object[] {HttpStatus.CONFLICT, "CODE_ALREADY_USED"},
+                new Object[] {HttpStatus.TOO_MANY_REQUESTS, "TOO_MANY_ATTEMPTS"},
+                new Object[] {HttpStatus.SERVICE_UNAVAILABLE, "DELIVERY_FAILED"});
+
+        for (Object[] item : expected) {
+            var response = controller.verificar(challengeId, verifyRequest, request);
+            assertEquals(item[0], response.getStatusCode());
+            assertEquals(item[1], response.getBody().get("codigo"));
+            if ("DELIVERY_FAILED".equals(item[1])) {
+                assertEquals("Não foi possível entregar o código. Inicie um novo login.",
+                        response.getBody().get("mensagem"));
+            }
+            assertTrue(response.getHeaders().getCacheControl().contains("no-store"));
+        }
+    }
+
+    @Test
+    void entregaEmConfirmacaoEProximoFatorSaoEstadosSeparados() {
+        UUID challengeId = UUID.randomUUID();
+        when(clientIpResolver.resolve(any())).thenReturn("192.0.2.75");
+        when(authenticationService.verificarEEmitirSessao(eq(challengeId), any(), eq("192.0.2.75")))
+                .thenReturn(
+                        new AdminAuthenticationService.VerificationOutcome(
+                                AdminAuthenticationService.VerificationResult.PENDING, null, null, "DELIVERY"),
+                        new AdminAuthenticationService.VerificationOutcome(
+                                AdminAuthenticationService.VerificationResult.PENDING, null, null, "SMS"));
+        AdminAuthController controller = new AdminAuthController(
+                authenticationService, clientIpResolver, sessionService, new AdminSessionCookie(true),
+                adminAuthorization);
+
+        var deliveryPending = controller.verificar(challengeId,
+                new AdminAuthVerifyRequest("synthetic-code", null), new MockHttpServletRequest());
+        assertEquals(HttpStatus.ACCEPTED, deliveryPending.getStatusCode());
+        assertEquals("DELIVERY_PENDING", deliveryPending.getBody().get("codigo"));
+        assertEquals("DELIVERY", deliveryPending.getBody().get("nextFactor"));
+        assertTrue(deliveryPending.getBody().get("mensagem").contains("Aguarde alguns segundos"));
+
+        var smsRequired = controller.verificar(challengeId,
+                new AdminAuthVerifyRequest("synthetic-code", null), new MockHttpServletRequest());
+        assertEquals(HttpStatus.ACCEPTED, smsRequired.getStatusCode());
+        assertEquals("NEXT_FACTOR_REQUIRED", smsRequired.getBody().get("codigo"));
+        assertEquals("SMS", smsRequired.getBody().get("nextFactor"));
+        assertTrue(smsRequired.getBody().get("mensagem").contains("código de e-mail foi confirmado"));
+    }
 
     @Test
     void consultaDaSessaoNaoRetornaDadosPessoaisEExigeSessaoAdmin() throws Exception {

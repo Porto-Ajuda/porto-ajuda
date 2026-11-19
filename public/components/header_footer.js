@@ -124,6 +124,11 @@ modalCSS.href = "../styles/modal.css";
 
 document.head.appendChild(modalCSS);
 
+const notificationStyles = document.createElement("link");
+notificationStyles.rel = "stylesheet";
+notificationStyles.href = "../styles/notificacoes.css";
+document.head.appendChild(notificationStyles);
+
 
 const script1 = document.createElement("script");
 
@@ -232,7 +237,7 @@ const cabecalho = `
 
         <li>
             <a href="${ROTAS.proximidade}">
-                ONG's Regionais
+                ONGs da região
             </a>
         </li>
 
@@ -396,7 +401,7 @@ async function configurarLinkAcessoUsuario() {
             }
 
             console.warn(
-                `Não foi possível confirmar a sessão (HTTP ${resposta.status}).`
+                "Não foi possível confirmar sua sessão. Tente novamente."
             );
 
             if (estadoSessao !== "authenticated") {
@@ -709,7 +714,7 @@ const menuMobileHTML = `
 
             <li>
                 <a href="${ROTAS.proximidade}">
-                    ONG's Regionais
+                ONGs da região
                 </a>
             </li>
 

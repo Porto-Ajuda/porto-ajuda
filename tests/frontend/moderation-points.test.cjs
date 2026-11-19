@@ -84,9 +84,10 @@ test("manual points adjustment uses its own vertical responsive dialog styles", 
 });
 
 test("user and NGO point panels use authenticated scoped endpoints and appeal API", async () => {
-    const [profile, ngoHtml, ngoScript, module] = await Promise.all([
+    const [profile, ngoHtml, ngoScript, module, logic] = await Promise.all([
         read("public/pages/perfil.html"), read("public/pages/ong-profile.html"),
-        read("public/components/ong-profile.js"), read("public/components/moderation-profile.js")
+        read("public/components/ong-profile.js"), read("public/components/moderation-profile.js"),
+        read("public/components/moderation-profile-logic.js")
     ]);
     assert.match(profile, /id="moderacao-perfil-usuario"/);
     assert.match(profile, /id="moderacao-organizacoes-usuario"/);
@@ -96,7 +97,10 @@ test("user and NGO point panels use authenticated scoped endpoints and appeal AP
     assert.match(module, /\/moderation\/me/);
     assert.match(module, /fetchAutenticado\("\/moderation\/organizations"/);
     assert.match(module, /\/osc\/.*\/moderation\/restriction/);
-    assert.match(module, /hasPointHistory === true/);
+    assert.match(module, /summaries\.filter\(possuiHistoricoModeracaoOng\)/);
+    assert.match(logic, /subject\?\.hasPointHistory === true/);
+    assert.match(logic, /subject\?\.appeals/);
+    assert.match(module, /void carregarResumoOrganizacoes\(organizations, state\)/);
     assert.match(module, /aria-expanded/);
     assert.match(module, /state\.requests\.get\(id\)/);
     assert.doesNotMatch(module, /state\.details/);

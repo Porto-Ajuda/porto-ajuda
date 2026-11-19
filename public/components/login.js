@@ -156,7 +156,7 @@ import {
                     ? "Não foi possível validar as credenciais ou a solicitação já venceu."
                     : response.status === 403
                         ? "A proteção da requisição expirou. Atualize a página e tente novamente."
-                        : `Não foi possível cancelar a solicitação (HTTP ${response.status}).`;
+                        : "Não foi possível recuperar a conta agora. Tente novamente mais tarde.";
                 return;
             }
 

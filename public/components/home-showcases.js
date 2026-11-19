@@ -2,8 +2,11 @@ import { getAPI_URL } from "./modoBack.js";
 import { urlImagemSegura } from "./ong-content.js";
 import { createShowcasePager, HOME_SHOWCASE_PAGE_SIZE } from "./showcase-pagination.js";
 import { renderizarPaginaOngs } from "./carrossel-amostra.js";
+import { createCampaignCard } from "./campaign-card.js";
+import { createCampaignDonationDialog } from "./campaign-donation-dialog.js";
 
 const API_URL = getAPI_URL();
+const campaignDialog = createCampaignDonationDialog();
 
 function criarElemento(tag, classe, texto) {
     const elemento = document.createElement(tag);
@@ -129,7 +132,7 @@ function iniciarVitrine({
                 headers: { Accept: "application/json" },
                 cache: "no-store"
             });
-            if (!resposta.ok) throw new Error(`HTTP ${resposta.status}`);
+            if (!resposta.ok) throw new Error("Não foi possível carregar este conteúdo. Tente novamente.");
             return resposta.json();
         },
         onItems: items => renderizar(container, items),
@@ -148,16 +151,43 @@ function iniciarVitrine({
     return pager;
 }
 
-function prepararEstadoVazioDoacoes() {
+function iniciarVitrineDoacoes() {
+    const container = document.getElementById("cards-doacao");
     const status = document.getElementById("doacoes-status");
     const anterior = document.getElementById("doacoes-anterior");
     const proximo = document.getElementById("doacoes-proximo");
     const tentarNovamente = document.getElementById("doacoes-tentar-novamente");
-    document.getElementById("cards-doacao")?.replaceChildren();
-    if (status) status.textContent = "Ainda não há campanhas de arrecadação verificadas para exibir.";
-    if (anterior) anterior.disabled = true;
-    if (proximo) proximo.disabled = true;
-    if (tentarNovamente) tentarNovamente.hidden = true;
+    if (!container || !status || !anterior || !proximo || !tentarNovamente) return;
+    anterior.setAttribute("aria-controls", "cards-doacao");
+    proximo.setAttribute("aria-controls", "cards-doacao");
+    const pager = createShowcasePager({
+        pageSize: HOME_SHOWCASE_PAGE_SIZE,
+        fetchPage: async (page, size) => {
+            const response = await fetch(`${API_URL}/donation-campaigns`, {
+                headers: { Accept: "application/json" }, cache: "no-store"
+            });
+            if (!response.ok) throw new Error("Falha ao carregar campanhas públicas.");
+            const campaigns = await response.json();
+            if (!Array.isArray(campaigns)) throw new TypeError("Resposta de campanhas inválida.");
+            const publicCampaigns = campaigns.filter(item => item?.state === "ACTIVE" && item.id != null);
+            const totalPages = Math.ceil(publicCampaigns.length / size);
+            return { content: publicCampaigns.slice(page * size, (page + 1) * size), number: page, totalPages };
+        },
+        onItems: items => container.replaceChildren(...items.map(item => createCampaignCard(item, { context: "home", onOpen: (campaign, trigger) => campaignDialog.open(campaign, trigger) }))),
+        onState: state => {
+            status.textContent = state.status === "loading" ? "Carregando vaquinhas…"
+                : state.status === "error" ? "Não foi possível carregar as vaquinhas. Tente novamente."
+                    : state.status === "empty" ? "Ainda não há vaquinhas ativas para exibir."
+                        : `Página ${state.page + 1} de ${state.totalPages}`;
+            anterior.disabled = !state.canPrevious;
+            proximo.disabled = !state.canNext;
+            tentarNovamente.hidden = state.status !== "error";
+        }
+    });
+    anterior.addEventListener("click", () => { void pager.previous(); });
+    proximo.addEventListener("click", () => { void pager.next(); });
+    tentarNovamente.addEventListener("click", () => { void pager.retry(); });
+    void pager.load();
 }
 
 iniciarVitrine({
@@ -193,4 +223,4 @@ iniciarVitrine({
     renderizar: (container, items) => renderizarCardsConteudo(container, items, "Voluntariado")
 });
 
-prepararEstadoVazioDoacoes();
+iniciarVitrineDoacoes();
