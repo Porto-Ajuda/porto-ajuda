@@ -30,18 +30,46 @@ test("input formats normalize WebP to JPEG and preserve PNG", async () => {
     assert.deepEqual(formatoSaidaImagem("image/png"), { mimeType: "image/png", extension: "png" });
 });
 
-test("all current user and content upload entry points invoke the accessible adjustment dialog", async () => {
-    const [profile, registration, ngo, crop, css] = await Promise.all([
+test("all current user and content image uploads invoke crop and pass the adjusted file to their upload handlers", async () => {
+    const [profile, registration, ngo, crop, css, ngoLogic, campaignLogic] = await Promise.all([
         readFile(resolve(__dirname, "../../public/pages/perfil.html"), "utf8"),
         readFile(resolve(__dirname, "../../public/pages/cadastro-osc.html"), "utf8"),
         readFile(resolve(__dirname, "../../public/pages/ong-profile.html"), "utf8"),
         readFile(resolve(__dirname, "../../public/components/ajuste-imagem.js"), "utf8"),
-        readFile(resolve(__dirname, "../../public/styles/ajuste-imagem.css"), "utf8")
+        readFile(resolve(__dirname, "../../public/styles/ajuste-imagem.css"), "utf8"),
+        readFile(resolve(__dirname, "../../public/components/ong-profile.js"), "utf8"),
+        readFile(resolve(__dirname, "../../public/components/campanhas-gestao-osc.js"), "utf8")
     ]);
     assert.match(profile, /data-preview-shape="circle"/);
     assert.match(registration, /data-aspect-ratio="1"/);
-    assert.match(ngo, /data-aspect-ratio="1\.7777778"/);
-    assert.equal((ngo.match(/data-image-adjustment/g) || []).length, 3);
+    assert.match(ngo, /components\/ajuste-imagem\.js/);
+    const fileInputs = [...ngo.matchAll(/<input\b[^>]*type="file"[^>]*>/g)].map(match => match[0]);
+    const expectedUploads = ["input-logo-osc", "post-imagem-arquivo-osc", "oportunidade-imagem-arquivo-osc", "campanha-imagem"];
+    assert.equal(fileInputs.length, 6, "the page also contains two non-image evidence uploads");
+    const imageInputs = fileInputs.filter(markup => /accept="image\/jpeg,image\/png,image\/webp"/.test(markup));
+    assert.equal(imageInputs.length, expectedUploads.length, "all image uploads are accounted for separately from evidence documents");
+    for (const id of expectedUploads) {
+        const input = imageInputs.find(markup => markup.includes(`id="${id}"`));
+        assert.ok(input, `expected upload input ${id}`);
+        assert.match(input, /data-image-adjustment/);
+        assert.match(input, /data-aspect-ratio="(?:1|1\.7777778)"/);
+        assert.match(input, /data-image-feedback=/);
+    }
+    const evidenceInputs = fileInputs.filter(markup => /id="arquivo-evidencia-/.test(markup));
+    assert.equal(evidenceInputs.length, 2);
+    for (const input of evidenceInputs) {
+        assert.match(input, /accept="application\/pdf,image\/jpeg,image\/png"/);
+        assert.doesNotMatch(input, /data-image-adjustment/);
+    }
+    assert.match(crop, /querySelectorAll\("input\[type=file\]\[data-image-adjustment\]"\)/);
+    assert.match(crop, /input\.dispatchEvent\(new Event\("change", \{ bubbles: true \}\)\)/);
+    assert.match(ngoLogic, /input\.addEventListener\("change", async \(\) => \{[\s\S]*FormData\(\)[\s\S]*form\.append\("logo", file\)/);
+    assert.match(ngoLogic, /estado\.arquivo = arquivo/);
+    assert.match(ngoLogic, /if \(arquivoImagem\) dados\.append\("imagem", arquivoImagem/);
+    assert.match(campaignLogic, /image\.addEventListener\("change", \(\) => renderPreview/);
+    assert.match(campaignLogic, /if \(image\.files\?\.\[0\]\) data\.append\("imagem", image\.files\[0\]/);
+    assert.match(ngoLogic, /file\.accept = "application\/pdf,image\/jpeg,image\/png"/,
+        "completion certificates are documents and do not go through the image cropper");
     assert.match(crop, /addEventListener\("pointermove"/);
     assert.match(crop, /addEventListener\("keydown"/);
     assert.match(css, /@media \(max-width: 600px\)/);

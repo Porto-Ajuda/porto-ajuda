@@ -56,10 +56,17 @@ function renderRegistros(){
     lista.replaceChildren(...[...registros.map(item=>criarRegistroHistorico(document,item)),...doacoesCampanha.map(item=>criarRegistroDoacao(document,item))]);
     const total=registros.length+doacoesCampanha.length;
     const visibility=calcularVisibilidadeHistorico(total,[...(registros.length?["voluntariado"]:[]),...(doacoesCampanha.length?["doacao"]:[])]);
-    definirAbaDisponivel("aba-registro",visibility.hasRecords);
+    definirAbaDisponivel("aba-registro", visibility.hasRecords);
     if(areaHistorico)areaHistorico.hidden=!visibility.hasRecords;
     if(semAtividades)semAtividades.hidden=visibility.hasRecords;
     if(totalCandidaturas)totalCandidaturas.textContent=String(total);
+    const horas = registros
+        .filter(item => item.status === "CONCLUIDA" && item.horasRealizadas != null)
+        .reduce((soma, item) => soma + item.horasRealizadas, 0);
+    const totalHoras = $("registro-total-horas-concluidas");
+    if (totalHoras) totalHoras.textContent = horas.toLocaleString("pt-BR", { maximumFractionDigits: 2 });
+    const totalDoacoes = $("registro-total-doacoes-vaquinha");
+    if (totalDoacoes) totalDoacoes.textContent = String(doacoesCampanha.length);
     notificarFiltros();
 }
 
@@ -67,11 +74,15 @@ async function carregarDoacoesCampanha(){
     if(!lista)return;
     try{
         const response=await fetchAutenticado("/donation-campaigns/history",{headers:{Accept:"application/json"}});
-        if(!response.ok)return;
+        if(!response.ok)throw new Error("Histórico de contribuições indisponível.");
         const result=await response.json();doacoesCampanha=Array.isArray(result)?result:[];
         const unavailable=$("registro-doacoes-indisponivel");if(unavailable)unavailable.hidden=true;
         renderRegistros();
-    }catch{/* Preserve the existing candidacy history if campaign history is unavailable. */}
+    }catch{
+        const unavailable=$("registro-doacoes-indisponivel");
+        if(unavailable){unavailable.textContent="O histórico de contribuições de vaquinhas não está disponível no momento. Doações diretas ainda não são conciliadas com esta conta.";unavailable.hidden=false;}
+        /* Preserve the existing candidacy history if campaign history is unavailable. */
+    }
 }
 
 function mostrarErro(mensagem, precisaEntrar = false) {

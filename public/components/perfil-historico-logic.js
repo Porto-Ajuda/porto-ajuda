@@ -1,6 +1,7 @@
 const STATUS_CANDIDATURA = Object.freeze({
     PENDENTE: "Pendente",
     APROVADA: "Aprovada",
+    CONCLUIDA: "Concluída",
     RECUSADA: "Recusada",
     REJEITADA: "Recusada",
     DESISTIU: "Cancelada"
@@ -55,11 +56,17 @@ export function mapearCandidaturaHistorico(item) {
         dataLabel: formatarDataHistorico(item.dataCandidatura),
         titulo: texto(item.tituloOportunidade) || "Oportunidade de voluntariado",
         nomeOsc: texto(item.nomeOsc) || "ONG parceira",
+        status: item.status,
         statusLabel: STATUS_CANDIDATURA[item.status] || "Status indisponível",
         modalidadeLabel,
         local,
         inicio: dataIsoValida(item.dataInicio) ? formatarDataHistorico(item.dataInicio) : "",
         encerramento: dataIsoValida(item.dataFim) ? formatarDataHistorico(item.dataFim) : "",
+        dataConclusao: dataIsoValida(item.dataConclusao) ? formatarDataHistorico(item.dataConclusao) : "",
+        horasRealizadas: item.horasRealizadas != null && Number.isFinite(Number(item.horasRealizadas)) && Number(item.horasRealizadas) >= 0
+            ? Number(item.horasRealizadas) : null,
+        certificadoDisponivel: item.certificadoDisponivel === true,
+        candidaturaId,
         link: linkDisponivel ? `/?${parametros.toString()}` : null
     });
 }
@@ -96,8 +103,13 @@ export function criarRegistroHistorico(documento, item) {
     const periodo = documento.createElement("p");
     periodo.className = "registro-voluntariado-periodo";
     const datas = [];
-    if (item.inicio) datas.push(`Início previsto: ${item.inicio}`);
-    if (item.encerramento) datas.push(`Encerramento previsto: ${item.encerramento}`);
+    if (item.status === "CONCLUIDA") {
+        if (item.dataConclusao) datas.push(`Concluída em: ${item.dataConclusao}`);
+        if (item.horasRealizadas != null) datas.push(`${item.horasRealizadas.toLocaleString("pt-BR")} hora(s) realizadas`);
+    } else {
+        if (item.inicio) datas.push(`Início previsto: ${item.inicio}`);
+        if (item.encerramento) datas.push(`Encerramento previsto: ${item.encerramento}`);
+    }
     periodo.textContent = datas.join(" · ");
 
     registro.append(cabecalho, ong, data);
@@ -110,6 +122,13 @@ export function criarRegistroHistorico(documento, item) {
         link.href = item.link;
         link.textContent = "Ver oportunidade";
         registro.append(link);
+    }
+    if (item.status === "CONCLUIDA" && item.certificadoDisponivel) {
+        const certificado = documento.createElement("a");
+        certificado.className = "registro-voluntariado-link";
+        certificado.href = `/usuario/candidaturas/${encodeURIComponent(item.candidaturaId)}/certificado`;
+        certificado.textContent = "Baixar certificado";
+        registro.append(certificado);
     }
     return registro;
 }

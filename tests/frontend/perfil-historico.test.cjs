@@ -64,6 +64,28 @@ test("profile history maps authenticated opportunity records without presenting 
     });
 });
 
+test("completed volunteer history uses recorded dates and hours and exposes only the authenticated certificate route", async () => {
+    const { criarRegistroHistorico, mapearCandidaturaHistorico } = await carregarLogica();
+    const item = mapearCandidaturaHistorico({
+        id: 29, tituloOportunidade: "Atividade concluída", nomeOsc: "ONG", status: "CONCLUIDA",
+        dataCandidatura: "2026-10-01", dataConclusao: "2026-10-18", horasRealizadas: 4.5,
+        certificadoDisponivel: true, oportunidadePublica: false
+    });
+    assert.equal(item.statusLabel, "Concluída");
+    assert.equal(item.dataConclusao, "18 de out. de 2026");
+    assert.equal(item.horasRealizadas, 4.5);
+    assert.equal(item.link, null);
+
+    class ElementoFalso {
+        constructor(tag) { this.tag = tag; this.children = []; this.dataset = {}; this.textContent = ""; }
+        append(...children) { this.children.push(...children); }
+    }
+    const documentFake = { createElement: tag => new ElementoFalso(tag), createTextNode: textContent => ({ textContent }) };
+    const record = criarRegistroHistorico(documentFake, item);
+    assert.ok(record.children.some(child => child.textContent.includes("4,5 hora(s) realizadas")));
+    assert.equal(record.children.at(-1).href, "/usuario/candidaturas/29/certificado");
+});
+
 test("profile history keeps real filters, uses the owner-scoped paged API and exposes explicit loading/error/unavailable states", async () => {
     const [history, filters, page, controller, service] = await Promise.all([
         read("public/components/perfil-historico.js"),
@@ -84,7 +106,13 @@ test("profile history keeps real filters, uses the owner-scoped paged API and ex
     assert.match(page, /id="registro-doacoes-indisponivel"/);
     assert.match(page, /data-activity-history-content/);
     assert.match(page, /id="registro-sem-atividades"/);
-    assert.match(history, /areaHistorico\.hidden = !visibility\.hasRecords/);
+    assert.match(page, /id="registro-total-horas-concluidas"/);
+    assert.match(page, /id="registro-total-doacoes-vaquinha"/);
+    assert.match(page, /Doações diretas ainda não são conciliadas/);
+    assert.doesNotMatch(page, /ainda não disponibiliza horas concluídas/);
+    assert.doesNotMatch(page, /baixar-registro|Baixar Registro/);
+    assert.match(await read("public/styles/perfil.css"), /repeat\(3, minmax\(0, 1fr\)\)/);
+    assert.match(history, /areaHistorico\)areaHistorico\.hidden=!visibility\.hasRecords/);
     assert.match(filters, /grupoFiltrosTipo\.hidden = tiposDisponiveis\.length <= 1/);
     assert.doesNotMatch(page, /Instituto Esperança|Campanha do Agasalho|R\$ 1\.800|12 horas/);
     assert.match(controller, /@AuthenticationPrincipal Usuario usuario/);

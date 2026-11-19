@@ -1062,17 +1062,19 @@ const acessibilidadeHTML = `
     <button
         id="botao-acessibilidade"
         type="button"
+        aria-label="Abrir painel de acessibilidade"
+        title="Acessibilidade"
     >
-        🚹
+        <img src="../assets/acessibility-icon.png" alt="" aria-hidden="true" draggable="false">
     </button>
 
 
-    <div id="painel-acessibilidade">
+    <div id="painel-acessibilidade" hidden>
 
         <div class="acessibilidade-cabecalho">
 
             <h2>
-                🚹 Acessibilidade
+                <img class="icone-titulo" src="../assets/acessibility-icon.png" alt="" aria-hidden="true"> Acessibilidade
             </h2>
 
             <button
@@ -1118,8 +1120,9 @@ const acessibilidadeHTML = `
                 <button
                     id="resetar-fonte"
                     type="button"
+                    aria-label="Restaurar tamanho da fonte"
                 >
-                    ↻
+                    <span class="icone-resetar">↻</span>
                 </button>
 
             </div>
@@ -1135,7 +1138,8 @@ const acessibilidadeHTML = `
                 class="opcao-acessibilidade"
                 type="button"
             >
-                ☀️ Modo Claro
+                <span class="icone-tema"><img class="icone-lua" src="../assets/moon.png" alt="" aria-hidden="true"><img class="icone-sol" src="../assets/sun.png" alt="" aria-hidden="true"></span>
+                <span class="texto-tema">Modo Escuro</span>
             </button>
 
 
@@ -1149,7 +1153,7 @@ const acessibilidadeHTML = `
                 class="opcao-acessibilidade"
                 type="button"
             >
-                ◐ Alto contraste
+                <img class="icone-opcao" src="../assets/contrast-icon.png" alt="" aria-hidden="true"> Alto Contraste
             </button>
 
 
@@ -1163,7 +1167,7 @@ const acessibilidadeHTML = `
                 class="opcao-acessibilidade"
                 type="button"
             >
-                🤟 Ativar Libras
+                <img class="icone-opcao" src="../assets/libras-icon.png" alt="" aria-hidden="true"> <span class="texto-libras">Ativar Libras</span>
             </button>
 
             <h3>Assistência por voz</h3>

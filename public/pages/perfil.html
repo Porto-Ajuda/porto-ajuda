@@ -198,18 +198,18 @@
                             <div class="resumo-registro">
                                 <div class="estatistica">
                                     <div class="valor-estatistica" id="registro-total-candidaturas">—</div>
-                                    <div class="rotulo-estatistica">candidaturas enviadas</div>
+                                    <div class="rotulo-estatistica">atividades registradas</div>
                                 </div>
                                 <div class="estatistica">
-                                    <div class="valor-estatistica">Indisponível</div>
-                                    <div class="rotulo-estatistica">horas de voluntariado concluídas</div>
+                                    <div class="valor-estatistica" id="registro-total-horas-concluidas">0</div>
+                                    <div class="rotulo-estatistica">horas concluídas nas candidaturas carregadas</div>
                                 </div>
                                 <div class="estatistica">
-                                    <div class="valor-estatistica">Indisponível</div>
-                                    <div class="rotulo-estatistica">histórico financeiro de doações</div>
+                                    <div class="valor-estatistica" id="registro-total-doacoes-vaquinha">0</div>
+                                    <div class="rotulo-estatistica">contribuições de vaquinhas</div>
                                 </div>
                                 <p id="registro-historico-explicacao" class="registro-historico-explicacao">
-                                    As candidaturas são carregadas da sua conta. O site ainda não disponibiliza horas concluídas nem conciliação de doações neste histórico.
+                                    O histórico reúne candidaturas e contribuições de vaquinhas vinculadas à sua conta. As horas e os certificados aparecem quando a ONG registra a conclusão. Doações diretas ainda não são conciliadas com este histórico.
                                 </p>
                             </div>
 
@@ -292,7 +292,7 @@
                                                         <p class="ano-registro" hidden></p>
                             <p id="registro-carregando" role="status" aria-live="polite">Carregando seu histórico…</p>
                             <p id="registro-doacoes-indisponivel" class="registro-historico-indisponivel" role="status" hidden>
-                                O histórico de doações ainda não está disponível porque as doações não são conciliadas com esta conta.
+                                O histórico de doações diretas ainda não está disponível porque elas não são conciliadas com esta conta.
                             </p>
                             <ul class="linha-tempo" id="linha-tempo-registros" aria-live="polite" aria-busy="true"></ul>
                             <section class="estado-vazio" id="registro-erro" role="alert" hidden>

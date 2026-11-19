@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="../styles/campaign-donation-dialog.css">
   <link rel="stylesheet" href="../styles/geral.css">
   <link rel="stylesheet" href="../styles/carrossel-amostra.css">
+  <link rel="stylesheet" href="../styles/vitrine.css">
   <link rel="stylesheet" href="../styles/denunciar-conteudo.css">
 
   <script type="module" src="../components/header_footer.js" defer></script>
@@ -22,7 +23,6 @@
   <script type="module" src="../components/home-showcases.js"></script>
   <script type="module" src="../components/candidaturas.js"></script>
   <script type="module" src="../components/denunciar-conteudo.js"></script>
-
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
@@ -263,27 +263,18 @@
               <p>Descubra iniciativas que fazem a diferença.</p>
             </div>
 
-            <div class="controles-carrossel">
-              <button type="button" id="ongs-anterior" aria-label="Organizações anteriores">
-                <i class="fa-solid fa-arrow-left"></i>
-              </button>
-
-              <button type="button" id="ongs-proximo" aria-label="Próximas organizações">
-                <i class="fa-solid fa-arrow-right"></i>
-              </button>
-            </div>
           </div>
 
           <p class="showcase-status" id="ongs-status" role="status" aria-live="polite">Carregando ONGs…</p>
           <button type="button" class="showcase-retry" id="ongs-tentar-novamente" hidden>Tentar novamente</button>
 
-          <div class="carrossel-ongs" id="carrossel-ongs">
-            <div class="cards ong-showcase-cards" id="cards-osc" data-home-showcase="true" role="list" aria-label="ONGs em destaque">
+          <div class="vitrine">
+            <div class="vitrine-viewport">
+              <div class="vitrine-trilho" id="cards-osc" aria-busy="true" data-home-showcase="true" role="list" aria-label="ONGs em destaque"></div>
             </div>
           </div>
+          <a href="/catalogo?categoria=ongs" class="section-link">Ver todas as ONGs →</a>
         </section>
-
-        <a href="/catalogo?categoria=ongs" class="section-link">Ver todas as ONGs →</a>
 
       </div>
 
@@ -291,18 +282,24 @@
 
   </section>
 
+  <section class="destaque">
+    <div class="divider">
+      <img class="lua1" src="../assets/moon.png">
+    </div>
+  </section>
+
   <section class="surgir showcase-home-section" id="publicacoes" aria-labelledby="titulo-publicacoes-home">
     <section class="section reverse">
       <div class="section-content">
         <h2 id="titulo-publicacoes-home">Publicações <span>Recentes</span></h2>
         <p class="showcase-introducao">Histórias, campanhas e novidades compartilhadas pelas organizações.</p>
-        <div class="showcase-controles" aria-label="Navegação das publicações">
-          <button type="button" id="publicacoes-anterior" aria-label="Publicações anteriores" disabled>‹</button>
-          <button type="button" id="publicacoes-proximo" aria-label="Próximas publicações" disabled>›</button>
-        </div>
         <p class="showcase-status" id="publicacoes-status" role="status" aria-live="polite">Carregando publicações…</p>
         <button type="button" class="showcase-retry" id="publicacoes-tentar-novamente" hidden>Tentar novamente</button>
-        <div class="showcase-grid" id="cards-publicacoes" role="list" aria-label="Publicações recentes"></div>
+        <div class="vitrine">
+          <div class="vitrine-viewport">
+            <div class="vitrine-trilho" id="cards-publicacoes" aria-busy="true" role="list" aria-label="Publicações recentes"></div>
+          </div>
+        </div>
         <a href="/catalogo?categoria=publicacoes" class="section-link">Ver todas as publicações →</a>
       </div>
       <div class="section-image showcase-ilustracao">
@@ -333,13 +330,13 @@
           <span id="titulo-voluntariado-home">Voluntariados</span>
         </h2>
 
-        <div class="showcase-controles" aria-label="Navegação dos voluntariados">
-          <button type="button" id="voluntariado-anterior" aria-label="Voluntariados anteriores" disabled>‹</button>
-          <button type="button" id="voluntariado-proximo" aria-label="Próximos voluntariados" disabled>›</button>
-        </div>
         <p class="showcase-status" id="voluntariado-status" role="status" aria-live="polite">Carregando oportunidades…</p>
         <button type="button" class="showcase-retry" id="voluntariado-tentar-novamente" hidden>Tentar novamente</button>
-        <div class="showcase-grid" id="cards-voluntariacao" data-home-showcase="true" role="list" aria-label="Oportunidades de voluntariado"></div>
+        <div class="vitrine">
+          <div class="vitrine-viewport">
+            <div class="vitrine-trilho" id="cards-voluntariacao" aria-busy="true" data-home-showcase="true" role="list" aria-label="Oportunidades de voluntariado"></div>
+          </div>
+        </div>
 
         <a href="/catalogo?categoria=voluntariado" class="section-link">Ver todos os voluntariados →</a>
 
@@ -399,13 +396,13 @@
           <span id="titulo-doacoes-home">Doações</span>
         </h2>
 
-        <div class="showcase-controles" aria-label="Navegação das doações">
-          <button type="button" id="doacoes-anterior" aria-label="Doações anteriores" disabled>‹</button>
-          <button type="button" id="doacoes-proximo" aria-label="Próximas doações" disabled>›</button>
-        </div>
-        <p class="showcase-status" id="doacoes-status" role="status" aria-live="polite">Ainda não há vaquinhas ativas para exibir.</p>
+        <p class="showcase-status" id="doacoes-status" role="status" aria-live="polite">Carregando vaquinhas…</p>
         <button type="button" class="showcase-retry" id="doacoes-tentar-novamente" hidden>Tentar novamente</button>
-        <div class="showcase-grid" id="cards-doacao" data-home-showcase="true" role="list" aria-label="Vaquinhas públicas das ONGs"></div>
+        <div class="vitrine">
+          <div class="vitrine-viewport">
+            <div class="vitrine-trilho" id="cards-doacao" aria-busy="true" data-home-showcase="true" role="list" aria-label="Vaquinhas públicas das ONGs"></div>
+          </div>
+        </div>
 
         <a href="/catalogo?categoria=doacoes" class="section-link">Ver todas as doações →</a>
 
@@ -422,26 +419,26 @@
   <footer id="footer"></footer>
 
   <!-- ========================= -->
-  <dialog class="home-organization-dialog" id="dialogo-gerenciar-ongs-home" aria-labelledby="gerenciar-ongs-home-titulo" aria-describedby="gerenciar-ongs-home-descricao">
-    <section class="home-organization-dialog__card">
-      <h2 id="gerenciar-ongs-home-titulo">Selecione uma ONG</h2>
-      <p id="gerenciar-ongs-home-descricao">Você será direcionada ao perfil da organização. As ações de publicação dependem do seu vínculo, cargo, status da ONG e restrições atuais.</p>
-      <p id="gerenciar-ongs-home-estado" class="home-organization-dialog__state" role="status" aria-live="polite">Carregando…</p>
-      <div id="gerenciar-ongs-home-lista" class="home-organization-dialog__list" role="list" aria-busy="false"></div>
-      <div class="home-organization-dialog__links">
-        <a id="gerenciar-ongs-home-entrar" href="/login" hidden>Entrar para consultar suas ONGs</a>
-        <a id="gerenciar-ongs-home-cadastrar" href="/cadastro-osc" hidden>Cadastrar uma ONG</a>
-      </div>
-      <div class="home-organization-dialog__actions">
-        <button class="btn btn-secundario" id="gerenciar-ongs-home-tentar-novamente" type="button" hidden>Tentar novamente</button>
-        <button class="btn btn-secundario" id="gerenciar-ongs-home-fechar" type="button">Fechar</button>
-      </div>
-    </section>
-  </dialog>
-  <!-- MODAL DE VISUALIZAÇÃO DE CARD -->
+  <!-- MODAL DE EDIÇÃO DE POSTS -->
   <!-- ========================= -->
 
-  <div class="modal-overlay" id="modal-card-overlay" aria-hidden="true" onclick="fecharModalCard(event)">
+  <dialog class="home-organization-dialog" id="dialogo-gerenciar-ongs-home" aria-labelledby="gerenciar-ongs-home-titulo" aria-describedby="gerenciar-ongs-home-descricao">
+  <section class="home-organization-dialog__card">
+    <h2 id="gerenciar-ongs-home-titulo">Selecione uma ONG</h2>
+    <p id="gerenciar-ongs-home-descricao">Você será direcionada ao perfil da organização. As ações dependem do seu vínculo, cargo, status da ONG e restrições atuais.</p>
+    <p id="gerenciar-ongs-home-estado" class="home-organization-dialog__state" role="status" aria-live="polite">Carregando…</p>
+    <div id="gerenciar-ongs-home-lista" class="home-organization-dialog__list" role="list" aria-busy="false"></div>
+    <div class="home-organization-dialog__links">
+      <a id="gerenciar-ongs-home-entrar" href="/login" hidden>Entrar para consultar suas ONGs</a>
+      <a id="gerenciar-ongs-home-cadastrar" href="/cadastro-osc" hidden>Cadastrar uma ONG</a>
+    </div>
+    <div class="home-organization-dialog__actions">
+      <button class="btn btn-secundario" id="gerenciar-ongs-home-tentar-novamente" type="button" hidden>Tentar novamente</button>
+      <button class="btn btn-secundario" id="gerenciar-ongs-home-fechar" type="button">Fechar</button>
+    </div>
+  </section>
+</dialog>
+<div class="modal-overlay" id="modal-card-overlay" aria-hidden="true" onclick="fecharModalCard(event)">
 
     <div class="modal-card-container" id="modal-card-container" role="dialog" aria-modal="true" aria-labelledby="modal-card-titulo">
 

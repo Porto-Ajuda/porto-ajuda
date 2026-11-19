@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&display=swap');
+
 #acessibilidade {
     position: fixed;
     right: 20px;
@@ -7,15 +9,19 @@
 }
 
 
-/* BOTÃO ♿ */
+/* BOTÃO DE ACESSIBILIDADE */
 
 #botao-acessibilidade {
     width: 60px;
     height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
     border: none;
     border-radius: 50%;
 
-    background: #453B80;
+    background: #513883;
     color: white;
 
     font-size: 28px;
@@ -23,6 +29,14 @@
     cursor: pointer;
 
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+#botao-acessibilidade img {
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
+    display: block;
+    pointer-events: none;
 }
 
 
@@ -36,22 +50,64 @@
 
     width: 360px;
 
-    background: #111;
+    background: linear-gradient(160deg, #7f58cc 0%, #513883 100%);
     color: white;
 
     border: 1px solid #333;
     border-radius: 18px;
 
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+}
 
-    display: none;
+#painel-acessibilidade,
+#painel-acessibilidade button {
+    font-family: 'Cormorant Garamond', serif;
 }
 
 
-/* PAINEL ABERTO */
+/* ANIMAÇÃO DO PAINEL (sai de trás da bolinha) */
+
+#botao-acessibilidade {
+    position: relative;
+    z-index: 2; /* botão fica por cima, o painel parece sair de trás */
+}
+
+#painel-acessibilidade {
+    display: block;
+    z-index: 1;
+
+    /* origem no centro do botão: 30px da borda direita, 45px abaixo do painel */
+    transform-origin: calc(100% - 30px) calc(100% + 45px);
+
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: scale(.2) translateY(20px);
+
+    transition:
+        transform .4s cubic-bezier(.22, 1, .36, 1),
+        opacity .25s ease-out,
+        visibility 0s linear .4s;
+}
 
 #painel-acessibilidade.aberto {
-    display: block;
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: none;
+
+    transition:
+        transform .4s cubic-bezier(.22, 1, .36, 1),
+        opacity .25s ease-out,
+        visibility 0s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #painel-acessibilidade,
+    #painel-acessibilidade.aberto {
+        transform: none;
+        transition: opacity .01s, visibility 0s;
+    }
 }
 
 
@@ -69,12 +125,27 @@
 
 .acessibilidade-cabecalho h2 {
     margin: 0;
-    font-size: 20px;
+    font-size: 40px;
+    color: var(--gold-light);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.icone-titulo {
+    width: 32px;
+    height: 32px;
 }
 
 #fechar-acessibilidade {
     background: none;
-    border: none;
+    border: 1px solid #9F88CC;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
 
     color: white;
 
@@ -93,9 +164,9 @@
 .acessibilidade-conteudo h3 {
     margin: 0 0 10px;
 
-    color: #aaa;
+    color: #FFFFFF;
 
-    font-size: 15px;
+    font-size: 20px;
 }
 
 
@@ -113,13 +184,13 @@
     width: 42px;
     height: 42px;
 
-    border: 1px solid #333;
+    border: 1px solid #9F88CC;
     border-radius: 10px;
 
-    background: #111;
-    color: white;
+    background: #6C4BAC;
+    color: #FFFFFF;
 
-    font-size: 22px;
+    font-size: 30px;
 
     cursor: pointer;
 }
@@ -129,21 +200,130 @@
 
 .opcao-acessibilidade {
     width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 
     padding: 13px;
 
     margin-bottom: 20px;
 
-    border: 1px solid #333;
+    border: 1px solid #9F88CC;
     border-radius: 10px;
 
-    background: #111;
-    color: white;
+    background: #6C4BAC;
+    color: #FFFFFF;
 
-    font-size: 16px;
+    font-size: 20px;
     font-weight: bold;
 
     text-align: left;
 
     cursor: pointer;
+}
+
+#tamanho-fonte {
+    color: #FFFFFF;
+    font-size: 25px;
+}
+
+img.icone-opcao {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+}
+
+.icone-tema {
+    position: relative;
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+}
+
+.icone-tema img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.icone-tema .icone-sol {
+    opacity: 0;
+}
+
+.icone-resetar {
+    display: inline-block;
+}
+
+@keyframes girar-reset {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.icone-resetar.girando {
+    animation: girar-reset .5s ease-in-out;
+}
+
+#alternar-tema {
+    background: linear-gradient(90deg, rgba(35, 20, 75, .65) 0%, rgba(255, 255, 255, .08) 50%, rgba(35, 20, 75, .65) 100%);
+    background-size: 200% 100%;
+    background-position: 0% 50%;
+}
+
+#alternar-tema.animando {
+    transition: background-position .6s ease-in-out;
+}
+
+#alternar-tema.animando .icone-lua,
+#alternar-tema.animando .icone-sol {
+    transition: transform .6s ease-in-out, opacity .6s ease-in-out;
+}
+
+#alternar-tema .icone-lua {
+    transform: rotate(0deg) scale(1);
+}
+
+#alternar-tema .icone-sol {
+    transform: rotate(-180deg) scale(.6);
+}
+
+body.modo-claro #alternar-tema {
+    background-image: linear-gradient(90deg, #679D6B 0%, #A8D3BA 50%, #679D6B 100%);
+    background-position: 100% 50%;
+}
+
+body.modo-claro #alternar-tema .icone-lua {
+    opacity: 0;
+    transform: rotate(180deg) scale(.6);
+}
+
+body.modo-claro #alternar-tema .icone-sol {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+}
+
+body.alto-contraste #alternar-tema {
+    background: #000000;
+    border: 2px solid #FFFFFF;
+}
+
+body.alto-contraste #alternar-tema .icone-lua,
+body.alto-contraste #alternar-tema .icone-sol {
+    transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #alternar-tema.animando,
+    #alternar-tema.animando .icone-lua,
+    #alternar-tema.animando .icone-sol {
+        transition: none;
+    }
+
+    .icone-resetar.girando {
+        animation: none;
+    }
 }

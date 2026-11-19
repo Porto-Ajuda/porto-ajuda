@@ -1,226 +1,189 @@
 import { getAPI_URL } from "./modoBack.js";
-import { urlImagemSegura } from "./ong-content.js";
-import { createShowcasePager, HOME_SHOWCASE_PAGE_SIZE } from "./showcase-pagination.js";
-import { renderizarPaginaOngs } from "./carrossel-amostra.js";
-import { createCampaignCard } from "./campaign-card.js";
+import { criarCardVitrine, iniciarCarrossel, VITRINE_MAX_ITENS } from "./vitrine.js";
+import { campaignMoney } from "./campaign-money.js";
 import { createCampaignDonationDialog } from "./campaign-donation-dialog.js";
 
 const API_URL = getAPI_URL();
 const campaignDialog = createCampaignDonationDialog();
 
-function criarElemento(tag, classe, texto) {
-    const elemento = document.createElement(tag);
-    if (classe) elemento.className = classe;
-    if (texto != null) elemento.textContent = texto;
-    return elemento;
-}
+const ROTA_PERFIL_ONG = API_URL === "http://localhost:8080"
+        || API_URL === "https://api.portoajuda.com.br"
+    ? "/ong-profile"
+    : "ong-profile.html";
 
-function formatarData(valor) {
-    if (!valor) return "";
-    const data = new Date(valor);
-    return Number.isNaN(data.getTime())
-        ? ""
-        : data.toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
-}
+const IMAGEM_PADRAO_ONG = "../assets/ong-padrao.png";
 
-function criarPreview(item, tipo) {
-    const preview = criarElemento("div", "showcase-card-preview");
-    preview.appendChild(criarElemento("span", "showcase-card-kicker", tipo));
-    preview.appendChild(criarElemento("strong", "showcase-card-preview-title", item.titulo || "Conteúdo público"));
-    const trecho = (item.conteudo || "").trim();
-    if (trecho) preview.appendChild(criarElemento("span", "showcase-card-preview-text", trecho.slice(0, 150)));
-    return preview;
-}
+// nome exibido + símbolo (Font Awesome) de cada categoria de ONG
+const CATEGORIAS_ONG = {
+    EDUCACAO: { nome: "Educação", icone: "fa-graduation-cap" },
+    SAUDE: { nome: "Saúde", icone: "fa-heart-pulse" },
+    MEIO_AMBIENTE: { nome: "Meio Ambiente", icone: "fa-leaf" },
+    ANIMAIS: { nome: "Proteção animal", icone: "fa-paw" },
+    INCLUSAO_SOCIAL: { nome: "Inclusão social", icone: "fa-hands-holding-heart" },
+    ESPORTE: { nome: "Esporte", icone: "fa-futbol" },
+    CULTURA: { nome: "Cultura", icone: "fa-masks-theater" },
+    COMBATE_POBREZA: { nome: "Combate à pobreza", icone: "fa-hand-holding-dollar" },
+    ALIMENTACAO: { nome: "Alimentação", icone: "fa-utensils" },
+    IDOSOS: { nome: "Pessoas idosas", icone: "fa-person-cane" }
+};
 
-function preencherMidia(card, item, tipo) {
-    const media = criarElemento("div", "showcase-card-media");
-    if (item.imagemUrl && urlImagemSegura(item.imagemUrl)) {
-        const imagem = document.createElement("img");
-        imagem.src = item.imagemUrl;
-        imagem.alt = "";
-        imagem.loading = "lazy";
-        imagem.referrerPolicy = "no-referrer";
-        imagem.addEventListener("error", () => media.replaceChildren(criarPreview(item, tipo)), { once: true });
-        media.appendChild(imagem);
-    } else {
-        media.appendChild(criarPreview(item, tipo));
+const CATEGORIA_PADRAO = { nome: "Organização social", icone: "fa-hand-holding-heart" };
+
+
+/* ---------------------------------------------------------
+   BUSCA NA API (sempre a primeira página, no máximo 6 itens)
+   --------------------------------------------------------- */
+
+async function buscarItens(endpoint) {
+    const resposta = await fetch(`${API_URL}${endpoint}?page=0&size=${VITRINE_MAX_ITENS}`, {
+        headers: { Accept: "application/json" },
+        cache: "no-store"
+    });
+    if (!resposta.ok) throw new Error("Não foi possível carregar este conteúdo. Tente novamente.");
+    const dados = await resposta.json();
+    if (!dados || !Array.isArray(dados.content)) {
+        throw new TypeError("Resposta inválida da API");
     }
-    card.appendChild(media);
+    return dados.content;
+}
+
+
+/* ---------------------------------------------------------
+   MONTAGEM DOS CARDS (dados da API -> card padrão)
+   --------------------------------------------------------- */
+
+function criarCardOng(ong) {
+    const nome = typeof ong.nome === "string" && ong.nome.trim()
+        ? ong.nome.trim()
+        : "Organização sem nome";
+    const categoria = CATEGORIAS_ONG[ong.causaPrincipal]
+        || (Array.isArray(ong.causas) && CATEGORIAS_ONG[ong.causas[0]])
+        || CATEGORIA_PADRAO;
+    const local = [ong.cidade, ong.estado].filter(Boolean).join(" - ");
+
+    return criarCardVitrine({
+        imagem: ong.logo || IMAGEM_PADRAO_ONG,
+        imagemFallback: IMAGEM_PADRAO_ONG,
+        icone: categoria.icone,
+        categoria: categoria.nome,
+        titulo: nome,
+        local,
+        cta: "Conhecer ONG",
+        href: `${ROTA_PERFIL_ONG}?id=${encodeURIComponent(ong.id)}`,
+        rotulo: `Conhecer ${nome}, ${categoria.nome}${local ? `, ${local}` : ""}`
+    });
 }
 
 function criarCardConteudo(item, tipo) {
     const oportunidade = tipo === "Voluntariado";
-    const itemLista = document.createElement("div");
-    itemLista.setAttribute("role", "listitem");
-    const card = document.createElement("button");
-    card.type = "button";
-    card.className = `showcase-card ${oportunidade ? "showcase-card-voluntariado" : "showcase-card-publicacao"}`;
-    card.setAttribute("aria-haspopup", "dialog");
-    card.setAttribute("aria-label", `Abrir ${oportunidade ? "oportunidade" : "publicação"}: ${item.titulo || "Conteúdo público"}, ${item.nomeOsc || "organização"}`);
-    preencherMidia(card, item, tipo.toLocaleUpperCase("pt-BR"));
+    const titulo = item.titulo || "Conteúdo público";
+    const organizacao = item.nomeOsc || "Organização parceira";
+    const cidade = item.vaga?.cidade;
 
-    const informacoes = criarElemento("div", "showcase-card-informacoes");
-    informacoes.appendChild(criarElemento("span", "showcase-card-kicker", tipo));
-    informacoes.appendChild(criarElemento("strong", "showcase-card-title", item.titulo || "Conteúdo público"));
-    informacoes.appendChild(criarElemento("span", "showcase-card-ngo", item.nomeOsc || "Organização parceira"));
-
-    if (oportunidade && item.vaga) {
-        const vaga = item.vaga;
-        const modalidade = {
-            PRESENCIAL: "Presencial",
-            REMOTO: "Remoto",
-            HIBRIDO: "Híbrido"
-        }[vaga.modalidadeVoluntariado] || "Modalidade não informada";
-        informacoes.appendChild(criarElemento("span", "showcase-card-detail", modalidade));
-        const local = [vaga.bairro, vaga.cidade].filter(Boolean).join(", ");
-        if (local) informacoes.appendChild(criarElemento("span", "showcase-card-detail", local));
-        informacoes.appendChild(criarElemento(
-            "span",
-            "showcase-card-detail",
-            `${vaga.quantidadeVagas} ${vaga.quantidadeVagas === 1 ? "vaga disponível" : "vagas disponíveis"}`
-        ));
-    } else {
-        const data = formatarData(item.dataCriacao);
-        if (data) informacoes.appendChild(criarElemento("time", "showcase-card-detail", data));
-    }
-
-    card.appendChild(informacoes);
-    card.addEventListener("click", () => {
-        window.abrirModalConteudoPublico?.(item, oportunidade ? "voluntariado" : "publicacao", card);
-    });
-    itemLista.appendChild(card);
-    return itemLista;
-}
-
-function renderizarCardsConteudo(container, items, tipo) {
-    container.replaceChildren(...items.map(item => criarCardConteudo(item, tipo)));
-}
-
-function mensagemEstado(rotulo, state) {
-    if (state.status === "loading") return `Carregando ${rotulo.toLocaleLowerCase("pt-BR")}…`;
-    if (state.status === "error") return `Não foi possível carregar ${rotulo.toLocaleLowerCase("pt-BR")}. Tente novamente.`;
-    if (state.status === "empty") return `Nenhum conteúdo público disponível em ${rotulo.toLocaleLowerCase("pt-BR")} no momento.`;
-    if (state.status === "ready") return `Página ${state.page + 1} de ${state.totalPages}`;
-    return "";
-}
-
-function iniciarVitrine({
-    containerId,
-    statusId,
-    anteriorId,
-    proximoId,
-    tentarNovamenteId,
-    rotulo,
-    endpoint,
-    renderizar
-}) {
-    const container = document.getElementById(containerId);
-    const status = document.getElementById(statusId);
-    const anterior = document.getElementById(anteriorId);
-    const proximo = document.getElementById(proximoId);
-    const tentarNovamente = document.getElementById(tentarNovamenteId);
-    if (!container || !status || !anterior || !proximo || !tentarNovamente) return null;
-
-    container.dataset.homeShowcase = "true";
-    anterior.setAttribute("aria-controls", containerId);
-    proximo.setAttribute("aria-controls", containerId);
-
-    const pager = createShowcasePager({
-        pageSize: HOME_SHOWCASE_PAGE_SIZE,
-        fetchPage: async (page, size) => {
-            const resposta = await fetch(`${API_URL}${endpoint}?page=${page}&size=${size}`, {
-                headers: { Accept: "application/json" },
-                cache: "no-store"
-            });
-            if (!resposta.ok) throw new Error("Não foi possível carregar este conteúdo. Tente novamente.");
-            return resposta.json();
-        },
-        onItems: items => renderizar(container, items),
-        onState: state => {
-            status.textContent = mensagemEstado(rotulo, state);
-            anterior.disabled = !state.canPrevious;
-            proximo.disabled = !state.canNext;
-            tentarNovamente.hidden = state.status !== "error";
+    return criarCardVitrine({
+        imagem: item.imagemUrl,
+        icone: oportunidade ? "fa-hand-holding-heart" : "fa-newspaper",
+        categoria: tipo,
+        titulo,
+        local: oportunidade && cidade ? cidade : organizacao,
+        cta: oportunidade ? "Ver oportunidade" : "Ler publicação",
+        rotulo: `Abrir ${oportunidade ? "oportunidade" : "publicação"}: ${titulo}, ${organizacao}`,
+        aoClicar: card => {
+            window.abrirModalConteudoPublico?.(item, oportunidade ? "voluntariado" : "publicacao", card);
         }
     });
-
-    anterior.addEventListener("click", () => { void pager.previous(); });
-    proximo.addEventListener("click", () => { void pager.next(); });
-    tentarNovamente.addEventListener("click", () => { void pager.retry(); });
-    void pager.load();
-    return pager;
 }
 
-function iniciarVitrineDoacoes() {
-    const container = document.getElementById("cards-doacao");
-    const status = document.getElementById("doacoes-status");
-    const anterior = document.getElementById("doacoes-anterior");
-    const proximo = document.getElementById("doacoes-proximo");
-    const tentarNovamente = document.getElementById("doacoes-tentar-novamente");
-    if (!container || !status || !anterior || !proximo || !tentarNovamente) return;
-    anterior.setAttribute("aria-controls", "cards-doacao");
-    proximo.setAttribute("aria-controls", "cards-doacao");
-    const pager = createShowcasePager({
-        pageSize: HOME_SHOWCASE_PAGE_SIZE,
-        fetchPage: async (page, size) => {
-            const response = await fetch(`${API_URL}/donation-campaigns`, {
-                headers: { Accept: "application/json" }, cache: "no-store"
-            });
-            if (!response.ok) throw new Error("Falha ao carregar campanhas públicas.");
-            const campaigns = await response.json();
-            if (!Array.isArray(campaigns)) throw new TypeError("Resposta de campanhas inválida.");
-            const publicCampaigns = campaigns.filter(item => item?.state === "ACTIVE" && item.id != null);
-            const totalPages = Math.ceil(publicCampaigns.length / size);
-            return { content: publicCampaigns.slice(page * size, (page + 1) * size), number: page, totalPages };
-        },
-        onItems: items => container.replaceChildren(...items.map(item => createCampaignCard(item, { context: "home", onOpen: (campaign, trigger) => campaignDialog.open(campaign, trigger) }))),
-        onState: state => {
-            status.textContent = state.status === "loading" ? "Carregando vaquinhas…"
-                : state.status === "error" ? "Não foi possível carregar as vaquinhas. Tente novamente."
-                    : state.status === "empty" ? "Ainda não há vaquinhas ativas para exibir."
-                        : `Página ${state.page + 1} de ${state.totalPages}`;
-            anterior.disabled = !state.canPrevious;
-            proximo.disabled = !state.canNext;
-            tentarNovamente.hidden = state.status !== "error";
-        }
+function criarCardCampanha(campanha) {
+    const titulo = campanha.title || "Campanha de doação";
+    const ong = campanha.ngoName || "Organização parceira";
+    const valorArrecadado = Number(campanha.raisedNetCents) || 0;
+    const metaLiquida = Number(campanha.goalNetCents) || 0;
+    const percentual = metaLiquida > 0
+        ? Math.max(0, Math.min(100, Math.floor(valorArrecadado * 100 / metaLiquida)))
+        : 0;
+    const cardItem = criarCardVitrine({
+        imagem: campanha.imageUrl,
+        icone: "fa-hand-holding-heart",
+        categoria: "VAQUINHA",
+        titulo,
+        local: ong,
+        cta: "Ver vaquinha",
+        rotulo: `Ver vaquinha ${titulo}, de ${ong}. ${campaignMoney(valorArrecadado)} arrecadados de ${campaignMoney(metaLiquida)} de meta líquida.`,
+        aoClicar: card => campaignDialog.open(campanha, card)
     });
-    anterior.addEventListener("click", () => { void pager.previous(); });
-    proximo.addEventListener("click", () => { void pager.next(); });
-    tentarNovamente.addEventListener("click", () => { void pager.retry(); });
-    void pager.load();
+    cardItem.classList.add("vitrine-item-campanha");
+
+    const vidro = cardItem.querySelector(".vitrine-vidro");
+    const detalhes = document.createElement("div");
+    detalhes.className = "vitrine-campanha-detalhes";
+    detalhes.setAttribute("aria-label", "Progresso da vaquinha");
+    const arrecadado = document.createElement("span");
+    arrecadado.className = "vitrine-campanha-arrecadado";
+    arrecadado.textContent = `${campaignMoney(valorArrecadado)} arrecadados`;
+    const meta = document.createElement("span");
+    meta.className = "vitrine-campanha-meta";
+    meta.textContent = `Meta líquida: ${campaignMoney(metaLiquida)}`;
+    const progresso = document.createElement("progress");
+    progresso.className = "vitrine-campanha-progresso";
+    progresso.max = 100;
+    progresso.value = percentual;
+    progresso.setAttribute("aria-label", `${percentual}% da meta líquida`);
+    detalhes.append(arrecadado, meta, progresso);
+    vidro.insertBefore(detalhes, vidro.querySelector(".vitrine-base"));
+    return cardItem;
 }
 
-iniciarVitrine({
-    containerId: "cards-osc",
+
+/* ---------------------------------------------------------
+   CARROSSÉIS DA HOME
+   --------------------------------------------------------- */
+
+iniciarCarrossel({
+    trilhoId: "cards-osc",
     statusId: "ongs-status",
-    anteriorId: "ongs-anterior",
-    proximoId: "ongs-proximo",
     tentarNovamenteId: "ongs-tentar-novamente",
     rotulo: "ONGs",
-    endpoint: "/osc/list",
-    renderizar: renderizarPaginaOngs
+    carregar: () => buscarItens("/osc/list"),
+    criarCard: criarCardOng
 });
 
-iniciarVitrine({
-    containerId: "cards-publicacoes",
+iniciarCarrossel({
+    trilhoId: "cards-publicacoes",
     statusId: "publicacoes-status",
-    anteriorId: "publicacoes-anterior",
-    proximoId: "publicacoes-proximo",
     tentarNovamenteId: "publicacoes-tentar-novamente",
     rotulo: "publicações",
-    endpoint: "/post/publicos",
-    renderizar: (container, items) => renderizarCardsConteudo(container, items, "Publicação")
+    carregar: () => buscarItens("/post/publicos"),
+    criarCard: item => criarCardConteudo(item, "Publicação")
 });
 
-iniciarVitrine({
-    containerId: "cards-voluntariacao",
+iniciarCarrossel({
+    trilhoId: "cards-voluntariacao",
     statusId: "voluntariado-status",
-    anteriorId: "voluntariado-anterior",
-    proximoId: "voluntariado-proximo",
     tentarNovamenteId: "voluntariado-tentar-novamente",
     rotulo: "voluntariado",
-    endpoint: "/post/voluntariados",
-    renderizar: (container, items) => renderizarCardsConteudo(container, items, "Voluntariado")
+    carregar: () => buscarItens("/post/voluntariados"),
+    criarCard: item => criarCardConteudo(item, "Voluntariado")
 });
 
-iniciarVitrineDoacoes();
+iniciarCarrossel({
+    trilhoId: "cards-doacao",
+    statusId: "doacoes-status",
+    tentarNovamenteId: "doacoes-tentar-novamente",
+    rotulo: "doações",
+    carregar: async () => {
+        const response = await fetch(`${API_URL}/donation-campaigns`, {
+            headers: { Accept: "application/json" },
+            cache: "no-store"
+        });
+        if (!response.ok) throw new Error("Não foi possível carregar as vaquinhas. Tente novamente.");
+        const campaigns = await response.json();
+        if (!Array.isArray(campaigns)) throw new TypeError("Resposta de campanhas inválida.");
+        // A API já aplica elegibilidade pública da campanha e da ONG; preserve
+        // ACTIVE como defesa de estado e não exiba estados de gestão.
+        return campaigns
+            .filter(item => item?.state === "ACTIVE" && Number.isSafeInteger(Number(item.id)) && Number(item.id) > 0)
+            .slice(0, VITRINE_MAX_ITENS);
+    },
+    criarCard: criarCardCampanha
+});

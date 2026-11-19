@@ -53,6 +53,7 @@ let preferencias = {
 
 let tamanhoFonte = preferencias.tamanhoFonte;
 let vlibrasInicializado = false;
+let timeoutAnimacaoTema;
 
 // ==========================
 // ABRIR E FECHAR
@@ -226,6 +227,19 @@ diminuirFonte?.addEventListener("click", () => {
 resetarFonte?.addEventListener("click", () => {
     tamanhoFonte = 100;
     atualizarFonte();
+
+    const iconeResetar = resetarFonte.querySelector(".icone-resetar");
+
+    if (!iconeResetar) {
+        return;
+    }
+
+    iconeResetar.classList.remove("girando");
+    void iconeResetar.offsetWidth;
+    iconeResetar.classList.add("girando");
+    iconeResetar.addEventListener("animationend", () => {
+        iconeResetar.classList.remove("girando");
+    }, { once: true });
 });
 
 // ==========================
@@ -233,6 +247,12 @@ resetarFonte?.addEventListener("click", () => {
 // ==========================
 
 alternarTema?.addEventListener("click", () => {
+    alternarTema.classList.add("animando");
+    clearTimeout(timeoutAnimacaoTema);
+    timeoutAnimacaoTema = setTimeout(() => {
+        alternarTema.classList.remove("animando");
+    }, 700);
+
     const modoClaroAtivo =
         document.body.classList.toggle("modo-claro");
 
@@ -247,10 +267,16 @@ function atualizarTextoBotaoTema() {
         return;
     }
 
-    alternarTema.textContent =
+    const textoTema = alternarTema.querySelector(".texto-tema");
+
+    if (!textoTema) {
+        return;
+    }
+
+    textoTema.textContent =
         preferencias.tema === "claro"
-            ? "🌙 Modo Escuro"
-            : "☀️ Modo Claro";
+            ? "Modo Claro"
+            : "Modo Escuro";
 }
 
 // ==========================
@@ -300,34 +326,53 @@ configModoExibicao?.addEventListener("change", () => {
 // VLIBRAS
 // ==========================
 
+function atualizarTextoBotaoLibras() {
+    const textoLibras = botaoLibras?.querySelector(".texto-libras");
+
+    if (!textoLibras) {
+        return;
+    }
+
+    textoLibras.textContent = preferencias.libras
+        ? "Desativar Libras"
+        : "Ativar Libras";
+}
+
 botaoLibras?.addEventListener("click", async () => {
     try {
-        if (typeof window.carregarVLibras !== "function") {
-            throw new Error(
-                "A função carregarVLibras não está disponível."
-            );
+        if (preferencias.libras) {
+            await definirVLibras(false);
+            painel?.classList.remove("aberto");
+        } else {
+            if (typeof window.carregarVLibras !== "function") {
+                throw new Error(
+                    "A função carregarVLibras não está disponível."
+                );
+            }
+
+            const botaoVLibras = await window.carregarVLibras();
+
+            if (!botaoVLibras) {
+                throw new Error(
+                    "Não foi possível obter o botão do VLibras."
+                );
+            }
+
+            botaoVLibras.click();
+
+            vlibrasInicializado = true;
+            preferencias.libras = true;
+
+            salvarPreferenciasLocais();
+
+            painel?.classList.remove("aberto");
         }
-
-        const botaoVLibras = await window.carregarVLibras();
-
-        if (!botaoVLibras) {
-            throw new Error(
-                "Não foi possível obter o botão do VLibras."
-            );
-        }
-
-        botaoVLibras.click();
-
-        vlibrasInicializado = true;
-        preferencias.libras = true;
-
-        salvarPreferenciasLocais();
-
-        painel?.classList.remove("aberto");
 
     } catch (erro) {
         console.error("Erro ao ativar o VLibras:", erro);
     }
+
+    atualizarTextoBotaoLibras();
 });
 
 
@@ -347,6 +392,7 @@ function obterEstadoAtualVLibras() {
 
 async function definirVLibras(ativar) {
     if (ativar === preferencias.libras) {
+        atualizarTextoBotaoLibras();
         return;
     }
 
@@ -383,6 +429,7 @@ async function definirVLibras(ativar) {
 
     salvarPreferenciasLocais();
     sincronizarControlesConfiguracao();
+    atualizarTextoBotaoLibras();
 }
 
 configLibras?.addEventListener("change", async () => {
@@ -462,6 +509,7 @@ async function aplicarPreferencias() {
     }
 
     sincronizarControlesConfiguracao();
+    atualizarTextoBotaoLibras();
 }
 
 // ==========================
@@ -473,6 +521,7 @@ function verificarEstadoVLibras() {
         localStorage.getItem("@vlibras-widget");
 
     if (!dadosVLibras) {
+        atualizarTextoBotaoLibras();
         return;
     }
 
@@ -487,6 +536,7 @@ function verificarEstadoVLibras() {
                 vlibrasInicializado = true;
             }
 
+            atualizarTextoBotaoLibras();
             return;
         }
 
@@ -514,6 +564,8 @@ function verificarEstadoVLibras() {
             erro
         );
     }
+
+    atualizarTextoBotaoLibras();
 }
 
 setInterval(verificarEstadoVLibras, 300);
