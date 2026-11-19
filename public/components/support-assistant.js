@@ -346,8 +346,10 @@ function formatHistoryDate(value) {
 }
 
 function historyStateLabel(state) {
-  return ({ AI_ACTIVE: "Com Sophie", WAITING_HUMAN: "Aguardando equipe",
-    HUMAN_ACTIVE: "Com atendimento humano", CLOSED: "Encerrada" })[state] || "Conversa";
+  return ({
+    AI_ACTIVE: "Com Sophie", WAITING_HUMAN: "Aguardando equipe",
+    HUMAN_ACTIVE: "Com atendimento humano", CLOSED: "Encerrada"
+  })[state] || "Conversa";
 }
 
 function historyTitle(row) {
@@ -627,17 +629,17 @@ dialog.addEventListener("keydown", event => {
   cancelVoiceHold();
   if (!humanConfirm.hidden) { humanConfirm.hidden = true; humanButton.focus(); }
   else if (!voiceSettings.hidden) { voiceSettings.hidden = true; document.getElementById(voiceSettings.dataset.returnFocusId || "support-voice-mode")?.focus(); }
-  else if (!voiceOnboarding.hidden) { voiceOnboarding.hidden = true; voiceChoiceMade = true; try { voiceStorage()?.setItem(onboardingKey(), "done"); } catch {} voiceModeButton.focus(); }
+  else if (!voiceOnboarding.hidden) { voiceOnboarding.hidden = true; voiceChoiceMade = true; try { voiceStorage()?.setItem(onboardingKey(), "done"); } catch { } voiceModeButton.focus(); }
   else if (!infoPopover.hidden) { infoPopover.hidden = true; infoToggle.setAttribute("aria-expanded", "false"); infoToggle.focus(); }
   else if (!historyList.hidden) { closeHistory(); historyButton.focus(); }
   else dialog.close();
 });
 dialog.addEventListener("close", () => {
   window.clearInterval(pollTimer); pollTimer = null; launcher.setAttribute("aria-expanded", "false"); launcher.focus();
-  if(currentConversation) currentConversation={id:currentConversation.id,state:currentConversation.state,version:currentConversation.version,messages:[],unread:currentConversation.unread};
-  newConfirm.hidden = true; humanConfirm.hidden = true; voiceOnboarding.hidden = true; voiceSettings.hidden = true; compose.value="";
+  if (currentConversation) currentConversation = { id: currentConversation.id, state: currentConversation.state, version: currentConversation.version, messages: [], unread: currentConversation.unread };
+  newConfirm.hidden = true; humanConfirm.hidden = true; voiceOnboarding.hidden = true; voiceSettings.hidden = true; compose.value = "";
   voice.stopDictation(); voice.stopSpeaking(); setVoiceMode(false);
-  pendingMessageBody=null; pendingMessageKey=null;
+  pendingMessageBody = null; pendingMessageKey = null;
 });
 dialog.addEventListener("click", event => { if (event.target === dialog) dialog.close(); });
 historyButton.addEventListener("click", () => {
@@ -716,8 +718,8 @@ document.getElementById("support-voice-settings-close").addEventListener("click"
   document.getElementById(voiceSettings.dataset.returnFocusId || "support-voice-mode")?.focus();
 });
 for (const [id, property] of [["support-voice-enabled", "enabled"], ["support-read-aloud", "readAloud"],
-  ["support-avoid-screen-reader", "avoidScreenReaderAnnouncements"], ["preferencia-assistencia-voz", "enabled"],
-  ["preferencia-leitura-voz", "readAloud"], ["preferencia-evitar-leitor-tela", "avoidScreenReaderAnnouncements"]]) {
+["support-avoid-screen-reader", "avoidScreenReaderAnnouncements"], ["preferencia-assistencia-voz", "enabled"],
+["preferencia-leitura-voz", "readAloud"], ["preferencia-evitar-leitor-tela", "avoidScreenReaderAnnouncements"]]) {
   document.getElementById(id)?.addEventListener("change", event => {
     const checked = event.target.checked;
     if (property === "enabled") {
