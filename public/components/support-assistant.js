@@ -94,7 +94,7 @@ if (!document.getElementById("support-assistant-launcher")) {
         <form class="support-compose" id="support-form">
           <div class="support-bar">
             <label class="support-sr-only" for="support-message">Mensagem</label>
-            <textarea id="support-message" maxlength="4000" placeholder="Qual sua dúvida?" required aria-describedby="support-login"></textarea>
+            <textarea id="support-message" maxlength="4000" placeholder="Qual é sua dúvida?" required></textarea>
             <a id="support-login" href="/login" hidden>Entre para enviar uma mensagem</a>
             <button type="button" id="support-dictate" aria-label="Iniciar ditado" title="Iniciar ditado"><svg class="microfone" xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 32 32" fill="none" aria-hidden="true"><g stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><rect x="11" y="1.5" width="10" height="19" rx="5"/><path d="M5 15.5V16a11 11 0 0 0 22 0v-.5"/><path d="M16 27v4"/></g></svg></button>
             <button class="support-send" id="support-send" type="submit" aria-label="Enviar mensagem" disabled hidden><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M5 16l22-11-7 22-4-8-11-3zM16 19l11-14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
@@ -148,6 +148,38 @@ let pendingStartConversationId = null;
 let pendingStartPreviousId = null;
 let authenticated = false;
 let voiceScope = "anonymous";
+const visibilityTimers = new WeakMap();
+const visibilityTransitionMs = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ? 1 : 240;
+
+function setAnimatedVisibility(element, visible) {
+  window.clearTimeout(visibilityTimers.get(element));
+
+  if (visible) {
+    element.hidden = false;
+    element.inert = false;
+    element.setAttribute("aria-hidden", "false");
+    element.classList.remove("is-visible");
+    visibilityTimers.set(element, window.setTimeout(() => {
+      visibilityTimers.delete(element);
+      if (!element.inert) element.classList.add("is-visible");
+    }, 16));
+    return;
+  }
+
+  element.classList.remove("is-visible");
+  element.inert = true;
+  element.setAttribute("aria-hidden", "true");
+  visibilityTimers.set(element, window.setTimeout(() => {
+    element.hidden = true;
+  }, visibilityTransitionMs));
+}
+
+function setLoginPrompt(required) {
+  loginLink.hidden = !required;
+  compose.placeholder = "Qual é sua dúvida?";
+  if (required) compose.setAttribute("aria-describedby", "support-login");
+  else compose.removeAttribute("aria-describedby");
+}
 let voiceChoiceMade = false;
 let voiceModeActive = false;
 let voiceReadMessageIds = new Set();
@@ -221,14 +253,14 @@ function completeVoiceOnboarding(enabled) {
   voiceChoiceMade = true;
   try { voiceStorage()?.setItem(onboardingKey(), "done"); } catch { /* Local preference is optional. */ }
   persistVoicePreference();
-  voiceOnboarding.hidden = true;
+  setAnimatedVisibility(voiceOnboarding, false);
   if (enabled) setVoiceMode(true);
   else voiceModeButton.focus();
 }
 function setVoiceMode(active) {
   voiceModeActive = Boolean(active);
-  voiceControls.hidden = !voiceModeActive;
-  voiceSettings.hidden = true;
+  setAnimatedVisibility(voiceControls, voiceModeActive);
+  setAnimatedVisibility(voiceSettings, false);
   voiceModeButton.setAttribute("aria-pressed", String(voiceModeActive));
   voiceModeButton.setAttribute("aria-label", voiceModeActive ? "Desativar assistência por voz" : "Ativar assistência por voz");
   voiceModeButton.setAttribute("title", voiceModeActive ? "Desativar assistência por voz" : "Ativar assistência por voz");
@@ -443,6 +475,7 @@ async function loadHistory() {
     const rows = await request("/support-assistant/conversations");
     authenticated = true;
     compose.disabled = false;
+    setLoginPrompt(false);
     newButton.hidden = false;
     sendButton.disabled = !introData?.conversationsEnabled;
     unreadConversationIds = new Set();
@@ -457,7 +490,7 @@ async function loadHistory() {
     historyLoaded = false;
     if (error.message === "AUTH_REQUIRED") {
       authenticated = false; compose.disabled = true; sendButton.disabled = true; newButton.hidden = true;
-      loginLink.hidden = false;
+      setLoginPrompt(true);
       feedback.textContent = "Entre na sua conta para criar uma conversa persistente e enviar mensagens.";
     }
     else feedback.textContent = error.message;
@@ -468,7 +501,7 @@ async function loadHistory() {
 function showError(error) {
   if (error.message === "AUTH_REQUIRED") {
     authenticated = false; historyLoaded = false; newButton.hidden = true; compose.disabled = true; sendButton.disabled = true;
-    loginLink.hidden = false;
+    setLoginPrompt(true);
     feedback.textContent = "Entre na sua conta para criar uma conversa persistente e enviar mensagens.";
   } else feedback.textContent = error.message || "Não foi possível conectar ao atendimento.";
 }
@@ -540,8 +573,8 @@ async function sendCurrentMessage() {
 async function showVoiceSettings() {
   const trigger = document.activeElement;
   if (!dialog.open) await openPanel();
-  voiceOnboarding.hidden = true;
-  voiceSettings.hidden = false;
+  setAnimatedVisibility(voiceOnboarding, false);
+  setAnimatedVisibility(voiceSettings, true);
   populateVoiceChoices();
   voiceSettings.dataset.returnFocusId = trigger?.id || "support-voice-mode";
   document.getElementById("support-voice-enabled").focus();
@@ -640,7 +673,7 @@ async function openPanel() {
   }
   if (!historyLoaded) await loadHistory();
   await loadVoicePreferenceScope();
-  if (!voiceChoiceMade) { voiceOnboarding.hidden = false; voiceEnable.focus(); }
+  if (!voiceChoiceMade) { setAnimatedVisibility(voiceOnboarding, true); voiceEnable.focus(); }
   if (currentConversation?.id && !currentConversation.messages?.length) {
     try { renderConversation(await request(`/support-assistant/conversations/${encodeURIComponent(currentConversation.id)}`)); }
     catch (error) {
@@ -677,11 +710,11 @@ document.addEventListener("click", event => {
 });
 const menuToggle = document.getElementById("support-menu-toggle");
 const menu = document.getElementById("support-menu");
-function closeMenu() { menu.hidden = true; menuToggle.setAttribute("aria-expanded", "false"); }
+function closeMenu() { setAnimatedVisibility(menu, false); menuToggle.setAttribute("aria-expanded", "false"); }
 menuToggle.addEventListener("click", event => {
   event.stopPropagation();
-  const opening = menu.hidden;
-  menu.hidden = !opening;
+  const opening = menuToggle.getAttribute("aria-expanded") !== "true";
+  setAnimatedVisibility(menu, opening);
   menuToggle.setAttribute("aria-expanded", String(opening));
   if (opening) menu.querySelector?.("button:not([hidden])")?.focus();
 });
@@ -709,8 +742,8 @@ dialog.addEventListener("keydown", event => {
   cancelVoiceHold();
   if (!menu.hidden) { closeMenu(); menuToggle.focus(); }
   else if (!humanConfirm.hidden) { humanConfirm.hidden = true; humanButton.focus(); }
-  else if (!voiceSettings.hidden) { voiceSettings.hidden = true; document.getElementById(voiceSettings.dataset.returnFocusId || "support-voice-mode")?.focus(); }
-  else if (!voiceOnboarding.hidden) { voiceOnboarding.hidden = true; voiceChoiceMade = true; try { voiceStorage()?.setItem(onboardingKey(), "done"); } catch { } voiceModeButton.focus(); }
+  else if (!voiceSettings.hidden) { setAnimatedVisibility(voiceSettings, false); document.getElementById(voiceSettings.dataset.returnFocusId || "support-voice-mode")?.focus(); }
+  else if (!voiceOnboarding.hidden) { setAnimatedVisibility(voiceOnboarding, false); voiceChoiceMade = true; try { voiceStorage()?.setItem(onboardingKey(), "done"); } catch { } voiceModeButton.focus(); }
   else if (!infoPopover.hidden) { infoPopover.hidden = true; infoToggle.setAttribute("aria-expanded", "false"); infoToggle.focus(); }
   else if (!historyList.hidden) { closeHistory(); historyButton.focus(); }
   else closePanel();
@@ -718,7 +751,7 @@ dialog.addEventListener("keydown", event => {
 dialog.addEventListener("close", () => {
   window.clearInterval(pollTimer); pollTimer = null; launcher.setAttribute("aria-expanded", "false"); launcher.focus();
   if (currentConversation) currentConversation = { id: currentConversation.id, state: currentConversation.state, version: currentConversation.version, messages: [], unread: currentConversation.unread };
-  newConfirm.hidden = true; humanConfirm.hidden = true; voiceOnboarding.hidden = true; voiceSettings.hidden = true; compose.value = "";
+  newConfirm.hidden = true; humanConfirm.hidden = true; setAnimatedVisibility(voiceOnboarding, false); setAnimatedVisibility(voiceSettings, false); compose.value = "";
   voice.stopDictation(); voice.stopSpeaking(); setVoiceMode(false);
   pendingMessageBody = null; pendingMessageKey = null;
 });
@@ -790,8 +823,9 @@ document.getElementById("support-voice-instructions").addEventListener("click", 
   "Você pode ativar a assistência por voz, iniciar o ditado e revisar a transcrição antes de enviar. A leitura em voz alta é opcional. Você também pode usar o teclado e o chat por texto.", voicePreference));
 voiceModeButton.addEventListener("click", () => {
   if (!voicePreference.enabled || !voiceChoiceMade) {
-    voiceOnboarding.hidden = !voiceOnboarding.hidden;
-    if (!voiceOnboarding.hidden) voiceEnable.focus();
+    const opening = voiceOnboarding.hidden || voiceOnboarding.inert;
+    setAnimatedVisibility(voiceOnboarding, opening);
+    if (opening) voiceEnable.focus();
     return;
   }
   setVoiceMode(!voiceModeActive);
@@ -800,7 +834,7 @@ document.getElementById("support-voice-exit").addEventListener("click", () => se
 document.getElementById("acss-voz-sair")?.addEventListener("click", () => setVoiceMode(false));
 for (const id of ["acss-voz-configurar", "preferencia-configurar-voz"]) document.getElementById(id)?.addEventListener("click", () => void showVoiceSettings());
 document.getElementById("support-voice-settings-close").addEventListener("click", () => {
-  voiceSettings.hidden = true;
+  setAnimatedVisibility(voiceSettings, false);
   document.getElementById(voiceSettings.dataset.returnFocusId || "support-voice-mode")?.focus();
 });
 for (const [id, property] of [["support-voice-enabled", "enabled"], ["support-read-aloud", "readAloud"],

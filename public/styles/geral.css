@@ -22,7 +22,6 @@ html {
 body {
     overflow-x: hidden;
     min-height: 100vh;
-    background: linear-gradient(180deg, #513883 0%, #3A256A 100%) 0 0 / 100% 100vh no-repeat fixed !important;
 }
 
 a {
@@ -33,6 +32,51 @@ a {
    mesmo que o CSS da página não defina --gold-light */
 :root {
     --gold-light: #F9C86B;
+
+    /* FUNDO PADRÃO DE TODAS AS PÁGINAS (de cima para baixo) */
+    --page-bg-top: #513883;
+    --page-bg-bottom: #3A256A;
+    --page-bg: linear-gradient(to bottom, var(--page-bg-top) 0%, var(--page-bg-bottom) 100%);
+    --page-bg-moon-upper: color-mix(in srgb, var(--page-bg-top) 75%, var(--page-bg-bottom));
+    --page-bg-moon-middle: color-mix(in srgb, var(--page-bg-top) 50%, var(--page-bg-bottom));
+    --page-bg-moon-lower: color-mix(in srgb, var(--page-bg-top) 25%, var(--page-bg-bottom));
+}
+
+body {
+    background-color: var(--page-bg-bottom);
+    background-image: var(--page-bg);
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+}
+
+body.modo-claro {
+    background-color: var(--bg-main);
+    background-image: none;
+}
+
+body.alto-contraste {
+    background-color: #000000;
+    background-image: none;
+}
+
+body:not(.modo-claro):not(.alto-contraste) .divider img.lua-bg-top {
+    background-color: var(--page-bg-top);
+}
+
+body:not(.modo-claro):not(.alto-contraste) .divider img.lua-bg-upper {
+    background-color: var(--page-bg-moon-upper);
+}
+
+body:not(.modo-claro):not(.alto-contraste) .divider img.lua-bg-middle {
+    background-color: var(--page-bg-moon-middle);
+}
+
+body:not(.modo-claro):not(.alto-contraste) .divider img.lua-bg-lower {
+    background-color: var(--page-bg-moon-lower);
+}
+
+body:not(.modo-claro):not(.alto-contraste) .divider img.lua-bg-bottom {
+    background-color: var(--page-bg-bottom);
 }
 
 /* =========================================================

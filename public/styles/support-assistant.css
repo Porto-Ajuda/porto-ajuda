@@ -6,10 +6,11 @@
   --support-muted: #c9c2d8;
 }
 #support-assistant-launcher {
-  position: fixed; right: 94px; bottom: 20px; z-index: 9997; min-width: 60px; height: 60px; padding: 0 17px;
+  --support-assistant-launcher-base-bottom: 20px;
+  position: fixed; right: 94px; bottom: var(--support-assistant-launcher-base-bottom); z-index: 9997; min-width: 60px; height: 60px; padding: 0 17px;
   border: 1px solid var(--support-gold); border-radius: 32px; background: var(--support-purple); color: #fff;
   font: 600 15px/1 Poppins, sans-serif; box-shadow: 0 5px 18px #17112e55; cursor: pointer;
-  transition: opacity .2s;
+  transition: bottom .2s ease-out, opacity .2s;
 }
 #support-assistant-launcher[aria-expanded="true"] {
   opacity: 0;
@@ -160,7 +161,7 @@ body.alto-contraste #support-close {
 }
 body.modo-claro .support-bar textarea { color: #000; }
 .support-bar textarea::placeholder {
-  color: var(--sa-placeholder); opacity: 1;
+  color: #604399; opacity: 1;
 }
 .support-bar button {
   flex: none; width: 52px; height: 52px; border-radius: 50%;
@@ -199,11 +200,34 @@ body.modo-claro .support-bar textarea { color: #000; }
 .support-menu{position:absolute;z-index:8;right:18px;top:76px;width:min(250px,calc(100% - 36px));display:grid;gap:7px;padding:10px;border:1px solid var(--sa-border);border-radius:14px;background:var(--sa-header-bg);box-shadow:0 12px 30px #100c2390}
 .support-menu[hidden]{display:none!important}
 .support-menu button{min-height:42px;border:1px solid var(--sa-border);border-radius:10px;background:var(--sa-ai-bg);color:var(--sa-ai-ink);font:600 14px Poppins,sans-serif;cursor:pointer}
+.support-menu,
+.support-voice-onboarding,
+.support-voice-settings,
+.support-voice-controls {
+  opacity: 0;
+  transform: translateY(8px) scale(.98);
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity .24s ease, transform .38s cubic-bezier(.22, 1, .36, 1), visibility 0s linear .24s;
+}
+.support-menu.is-visible,
+.support-voice-onboarding.is-visible,
+.support-voice-settings.is-visible,
+.support-voice-controls.is-visible {
+  opacity: 1;
+  transform: none;
+  visibility: visible;
+  pointer-events: auto;
+  transition: opacity .24s ease, transform .38s cubic-bezier(.22, 1, .36, 1), visibility 0s;
+}
 .support-menu #support-info-toggle{font-size:18px}
 .support-voice-onboarding__actions{display:flex;flex-wrap:wrap;gap:7px}.support-voice-onboarding__actions button{flex:1;min-height:38px;border:1px solid var(--sa-border);border-radius:9px;background:var(--sa-ai-bg);color:var(--sa-ai-ink);font:600 14px Poppins,sans-serif;cursor:pointer}
+#support-voice-skip,
+#support-voice-instructions,
+#support-voice-controls { display: none !important; }
 .support-voice-mode__fallback{width:32px;height:32px}.support-voice-onboarding h3{text-transform:none}
 @media(max-width:600px) {
-  #support-assistant-launcher { right: 18px; bottom: 96px; width: 56px; min-width: 56px; height: 56px; padding: 0; border-radius: 50%; font-size: 0; }
+  #support-assistant-launcher { --support-assistant-launcher-base-bottom: 96px; right: 18px; bottom: var(--support-assistant-launcher-base-bottom); width: 56px; min-width: 56px; height: 56px; padding: 0; border-radius: 50%; font-size: 0; }
   #support-assistant-launcher::before { content: "?"; font-size: 24px; }
   #support-assistant-panel {
     inset: 0; width: 100vw; max-width: 100vw; height: 100dvh; max-height: 100dvh;
@@ -225,6 +249,10 @@ body.modo-claro .support-bar textarea { color: #000; }
 }
 @media(prefers-reduced-motion:reduce) {
   #support-assistant-panel, #support-assistant-panel.support-aberto { transform: none; transition: opacity .01s, visibility 0s; }
+  .support-menu, .support-menu.is-visible,
+  .support-voice-onboarding, .support-voice-onboarding.is-visible,
+  .support-voice-settings, .support-voice-settings.is-visible,
+  .support-voice-controls, .support-voice-controls.is-visible { transition: opacity .01s, visibility 0s; }
   .support-typing i, .support-transcribing { animation: none; }
 }
 .microfone{color:#ffffff}

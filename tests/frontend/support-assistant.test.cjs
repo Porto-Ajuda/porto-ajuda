@@ -20,6 +20,7 @@ class Element {
     return result;
   }
   setAttribute(name, value) { this.attributes.set(name, String(value)); }
+  removeAttribute(name) { this.attributes.delete(name); }
   getAttribute(name) { return this.attributes.get(name) ?? null; }
   append(...nodes) { this.children.push(...nodes); }
   appendChild(node) { this.append(node); return node; }
@@ -116,6 +117,7 @@ test("renders descriptive public links and refuses paths outside the allowlist",
   assert.equal(anchors[0].textContent,"Abrigo Sintético");
   assert.equal(anchors[0].href,"/ong-profile?id=782201");
   assert.equal(anchors[1].textContent,"Filtro animal");
+  assert.equal(document.getElementById("support-message").placeholder,"Qual sua dúvida?");
   assert.doesNotMatch(textContent(stream),/example\\.invalid/);
   assert.doesNotMatch(textContent(stream),/Abrir p\\u00e1gina relacionada/);
 });
@@ -213,6 +215,7 @@ test("visitor sees the greeting but cannot create a persistent conversation befo
     /Olá! Sou a Sophie, assistente virtual do Porto Ajuda\. Como posso ajudar\?/);
   assert.equal(document.getElementById("support-login").hidden,false);
   assert.equal(document.getElementById("support-message").disabled,true);
+  assert.equal(document.getElementById("support-message").placeholder,"");
   assert.equal(document.getElementById("support-new").hidden,true);
   assert.deepEqual(calls,["/support-assistant/intro","/support-assistant/conversations"]);
 });
@@ -275,9 +278,12 @@ test("menu ⋯ abre, fecha por ação e fecha com Escape", async () => {
   assert.equal(menu.hidden,false);
   assert.equal(toggle.getAttribute("aria-expanded"),"true");
   await document.getElementById("support-history").dispatch("click");
+  assert.equal(menu.getAttribute("aria-hidden"),"true");
+  await new Promise(resolve=>setTimeout(resolve,260));
   assert.equal(menu.hidden,true);
   await toggle.dispatch("click",{stopPropagation(){}});
   await document.getElementById("support-assistant-panel").dispatch("keydown",{key:"Escape",preventDefault(){},stopPropagation(){}});
+  await new Promise(resolve=>setTimeout(resolve,260));
   assert.equal(menu.hidden,true);
 });
 
