@@ -16,32 +16,45 @@ if (!document.getElementById("support-assistant-launcher")) {
     <dialog id="support-assistant-panel" aria-labelledby="support-title" aria-describedby="support-description">
       <div class="support-shell">
         <header class="support-header">
-          <div><h2 id="support-title">Sophie</h2><p>Assistente virtual do Porto Ajuda</p><p id="support-status" aria-live="polite">Orientação pública</p></div>
-          <div class="support-header__actions"><button type="button" id="support-info-toggle" aria-label="Informações sobre o atendimento" aria-expanded="false" aria-controls="support-info">?</button><button type="button" id="support-close" aria-label="Fechar atendimento">×</button></div>
+          <div class="support-avatar"><img src="../assets/logo-night.png" alt=""></div>
+          <div class="support-header__id"><h2 id="support-title">Sophie</h2><p>Sempre online</p></div>
+          <div class="support-header__actions">
+            <button type="button" class="support-icon-btn" id="support-menu-toggle" aria-label="Mais opções" aria-expanded="false" aria-controls="support-menu">&#x22EF;</button>
+            <button type="button" class="support-icon-btn" id="support-close" aria-label="Fechar atendimento"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M9 9l14 14M23 9L9 23" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/></svg></button>
+          </div>
         </header>
+        <nav class="support-menu" id="support-menu" aria-label="Opções da conversa" hidden>
+          <button type="button" id="support-new" hidden>Nova conversa</button>
+          <button type="button" id="support-human" hidden>Falar com uma pessoa</button>
+          <button type="button" id="support-retry-ai" hidden>Tentar novamente</button>
+          <button type="button" id="support-resume-ai" hidden>Continuar com Sophie</button>
+          <button type="button" id="support-reopen" hidden>Reabrir conversa</button>
+          <button type="button" id="support-close-conversation" hidden>Encerrar conversa</button>
+          <button type="button" id="support-history" aria-expanded="false" aria-controls="support-conversation-list">Histórico</button>
+          <button type="button" id="support-info-toggle" aria-label="Privacidade e retenção" aria-expanded="false" aria-controls="support-info">?</button>
+        </nav>
+        <div class="support-toolbar" id="support-toolbar" hidden>
+          <!-- Compatibilidade visual: os controles acima permanecem com os IDs originais. -->
+        </div>
         <aside class="support-info" id="support-info" role="dialog" aria-label="Informações sobre privacidade e retenção" hidden>
           <button type="button" class="support-info__close" id="support-info-close" aria-label="Fechar informações">×</button>
           <p>A equipe autorizada pode ler as conversas para prestar atendimento. As respostas humanas são assíncronas e podem levar algum tempo.</p>
           <p>Após o encerramento, mensagens e conteúdo da conversa são removidos em 30 dias. Reabrir cancela esse prazo; um novo encerramento inicia outro prazo. Permanecem apenas metadados técnicos mínimos. Esta é uma política do produto, não uma garantia jurídica.</p>
         </aside>
-        <section class="support-intro" id="support-intro" aria-live="polite"></section>
-        <div class="support-toolbar" id="support-toolbar">
-          <button type="button" id="support-new" hidden>Nova conversa</button>
-          <button type="button" id="support-human" hidden>Falar com uma pessoa</button>
-          <button type="button" id="support-retry-ai" hidden>Tentar novamente</button>
-          <button type="button" id="support-resume-ai" hidden>Continuar com Sophie</button>
-          <button type="button" id="support-voice-mode" aria-pressed="false">Ativar assistência por voz</button>
-          <button type="button" id="support-reopen" hidden>Reabrir conversa</button>
-          <button type="button" id="support-close-conversation" hidden>Encerrar conversa</button>
-          <button type="button" id="support-history" aria-expanded="false" aria-controls="support-conversation-list">Histórico</button>
-        </div>
+        <button type="button" id="support-voice-mode" aria-label="Ativar assistência por voz" aria-pressed="false">
+          <img src="../assets/voz-icon.png" alt="" hidden>
+          <svg class="support-voice-mode__fallback microfone" xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 32 32" fill="none" aria-hidden="true"><g stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="4.2"/><path d="M1 29.5v-.7a6.5 6.5 0 0 1 13 0v.7H1Z"/><path d="M17.8 11a6.5 6.5 0 0 1 0 9"/><path d="M22 7.8a11 11 0 0 1 0 15.4"/><path d="M26.8 2.5a18 18 0 0 1 0 26"/></g></svg>
+        </button>
         <div class="support-messages" id="support-messages" role="log" aria-live="polite" aria-relevant="additions text" tabindex="0">
           <section class="support-conversation-list" id="support-conversation-list" hidden aria-label="Conversas anteriores">
             <div class="support-history__header"><strong>Histórico</strong><button type="button" id="support-history-close" aria-label="Fechar histórico">Fechar</button></div>
             <div id="support-history-items"></div>
           </section>
+          <div class="support-status-bubble">Assistente virtual do Porto Ajuda.<br><span id="support-status" aria-live="polite">Orientação pública</span></div>
+          <section class="support-intro" id="support-intro" aria-live="polite"></section>
           <div id="support-message-stream"></div>
         </div>
+        <p class="support-transcribing" id="support-transcribing" role="status" hidden>Transcrevendo...</p>
         <p class="support-status" id="support-feedback" role="status" aria-live="polite"></p>
         <section id="support-new-confirm" class="support-new-confirm" role="alertdialog" aria-modal="true" aria-labelledby="support-new-confirm-title" aria-describedby="support-new-confirm-description" hidden>
           <h3 id="support-new-confirm-title">Iniciar nova conversa?</h3>
@@ -54,8 +67,8 @@ if (!document.getElementById("support-assistant-launcher")) {
           <div><button type="button" id="support-human-cancel">Continuar com Sophie</button><button type="button" id="support-human-confirm-action">Confirmar pedido</button></div>
         </section>
         <section id="support-voice-onboarding" class="support-voice-onboarding" role="region" aria-labelledby="support-voice-onboarding-title" hidden>
-          <h3 id="support-voice-onboarding-title">Deseja ativar a assistência por voz?</h3>
-          <p>Você também pode continuar usando o chat por texto. A voz só começa após uma ação sua.</p>
+          <h3 id="support-voice-onboarding-title">assistência por voz</h3>
+          <p class="support-sr-only">Você também pode continuar usando o chat por texto. A voz só começa após uma ação sua.</p>
           <div class="support-voice-onboarding__actions"><button type="button" id="support-voice-enable">Ativar</button><button type="button" id="support-voice-skip">Agora não</button><button type="button" id="support-voice-instructions">Ouvir instruções</button></div>
           <progress id="support-voice-hold-progress" max="3" value="0" aria-label="Atalho opcional: mantenha Ativar pressionado por três segundos" hidden></progress>
         </section>
@@ -79,9 +92,13 @@ if (!document.getElementById("support-assistant-launcher")) {
           <button type="button" id="support-voice-exit">Sair da assistência por voz</button>
         </section>
         <form class="support-compose" id="support-form">
-          <label class="sr-only" for="support-message">Mensagem</label>
-          <textarea id="support-message" maxlength="4000" placeholder="Escreva sua mensagem…" required aria-describedby="support-login"></textarea>
-          <div class="support-send-row"><a id="support-login" href="/login" hidden>Entre para enviar uma mensagem</a><button type="button" id="support-dictate" aria-label="Iniciar ditado">🎙</button><button class="support-send" id="support-send" type="submit" disabled hidden>Enviar</button></div>
+          <div class="support-bar">
+            <label class="support-sr-only" for="support-message">Mensagem</label>
+            <textarea id="support-message" maxlength="4000" placeholder="Qual sua dúvida?" required aria-describedby="support-login"></textarea>
+            <a id="support-login" href="/login" hidden>Entre para enviar uma mensagem</a>
+            <button type="button" id="support-dictate" aria-label="Iniciar ditado" title="Iniciar ditado"><svg class="microfone" xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 32 32" fill="none" aria-hidden="true"><g stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><rect x="11" y="1.5" width="10" height="19" rx="5"/><path d="M5 15.5V16a11 11 0 0 0 22 0v-.5"/><path d="M16 27v4"/></g></svg></button>
+            <button class="support-send" id="support-send" type="submit" aria-label="Enviar mensagem" disabled hidden><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M5 16l22-11-7 22-4-8-11-3zM16 19l11-14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          </div>
         </form>
       </div>
     </dialog>`);
@@ -152,8 +169,14 @@ const voice = createSupportVoiceController({
   onDictation: active => {
     document.getElementById("support-voice-stop-dictation").disabled = !active;
     const dictate = document.getElementById("support-dictate");
+    const transcribing = document.getElementById("support-transcribing");
+    transcribing.hidden = !active;
+    dictate.classList.toggle("is-listening", active);
     dictate.setAttribute("aria-label", active ? "Parar ditado" : "Iniciar ditado");
-    dictate.textContent = active ? "■" : "🎙";
+    dictate.setAttribute("title", active ? "Parar ditado" : "Iniciar ditado");
+    dictate.innerHTML = active
+      ? '<svg class="microfone" viewBox="0 0 32 32" aria-hidden="true"><rect x="9" y="9" width="14" height="14" rx="3" fill="currentColor"/></svg>'
+      : '<svg class="microfone" xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 32 32" fill="none" aria-hidden="true"><g stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><rect x="11" y="1.5" width="10" height="19" rx="5"/><path d="M5 15.5V16a11 11 0 0 0 22 0v-.5"/><path d="M16 27v4"/></g></svg>';
   }
 });
 
@@ -207,7 +230,8 @@ function setVoiceMode(active) {
   voiceControls.hidden = !voiceModeActive;
   voiceSettings.hidden = true;
   voiceModeButton.setAttribute("aria-pressed", String(voiceModeActive));
-  voiceModeButton.textContent = voiceModeActive ? "Assistência por voz ativa" : "Ativar assistência por voz";
+  voiceModeButton.setAttribute("aria-label", voiceModeActive ? "Desativar assistência por voz" : "Ativar assistência por voz");
+  voiceModeButton.setAttribute("title", voiceModeActive ? "Desativar assistência por voz" : "Ativar assistência por voz");
   if (dialog.classList?.toggle) dialog.classList.toggle("support-voice-mode", voiceModeActive);
   else dialog.className = voiceModeActive ? `${dialog.className} support-voice-mode`.trim() : dialog.className.replace(/\bsupport-voice-mode\b/g, "").trim();
   syncVoiceControls();
@@ -299,14 +323,22 @@ function renderConversation(data) {
   for (const message of (Array.isArray(data.messages) ? data.messages : [])) {
     const article = document.createElement("article");
     article.className = `support-message support-message--${String(message.senderType || "system").toLowerCase()}`;
-    const meta = document.createElement("div"); meta.className = "support-message__meta";
-    const sender = document.createElement("strong"); sender.textContent = message.senderType === "AI"
-      ? `${introData?.assistantName || "Sophie"} · resposta automática`
-      : message.senderType === "STAFF" ? "Equipe Porto Ajuda · atendimento humano"
-        : message.senderLabel || (message.senderType === "SYSTEM" ? "Aviso automático" : "Porto Ajuda");
-    const time = document.createElement("time"); time.dateTime = message.createdAt;
-    const date = new Date(message.createdAt); time.textContent = Number.isNaN(date.valueOf()) ? "" : new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(date);
-    meta.append(sender, time); article.append(meta, readableLinks(message)); messageStream.append(article);
+    const senderName = message.senderType === "USER" ? "Você" : "Sophie";
+    const srSender = document.createElement("span"); srSender.className = "support-sr-only"; srSender.textContent = `${senderName}: `;
+    const srTime = document.createElement("time"); srTime.className = "support-sr-only"; srTime.dateTime = message.createdAt;
+    const date = new Date(message.createdAt); srTime.textContent = Number.isNaN(date.valueOf()) ? "" : new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(date);
+    article.append(srSender, readableLinks(message), srTime);
+    if (["SYSTEM", "STAFF"].includes(message.senderType)) {
+      const label = document.createElement("span"); label.className = "support-auto-label";
+      label.textContent = message.senderType === "STAFF"
+        ? "Equipe Porto Ajuda · atendimento humano"
+        : "Aviso automático";
+      article.append(label);
+    } else if (message.senderType === "AI") {
+      const label = document.createElement("span"); label.className = "support-auto-label"; label.textContent = "Mensagem automática"; article.append(label);
+    }
+    article.title = srTime.textContent;
+    messageStream.append(article);
   }
   if (firstView) {
     for (const message of data.messages || []) voiceReadMessageIds.add(`${data.id}:${message.id}`);
@@ -469,18 +501,19 @@ async function requestHumanNow() {
 async function retryAi() {
   if (!currentConversation || busy) return;
   const button = document.getElementById("support-retry-ai");
-  busy = true; button.disabled = true; feedback.textContent = "Tentando responder novamente…";
+  busy = true; button.disabled = true; feedback.textContent = ""; showTyping();
   try {
     renderConversation(await request(`/support-assistant/conversations/${encodeURIComponent(currentConversation.id)}/retry-ai`, { method: "POST" }));
-    feedback.textContent = "A tentativa foi concluída.";
-  } catch (error) { showError(error); }
+    hideTyping(); feedback.textContent = "A tentativa foi concluída.";
+  } catch (error) { hideTyping(); showError(error); }
   finally { busy = false; button.disabled = false; updateComposerControls(); }
 }
 
 async function sendCurrentMessage() {
   const text = compose.value.trim(); if (!text || busy) return;
   if (pendingMessageBody !== text) { pendingMessageBody = text; pendingMessageKey = crypto.randomUUID(); }
-  busy = true; sendButton.disabled = true; feedback.textContent = "Enviando…";
+  busy = true; sendButton.disabled = true; feedback.textContent = "";
+  await animateSentMessage(text);
   try {
     if (!currentConversation) {
       if (!pendingStartConversationId) { pendingStartConversationId = crypto.randomUUID(); pendingStartPreviousId = null; }
@@ -492,9 +525,15 @@ async function sendCurrentMessage() {
     const result = await request(`/support-assistant/conversations/${encodeURIComponent(currentConversation.id)}/messages`, {
       method: "POST", body: { body: text, idempotencyKey: pendingMessageKey }
     });
-    compose.value = ""; pendingMessageBody = null; pendingMessageKey = null; historyLoaded = false; renderConversation(result);
+    compose.value = ""; pendingMessageBody = null; pendingMessageKey = null; historyLoaded = false; hideTyping(); renderConversation(result);
     feedback.textContent = result.state === "WAITING_HUMAN" ? "Conversa confirmada na fila de atendimento." : "Mensagem registrada nesta conversa.";
-  } catch (error) { showError(error); }
+  } catch (error) {
+    hideTyping();
+    document.querySelectorAll?.(".support-message--user").forEach?.(bubble => {
+      if (bubble.getAttribute("aria-hidden") === "true") bubble.remove?.();
+    });
+    compose.value = text; updateComposerControls(); showError(error);
+  }
   finally { busy = false; updateComposerControls(); }
 }
 
@@ -555,9 +594,33 @@ async function startNewConversation() {
   finally { busy = false; newButton.disabled = !authenticated; sendButton.disabled = !currentConversation || currentConversation.state === "CLOSED"; }
 }
 
+function reducedMotion() {
+  return typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+function showPanel() {
+  if (dialog.open) return;
+  dialog.show();
+  launcher.setAttribute("aria-expanded", "true");
+  const raf = window.requestAnimationFrame || (callback => callback());
+  raf(() => raf(() => dialog.classList.add("support-aberto")));
+}
+
+function closePanel() {
+  if (!dialog.open) return;
+  dialog.classList.remove("support-aberto");
+  launcher.setAttribute("aria-expanded", "false");
+  if (reducedMotion() || typeof window.matchMedia !== "function") { dialog.close(); return; }
+  let done = false;
+  const finish = () => { if (done) return; done = true; dialog.close(); };
+  dialog.addEventListener("transitionend", event => { if (event.target === dialog && event.propertyName === "transform") finish(); });
+  window.setTimeout(finish, 600);
+}
+
 async function openPanel() {
-  if (!dialog.open) dialog.show();
-  feedback.textContent = ""; launcher.setAttribute("aria-expanded", "true");
+  showPanel();
+  feedback.textContent = "";
+  launcher.setAttribute("aria-expanded", "true");
   document.getElementById("support-close").focus();
   if (!intro.childElementCount) {
     try {
@@ -565,8 +628,11 @@ async function openPanel() {
       introData = data;
       const assistantName = data.assistantName || "Sophie";
       document.getElementById("support-title").textContent = assistantName;
-      const greetingLabel = document.createElement("strong"); greetingLabel.className = "support-greeting__label"; greetingLabel.textContent = `${assistantName} · mensagem automática`;
-      const p = document.createElement("p"); p.textContent = `Olá! Sou a ${assistantName}, assistente virtual do Porto Ajuda. Como posso ajudar?`; p.className = "support-greeting"; intro.append(greetingLabel, p);
+      intro.className = "support-message support-message--ai support-message--auto";
+      const srSender = document.createElement("span"); srSender.className = "support-sr-only"; srSender.textContent = `${assistantName}: `;
+      const p = document.createElement("p"); p.textContent = `Olá! Sou a ${assistantName}, assistente virtual do Porto Ajuda. Como posso ajudar?`; p.className = "support-message__body";
+      const greetingLabel = document.createElement("span"); greetingLabel.className = "support-auto-label"; greetingLabel.textContent = "Mensagem automática";
+      intro.append(srSender, p, greetingLabel);
       intro.hidden = Boolean(currentConversation);
       if (!data.conversationsEnabled) feedback.textContent = "Conversas persistentes estão temporariamente indisponíveis. Você ainda pode consultar conteúdo público.";
       sendButton.disabled = !data.conversationsEnabled || !authenticated;
@@ -603,8 +669,22 @@ function startPolling() {
 launcher.addEventListener("click", () => void openPanel());
 infoToggle.addEventListener("click", () => { infoPopover.hidden = !infoPopover.hidden; infoToggle.setAttribute("aria-expanded", String(!infoPopover.hidden)); if (!infoPopover.hidden) document.getElementById("support-info-close").focus(); });
 document.getElementById("support-info-close").addEventListener("click", () => { infoPopover.hidden = true; infoToggle.setAttribute("aria-expanded", "false"); infoToggle.focus(); });
-document.addEventListener("click", event => { if (!infoPopover.hidden && !infoPopover.contains(event.target) && event.target !== infoToggle) { infoPopover.hidden = true; infoToggle.setAttribute("aria-expanded", "false"); } });
-document.getElementById("support-close").addEventListener("click", () => dialog.close());
+document.addEventListener("click", event => {
+  if (!menu.hidden && !menu.contains(event.target) && event.target !== menuToggle) closeMenu();
+  if (!infoPopover.hidden && !infoPopover.contains(event.target) && event.target !== infoToggle) {
+    infoPopover.hidden = true; infoToggle.setAttribute("aria-expanded", "false");
+  }
+});
+const menuToggle = document.getElementById("support-menu-toggle");
+const menu = document.getElementById("support-menu");
+function closeMenu() { menu.hidden = true; menuToggle.setAttribute("aria-expanded", "false"); }
+menuToggle.addEventListener("click", event => {
+  event.stopPropagation();
+  const opening = menu.hidden;
+  menu.hidden = !opening;
+  menuToggle.setAttribute("aria-expanded", String(opening));
+  if (opening) menu.querySelector?.("button:not([hidden])")?.focus();
+});
 newButton.addEventListener("click", askBeforeStartingNewConversation);
 document.getElementById("support-new-cancel").addEventListener("click", () => {
   newConfirm.hidden = true; pendingStartConversationId = null; pendingStartPreviousId = null; newButton.focus();
@@ -627,12 +707,13 @@ dialog.addEventListener("keydown", event => {
   if (event.key !== "Escape") return;
   event.preventDefault();
   cancelVoiceHold();
-  if (!humanConfirm.hidden) { humanConfirm.hidden = true; humanButton.focus(); }
+  if (!menu.hidden) { closeMenu(); menuToggle.focus(); }
+  else if (!humanConfirm.hidden) { humanConfirm.hidden = true; humanButton.focus(); }
   else if (!voiceSettings.hidden) { voiceSettings.hidden = true; document.getElementById(voiceSettings.dataset.returnFocusId || "support-voice-mode")?.focus(); }
   else if (!voiceOnboarding.hidden) { voiceOnboarding.hidden = true; voiceChoiceMade = true; try { voiceStorage()?.setItem(onboardingKey(), "done"); } catch { } voiceModeButton.focus(); }
   else if (!infoPopover.hidden) { infoPopover.hidden = true; infoToggle.setAttribute("aria-expanded", "false"); infoToggle.focus(); }
   else if (!historyList.hidden) { closeHistory(); historyButton.focus(); }
-  else dialog.close();
+  else closePanel();
 });
 dialog.addEventListener("close", () => {
   window.clearInterval(pollTimer); pollTimer = null; launcher.setAttribute("aria-expanded", "false"); launcher.focus();
@@ -641,8 +722,9 @@ dialog.addEventListener("close", () => {
   voice.stopDictation(); voice.stopSpeaking(); setVoiceMode(false);
   pendingMessageBody = null; pendingMessageKey = null;
 });
-dialog.addEventListener("click", event => { if (event.target === dialog) dialog.close(); });
+dialog.addEventListener("click", event => { if (event.target === dialog) closePanel(); });
 historyButton.addEventListener("click", () => {
+  closeMenu();
   if (!historyList.hidden) { closeHistory(); return; }
   historyList.hidden = false; historyButton.setAttribute("aria-expanded", "true");
   if (!historyLoaded) void loadHistory();
@@ -707,7 +789,11 @@ document.getElementById("support-voice-skip").addEventListener("click", () => co
 document.getElementById("support-voice-instructions").addEventListener("click", () => voice.speak(
   "Você pode ativar a assistência por voz, iniciar o ditado e revisar a transcrição antes de enviar. A leitura em voz alta é opcional. Você também pode usar o teclado e o chat por texto.", voicePreference));
 voiceModeButton.addEventListener("click", () => {
-  if (!voicePreference.enabled) { completeVoiceOnboarding(true); return; }
+  if (!voicePreference.enabled || !voiceChoiceMade) {
+    voiceOnboarding.hidden = !voiceOnboarding.hidden;
+    if (!voiceOnboarding.hidden) voiceEnable.focus();
+    return;
+  }
   setVoiceMode(!voiceModeActive);
 });
 document.getElementById("support-voice-exit").addEventListener("click", () => setVoiceMode(false));
@@ -763,3 +849,43 @@ document.getElementById("support-voice-read-reply").addEventListener("click", ()
 document.getElementById("support-voice-stop-reading").addEventListener("click", () => voice.stopSpeaking());
 document.getElementById("support-dictate").setAttribute("title", "O navegador pode usar um serviço externo de reconhecimento de voz. Nenhum áudio é salvo pelo Porto Ajuda.");
 syncVoiceControls(); updateComposerControls();
+if (typeof menu.querySelectorAll === "function") {
+  for (const button of menu.querySelectorAll("button")) button.addEventListener("click", () => closeMenu());
+}
+
+function showTyping() {
+  hideTyping();
+  const bubble = document.createElement("div"); bubble.className = "support-typing"; bubble.id = "support-typing";
+  bubble.innerHTML = "<i></i><i></i><i></i><span class=\"support-sr-only\">Sophie está digitando</span>";
+  messageStream.append(bubble); messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+function hideTyping() { document.getElementById("support-typing")?.remove?.(); }
+
+function createOptimisticUserBubble(text) {
+  const bubble = document.createElement("article"); bubble.className = "support-message support-message--user";
+  bubble.style = { visibility: "hidden" }; bubble.setAttribute("aria-hidden", "true");
+  const sr = document.createElement("span"); sr.className = "support-sr-only"; sr.textContent = "Você: ";
+  const body = document.createElement("p"); body.className = "support-message__body"; body.textContent = text;
+  bubble.append(sr, body); messageStream.append(bubble); messagesEl.scrollTop = messagesEl.scrollHeight;
+  return bubble;
+}
+
+async function animateSentMessage(text) {
+  const bubble = createOptimisticUserBubble(text);
+  if (reducedMotion() || typeof compose.getBoundingClientRect !== "function") {
+    bubble.style.visibility = "visible"; bubble.setAttribute("aria-hidden", "false"); showTyping(); return;
+  }
+  const to = bubble.getBoundingClientRect?.();
+  const from = compose.getBoundingClientRect?.();
+  if (!to || !from || typeof bubble.animate !== "function") { bubble.style = { visibility: "visible" }; showTyping(); return; }
+  bubble.style = { visibility: "hidden" }; const clone = bubble.cloneNode?.() || bubble;
+  clone.className = "support-message support-message--user support-flying";
+  clone.style.visibility = "visible"; document.body.append(clone);
+  const animation = clone.animate([
+    { transform: `translate(${from.left - to.left}px,${from.top - to.top}px) scale(.85)`, opacity: .6 },
+    { transform: "none", opacity: 1 }
+  ], { duration: 420, easing: "cubic-bezier(.22,1,.36,1)" });
+  await (animation.finished || new Promise(resolve => setTimeout(resolve, 420)));
+  clone.remove?.(); bubble.style = { visibility: "visible" }; bubble.setAttribute("aria-hidden", "false"); showTyping();
+}
+document.getElementById("support-close").addEventListener("click", () => closePanel());

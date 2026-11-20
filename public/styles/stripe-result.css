@@ -13,9 +13,6 @@ body {
   min-height: 100vh;
   place-items: center;
   padding: 24px;
-  background:
-    radial-gradient(ellipse at 50% 0, rgba(91, 61, 143, .38), transparent 55%),
-    #111522;
   color: #f7f5fa;
   font-family: "Poppins", sans-serif;
 }

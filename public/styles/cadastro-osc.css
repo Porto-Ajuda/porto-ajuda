@@ -60,7 +60,6 @@ body {
   overflow-y: auto;
   font-family: 'Poppins', sans-serif;
   color: var(--text);
-  background: radial-gradient(circle at top, var(--bg-card) 0%, var(--bg-section) 45%, var(--bg-main) 100%);
   display: flex;
   align-items: center;
   justify-content: center;

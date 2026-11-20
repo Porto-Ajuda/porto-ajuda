@@ -16,10 +16,13 @@ body {
 
 html {
     overflow-x: hidden;
+    background-color: #3A256A;
 }
 
 body {
     overflow-x: hidden;
+    min-height: 100vh;
+    background: linear-gradient(180deg, #513883 0%, #3A256A 100%) 0 0 / 100% 100vh no-repeat fixed !important;
 }
 
 a {
@@ -1050,13 +1053,6 @@ body.modo-claro {
 body.modo-claro {
 
     color: var(--text);
-
-    background:
-        radial-gradient(circle at top,
-            var(--bg-card) 0%,
-            var(--bg-section) 45%,
-            var(--bg-main) 100%);
-
 }
 
 
@@ -2235,11 +2231,7 @@ body.alto-contraste {
 ========================================================= */
 
 body.alto-contraste {
-
-    background: #000000 !important;
-
     color: #FFFFFF !important;
-
 }
 
 

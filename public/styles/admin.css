@@ -13,7 +13,6 @@
     --admin-border: rgba(221, 170, 65, 0.18);
     --admin-danger: #ffb2a7;
     font-family: "Poppins", sans-serif;
-    background: var(--admin-bg);
     color: var(--admin-text);
 }
 
@@ -23,9 +22,6 @@ body {
     min-width: 320px;
     min-height: 100vh;
     margin: 0;
-    background:
-        radial-gradient(ellipse at 78% 4%, rgba(74, 84, 146, 0.18), transparent 34rem),
-        var(--admin-bg);
     color: var(--admin-text);
 }
 
@@ -234,7 +230,6 @@ body.modo-claro {
     --admin-text: #1a241e;
     --admin-muted: #42564a;
     --admin-border: rgba(69, 59, 128, 0.22);
-    background: var(--admin-bg);
 }
 
 body.modo-claro .admin-sidebar,
@@ -259,7 +254,6 @@ body.alto-contraste {
     --admin-text: #fff;
     --admin-muted: #fff;
     --admin-border: #fff;
-    background: #000;
 }
 
 body.alto-contraste .admin-sidebar,
