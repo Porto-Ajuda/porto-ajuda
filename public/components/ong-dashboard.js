@@ -77,7 +77,9 @@ function render(data) {
     metric("Publicações", `${publications.published || 0} publicadas`, `${publications.unpublished || 0} não publicadas`),
     metric("Oportunidades", `${opportunities.open || 0} abertas · ${opportunities.full || 0} lotadas`, `${opportunities.completed || 0} concluídas · ${opportunities.canceled || 0} canceladas`),
     metric("Vagas", `${slots.availableSlots || 0} disponíveis`, `${slots.occupiedSlots || 0} ocupadas de ${slots.totalCapacity || 0} na capacidade das oportunidades abertas`),
-    metric("Candidaturas", `${applications.pending || 0} pendentes · ${applications.accepted || 0} aprovadas`, `${applications.rejected || 0} recusadas · ${applications.canceled || 0} canceladas · ${applications.completed || 0} concluídas`),
+    metric("Candidaturas", String(applications.pending || 0) + " pendentes · " + String(applications.accepted || 0) + " aprovadas", String(applications.rejected || 0) + " recusadas · " + String(applications.canceled || 0) + " canceladas"),
+    metric("Participantes concluídos", applications.completed || 0, "Participantes com conclusão registrada pela ONG."),
+    metric("Horas voluntárias registradas", applications.completedHours == null ? "Indisponível" : Number(applications.completedHours).toLocaleString("pt-BR", { maximumFractionDigits: 2 }) + " h", "Soma das horas individuais registradas; não inclui carga horária planejada."),
     metric("Vaquinhas", campaigns.available ? `${Object.values(campaigns.states || {}).reduce((n, item) => n + Number(item.count || 0), 0)} campanhas` : "Indisponível",
       campaigns.available ? `Metas líquidas: ${money(campaigns.goalNetCents)} · ${raised} arrecadados líquidos confirmados` : campaigns.label || "Indisponível"),
     metric("Saldo para saque", "Indisponível", "O painel não tem acesso ao saldo Stripe ou à disponibilidade de payout.")

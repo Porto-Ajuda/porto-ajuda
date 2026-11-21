@@ -80,12 +80,12 @@ function cardCandidatura(item) {
         link.className = "botao botao-secundario";
         actions.append(link);
     }
-    if (item.status === "PENDENTE") {
+    if (item.status === "PENDENTE" || item.status === "APROVADA") {
         const cancel = document.createElement("button");
         cancel.type = "button";
         cancel.className = "botao botao-secundario candidatura-cancelar";
-        cancel.textContent = "Cancelar candidatura";
-        cancel.addEventListener("click", () => void cancelar(item.id, cancel));
+        cancel.textContent = item.status === "APROVADA" ? "Desistir da vaga" : "Cancelar candidatura";
+        cancel.addEventListener("click", () => void cancelar(item.id, cancel, item.status));
         actions.append(cancel);
     }
     if (item.status === "CONCLUIDA" && item.certificadoDisponivel) {
@@ -132,18 +132,21 @@ async function carregar(paginaSolicitada = pagina) {
         $("candidaturas-usuario-lista").replaceChildren();
     } finally { carregando = false; }
 }
-async function cancelar(id, button) {
+async function cancelar(id, button, statusAtual) {
     if (button.disabled) return;
+    const participanteAceito = statusAtual === "APROVADA";
     await confirmarAcao({
-        tipo: "Cancelamento de candidatura",
-        titulo: "Cancelar candidatura?",
-        descricao: "A candidatura pendente será marcada como cancelada. Essa ação não pode ser desfeita.",
+        tipo: participanteAceito ? "Desistência do voluntariado" : "Cancelamento de candidatura",
+        titulo: participanteAceito ? "Desistir desta vaga?" : "Cancelar candidatura?",
+        descricao: participanteAceito
+            ? "Sua participação aceita será cancelada. A vaga só volta à divulgação se a oportunidade continuar aberta e elegível."
+            : "A candidatura pendente será marcada como cancelada. Essa ação não pode ser desfeita.",
         textoCancelar: "Manter candidatura",
-        textoConfirmar: "Cancelar candidatura",
+        textoConfirmar: participanteAceito ? "Desistir da vaga" : "Cancelar candidatura",
         estilo: "destrutivo",
         origem: button,
         focoSucesso: $("candidaturas-usuario-status"),
-        mensagemSucesso: "Candidatura cancelada.",
+        mensagemSucesso: participanteAceito ? "Participação cancelada." : "Candidatura cancelada.",
         aoConfirmar: async () => {
             button.disabled = true;
             definirEstado("Cancelando candidatura…");
@@ -156,7 +159,7 @@ async function cancelar(id, button) {
                 if (response.ok) { await carregar(pagina); return; }
                 if (response.status === 404 || response.status === 409) await carregar(pagina);
                 throw new Error(response.status === 409
-                    ? "A candidatura já recebeu uma decisão e não pode ser cancelada."
+                    ? "A candidatura ou participação mudou desde a última atualização. Confira o status antes de tentar novamente."
                     : response.status === 404 ? "A candidatura não foi encontrada."
                         : "Não foi possível cancelar agora. Tente novamente.");
             } catch (erro) {

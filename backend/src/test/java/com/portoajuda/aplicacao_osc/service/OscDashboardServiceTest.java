@@ -61,7 +61,17 @@ class OscDashboardServiceTest {
         doAnswer(invocation -> {
             String sql = invocation.getArgument(0);
             if (sql.contains("publications")) return Map.of("published", 2L, "unpublished", 1L, "volunteerPosts", 1L, "unpublishedVolunteerPosts", 0L);
-            if (sql.contains("totalCapacity")) return Map.of("open", 1L, "full", 1L, "completed", 0L, "canceled", 0L, "totalCapacity", 4L, "occupiedSlots", 3L, "availableSlots", 1L);
+            if (sql.contains("totalCapacity")) {
+                assertTrue(sql.contains("WHERE status='APROVADA'"), "pending applications must not occupy dashboard capacity");
+                assertTrue(sql.contains("o.data_arquivamento IS NULL"));
+                assertTrue(sql.contains("data_conclusao IS NULL"));
+                assertTrue(sql.contains("content_moderation_blocks"));
+                return Map.of("open", 1L, "full", 1L, "completed", 0L, "canceled", 0L, "totalCapacity", 4L, "occupiedSlots", 3L, "availableSlots", 1L);
+            }
+            if (sql.contains("completedHours")) {
+                assertTrue(sql.contains("sum(c.horas_realizadas)"), "dashboard hours must use individual recorded completion hours");
+                return Map.of("pending", 2L, "accepted", 3L, "rejected", 1L, "canceled", 0L, "completed", 2L, "completedHours", new java.math.BigDecimal("6.75"), "canceledByNgo", 0L);
+            }
             if (sql.contains("pendingApplications")) return Map.of("pendingApplications", 2L);
             return Map.of("pending", 2L, "accepted", 3L, "rejected", 1L, "canceled", 0L, "completed", 0L, "canceledByNgo", 0L);
         }).when(jdbc).queryForMap(anyString(), any(Object[].class));
@@ -76,6 +86,8 @@ class OscDashboardServiceTest {
         assertEquals(1L, ((Map<?,?>) data.get("opportunities")).get("full"));
         assertEquals(1L, ((Map<?,?>) data.get("opportunities")).get("availableSlots"));
         assertEquals(12500L, ((Map<?,?>) data.get("campaigns")).get("confirmedNetRaisedCents"));
+        assertEquals(new java.math.BigDecimal("6.75"), ((Map<?,?>) data.get("applications")).get("completedHours"));
+        assertEquals(2L, ((Map<?,?>) data.get("pendingActions")).get("pendingApplications"));
         assertFalse((Boolean) ((Map<?,?>) data.get("stripeBalance")).get("available"));
         assertEquals("Indisponível", ((Map<?,?>) data.get("stripeBalance")).get("label"));
     }

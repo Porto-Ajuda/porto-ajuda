@@ -13,6 +13,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /** NGO-scoped management metrics. Candidate PII and Stripe balances are never included. */
 @Service
@@ -20,6 +21,7 @@ public class OscDashboardService {
     private final JdbcTemplate jdbc;
     private final OscRepository oscs;
     private final OscService oscService;
+    @Autowired(required = false) private VerificacaoRepresentanteService verificationService;
 
     public OscDashboardService(JdbcTemplate jdbc, OscRepository oscs, OscService oscService) {
         this.jdbc = jdbc; this.oscs = oscs; this.oscService = oscService;
@@ -47,26 +49,15 @@ public class OscDashboardService {
                        count(*) FILTER (WHERE tipo='VOLUNTARIADO' AND NOT ativo) AS unpublishedVolunteerPosts
                   FROM post WHERE id_osc=?
                 """, oscId));
-        result.put("opportunities", one("""
-                SELECT count(*) FILTER (WHERE v.status='ABERTA' AND v.data_fim>=CURRENT_DATE
-                            AND p.ativo AND v.quantidade_vagas > COALESCE(a.occupied,0)) AS open,
-                       count(*) FILTER (WHERE v.status='ABERTA' AND v.data_fim>=CURRENT_DATE
-                            AND p.ativo AND v.quantidade_vagas > 0 AND v.quantidade_vagas <= COALESCE(a.occupied,0)) AS full,
-                       count(*) FILTER (WHERE v.data_conclusao IS NOT NULL) AS completed,
-                       count(*) FILTER (WHERE v.status='CANCELADA') AS canceled,
-                       COALESCE(sum(v.quantidade_vagas) FILTER (WHERE v.status='ABERTA' AND v.data_fim>=CURRENT_DATE AND p.ativo),0) AS totalCapacity,
-                       COALESCE(sum(LEAST(v.quantidade_vagas,COALESCE(a.occupied,0))) FILTER (WHERE v.status='ABERTA' AND v.data_fim>=CURRENT_DATE AND p.ativo),0) AS occupiedSlots,
-                       COALESCE(sum(GREATEST(v.quantidade_vagas-COALESCE(a.occupied,0),0)) FILTER (WHERE v.status='ABERTA' AND v.data_fim>=CURRENT_DATE AND p.ativo),0) AS availableSlots
-                  FROM vagas_voluntariado v JOIN post p ON p.id=v.id_post
-                  LEFT JOIN (SELECT id_vaga,count(*) AS occupied FROM candidaturas_voluntariado WHERE status='APROVADA' GROUP BY id_vaga) a ON a.id_vaga=v.id
-                 WHERE p.id_osc=?
-                """, oscId));
+        result.put("opportunities", opportunities(oscId,
+                verificationService == null || verificationService.isPubliclyEligible(oscId)));
         result.put("applications", one("""
                 SELECT count(*) FILTER (WHERE c.status='PENDENTE') AS pending,
                        count(*) FILTER (WHERE c.status='APROVADA') AS accepted,
                        count(*) FILTER (WHERE c.status='RECUSADA') AS rejected,
                        count(*) FILTER (WHERE c.status='DESISTIU') AS canceled,
                        count(*) FILTER (WHERE c.status='CONCLUIDA') AS completed,
+                       COALESCE(sum(c.horas_realizadas) FILTER (WHERE c.status='CONCLUIDA'),0) AS completedHours,
                        count(*) FILTER (WHERE c.status='CANCELADA_PELA_ONG') AS canceledByNgo
                   FROM candidaturas_voluntariado c JOIN vagas_voluntariado v ON v.id=c.id_vaga
                   JOIN post p ON p.id=v.id_post WHERE p.id_osc=?
@@ -125,6 +116,40 @@ public class OscDashboardService {
                   LEFT JOIN donation_campaign_ledger_entries l ON l.contribution_id=d.id
                  WHERE c.osc_id=? GROUP BY c.id,c.title,c.goal_net_cents ORDER BY c.created_at DESC LIMIT 12
                 """, oscId);
+    }
+
+    /** Slot totals only include opportunities that are currently discoverable. */
+    private Map<String, Object> opportunities(Integer oscId, boolean verificationEligible) {
+        return jdbc.queryForMap("""
+                WITH vacancy_rows AS (
+                    SELECT v.status, v.data_fim, v.data_conclusao, v.quantidade_vagas,
+                           COALESCE(a.occupied,0) AS occupied,
+                           (p.ativo AND o.status='ATIVA' AND o.data_arquivamento IS NULL AND ?
+                            AND NOT EXISTS (SELECT 1 FROM public.content_moderation_blocks b
+                                            WHERE b.target_type='OSC' AND b.target_id=o.id AND b.active)
+                            AND NOT EXISTS (SELECT 1 FROM public.content_moderation_blocks b
+                                            WHERE b.target_type='POST' AND b.target_id=p.id AND b.active)) AS publicly_eligible
+                      FROM vagas_voluntariado v
+                      JOIN post p ON p.id=v.id_post
+                      JOIN oscs o ON o.id=p.id_osc
+                      LEFT JOIN (SELECT id_vaga,count(*) AS occupied FROM candidaturas_voluntariado
+                                  WHERE status='APROVADA' GROUP BY id_vaga) a ON a.id_vaga=v.id
+                     WHERE p.id_osc=?
+                )
+                SELECT count(*) FILTER (WHERE publicly_eligible AND status='ABERTA' AND data_fim>=CURRENT_DATE
+                            AND data_conclusao IS NULL AND quantidade_vagas>occupied) AS open,
+                       count(*) FILTER (WHERE publicly_eligible AND status='ABERTA' AND data_fim>=CURRENT_DATE
+                            AND data_conclusao IS NULL AND quantidade_vagas>0 AND quantidade_vagas<=occupied) AS full,
+                       count(*) FILTER (WHERE data_conclusao IS NOT NULL) AS completed,
+                       count(*) FILTER (WHERE status='CANCELADA') AS canceled,
+                       COALESCE(sum(quantidade_vagas) FILTER (WHERE publicly_eligible AND status='ABERTA'
+                            AND data_fim>=CURRENT_DATE AND data_conclusao IS NULL),0) AS totalCapacity,
+                       COALESCE(sum(LEAST(quantidade_vagas,occupied)) FILTER (WHERE publicly_eligible AND status='ABERTA'
+                            AND data_fim>=CURRENT_DATE AND data_conclusao IS NULL),0) AS occupiedSlots,
+                       COALESCE(sum(GREATEST(quantidade_vagas-occupied,0)) FILTER (WHERE publicly_eligible AND status='ABERTA'
+                            AND data_fim>=CURRENT_DATE AND data_conclusao IS NULL),0) AS availableSlots
+                  FROM vacancy_rows
+                """, verificationEligible, oscId);
     }
 
     private Map<String, Object> campaigns(Integer oscId) {

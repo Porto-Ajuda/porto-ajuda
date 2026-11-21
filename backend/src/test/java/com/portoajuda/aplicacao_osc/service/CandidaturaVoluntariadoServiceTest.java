@@ -3,6 +3,7 @@ package com.portoajuda.aplicacao_osc.service;
 import com.portoajuda.aplicacao_osc.dto.request.RequestCandidaturaDTO;
 import com.portoajuda.aplicacao_osc.dto.request.RequestDecisaoCandidaturaDTO;
 import com.portoajuda.aplicacao_osc.dto.request.RequestFinalizarVoluntariadoDTO;
+import com.portoajuda.aplicacao_osc.dto.response.CandidaturaUsuarioDTO;
 import com.portoajuda.aplicacao_osc.entity.CandidaturasVoluntariado;
 import com.portoajuda.aplicacao_osc.entity.Osc;
 import com.portoajuda.aplicacao_osc.entity.Post;
@@ -184,7 +185,7 @@ class CandidaturaVoluntariadoServiceTest {
     }
 
     @Test
-    void usuarioPodeCancelarSomenteCandidaturaPendente() {
+    void usuarioPodeCancelarCandidaturaPendente() {
         CandidaturasVoluntariado candidatura = candidatura(StatusCandidatura.PENDENTE);
         when(candidaturas.findByIdAndUsuario_Id(99, 11)).thenReturn(Optional.of(candidatura));
         when(vagas.findForUpdateById(41)).thenReturn(Optional.of(vaga));
@@ -193,6 +194,53 @@ class CandidaturaVoluntariadoServiceTest {
         var result = service.cancelarMinha(99, applicant);
 
         assertEquals(StatusCandidatura.DESISTIU, result.status());
+    }
+
+    @Test
+    void acceptedParticipantCancellationReleasesOneSlotWhileOpportunityRemainsEligible() {
+        CandidaturasVoluntariado candidatura = candidatura(StatusCandidatura.APROVADA);
+        when(candidaturas.findByIdAndUsuario_Id(99, 11)).thenReturn(Optional.of(candidatura));
+        when(vagas.findForUpdateById(41)).thenReturn(Optional.of(vaga));
+        when(candidaturas.save(candidatura)).thenReturn(candidatura);
+        // With capacity 2, this applicant's cancellation leaves one other accepted participant.
+        when(candidaturas.countByVaga_IdAndStatus(41, StatusCandidatura.APROVADA)).thenReturn(1L);
+
+        var result = service.cancelarMinha(99, applicant);
+
+        assertEquals(StatusCandidatura.DESISTIU, result.status());
+        assertTrue(result.oportunidadePublica());
+        assertEquals(StatusVaga.ABERTA, vaga.getStatus());
+        verify(vagas).findForUpdateById(41);
+    }
+
+    @Test
+    void acceptedCancellationDoesNotReopenClosedOpportunity() {
+        CandidaturasVoluntariado candidatura = candidatura(StatusCandidatura.APROVADA);
+        vaga.setStatus(StatusVaga.ENCERRADA);
+        when(candidaturas.findByIdAndUsuario_Id(99, 11)).thenReturn(Optional.of(candidatura));
+        when(vagas.findForUpdateById(41)).thenReturn(Optional.of(vaga));
+        when(candidaturas.save(candidatura)).thenReturn(candidatura);
+
+        var result = service.cancelarMinha(99, applicant);
+
+        assertEquals(StatusCandidatura.DESISTIU, result.status());
+        assertFalse(result.oportunidadePublica());
+        assertEquals(StatusVaga.ENCERRADA, vaga.getStatus());
+    }
+
+    @Test
+    void acceptedCancellationDoesNotReopenExpiredOpportunity() {
+        CandidaturasVoluntariado accepted = candidatura(StatusCandidatura.APROVADA);
+        vaga.setDataFim(LocalDate.now().minusDays(1));
+        when(candidaturas.findByIdAndUsuario_Id(99, 11)).thenReturn(Optional.of(accepted));
+        when(vagas.findForUpdateById(41)).thenReturn(Optional.of(vaga));
+        when(candidaturas.save(accepted)).thenReturn(accepted);
+
+        CandidaturaUsuarioDTO result = service.cancelarMinha(99, applicant);
+
+        assertEquals(StatusCandidatura.DESISTIU, result.status());
+        assertFalse(result.oportunidadePublica());
+        assertEquals(StatusVaga.ABERTA, vaga.getStatus());
     }
 
     @Test
@@ -309,6 +357,56 @@ class CandidaturaVoluntariadoServiceTest {
         var method = VagaRepository.class.getMethod("findForUpdateById", Integer.class);
 
         assertEquals(LockModeType.PESSIMISTIC_WRITE, method.getAnnotation(Lock.class).value());
+        assertNotNull(CandidaturaVoluntariadoService.class.getMethod("candidatar", Integer.class,
+                RequestCandidaturaDTO.class, Usuario.class).getAnnotation(org.springframework.transaction.annotation.Transactional.class));
+        assertNotNull(CandidaturaVoluntariadoService.class.getMethod("decidir", Integer.class, Integer.class,
+                RequestDecisaoCandidaturaDTO.class, Usuario.class).getAnnotation(org.springframework.transaction.annotation.Transactional.class));
+    }
+
+    @Test
+    void concurrentFinalSlotDecisionsSerializeAtTheVacancyLock() throws Exception {
+        CandidaturasVoluntariado first = candidatura(StatusCandidatura.PENDENTE);
+        CandidaturasVoluntariado second = candidatura(StatusCandidatura.PENDENTE);
+        ReflectionTestUtils.setField(second, "id", 100);
+        when(oscService.obterCargoUsuario(osc, manager)).thenReturn(CargoOsc.ADMINISTRADOR);
+        when(oscs.findForUpdateById(7)).thenReturn(Optional.of(osc));
+        when(candidaturas.findByIdAndVaga_Post_Osc_Id(anyInt(), eq(7)))
+                .thenAnswer(invocation -> invocation.getArgument(0).equals(99) ? Optional.of(first) : Optional.of(second));
+
+        var vacancyLock = new java.util.concurrent.locks.ReentrantLock();
+        var accepted = new java.util.concurrent.atomic.AtomicInteger(1);
+        when(vagas.findForUpdateById(41)).thenAnswer(invocation -> {
+            vacancyLock.lock();
+            return Optional.of(vaga);
+        });
+        when(candidaturas.countByVaga_IdAndStatus(41, StatusCandidatura.APROVADA)).thenAnswer(invocation -> {
+            int count = accepted.get();
+            // The second decision sees the full slot after it acquires the simulated repository row lock.
+            if (count >= vaga.getQuantidadeVagas()) vacancyLock.unlock();
+            return (long) count;
+        });
+        when(candidaturas.save(any())).thenAnswer(invocation -> {
+            CandidaturasVoluntariado saved = invocation.getArgument(0);
+            if (saved.getStatus() == StatusCandidatura.APROVADA) accepted.incrementAndGet();
+            vacancyLock.unlock();
+            return saved;
+        });
+
+        var ready = new java.util.concurrent.CountDownLatch(2);
+        var start = new java.util.concurrent.CountDownLatch(1);
+        var pool = java.util.concurrent.Executors.newFixedThreadPool(2);
+        try {
+            var firstDecision = pool.submit(() -> concurrentDecision(99, ready, start));
+            var secondDecision = pool.submit(() -> concurrentDecision(100, ready, start));
+            assertTrue(ready.await(5, java.util.concurrent.TimeUnit.SECONDS));
+            start.countDown();
+            assertEquals(1, (firstDecision.get(5, java.util.concurrent.TimeUnit.SECONDS) ? 1 : 0)
+                    + (secondDecision.get(5, java.util.concurrent.TimeUnit.SECONDS) ? 1 : 0));
+            assertEquals(2, accepted.get());
+        } finally {
+            start.countDown();
+            pool.shutdownNow();
+        }
     }
 
     @Test
@@ -324,6 +422,26 @@ class CandidaturaVoluntariadoServiceTest {
     }
 
     @Test
+    void completionMarkerAndModerationNeverReopenPublicAvailability() {
+        when(vagas.findById(41)).thenReturn(Optional.of(vaga));
+        ReflectionTestUtils.setField(vaga, "dataConclusao", java.time.Instant.now());
+        assertFalse(service.disponibilidadePublica(41).aceitaCandidaturas());
+        verify(candidaturas, never()).countByVaga_IdAndStatus(41, StatusCandidatura.APROVADA);
+
+        ReflectionTestUtils.setField(service, "contentReports", null);
+        vaga.setStatus(StatusVaga.CANCELADA);
+        assertFalse(service.disponibilidadePublica(41).aceitaCandidaturas());
+
+        ReflectionTestUtils.setField(vaga, "dataConclusao", null);
+        var reports = mock(ContentReportService.class);
+        when(reports.isBlocked("OSC", 7)).thenReturn(false);
+        when(reports.isBlocked("POST", 31)).thenReturn(true);
+        ReflectionTestUtils.setField(service, "contentReports", reports);
+        assertFalse(service.disponibilidadePublica(41).aceitaCandidaturas());
+        verify(candidaturas, never()).countByVaga_IdAndStatus(41, StatusCandidatura.APROVADA);
+    }
+
+    @Test
     void pendingApplicationsDoNotConsumePublicCapacity() {
         when(vagas.findById(41)).thenReturn(Optional.of(vaga));
         when(candidaturas.countByVaga_IdAndStatus(41, StatusCandidatura.APROVADA)).thenReturn(0L);
@@ -336,6 +454,9 @@ class CandidaturaVoluntariadoServiceTest {
     void twoSlotsOneAcceptedAndOnePendingStillHasOnePublicSlot() {
         CandidaturasVoluntariado accepted = candidatura(StatusCandidatura.APROVADA);
         CandidaturasVoluntariado pending = candidatura(StatusCandidatura.PENDENTE);
+        assertEquals(2, vaga.getQuantidadeVagas());
+        assertEquals(StatusCandidatura.APROVADA, accepted.getStatus());
+        assertEquals(StatusCandidatura.PENDENTE, pending.getStatus());
         assertEquals(2, List.of(accepted, pending).size());
         when(vagas.findById(41)).thenReturn(Optional.of(vaga));
         when(candidaturas.countByVaga_IdAndStatus(41, StatusCandidatura.APROVADA)).thenReturn(1L);
@@ -462,6 +583,19 @@ class CandidaturaVoluntariadoServiceTest {
 
         assertEquals(409, error.getStatusCode().value());
         verify(candidaturas, never()).save(any());
+    }
+
+    private boolean concurrentDecision(Integer candidaturaId, java.util.concurrent.CountDownLatch ready,
+            java.util.concurrent.CountDownLatch start) throws Exception {
+        ready.countDown();
+        if (!start.await(5, java.util.concurrent.TimeUnit.SECONDS)) throw new IllegalStateException("Start gate timed out.");
+        try {
+            service.decidir(7, candidaturaId, new RequestDecisaoCandidaturaDTO(StatusCandidatura.APROVADA), manager);
+            return true;
+        } catch (ResponseStatusException error) {
+            if (error.getStatusCode().value() == 409) return false;
+            throw error;
+        }
     }
 
     private CandidaturasVoluntariado candidatura(StatusCandidatura status) {

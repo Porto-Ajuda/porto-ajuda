@@ -122,6 +122,15 @@ function buildCard(item) {
     return article;
 }
 
+function restaurarFocoAoFechar(dialog) {
+    const handler = () => {
+        const opener = dialog._candidateTrigger;
+        if (opener?.isConnected) opener.focus();
+        dialog.removeEventListener("close", handler);
+    };
+    dialog.addEventListener("close", handler);
+}
+
 /** Open the existing NGO candidate workflow in-place for one opportunity. */
 export function openOpportunityCandidates({ oscId, opportunity, trigger, onFinalize, onChanged } = {}) {
     if (!Number.isSafeInteger(Number(oscId)) || !opportunity?.vaga?.id) return;
@@ -139,6 +148,7 @@ export function openOpportunityCandidates({ oscId, opportunity, trigger, onFinal
         dialog.addEventListener("click", event => { if (event.target === dialog) dialog.close(); });
     }
     const section = dialog.querySelector("[data-candidaturas-ong]");
+    dialog._candidateTrigger = trigger;
     section.dataset.vagaId = String(opportunity.vaga.id);
     section.dataset.requestGeneration = String((Number(section.dataset.requestGeneration) || 0) + 1);
     section.dataset.page = "0";
@@ -149,6 +159,10 @@ export function openOpportunityCandidates({ oscId, opportunity, trigger, onFinal
     const resumo = dialog.querySelector(".candidatos-modal-resumo");
     const capacity = Number(opportunity.vaga.quantidadeVagas) || 0;
     resumo.innerHTML = `<div><dt>Capacidade</dt><dd>${capacity}</dd></div><div><dt>Participantes aceitos</dt><dd data-resumo-aceitos>…</dd></div><div><dt>Vagas disponíveis</dt><dd data-resumo-disponiveis>…</dd></div><div><dt>Candidaturas pendentes</dt><dd data-resumo-pendentes>…</dd></div>`;
+    section.querySelector("[data-candidaturas-lista]").replaceChildren();
+    const initialFeedback = section.querySelector("[data-candidaturas-feedback]");
+    initialFeedback.tabIndex = -1;
+    initialFeedback.textContent = "Carregando candidaturas…";
     const finalizeHost = dialog.querySelector("[data-candidaturas-finalizar]");
     finalizeHost.replaceChildren();
     if (typeof onFinalize === "function" && opportunity.vaga.status === "ABERTA") {
@@ -156,19 +170,33 @@ export function openOpportunityCandidates({ oscId, opportunity, trigger, onFinal
         finish.addEventListener("click", () => { dialog.close(); onFinalize(); }); finalizeHost.append(finish);
     }
     const refreshCounts = async () => {
+        const requestedVacancy = section.dataset.vagaId;
+        const requestedGeneration = section.dataset.requestGeneration;
         const fetchCount = async status => {
-            const q = new URLSearchParams({ page: "0", size: "1", vagaId: String(opportunity.vaga.id) });
+            const q = new URLSearchParams({ page: "0", size: "1", vagaId: requestedVacancy });
             if (status) q.set("status", status);
             const response = await fetch(`${API}/osc/${oscId}/candidaturas?${q}`, { credentials: "include", cache: "no-store", headers: { Accept: "application/json" } });
             if (!response.ok) throw new Error("Não foi possível atualizar os totais.");
             return Number((await response.json()).totalElements) || 0;
         };
         try {
-            const [accepted, pending] = await Promise.all([fetchCount("APROVADA"), fetchCount("PENDENTE")]);
+            const fetchAvailability = async () => {
+                const response = await fetch(`${API}/voluntariado/vagas/${encodeURIComponent(requestedVacancy)}/disponibilidade`, {
+                    credentials: "include", cache: "no-store", headers: { Accept: "application/json" }
+                });
+                if (!response.ok) throw new Error("NÃ£o foi possÃ­vel atualizar a disponibilidade.");
+                return response.json();
+            };
+            const [accepted, pending, availability] = await Promise.all([
+                fetchCount("APROVADA"), fetchCount("PENDENTE"), fetchAvailability()
+            ]);
+            if (requestedVacancy !== section.dataset.vagaId
+                    || requestedGeneration !== section.dataset.requestGeneration) return;
+            const available = availability.aceitaCandidaturas === true ? Math.max(0, capacity - accepted) : 0;
             resumo.querySelector("[data-resumo-aceitos]").textContent = String(accepted);
-            resumo.querySelector("[data-resumo-disponiveis]").textContent = String(Math.max(0, capacity - accepted));
+            resumo.querySelector("[data-resumo-disponiveis]").textContent = String(available);
             resumo.querySelector("[data-resumo-pendentes]").textContent = String(pending);
-            if (typeof onChanged === "function") onChanged({ accepted, pending, available: Math.max(0, capacity - accepted) });
+            if (typeof onChanged === "function") onChanged({ accepted, pending, available });
             window.dispatchEvent(new CustomEvent("porto:volunteer-capacity-changed", { detail: { oscId: Number(oscId), vacancyId: Number(opportunity.vaga.id) } }));
         } catch { for (const node of resumo.querySelectorAll("dd")) if (node.textContent === "…") node.textContent = "Indisponível"; }
     };
@@ -178,8 +206,7 @@ export function openOpportunityCandidates({ oscId, opportunity, trigger, onFinal
     selected.onchange = () => { section.dataset.page = "0"; void load(section); };
     section.querySelector("[data-candidaturas-anterior]").onclick = () => { section.dataset.page = String(Math.max(0, (Number(section.dataset.page) || 0) - 1)); void load(section); };
     section.querySelector("[data-candidaturas-proxima]").onclick = () => { section.dataset.page = String((Number(section.dataset.page) || 0) + 1); void load(section); };
-    const onClose = () => { if (trigger?.isConnected) trigger.focus(); dialog.removeEventListener("close", onClose); };
-    dialog.addEventListener("close", onClose);
+    restaurarFocoAoFechar(dialog);
     dialog.showModal();
     void refreshCounts(); void load(section);
 }
@@ -193,6 +220,10 @@ async function load(section) {
     const requestedVacancy = section.dataset.vagaId;
     const requestedGeneration = section.dataset.requestGeneration;
     const status = $(section, "[data-candidaturas-status]").value;
+    const requestIsCurrent = () => requestedVacancy === section.dataset.vagaId
+        && requestedGeneration === section.dataset.requestGeneration
+        && String(pageNumber) === String(Number(section.dataset.page) || 0)
+        && status === $(section, "[data-candidaturas-status]").value;
     const query = new URLSearchParams({ page: String(pageNumber), size: String(PAGE_SIZE) });
     if (status) query.set("status", status);
     if (section.dataset.vagaId) query.set("vagaId", section.dataset.vagaId);
@@ -201,6 +232,7 @@ async function load(section) {
         const response = await fetch(`${API}/osc/${section.dataset.oscId || getOscId()}/candidaturas?${query}`, {
             credentials: "include", cache: "no-store", headers: { Accept: "application/json" }
         });
+        if (!requestIsCurrent()) return;
         if (response.status === 401 || response.status === 403) {
             feedback.textContent = "Esta conta não tem acesso à gestão de candidaturas desta ONG.";
             list.replaceChildren();
@@ -208,7 +240,7 @@ async function load(section) {
         }
         if (!response.ok) throw new Error("N?o foi poss?vel carregar as candidaturas. Tente novamente.");
         const data = await response.json();
-        if (requestedVacancy !== section.dataset.vagaId || requestedGeneration !== section.dataset.requestGeneration) return;
+        if (!requestIsCurrent()) return;
         const entries = Array.isArray(data.content) ? data.content : [];
         list.replaceChildren(...entries.map(buildCard));
         const pages = Number(data.totalPages) || 0;
@@ -217,15 +249,22 @@ async function load(section) {
         $(section, "[data-candidaturas-proxima]").disabled = pageNumber + 1 >= pages;
         feedback.textContent = entries.length ? `${data.totalElements} candidatura(s).` : "Ainda não há candidaturas para este filtro.";
     } catch {
-        feedback.textContent = "Não foi possível carregar as candidaturas. Tente novamente.";
-    } finally { section.dataset.loading = "false"; if (section._refreshCounts) void section._refreshCounts(); }
+        if (requestIsCurrent()) feedback.textContent = "Não foi possível carregar as candidaturas. Tente novamente.";
+    } finally {
+        section.dataset.loading = "false";
+        if (section._refreshCounts) void section._refreshCounts();
+        if (!requestIsCurrent()) void load(section);
+    }
 }
 
 async function decide(item, status, button) {
     if (button.disabled) return;
     const card = button.closest(".gestao-candidatura-card");
+    const candidateDialog = button.closest("dialog.dialogo-candidatos-oportunidade");
+    const reopenCandidateDialog = Boolean(candidateDialog?.open);
+    if (reopenCandidateDialog) candidateDialog.close("confirmation");
     const aprovado = status === "APROVADA";
-    await confirmarAcao({
+    try { await confirmarAcao({
         tipo: "Decis\u00e3o de candidatura",
         titulo: aprovado ? "Aprovar candidatura?" : "Rejeitar candidatura?",
         descricao: aprovado
@@ -264,7 +303,13 @@ async function decide(item, status, button) {
                 card.querySelectorAll("button").forEach(actionButton => { actionButton.disabled = false; });
             }
         }
-    });
+    }); } finally {
+        if (reopenCandidateDialog && candidateDialog.isConnected && !candidateDialog.open) {
+            restaurarFocoAoFechar(candidateDialog);
+            candidateDialog.showModal();
+            candidateDialog.querySelector("[data-candidaturas-feedback]")?.focus();
+        }
+    }
 }
 
 createPanel();

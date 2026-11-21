@@ -115,10 +115,8 @@ public class CandidaturaVoluntariadoService {
         exigirUsuario(usuario);
         Pageable paginacao = paginacaoLimitada(pageable);
         return candidaturasRepository.findAllByUsuario_IdOrderByDataCandidaturaDesc(usuario.getId(), paginacao)
-                .map(candidatura -> CandidaturaUsuarioDTO.from(candidatura,
-                        verificationService == null || verificationService.isPubliclyEligible(oscIdFromVaga(candidatura.getVaga())),
-                        candidaturasRepository.countByVaga_IdAndStatus(candidatura.getVaga().getId(), StatusCandidatura.APROVADA)
-                                < Math.max(0, candidatura.getVaga().getQuantidadeVagas() == null ? 0 : candidatura.getVaga().getQuantidadeVagas())));
+                .map(candidatura -> CandidaturaUsuarioDTO.from(candidatura, true,
+                        vagaBasicaDisponivel(candidatura.getVaga())));
     }
 
     @Transactional
@@ -133,12 +131,14 @@ public class CandidaturaVoluntariadoService {
         if (candidatura.getVaga().getId().equals(vaga.getId()) == false) {
             throw naoEncontrada();
         }
-        if (candidatura.getStatus() != StatusCandidatura.PENDENTE) {
-            throw conflito("Somente candidaturas pendentes podem ser canceladas.");
+        if (candidatura.getStatus() != StatusCandidatura.PENDENTE
+                && candidatura.getStatus() != StatusCandidatura.APROVADA) {
+            throw conflito("Somente candidaturas pendentes ou participantes aprovados podem cancelar a participação.");
         }
         candidatura.setStatus(StatusCandidatura.DESISTIU);
         return CandidaturaUsuarioDTO.from(candidaturasRepository.save(candidatura),
-                verificationService == null || verificationService.isPubliclyEligible(oscIdFromVaga(candidatura.getVaga())));
+                verificationService == null || verificationService.isPubliclyEligible(oscIdFromVaga(candidatura.getVaga())),
+                vagaBasicaDisponivel(vaga));
     }
 
     @Transactional

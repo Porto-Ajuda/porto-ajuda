@@ -31,13 +31,16 @@ test("application submission confirms session and sends one CSRF-protected reque
     assert.match(source, /body: JSON\.stringify\(\{ mensagem: null \}\)/);
 });
 
-test("my applications UI requests only the authenticated user's page and offers pending cancellation", async () => {
+test("my applications UI requests the authenticated user's page and lets pending or accepted applicants cancel", async () => {
     const source = await ler("public/components/minhas-candidaturas.js");
     const profile = await ler("public/pages/perfil.html");
     assert.match(profile, /id="aba-candidaturas"/);
     assert.match(profile, /id="painel-candidaturas"/);
     assert.match(source, /fetchAutenticado\(`\/usuario\/candidaturas\?page=/);
     assert.match(source, /item\.status === "PENDENTE"/);
+    assert.match(source, /item\.status === "PENDENTE" \|\| item\.status === "APROVADA"/);
+    assert.match(source, /Desistir da vaga/);
+    assert.match(source, /open and eligible|aberta e elegível/i);
     assert.match(source, /\/usuario\/candidaturas\/\$\{encodeURIComponent\(id\)\}\/cancelar/);
     assert.match(source, /item\.oportunidadePublica/);
 });
@@ -49,7 +52,7 @@ test("application decisions and cancellation use the shared styled confirmation 
     const css = await ler("public/styles/candidaturas.css");
     assert.match(manager, /import \{ confirmarAcao \} from "\.\/confirm-modal\.js"/);
     assert.match(manager, /textoConfirmar: aprovado \? "Aprovar" : "Rejeitar"/);
-    assert.match(mine, /textoConfirmar: "Cancelar candidatura"/);
+    assert.match(mine, /textoConfirmar: participanteAceito \? "Desistir da vaga" : "Cancelar candidatura"/);
     assert.doesNotMatch(manager, /window\.confirm/);
     assert.doesNotMatch(mine, /window\.confirm/);
     assert.match(modal, /export function confirmarAcao/);
@@ -119,10 +122,17 @@ test("candidate management opens a filtered accessible modal in-place and refres
     assert.match(manager, /data-resumo-aceitos/);
     assert.match(manager, /data-resumo-disponiveis/);
     assert.match(manager, /data-resumo-pendentes/);
+    assert.match(manager, /fetchAvailability/);
+    assert.match(manager, /availability\.aceitaCandidaturas === true/);
     assert.match(manager, /dialog\.close\(\)/);
-    assert.match(manager, /trigger\.focus\(\)/);
+    assert.match(manager, /opener\.focus\(\)/);
     assert.match(manager, /requestedVacancy !== section\.dataset\.vagaId/);
+    assert.match(manager, /const requestIsCurrent = \(\) => requestedVacancy === section\.dataset\.vagaId/);
+    assert.match(manager, /if \(!requestIsCurrent\(\)\) void load\(section\)/);
+    assert.match(manager, /requestedGeneration !== section\.dataset\.requestGeneration/);
     assert.match(manager, /onChanged\(\{ accepted, pending, available/);
+    assert.match(manager, /candidateDialog\.close\("confirmation"\)/);
+    assert.match(manager, /candidateDialog\.showModal\(\)/);
     assert.match(manager, /porto:volunteer-capacity-changed/);
     assert.match(profile, /onFinalize: \(\) => abrirDialogoConclusao\(item\)/);
     assert.match(profile, /data-vagas-disponiveis/);
@@ -140,5 +150,5 @@ test("completed candidates receive their persisted hours and private certificate
 test("applicant cancellation refreshes stale state after a 404 or 409 conflict", async () => {
     const source = await ler("public/components/minhas-candidaturas.js");
     assert.match(source, /response\.status === 404 \|\| response\.status === 409\) await carregar\(pagina\)/);
-    assert.match(source, /A candidatura .+recebeu uma decis/);
+    assert.match(source, /A candidatura ou participa/);
 });
