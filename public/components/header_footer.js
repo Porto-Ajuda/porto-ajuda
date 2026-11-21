@@ -179,7 +179,7 @@ document.body.insertAdjacentHTML(
 
 const cabecalho = `
 
-<a href="${ROTAS.home}">
+<a href="${ROTAS.home}" class="logo-link">
 
     <div class="logo">
 
@@ -1197,8 +1197,9 @@ document.body.insertAdjacentHTML(
 const supportAssistantStyles = document.createElement("link");
 supportAssistantStyles.rel = "stylesheet";
 supportAssistantStyles.href = "../styles/support-assistant.css";
+supportAssistantStyles.addEventListener("load", () => requestAnimationFrame(ajustarAcessibilidadeFooter), { once: true });
 document.head.appendChild(supportAssistantStyles);
-import("./support-assistant.js").catch(() => {
+import("./support-assistant.js").then(() => requestAnimationFrame(ajustarAcessibilidadeFooter)).catch(() => {
     // A falha no widget não pode impedir navegação ou acessibilidade.
 });
 
@@ -1583,55 +1584,69 @@ function ajustarAcessibilidadeFooter() {
             "#acessibilidade"
         );
 
+    const supportLauncher =
+        document.querySelector(
+            "#support-assistant-launcher"
+        );
+
     const footer =
         document.querySelector(
             "#footer"
         );
 
-
-    if (
-        !acessibilidade ||
-        !footer
-    ) {
+    if (!footer) {
 
         return;
 
     }
 
-
     const footerRect =
         footer.getBoundingClientRect();
 
-
-    const alturaBotao =
-        acessibilidade.offsetHeight;
-
-
     const margem = 20;
+    const obterBottom = (elemento, bottomBase) => {
+        if (!elemento) {
+            return bottomBase;
+        }
 
+        const limiteInferior =
+            window.innerHeight - bottomBase - elemento.offsetHeight;
 
-    const limiteInferior =
-        window.innerHeight - margem;
+        return footerRect.top < limiteInferior
+            ? window.innerHeight - footerRect.top + margem
+            : bottomBase;
+    };
 
+    const acessibilidadeBottom =
+        obterBottom(acessibilidade, margem);
 
-    if (
-        footerRect.top <
-        limiteInferior - alturaBotao
-    ) {
+    if (acessibilidade) {
+        acessibilidade.style.bottom = `${acessibilidadeBottom}px`;
+    }
 
-        const distanciaFooter =
-            window.innerHeight -
-            footerRect.top;
+    if (supportLauncher) {
+        const bottomBase = Number.parseFloat(
+            getComputedStyle(supportLauncher)
+                .getPropertyValue("--support-assistant-launcher-base-bottom")
+        ) || margem;
+        let supportBottom = obterBottom(supportLauncher, bottomBase);
 
+        if (acessibilidade) {
+            const accessibilityRect = acessibilidade.getBoundingClientRect();
+            const launcherRect = supportLauncher.getBoundingClientRect();
+            const overlapsHorizontally =
+                launcherRect.left < accessibilityRect.right &&
+                launcherRect.right > accessibilityRect.left;
 
-        acessibilidade.style.bottom =
-            `${distanciaFooter + margem}px`;
+            if (overlapsHorizontally) {
+                supportBottom = Math.max(
+                    supportBottom,
+                    acessibilidadeBottom + acessibilidade.offsetHeight + 16
+                );
+            }
+        }
 
-    } else {
-
-        acessibilidade.style.bottom =
-            `${margem}px`;
-
+        supportLauncher.style.bottom = `${supportBottom}px`;
     }
 
 }

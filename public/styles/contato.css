@@ -17,14 +17,6 @@ body {
     font-family: 'Poppins', sans-serif;
     color: var(--contato-texto);
 
-    background:
-        radial-gradient(ellipse at 15% 40%,
-            rgba(91, 57, 143, 0.26),
-            transparent 48%),
-        linear-gradient(135deg,
-            #161928 0%,
-            #24183D 55%,
-            #19152B 100%);
 }
 
 /* Fundo decorativo */

@@ -21,6 +21,7 @@ class Element {
     return result;
   }
   setAttribute(name, value) { this.attributes.set(name, String(value)); }
+  removeAttribute(name) { this.attributes.delete(name); }
   getAttribute(name) { return this.attributes.get(name) ?? null; }
   append(...nodes) { this.children.push(...nodes); }
   appendChild(node) { this.append(node); return node; }
@@ -82,7 +83,7 @@ async function mountAssistant(fetchAutenticado) {
   const localStorage = { values:new Map(), getItem(key){return this.values.get(key)||null;}, setItem(key,value){this.values.set(key,String(value));} };
   const voiceMock = { supported:true,synthesisSupported:true,dictating:false,speaking:false,
     startDictation(){this.dictating=true;this.onDictation?.(true);this.onStatus?.("Ditado ativo");this.onTranscript?.("texto ditado sintético");return true;},
-    stopDictation(){this.dictating=false;}, speak(){this.speaking=true;return true;},stopSpeaking(){this.speaking=false;},voices(){return [];} };
+    stopDictation(){this.dictating=false;this.onDictation?.(false);}, speak(){this.speaking=true;return true;},stopSpeaking(){this.speaking=false;},voices(){return [];} };
   document.__voice = voiceMock;
   const sourceWithVoice = source.replace('const createSupportVoiceController = ({onStatus}) => ({supported:false,synthesisSupported:false,dictating:false,speaking:false,\n        startDictation(){onStatus("Ditado simulado indisponível.");return false;},stopDictation(){},speak(){return false;},stopSpeaking(){},voices(){return [];} });',
       'const createSupportVoiceController = hooks => { Object.assign(document.__voice, hooks); return document.__voice; };');
@@ -120,6 +121,7 @@ test("renders descriptive public links and refuses paths outside the allowlist",
   assert.equal(anchors[1].textContent,"Filtro animal");
   assert.equal(anchors[2].textContent,"Vaquinha de teste");
   assert.equal(anchors[2].href,"/catalogo?categoria=doacoes&campanha=31");
+  assert.equal(document.getElementById("support-message").placeholder,"Qual é sua dúvida?");
   assert.doesNotMatch(textContent(stream),/example\\.invalid/);
   assert.doesNotMatch(textContent(stream),/Abrir p\\u00e1gina relacionada/);
 });
@@ -218,6 +220,8 @@ test("visitor sees the greeting but cannot create a persistent conversation befo
     /Olá! Sou a Sophie, assistente virtual do Porto Ajuda\. Como posso ajudar\?/);
   assert.equal(document.getElementById("support-login").hidden,false);
   assert.equal(document.getElementById("support-message").disabled,true);
+  assert.equal(document.getElementById("support-message").placeholder,"Qual é sua dúvida?");
+  assert.equal(document.getElementById("support-message").getAttribute("aria-describedby"),"support-login");
   assert.equal(document.getElementById("support-new").hidden,true);
   assert.deepEqual(calls,["/support-assistant/intro","/support-assistant/conversations"]);
 });
@@ -247,6 +251,41 @@ test("protected user and NGO registration forms stay outside chat messages", asy
   assert.equal(frame.src,"/cadastro-osc");
   assert.match(document.getElementById("support-secure-forms-notice").textContent,/login e envio de evidências/);
   assert.equal(calls.some(call=>call.path.endsWith("/messages")),false);
+});
+
+test("the merged assistant markup has one intro and one voice control", async () => {
+  const source = await readFile(resolve(__dirname, "../../public/components/support-assistant.js"), "utf8");
+  const markup = source.match(/insertAdjacentHTML\("beforeend", `([\s\S]*?)`\);/)?.[1];
+  assert.ok(markup, "assistant markup should be available for a single ID scan");
+  for (const id of ["support-intro", "support-voice-mode", "support-toolbar", "support-secure-forms"]) {
+    assert.equal([...markup.matchAll(new RegExp(`\\bid="${id}"`, "g"))].length, 1, `${id} must be unique`);
+  }
+});
+
+test("Escape fecha primeiro o cadastro protegido e depois o painel", async () => {
+  const document = await mountAssistant(async path => {
+    if (path === "/support-assistant/intro") return response({
+      assistantName:"Sophie", conversationsEnabled:true, aiAvailable:false
+    });
+    if (path === "/support-assistant/conversations") return response([]);
+    if (path === "/support-assistant/voice-preference-scope") return response({ userId:700008 });
+    throw new Error("Unexpected path while testing secure form Escape behavior.");
+  });
+  const panel = document.getElementById("support-assistant-panel");
+  await document.getElementById("support-assistant-launcher").dispatch("click");
+  for (let i = 0; i < 20 && document.getElementById("support-voice-onboarding").hidden; i++)
+    await new Promise(resolve => setImmediate(resolve));
+  await document.getElementById("support-voice-skip").dispatch("click");
+  await new Promise(resolve => setTimeout(resolve, 260));
+  await document.getElementById("support-secure-forms-toggle").dispatch("click");
+  assert.equal(panel.open, true);
+
+  await panel.dispatch("keydown", { key:"Escape" });
+  assert.equal(document.getElementById("support-secure-forms").hidden, true);
+  assert.equal(panel.open, true);
+
+  await panel.dispatch("keydown", { key:"Escape" });
+  assert.equal(panel.open, false);
 });
 
 test("ditado preenche campo editável e só envia após confirmação explícita", async () => {
@@ -327,4 +366,69 @@ test("volunteer action preview requires an explicit click and shows success only
   for (let i=0; i<30 && !document.getElementById("support-feedback").textContent; i++)
     await new Promise(resolve => setImmediate(resolve));
   assert.match(document.getElementById("support-feedback").textContent,/aguardando a análise da ONG/);
+});
+
+test("closePanel fecha o painel sem window.matchMedia", async () => {
+  const document=await mountAssistant(async path=>{
+    if(path==="/support-assistant/intro") return response({assistantName:"Sophie",conversationsEnabled:true,aiAvailable:true});
+    if(path==="/support-assistant/conversations") return response([]);
+    throw new Error("Unexpected path.");
+  });
+  await document.getElementById("support-assistant-launcher").dispatch("click");
+  await document.getElementById("support-close").dispatch("click");
+  assert.equal(document.getElementById("support-assistant-panel").open,false);
+});
+
+test("menu ⋯ abre, fecha por ação e fecha com Escape", async () => {
+  const document=await mountAssistant(async path=>{
+    if(path==="/support-assistant/intro") return response({assistantName:"Sophie",conversationsEnabled:true,aiAvailable:true});
+    if(path==="/support-assistant/conversations") return {status:401,ok:false,json:async()=>({})};
+    throw new Error("Unexpected path.");
+  });
+  await document.getElementById("support-assistant-launcher").dispatch("click");
+  const menu=document.getElementById("support-menu");
+  const toggle=document.getElementById("support-menu-toggle");
+  await toggle.dispatch("click",{stopPropagation(){}});
+  assert.equal(menu.hidden,false);
+  assert.equal(toggle.getAttribute("aria-expanded"),"true");
+  await document.getElementById("support-history").dispatch("click");
+  assert.equal(menu.getAttribute("aria-hidden"),"true");
+  await new Promise(resolve=>setTimeout(resolve,260));
+  assert.equal(menu.hidden,true);
+  await toggle.dispatch("click",{stopPropagation(){}});
+  await document.getElementById("support-assistant-panel").dispatch("keydown",{key:"Escape",preventDefault(){},stopPropagation(){}});
+  await new Promise(resolve=>setTimeout(resolve,260));
+  assert.equal(menu.hidden,true);
+});
+
+test("Transcrevendo aparece e some no callback de ditado", async () => {
+  const document=await mountAssistant(async path=>{
+    if(path==="/support-assistant/intro") return response({assistantName:"Sophie",conversationsEnabled:true,aiAvailable:true});
+    if(path==="/support-assistant/conversations") return response([]);
+    throw new Error("Unexpected path.");
+  });
+  await document.getElementById("support-assistant-launcher").dispatch("click");
+  await document.getElementById("support-dictate").dispatch("click");
+  assert.equal(document.getElementById("support-transcribing").hidden,false);
+  document.__voice.stopDictation();
+  assert.equal(document.getElementById("support-transcribing").hidden,true);
+});
+
+test("falha de envio devolve o texto ao campo", async () => {
+  const id="55555555-5555-4555-8555-555555555555";
+  const document=await mountAssistant(async (path,options={})=>{
+    if(path==="/support-assistant/intro") return response({assistantName:"Sophie",conversationsEnabled:true,aiAvailable:true});
+    if(path==="/support-assistant/conversations") return response([]);
+    if(path==="/support-assistant/conversations/new") return response({id,state:"AI_ACTIVE",createdAt:baseTime,updatedAt:baseTime,version:0,messages:[message(1,"SYSTEM","Olá!")]});
+    if(path.endsWith("/messages")) return {status:500,ok:false,json:async()=>({message:"Falha simulada ao enviar."})};
+    throw new Error("Unexpected path.");
+  });
+  await document.getElementById("support-assistant-launcher").dispatch("click");
+  const compose=document.getElementById("support-message");
+  compose.value="Texto que não pode ser perdido";
+  compose.dispatchEvent(new Event("input"));
+  await document.getElementById("support-form").dispatch("submit",{preventDefault(){}});
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(compose.value,"Texto que não pode ser perdido");
+  assert.match(textContent(document.getElementById("support-feedback")),/Falha simulada/);
 });

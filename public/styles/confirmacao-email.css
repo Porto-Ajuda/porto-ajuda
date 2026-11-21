@@ -25,9 +25,6 @@ body {
     font-family: "Poppins", sans-serif;
     color: var(--texto);
 
-    background:
-        radial-gradient(ellipse at top, #352454 0%, transparent 55%),
-        var(--fundo);
 }
 
 .cartao {
