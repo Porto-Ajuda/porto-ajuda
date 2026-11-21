@@ -89,10 +89,13 @@ public class UsuarioService {
 
                 int idade = Period.between(
                                 usuarioDTO.dataNascimento(),
-                                LocalDate.now()).getYears();
+                                LocalDate.now(ZONA_APLICACAO)).getYears();
 
                 if (idade < 16) {
                         throw new BadCredentialsException("A idade mínima é de 16 anos");
+                }
+                if (idade > 120) {
+                        throw new BadCredentialsException("A idade máxima é de 120 anos");
                 }
 
                 Usuario usuario = new Usuario();

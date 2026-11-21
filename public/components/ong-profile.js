@@ -9,6 +9,10 @@ import { resetarAjusteImagem } from "./ajuste-imagem.js";
 import { createCampaignCard } from "./campaign-card.js";
 import { createCampaignDonationDialog } from "./campaign-donation-dialog.js";
 import { openOpportunityCandidates } from "./candidaturas-ong.js";
+import { CAUSE_TAXONOMY, causeCategoriesForNgo, causeLabel } from "./cause-taxonomy.js";
+import { recordEligibleProfileVisit } from "./recommendation-personalization.js";
+import { carregarPerfilOngAcessivel } from "./ong-profile-access.js";
+import { AdminRequestError, fetchAdminCapabilities } from "./admin-rbac.js";
 const API_URL = getAPI_URL();
 const campaignDialog = createCampaignDonationDialog();
 let oscAtual = null;
@@ -282,14 +286,9 @@ const dadosODS = {
 
 
 const NOMES_CAUSAS = {
-    EDUCACAO: "Educação",
-    SAUDE: "Saúde",
-    MEIO_AMBIENTE: "Meio ambiente",
-    ANIMAIS: "Proteção animal",
-    INCLUSAO_SOCIAL: "Inclusão social",
-    ESPORTE: "Esporte",
-    CULTURA: "Cultura",
-    COMBATE_POBREZA: "Combate à pobreza"
+    ...Object.fromEntries(CAUSE_TAXONOMY.flatMap(cause => cause.causes.map(value => [value, cause.label]))),
+    INCLUSAO_SOCIAL: "Assistência social · Direitos humanos e cidadania",
+    COMBATE_POBREZA: "Assistência social"
 };
 
 const modalODS = document.createElement("div");
@@ -550,9 +549,14 @@ function renderizarCausas(osc) {
         causasSecundarias = osc.causas.filter(valor => enumCausas.includes(valor));
     }
     causasSecundarias = [...new Set(causasSecundarias)].filter(valor => valor !== causaPrincipal);
-    principal.textContent = causaPrincipal ? `Causa principal: ${NOMES_CAUSAS[causaPrincipal]}` : "Causa principal não informada";
+    const categoriasPrincipal = causeCategoriesForNgo({ causaPrincipal });
+    principal.textContent = categoriasPrincipal.length ? `Causa principal: ${causeLabel(categoriasPrincipal[0])}` : "Causa principal não informada";
     if (causasSecundarias.length) {
-        secundarias.textContent = `Outras causas: ${causasSecundarias.map(valor => NOMES_CAUSAS[valor]).join(" · ")}`;
+        const categoriasSecundarias = [...new Set(causeCategoriesForNgo({ causas: causasSecundarias }))]
+            .filter(valor => valor !== categoriasPrincipal[0]);
+        secundarias.textContent = categoriasSecundarias.length
+            ? `Outras causas: ${categoriasSecundarias.map(causeLabel).join(" · ")}`
+            : `Outras causas: ${causasSecundarias.map(valor => NOMES_CAUSAS[valor]).join(" · ")}`;
         secundarias.hidden = false;
     }
 }
@@ -849,11 +853,7 @@ async function mensagemErroApi(resposta, acao = "concluir a operação") {
     return "Não foi possível concluir a operação. Tente novamente.";
 }
 
-const causasOsc = [
-    ["EDUCACAO", "Educação"], ["SAUDE", "Saúde"], ["MEIO_AMBIENTE", "Meio ambiente"],
-    ["ANIMAIS", "Proteção animal"], ["INCLUSAO_SOCIAL", "Inclusão social"],
-    ["ESPORTE", "Esporte"], ["CULTURA", "Cultura"], ["COMBATE_POBREZA", "Combate à pobreza"]
-];
+const causasOsc = CAUSE_TAXONOMY.map(cause => [cause.causes[0], cause.label]);
 const diasOsc = [["segunda", "Segunda-feira"], ["terca", "Terça-feira"], ["quarta", "Quarta-feira"], ["quinta", "Quinta-feira"], ["sexta", "Sexta-feira"], ["sabado", "Sábado"], ["domingo", "Domingo"]];
 const nomesOds = ["Erradicação da pobreza", "Fome zero e agricultura sustentável", "Saúde e bem-estar", "Educação de qualidade", "Igualdade de gênero", "Água potável e saneamento", "Energia limpa e acessível", "Trabalho decente e crescimento econômico", "Indústria, inovação e infraestrutura", "Redução das desigualdades", "Cidades e comunidades sustentáveis", "Consumo e produção responsáveis", "Ação contra a mudança global do clima", "Vida na água", "Vida terrestre", "Paz, justiça e instituições eficazes", "Parcerias e meios de implementação"];
 let causasEdicao = new Set();
@@ -863,7 +863,7 @@ let snapshotDadosEdicao = null;
 
 function prepararOpcoesCausas() {
     const causaPrincipal = oscAtual?.causaPrincipal;
-    document.getElementById("edicao-causa-principal").textContent = causasOsc.find(([v]) => v === causaPrincipal)?.[1] || causaPrincipal || "Não informado";
+    document.getElementById("edicao-causa-principal").textContent = causasOsc.find(([v]) => v === causaPrincipal)?.[1] || NOMES_CAUSAS[causaPrincipal] || causaPrincipal || "Não informado";
     const opcoesCausas = document.getElementById("edicao-opcoes-causas");
     if (!opcoesCausas.childElementCount) causasOsc.forEach(([valor, rotulo]) => {
         const botao = document.createElement("button"); botao.type = "button"; botao.dataset.valor = valor; botao.textContent = rotulo;
@@ -889,7 +889,7 @@ function sincronizarOpcoesSelecao() {
     document.querySelectorAll("#edicao-opcoes-causas button").forEach(botao => { botao.hidden = causasEdicao.has(botao.dataset.valor) || botao.dataset.valor === oscAtual?.causaPrincipal; });
     document.querySelectorAll("#edicao-opcoes-ods button").forEach(botao => { botao.hidden = odsEdicao.has(botao.dataset.valor); });
 }
-function renderizarCausasEdicao() { const area = document.getElementById("edicao-causas-selecionadas"); area.replaceChildren(); for (const valor of causasEdicao) { const item = document.createElement("span"); item.className = "area-selecionada"; item.textContent = causasOsc.find(([v]) => v === valor)?.[1] || valor; const btn = document.createElement("button"); btn.type = "button"; btn.setAttribute("aria-label", `Remover ${item.textContent}`); btn.textContent = "×"; btn.addEventListener("click", () => { causasEdicao.delete(valor); renderizarCausasEdicao(); sincronizarOpcoesSelecao(); atualizarEstadoEdicao(); }); item.append(btn); area.append(item); } }
+function renderizarCausasEdicao() { const area = document.getElementById("edicao-causas-selecionadas"); area.replaceChildren(); for (const valor of causasEdicao) { const item = document.createElement("span"); item.className = "area-selecionada"; item.textContent = causasOsc.find(([v]) => v === valor)?.[1] || NOMES_CAUSAS[valor] || valor; const btn = document.createElement("button"); btn.type = "button"; btn.setAttribute("aria-label", `Remover ${item.textContent}`); btn.textContent = "×"; btn.addEventListener("click", () => { causasEdicao.delete(valor); renderizarCausasEdicao(); sincronizarOpcoesSelecao(); atualizarEstadoEdicao(); }); item.append(btn); area.append(item); } }
 function renderizarOdsEdicao() { const area = document.getElementById("edicao-ods-selecionadas"); area.replaceChildren(); for (const valor of odsEdicao) { const item = document.createElement("span"); item.className = "ods-selecionada"; const numero = document.createElement("strong"); numero.className = "ods-numero"; numero.textContent = `ODS ${valor}`; const titulo = document.createElement("span"); titulo.textContent = nomesOds[Number(valor)-1]; item.append(numero, titulo); const btn = document.createElement("button"); btn.type = "button"; btn.setAttribute("aria-label", `Remover ODS ${valor}`); btn.textContent = "×"; btn.addEventListener("click", () => { odsEdicao.delete(valor); renderizarOdsEdicao(); sincronizarOpcoesSelecao(); atualizarEstadoEdicao(); }); item.append(btn); area.append(item); } }
 function capturarEdicao() { const campos = [...document.querySelectorAll("#form-edicao-osc input:not([data-dia]), #form-edicao-osc select, #form-edicao-osc textarea")].map(el => [el.id, el.value]); const dias = [...document.querySelectorAll("#edicao-dias-semana input:checked")].map(el => el.value).sort(); return JSON.stringify({ campos, causas: [...causasEdicao].sort(), ods: [...odsEdicao].sort((a,b)=>Number(a)-Number(b)), dias }); }
 function atualizarEstadoEdicao() { if (!snapshotEdicao) return; document.getElementById("edicao-descartar").disabled = capturarEdicao() === snapshotEdicao; }
@@ -921,7 +921,7 @@ function preencherCamposEdicao(dados) {
     document.getElementById("edicao-cnpj").textContent = dados.cnpj || "Não informado";
     document.getElementById("edicao-nome").textContent = dados.nome || "Não informado";
     document.getElementById("edicao-ano").textContent = dados.anoFundacao ?? "Não informado";
-    document.getElementById("edicao-causa-principal").textContent = causasOsc.find(([v]) => v === dados.causaPrincipal)?.[1] || dados.causaPrincipal || "Não informado";
+    document.getElementById("edicao-causa-principal").textContent = causasOsc.find(([v]) => v === dados.causaPrincipal)?.[1] || NOMES_CAUSAS[dados.causaPrincipal] || dados.causaPrincipal || "Não informado";
     causasEdicao = new Set(dados.causasSecundarias || []); renderizarCausasEdicao();
     odsEdicao = new Set((dados.ods || []).map(String)); renderizarOdsEdicao();
     sincronizarOpcoesSelecao();
@@ -2288,18 +2288,42 @@ async function configurarGestao() {
     }
 }
 
-async function carregarPermissoes(id) {
+async function listarOngsDoUsuario() {
+    if (obterEstadoSessao() === "anonymous") {
+        return null;
+    }
+    const resposta = await requisicaoAutenticada("/osc/minhas");
+    if (!resposta?.ok) return null;
+    const organizacoes = await resposta.json();
+    return Array.isArray(organizacoes) ? organizacoes : null;
+}
+
+async function podeLerPerfilPrivadoComoAdmin() {
+    try {
+        const capabilities = await fetchAdminCapabilities(API_URL);
+        return capabilities.permissions.includes("ORG_READ_PRIVATE");
+    } catch (erro) {
+        if (erro instanceof AdminRequestError
+                && ["unauthorized", "forbidden"].includes(erro.kind)) {
+            return false;
+        }
+        throw erro;
+    }
+}
+
+async function carregarPermissoes(id, organizacoesCarregadas = null) {
     if (obterEstadoSessao() === "anonymous") {
         definirAcessoAbasPrivadas(false);
         return;
     }
     try {
-        const resposta = await requisicaoAutenticada("/osc/minhas");
-        if (!resposta?.ok) {
+        const organizacoes = Array.isArray(organizacoesCarregadas)
+            ? organizacoesCarregadas
+            : await listarOngsDoUsuario();
+        if (!organizacoes) {
             definirAcessoAbasPrivadas(false);
             return;
         }
-        const organizacoes = await resposta.json();
         const vinculo = organizacoes.find((osc) => Number(osc.id) === Number(id));
         if (!vinculo?.cargo || oscAtual?.arquivada) {
             definirAcessoAbasPrivadas(false);
@@ -2343,27 +2367,43 @@ async function carregarPerfil() {
     }
 
     try {
-        const privada = await fetchAutenticado(`/osc/${encodeURIComponent(id)}/privado`);
-        const resposta = [401, 403, 404].includes(privada.status)
-            ? await fetch(`${API_URL}/osc/${encodeURIComponent(id)}`, {
-                headers: { Accept: "application/json" },
-                cache: "no-store"
-            })
-            : privada;
-        if (resposta.status === 404) {
+        const acesso = await carregarPerfilOngAcessivel(id, {
+            buscarPerfilPublico: perfilId => fetch(`${API_URL}/osc/${encodeURIComponent(perfilId)}`, {
+                headers: { Accept: "application/json" }, cache: "no-store"
+            }),
+            listarOngsDoUsuario,
+            buscarPerfilPrivado: perfilId => fetchAutenticado(`/osc/${encodeURIComponent(perfilId)}/privado`),
+            podeLerPerfilPrivadoComoAdmin,
+            buscarPerfilPrivadoComoAdmin: perfilId => fetch(
+                `${API_URL}/admin/oscs/${encodeURIComponent(perfilId)}/perfil-privado`,
+                { headers: { Accept: "application/json" }, credentials: "include", cache: "no-store" }
+            )
+        });
+        if (acesso.naoEncontrado) {
             tituloErro.textContent = "Organização não encontrada";
             mensagemErro.textContent = "Este perfil não está disponível. Confira o link ou volte à lista de organizações.";
             throw new Error("estado-ja-apresentado");
         }
-        if (!resposta.ok) throw new Error("api-indisponivel");
-        const osc = await resposta.json();
+        const resposta = acesso.resposta;
+        if (resposta && !acesso.respostaInvalida && resposta.status === 404) {
+            tituloErro.textContent = "Organização não encontrada";
+            mensagemErro.textContent = "Este perfil não está disponível. Confira o link ou volte à lista de organizações.";
+            throw new Error("estado-ja-apresentado");
+        }
+        if (resposta) {
+            if (!resposta.ok) throw new Error("api-indisponivel");
+            throw new Error("resposta-invalida");
+        }
+        if (!acesso.perfil) throw new Error("api-indisponivel");
+        const osc = acesso.perfil;
         if (!osc || Number(osc.id) !== id || typeof osc.nome !== "string") throw new Error("resposta-invalida");
         oscAtual = osc;
         renderizarPerfil(osc);
         carregamento.hidden = true;
         conteudo.hidden = false;
+        if (acesso.origem === "publica") void recordEligibleProfileVisit({ ...osc, publicEligible: true });
         void carregarConteudoPublico(id);
-        void carregarPermissoes(id);
+        void carregarPermissoes(id, acesso.organizacoes);
         return;
     } catch (falha) {
         carregamento.hidden = true;

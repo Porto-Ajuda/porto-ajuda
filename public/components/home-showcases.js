@@ -1,7 +1,10 @@
 import { getAPI_URL } from "./modoBack.js";
-import { criarCardVitrine, iniciarCarrossel, VITRINE_MAX_ITENS } from "./vitrine.js";
+import { criarCardVitrine, iniciarCarrossel } from "./vitrine.js";
 import { campaignMoney } from "./campaign-money.js";
 import { createCampaignDonationDialog } from "./campaign-donation-dialog.js";
+import { CAUSE_TAXONOMY, causeCategoriesForNgo } from "./cause-taxonomy.js";
+import { ready as personalizationReady, orderNgoRecommendations } from "./recommendation-personalization.js";
+import { fisherYatesShuffle, loadCompleteDataset, uniqueById } from "./home-content-order.js";
 
 const API_URL = getAPI_URL();
 const campaignDialog = createCampaignDonationDialog();
@@ -13,38 +16,50 @@ const ROTA_PERFIL_ONG = API_URL === "http://localhost:8080"
 
 const IMAGEM_PADRAO_ONG = "../assets/ong-padrao.png";
 
-// nome exibido + símbolo (Font Awesome) de cada categoria de ONG
-const CATEGORIAS_ONG = {
-    EDUCACAO: { nome: "Educação", icone: "fa-graduation-cap" },
-    SAUDE: { nome: "Saúde", icone: "fa-heart-pulse" },
-    MEIO_AMBIENTE: { nome: "Meio Ambiente", icone: "fa-leaf" },
-    ANIMAIS: { nome: "Proteção animal", icone: "fa-paw" },
-    INCLUSAO_SOCIAL: { nome: "Inclusão social", icone: "fa-hands-holding-heart" },
-    ESPORTE: { nome: "Esporte", icone: "fa-futbol" },
-    CULTURA: { nome: "Cultura", icone: "fa-masks-theater" },
-    COMBATE_POBREZA: { nome: "Combate à pobreza", icone: "fa-hand-holding-dollar" },
-    ALIMENTACAO: { nome: "Alimentação", icone: "fa-utensils" },
-    IDOSOS: { nome: "Pessoas idosas", icone: "fa-person-cane" }
-};
-
 const CATEGORIA_PADRAO = { nome: "Organização social", icone: "fa-hand-holding-heart" };
 
 
 /* ---------------------------------------------------------
-   BUSCA NA API (sempre a primeira página, no máximo 6 itens)
+   BUSCA NA API (carrega o conjunto elegível completo)
    --------------------------------------------------------- */
 
 async function buscarItens(endpoint) {
-    const resposta = await fetch(`${API_URL}${endpoint}?page=0&size=${VITRINE_MAX_ITENS}`, {
-        headers: { Accept: "application/json" },
-        cache: "no-store"
+    return loadCompleteDataset(async (page, size) => {
+        const url = new URL(endpoint, API_URL);
+        url.searchParams.set("page", String(page));
+        url.searchParams.set("size", String(size));
+        const resposta = await fetch(url, {
+            headers: { Accept: "application/json" },
+            cache: "no-store"
+        });
+        if (!resposta.ok) throw new Error("Não foi possível carregar este conteúdo. Tente novamente.");
+        return resposta.json();
     });
-    if (!resposta.ok) throw new Error("Não foi possível carregar este conteúdo. Tente novamente.");
-    const dados = await resposta.json();
-    if (!dados || !Array.isArray(dados.content)) {
-        throw new TypeError("Resposta inválida da API");
+}
+
+async function buscarItensAleatorios(endpoint) {
+    return fisherYatesShuffle(await buscarItens(endpoint));
+}
+
+async function buscarTodasOngsParaRecomendacao() {
+    const pageSize = 24;
+    const firstResponse = await fetch(`${API_URL}/osc/list?page=0&size=${pageSize}`, { headers: { Accept: "application/json" }, cache: "no-store" });
+    if (!firstResponse.ok) throw new Error("Não foi possível carregar as ONGs. Tente novamente.");
+    const first = await firstResponse.json();
+    if (!first || !Array.isArray(first.content) || !Number.isInteger(Number(first.totalPages))) throw new TypeError("Resposta de ONGs inválida");
+    const records = [...first.content];
+    for (let page = 1; page < Number(first.totalPages); page += 1) {
+        const response = await fetch(`${API_URL}/osc/list?page=${page}&size=${pageSize}`, { headers: { Accept: "application/json" }, cache: "no-store" });
+        if (!response.ok) throw new Error("Não foi possível concluir o carregamento das ONGs.");
+        const result = await response.json();
+        if (!result || !Array.isArray(result.content)) throw new TypeError("Resposta de ONGs inválida");
+        records.push(...result.content);
     }
-    return dados.content;
+    const unique = [...new Map(records.filter(item => item?.status === "ATIVA" && item.arquivada !== true && item.id != null)
+        .map(item => [String(item.id), item])).values()];
+    if (unique.length !== Number(first.totalElements)) throw new Error("A lista de ONGs mudou durante o carregamento; tente novamente.");
+    await personalizationReady();
+    return orderNgoRecommendations(unique);
 }
 
 
@@ -56,9 +71,9 @@ function criarCardOng(ong) {
     const nome = typeof ong.nome === "string" && ong.nome.trim()
         ? ong.nome.trim()
         : "Organização sem nome";
-    const categoria = CATEGORIAS_ONG[ong.causaPrincipal]
-        || (Array.isArray(ong.causas) && CATEGORIAS_ONG[ong.causas[0]])
-        || CATEGORIA_PADRAO;
+    const causaId = causeCategoriesForNgo(ong)[0];
+    const causa = CAUSE_TAXONOMY.find(item => item.id === causaId);
+    const categoria = causa ? { nome: causa.label, icone: causa.icon } : CATEGORIA_PADRAO;
     const local = [ong.cidade, ong.estado].filter(Boolean).join(" - ");
 
     return criarCardVitrine({
@@ -144,7 +159,7 @@ iniciarCarrossel({
     statusId: "ongs-status",
     tentarNovamenteId: "ongs-tentar-novamente",
     rotulo: "ONGs",
-    carregar: () => buscarItens("/osc/list"),
+    carregar: buscarTodasOngsParaRecomendacao,
     criarCard: criarCardOng
 });
 
@@ -153,7 +168,7 @@ iniciarCarrossel({
     statusId: "publicacoes-status",
     tentarNovamenteId: "publicacoes-tentar-novamente",
     rotulo: "publicações",
-    carregar: () => buscarItens("/post/publicos"),
+    carregar: () => buscarItensAleatorios("/post/catalogo/publicacoes"),
     criarCard: item => criarCardConteudo(item, "Publicação")
 });
 
@@ -162,7 +177,7 @@ iniciarCarrossel({
     statusId: "voluntariado-status",
     tentarNovamenteId: "voluntariado-tentar-novamente",
     rotulo: "voluntariado",
-    carregar: () => buscarItens("/post/voluntariados"),
+    carregar: () => buscarItensAleatorios("/post/catalogo/voluntariados"),
     criarCard: item => criarCardConteudo(item, "Voluntariado")
 });
 
@@ -181,9 +196,9 @@ iniciarCarrossel({
         if (!Array.isArray(campaigns)) throw new TypeError("Resposta de campanhas inválida.");
         // A API já aplica elegibilidade pública da campanha e da ONG; preserve
         // ACTIVE como defesa de estado e não exiba estados de gestão.
-        return campaigns
-            .filter(item => item?.state === "ACTIVE" && Number.isSafeInteger(Number(item.id)) && Number(item.id) > 0)
-            .slice(0, VITRINE_MAX_ITENS);
+        const eligible = uniqueById(campaigns
+            .filter(item => item?.state === "ACTIVE" && Number.isSafeInteger(Number(item.id)) && Number(item.id) > 0));
+        return fisherYatesShuffle(eligible);
     },
     criarCard: criarCardCampanha
 });

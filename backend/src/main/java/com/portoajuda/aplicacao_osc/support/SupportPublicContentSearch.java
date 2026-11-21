@@ -6,12 +6,18 @@ import com.portoajuda.aplicacao_osc.dto.response.VagaConteudoDTO;
 import com.portoajuda.aplicacao_osc.enums.CausaSocial;
 import com.portoajuda.aplicacao_osc.service.OscService;
 import com.portoajuda.aplicacao_osc.service.PostService;
+import com.portoajuda.aplicacao_osc.service.DonationCampaignService;
 import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Set;
+import java.util.Map;
+import java.util.HashMap;
+import java.text.NumberFormat;
+import java.util.Locale;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,10 +46,17 @@ public class SupportPublicContentSearch {
                     "Na tela de login, use Esqueci minha senha para iniciar a recuperação pelo endereço cadastrado. Não compartilhe senhas ou códigos nesta conversa.", "/login#recuperacao-senha"));
     private final OscService ngos;
     private final PostService posts;
+    private final DonationCampaignService campaigns;
 
-    public SupportPublicContentSearch(OscService ngos, PostService posts) {
+    @Autowired
+    public SupportPublicContentSearch(OscService ngos, PostService posts, DonationCampaignService campaigns) {
         this.ngos = ngos;
         this.posts = posts;
+        this.campaigns = campaigns;
+    }
+
+    public SupportPublicContentSearch(OscService ngos, PostService posts) {
+        this(ngos, posts, null);
     }
 
     /** Facts and destinations maintained against implemented flows; the model may paraphrase, not extend them. */
@@ -59,7 +72,7 @@ public class SupportPublicContentSearch {
             case "PUBLICATIONS" -> List.of(new SupportDtos.SearchResult("help:publications", "ORIENTACAO", "Publicações de ONG",
                     "Publicações são conteúdo da ONG e devem ser administradas por integrante autorizado na própria área da organização. Sophie pode localizar conteúdo público, mas não publica nem edita.", "/catalogo?categoria=publicacoes"));
             case "VOLUNTEERING" -> List.of(new SupportDtos.SearchResult("help:volunteering", "ORIENTACAO", "Voluntariado",
-                    "O catálogo apresenta oportunidades públicas disponíveis. A candidatura é feita pela página da oportunidade e exige login; Sophie não envia candidatura.", "/catalogo?categoria=voluntariado"));
+                    "O catálogo apresenta oportunidades públicas disponíveis. Se você pedir, Sophie pode conferir uma oportunidade e preparar uma prévia de candidatura; só enviaremos depois do seu clique em Confirmar.", "/catalogo?categoria=voluntariado"));
             case "ACCESSIBILITY" -> List.of(new SupportDtos.SearchResult("help:accessibility", "ORIENTACAO", "Acessibilidade",
                     "O painel de acessibilidade está no cabeçalho/rodapé compartilhado. A assistência por voz é opcional e depende dos recursos do navegador; o chat continua disponível por texto.", ""));
             case "SUPPORT" -> List.of(new SupportDtos.SearchResult("help:support", "ORIENTACAO", "Atendimento humano",
@@ -74,6 +87,9 @@ public class SupportPublicContentSearch {
 
     public List<SupportDtos.SearchResult> openPage(String category, String cause, String topic) {
         String cat=category==null?"NONE":category;
+        if ("CAMPAIGN".equals(cat)) return List.of(new SupportDtos.SearchResult("page:CAMPAIGN", "NAVEGACAO",
+                "Abrir cat\u00e1logo de vaquinhas", "Revise as vaquinhas p\u00fablicas e a disponibilidade de pagamento.",
+                "/catalogo?categoria=doacoes"));
         String route=switch(cat){case "NGO"->"ongs";case "PUBLICATION"->"publicacoes";case "VOLUNTEERING"->"voluntariado";default->null;};
         if(route!=null) {
             String href="/catalogo?categoria="+route;
@@ -98,7 +114,7 @@ public class SupportPublicContentSearch {
         if (query.isBlank()) return List.of();
         if (query.length() > 120) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A busca deve ter até 120 caracteres.");
         String selected = category == null ? "ALL" : category.toUpperCase(Locale.ROOT);
-        if (!Set.of("ALL", "NGO", "PUBLICATION", "VOLUNTEERING").contains(selected)) {
+        if (!Set.of("ALL", "NGO", "PUBLICATION", "VOLUNTEERING", "CAMPAIGN").contains(selected)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Categoria de busca inválida.");
         }
         List<SupportDtos.SearchResult> result = new ArrayList<>();
@@ -118,6 +134,9 @@ public class SupportPublicContentSearch {
         if (selected.equals("ALL") || selected.equals("VOLUNTEERING")) {
             appendVolunteering(query, result, cityFilter);
         }
+        if (selected.equals("ALL") || selected.equals("CAMPAIGN")) {
+            appendCampaigns(query, result, causeFromQuery(query), cityFilter);
+        }
         return List.copyOf(result);
     }
 
@@ -126,7 +145,7 @@ public class SupportPublicContentSearch {
     public SupportDtos.SearchResult count(String rawQuery, String category, CausaSocial explicitCause, String cityFilter) {
         String query=normalize(rawQuery);
         String selected=category==null?"ALL":category.toUpperCase(Locale.ROOT);
-        if(!Set.of("ALL","NGO","PUBLICATION","VOLUNTEERING").contains(selected))
+        if(!Set.of("ALL","NGO","PUBLICATION","VOLUNTEERING","CAMPAIGN").contains(selected))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Categoria de busca inválida.");
         int count=0; boolean truncated=false; int pages=0;
         if(selected.equals("ALL")||selected.equals("NGO")) {
@@ -166,9 +185,17 @@ public class SupportPublicContentSearch {
                 if(pageNumber==39)truncated=true;
             }
         }
+        if(selected.equals("ALL")||selected.equals("CAMPAIGN"))
+            count += countCampaignMatches(query, explicitCause == null ? causeFromQuery(query) : explicitCause, cityFilter);
         String label=switch(selected){case "NGO"->count==1?"ONG":"ONGs";case "PUBLICATION"->count==1?"publicação":"publicações";case "VOLUNTEERING"->count==1?"oportunidade de voluntariado":"oportunidades de voluntariado";default->count==1?"item público":"itens públicos";};
         String amount=truncated?"pelo menos "+count:String.valueOf(count);
         String city=cityFilter==null||cityFilter.isBlank()?"":" em "+cityFilter;
+        if ("CAMPAIGN".equals(selected)) {
+            String campaignLabel = count == 1 ? "vaquinha p\u00fablica" : "vaquinhas p\u00fablicas";
+            return new SupportDtos.SearchResult("count:CAMPAIGN", "CONTAGEM", "Contagem de " + campaignLabel,
+                    "A consulta encontrou " + amount + " " + campaignLabel + city + " dentro do recorte informado.",
+                    "/catalogo?categoria=doacoes");
+        }
         return new SupportDtos.SearchResult("count:"+selected,"CONTAGEM","Contagem de resultados públicos",
                 "A consulta encontrou "+amount+" "+label+city+" dentro do recorte informado.",
                 switch(selected){case "NGO"->"/catalogo?categoria=ongs";case "PUBLICATION"->"/catalogo?categoria=publicacoes";case "VOLUNTEERING"->"/catalogo?categoria=voluntariado";default->"/catalogo?categoria=ongs";});
@@ -178,6 +205,7 @@ public class SupportPublicContentSearch {
     public static String inferCategory(String rawQuery) {
         String query = normalize(rawQuery);
         if (hasAny(query, "voluntariado", "voluntario", "vaga", "oportunidade", "volunteer")) return "VOLUNTEERING";
+        if (hasAny(query, "doacao", "doacoes", "vaquinha", "vaquinhas", "campanha de arrecadacao", "arrecadar")) return "CAMPAIGN";
         if (hasAny(query, "publicacao", "publicacoes", "post", "posts", "noticia", "campaign", "campanha")) return "PUBLICATION";
         if (causeFromQuery(query) != null || hasAny(query, "ong", "ongs", "organizacao", "organization", "instituicao")) return "NGO";
         return "ALL";
@@ -266,13 +294,114 @@ public class SupportPublicContentSearch {
                         vacancy == null || vacancy.quantidadeVagas() == null ? ""
                                 : "Vagas publicadas: " + vacancy.quantidadeVagas(),
                         "Descrição pública: " + excerpt(post.conteudo()));
-                result.add(new SupportDtos.SearchResult("volunteering:" + post.id(), "VOLUNTARIADO", safe(post.titulo()),
+                if (vacancy == null || vacancy.id() == null) continue;
+                result.add(new SupportDtos.SearchResult("volunteering:" + vacancy.id(), "VOLUNTARIADO", safe(post.titulo()),
                         summary, "/ong-profile?id=" + post.oscId() + "#voluntariado"));
                 if (result.size() == SOURCE_LIMIT) return;
             }
             if (!page.hasNext()) break;
             pageNumber++;
         }
+    }
+
+    /** Resolves an exact vacancy only through the same currently public catalog feed used for discovery. */
+    @Transactional(readOnly = true)
+    public SupportDtos.SearchResult publicVolunteerOpportunity(Integer opportunityId) {
+        if (opportunityId == null || opportunityId < 1) return null;
+        for (int pageNumber = 0; pageNumber < 100; pageNumber++) {
+            var page = posts.listarVoluntariadosCatalogo(PageRequest.of(pageNumber, SEARCH_PAGE_SIZE));
+            for (PostConteudoDTO post : page.getContent()) {
+                VagaConteudoDTO vacancy = post.vaga();
+                if (vacancy == null || !opportunityId.equals(vacancy.id())) continue;
+                String activityLocation = location(vacancy.cidade(), vacancy.bairro());
+                String summary = joinFacts("Oportunidade de " + safe(post.nomeOsc()),
+                        vacancy.modalidadeVoluntariado() == null ? ""
+                                : "Modalidade: " + modalityLabel(vacancy.modalidadeVoluntariado().name()),
+                        activityLocation.isBlank() ? "" : "Local da atividade: " + activityLocation,
+                        vacancy.quantidadeVagas() == null ? "" : "Capacidade publicada: " + vacancy.quantidadeVagas(),
+                        "Descrição pública: " + excerpt(post.conteudo()));
+                return new SupportDtos.SearchResult("volunteering:" + vacancy.id(), "VOLUNTARIADO",
+                        safe(post.titulo()), summary, "/ong-profile?id=" + post.oscId() + "#voluntariado");
+            }
+            if (!page.hasNext()) break;
+        }
+        return null;
+    }
+
+    private void appendCampaigns(String query, List<SupportDtos.SearchResult> result, CausaSocial requestedCause, String cityFilter) {
+        if (campaigns == null || result.size() >= SOURCE_LIMIT) return;
+        Map<Integer, OscListagemDTO> publicOrganizations = publicOrganizationIndex();
+        for (Map<String, Object> campaign : campaigns.listPublicForAssistant()) {
+            if (result.size() >= SOURCE_LIMIT) return;
+            Integer ngoId = integer(campaign.get("oscId"));
+            OscListagemDTO ngo = ngoId == null ? null : publicOrganizations.get(ngoId);
+            Set<CausaSocial> causes = ngo == null ? Set.of() : causes(ngo);
+            if (requestedCause != null && !causes.contains(requestedCause)) continue;
+            String city = ngo == null ? "" : ngo.cidade();
+            String state = ngo == null ? "" : ngo.estado();
+            if (!matchesCity(cityFilter, city, state)) continue;
+            String title = safe(string(campaign.get("title")));
+            String ngoName = safe(string(campaign.get("ngoName")));
+            String description = safe(string(campaign.get("description")));
+            String searchable = normalize(String.join(" ", title, description, ngoName, city, state,
+                    causes.stream().map(Enum::name).reduce("", (a,b) -> a + " " + b)));
+            String campaignQuery = campaignSearchText(query);
+            if (!campaignQuery.isBlank() && !matchesSearchText(campaignQuery, searchable)) continue;
+            String causeText = causes.stream().map(SupportPublicContentSearch::causeLabel).reduce((a,b)->a+", "+b).orElse("");
+            String summary = joinFacts("Vaquinha p\u00fablica de " + ngoName,
+                    causeText.isBlank() ? "" : "Causas p\u00fablicas da ONG: " + causeText,
+                    location(city, state), "Arrecadado l\u00edquido confirmado: " + money(number(campaign.get("raisedNetCents"))),
+                    "Meta l\u00edquida da ONG: " + money(number(campaign.get("goalNetCents"))),
+                    "Descri\u00e7\u00e3o p\u00fablica: " + excerpt(description));
+            result.add(new SupportDtos.SearchResult("campaign:" + campaign.get("id"), "CAMPANHA", title, summary,
+                    "/catalogo?categoria=doacoes&campanha=" + campaign.get("id")));
+        }
+    }
+
+    private int countCampaignMatches(String query, CausaSocial requestedCause, String cityFilter) {
+        if (campaigns == null) return 0;
+        String campaignQuery = campaignSearchText(query);
+        Map<Integer, OscListagemDTO> publicOrganizations = publicOrganizationIndex();
+        int count = 0;
+        for (Map<String, Object> campaign : campaigns.listPublicForAssistant()) {
+            Integer ngoId = integer(campaign.get("oscId"));
+            OscListagemDTO ngo = ngoId == null ? null : publicOrganizations.get(ngoId);
+            Set<CausaSocial> causes = ngo == null ? Set.of() : causes(ngo);
+            if (requestedCause != null && !causes.contains(requestedCause)) continue;
+            String city = ngo == null ? "" : ngo.cidade();
+            String state = ngo == null ? "" : ngo.estado();
+            if (!matchesCity(cityFilter, city, state)) continue;
+            String searchable = normalize(String.join(" ", safe(string(campaign.get("title"))),
+                    safe(string(campaign.get("description"))), safe(string(campaign.get("ngoName"))), city, state,
+                    causes.stream().map(Enum::name).reduce("", (a,b) -> a + " " + b)));
+            if (campaignQuery.isBlank() || matchesSearchText(campaignQuery, searchable)) count++;
+        }
+        return count;
+    }
+
+    private Map<Integer, OscListagemDTO> publicOrganizationIndex() {
+        Map<Integer, OscListagemDTO> index = new HashMap<>();
+        for (int pageNumber = 0; pageNumber < 40; pageNumber++) {
+            var page = ngos.viewAll(PageRequest.of(pageNumber, SEARCH_PAGE_SIZE));
+            for (OscListagemDTO organization : page.getContent()) index.put(organization.id(), organization);
+            if (!page.hasNext()) break;
+        }
+        return index;
+    }
+
+    private static Integer integer(Object value) { return value instanceof Number n ? n.intValue() : null; }
+    private static long number(Object value) { return value instanceof Number n ? n.longValue() : 0L; }
+    private static String string(Object value) { return value == null ? "" : value.toString(); }
+    private static String money(long cents) {
+        return NumberFormat.getCurrencyInstance(Locale.forLanguageTag("pt-BR"))
+                .format(java.math.BigDecimal.valueOf(cents, 2));
+    }
+
+    private static String campaignSearchText(String query) {
+        String cleaned = normalize(query).replaceAll("\\b(vaquinha|vaquinhas|doacao|doacoes|campanha|campanhas|arrecadacao|arrecadar|quero|queria|encontrar|encontre|buscar|busco|ver|mostrar|mostre)\\b", " ");
+        return java.util.Arrays.stream(cleaned.split("[^\\p{L}\\p{N}]+"))
+                .filter(token -> token.length() >= 3 && !SEARCH_STOP_WORDS.contains(token))
+                .reduce((first, next) -> first + " " + next).orElse("");
     }
 
     private static boolean matchesNgo(String query, OscListagemDTO ngo, CausaSocial requestedCause) {
@@ -300,13 +429,19 @@ public class SupportPublicContentSearch {
 
     private static CausaSocial causeFromQuery(String query) {
         if (hasAny(query, "animal", "animais", "pet", "pets", "cachorro", "cachorros", "cao", "caes", "gato", "gatos", "fauna", "bicho", "bichos")) return CausaSocial.ANIMAIS;
+        if (hasAny(query, "crianca", "criancas", "adolescente", "adolescentes", "infancia")) return CausaSocial.CRIANCAS_ADOLESCENTES;
+        if (hasAny(query, "idoso", "idosos", "terceira idade", "envelhecimento")) return CausaSocial.IDOSOS;
+        if (hasAny(query, "moradia", "habitacao", "casa propria", "abrigo")) return CausaSocial.MORADIA;
+        if (hasAny(query, "mulher", "mulheres", "feminino", "violencia domestica")) return CausaSocial.APOIO_MULHERES;
+        if (hasAny(query, "emergencia", "emergencias", "desastre", "calamidade", "ajuda humanitaria")) return CausaSocial.AJUDA_HUMANITARIA_EMERGENCIAS;
+        if (hasAny(query, "direitos humanos", "cidadania", "justica social")) return CausaSocial.DIREITOS_HUMANOS_CIDADANIA;
+        if (hasAny(query, "fome", "alimentacao", "seguranca alimentar")) return CausaSocial.COMBATE_FOME;
         if (hasAny(query, "meio ambiente", "natureza", "clima", "sustentabilidade", "ecologia")) return CausaSocial.MEIO_AMBIENTE;
         if (hasAny(query, "educacao", "escola", "ensino", "aprendizagem")) return CausaSocial.EDUCACAO;
         if (hasAny(query, "saude", "hospital", "tratamento", "prevencao")) return CausaSocial.SAUDE;
         if (hasAny(query, "inclusao", "acessibilidade", "deficiencia", "inclusiva")) return CausaSocial.INCLUSAO_SOCIAL;
-        if (hasAny(query, "esporte", "futebol", "atividade esportiva")) return CausaSocial.ESPORTE;
-        if (hasAny(query, "cultura", "arte", "musica", "teatro")) return CausaSocial.CULTURA;
-        if (hasAny(query, "pobreza", "fome", "renda", "seguranca alimentar")) return CausaSocial.COMBATE_POBREZA;
+        if (hasAny(query, "esporte", "futebol", "atividade esportiva", "cultura", "arte", "musica", "teatro")) return CausaSocial.CULTURA_ESPORTE;
+        if (hasAny(query, "pobreza", "renda", "assistencia social", "vulnerabilidade")) return CausaSocial.ASSISTENCIA_SOCIAL;
         return null;
     }
 
@@ -318,14 +453,20 @@ public class SupportPublicContentSearch {
 
     private static String causeLabel(CausaSocial cause) {
         return switch (cause) {
-            case ANIMAIS -> "proteção animal";
+            case ANIMAIS -> "prote\u00e7\u00e3o animal";
             case MEIO_AMBIENTE -> "meio ambiente";
-            case COMBATE_POBREZA -> "combate à pobreza";
-            case INCLUSAO_SOCIAL -> "inclusão social";
-            case EDUCACAO -> "educação";
-            case SAUDE -> "saúde";
-            case ESPORTE -> "esporte";
-            case CULTURA -> "cultura";
+            case COMBATE_POBREZA, ASSISTENCIA_SOCIAL -> "assist\u00eancia social";
+            case INCLUSAO_SOCIAL, DIREITOS_HUMANOS_CIDADANIA -> "direitos humanos e cidadania";
+            case EDUCACAO -> "educa\u00e7\u00e3o";
+            case SAUDE -> "sa\u00fade";
+            case ESPORTE, CULTURA, CULTURA_ESPORTE -> "cultura e esporte";
+            case COMBATE_FOME -> "combate \u00e0 fome";
+            case CRIANCAS_ADOLESCENTES -> "crian\u00e7as e adolescentes";
+            case IDOSOS -> "pessoas idosas";
+            case MORADIA -> "moradia";
+            case PESSOAS_COM_DEFICIENCIA -> "pessoas com defici\u00eancia";
+            case APOIO_MULHERES -> "apoio \u00e0s mulheres";
+            case AJUDA_HUMANITARIA_EMERGENCIAS -> "ajuda humanit\u00e1ria e emerg\u00eancias";
         };
     }
 

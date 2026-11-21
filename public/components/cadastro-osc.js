@@ -1,6 +1,7 @@
 import { getAPI_URL } from "./modoBack.js";
 import { fetchAutenticado } from "./api.js";
 import { formatarCnpj, normalizarCnpj, validarCnpj } from "./cnpj.js";
+import { CAUSE_TAXONOMY } from "./cause-taxonomy.js";
 
 const API_URL = getAPI_URL();
 
@@ -77,38 +78,32 @@ document.addEventListener("DOMContentLoaded", () => {
     const odsSugestoes = document.getElementById("ods-sugestoes");
     const odsEscolhidas = new Set();
 
-    const CAUSA_PARA_ENUM = {
-        "assistencia-social": ["INCLUSAO_SOCIAL", "COMBATE_POBREZA"],
-        "protecao-animal": ["ANIMAIS"],
-        "meio-ambiente": ["MEIO_AMBIENTE"],
-        educacao: ["EDUCACAO"],
-        saude: ["SAUDE"],
-        "direitos-humanos": ["INCLUSAO_SOCIAL"],
-        cultura: ["CULTURA"],
-        esporte: ["ESPORTE"]
-    };
+    const CAUSA_PARA_ENUM = Object.fromEntries(CAUSE_TAXONOMY.map(cause => [cause.id, [cause.causes[0]] ]));
 
     const AREA_POR_CAUSA = {
         INCLUSAO_SOCIAL: "assistencia-social",
         COMBATE_POBREZA: "assistencia-social",
-        ANIMAIS: "protecao-animal",
-        MEIO_AMBIENTE: "meio-ambiente",
-        EDUCACAO: "educacao",
-        SAUDE: "saude",
-        CULTURA: "cultura",
-        ESPORTE: "esporte"
+        CULTURA: "cultura-esporte",
+        ESPORTE: "cultura-esporte",
+        ...Object.fromEntries(CAUSE_TAXONOMY.map(cause => [cause.causes[0], cause.id]))
     };
 
     const SUGESTOES_ODS_POR_AREA = {
-        "assistencia-social": [1, 10, 16],
-        "protecao-animal": [15],
-        "meio-ambiente": [6, 7, 11, 12, 13, 14, 15],
-        educacao: [4],
-        saude: [3],
-        "direitos-humanos": [5, 10, 16],
-        cultura: [4, 11],
-        esporte: [3, 4]
+        "assistencia-social": [1, 10, 16], "direitos-humanos-cidadania": [5, 10, 16],
+        "protecao-animal": [15], "animais": [15], "meio-ambiente": [6, 7, 11, 12, 13, 14, 15],
+        educacao: [4], saude: [3], "cultura-esporte": [3, 4, 11],
+        alimentacao: [2], "criancas-adolescentes": [3, 4, 10], idosos: [3, 10],
+        moradia: [1, 6, 11], "pessoas-com-deficiencia": [3, 4, 10], mulheres: [5], emergencias: [1, 2, 11, 13, 16]
     };
+
+    if (opcoesFoco) opcoesFoco.replaceChildren(...CAUSE_TAXONOMY.map(cause => {
+        const option = document.createElement("button"); option.type = "button";
+        option.dataset.valor = cause.causes[0]; option.textContent = cause.label; return option;
+    }));
+    if (opcoesSecundarias) opcoesSecundarias.replaceChildren(...CAUSE_TAXONOMY.map(cause => {
+        const option = document.createElement("button"); option.type = "button";
+        option.dataset.valor = cause.id; option.textContent = cause.label; return option;
+    }));
 
     /* =====================================================
        ELEMENTOS DO CNPJ E CEP

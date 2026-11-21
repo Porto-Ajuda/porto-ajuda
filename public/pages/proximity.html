@@ -10,6 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
   <link rel="stylesheet" href="../styles/proximity.css">
   <link rel="stylesheet" href="../styles/geral.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -57,16 +58,11 @@
       <div class="section-ongs">
 
         <div class="barra-pesquisa">
-          <input type="text" placeholder="Pesquisar ONGs">
-          <button>🔍</button>
+          <input type="search" placeholder="Pesquisar ONGs" aria-label="Pesquisar ONGs">
+          <button type="button" aria-label="Pesquisar">🔍</button>
         </div>
 
-        <div class="filtros">
-          <button>Todos</button>
-          <button>Alimentação</button>
-          <button>Animais</button>
-          <button>Crianças</button>
-        </div>
+        <div class="filtros" role="group" aria-label="Filtrar organizações por causa"></div>
 
         <div class="lista-ongs"></div>
 
@@ -76,6 +72,6 @@
 
   <button id="botao-abrir-ongs" aria-label="Abrir lista de ONGs">
     <i class="fa-solid fa-chevron-right"></i>
-</button>
+  </button>
 
 </body>

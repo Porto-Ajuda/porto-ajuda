@@ -35,6 +35,9 @@ export function obterEstadoSessao() {
 export function marcarSessaoAutenticada({ novaSessao = false } = {}) {
     if (novaSessao) {
         registrarRenovacaoConcluida();
+        if (typeof window !== "undefined") {
+            window.dispatchEvent(new CustomEvent("portoajuda:sessao-autenticada"));
+        }
     }
 
     gravarArmazenamento(CHAVE_ESTADO_SESSAO, "authenticated");
@@ -43,6 +46,9 @@ export function marcarSessaoAutenticada({ novaSessao = false } = {}) {
 export function marcarSessaoAnonima() {
     gravarArmazenamento(CHAVE_ESTADO_SESSAO, "anonymous");
     pararRenovacaoPeriodica();
+    if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("portoajuda:sessao-anonima"));
+    }
 }
 
 function lerMarcadorRenovacao() {
@@ -305,6 +311,7 @@ if (typeof window !== "undefined") {
             evento.newValue === "anonymous"
         ) {
             pararRenovacaoPeriodica();
+            window.dispatchEvent(new CustomEvent("portoajuda:sessao-anonima"));
         }
 
         if (evento.key === CHAVE_RENOVACAO && renovacaoPeriodicaAtiva) {

@@ -38,6 +38,7 @@ class AdminAuthControllerSessionTest {
         UUID challengeId = UUID.randomUUID();
         when(clientIpResolver.resolve(any())).thenReturn("192.0.2.70");
         when(authenticationService.iniciar(any(), eq("192.0.2.70"))).thenReturn(challengeId);
+        when(authenticationService.isSmsVerificationEnabled()).thenReturn(true);
         AdminAuthController controller = new AdminAuthController(
                 authenticationService, clientIpResolver, sessionService, new AdminSessionCookie(true),
                 adminAuthorization);

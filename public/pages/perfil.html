@@ -485,8 +485,8 @@
 
                             <div class="acss-grupo">
 
-                                <h3 id="titulo-tipos-ong">Tipos de ONGs de preferência</h3>
-                                <p>Marque as causas que você mais gostaria de apoiar.</p>
+                                <h3 id="titulo-tipos-ong">Causas que quero apoiar</h3>
+                                <p>Escolha suas causas favoritas para orientar as sugestões do Porto Ajuda.</p>
 
                                 <div class="acss-chips" role="group" aria-labelledby="titulo-tipos-ong">
 
@@ -494,7 +494,7 @@
                                         <input type="checkbox" name="acss-tipos-ong" value="alimentacao">
                                         <span class="acss-chip__rotulo"><span class="acss-chip__caixa"
                                                 aria-hidden="true"></span><i class="fa-solid fa-bowl-food"
-                                                aria-hidden="true"></i>Alimentação</span>
+                                                aria-hidden="true"></i>Combate à fome</span>
                                     </label>
 
                                     <label class="acss-chip">
@@ -508,7 +508,7 @@
                                         <input type="checkbox" name="acss-tipos-ong" value="idosos">
                                         <span class="acss-chip__rotulo"><span class="acss-chip__caixa"
                                                 aria-hidden="true"></span><i class="fa-solid fa-person-cane"
-                                                aria-hidden="true"></i>Idosos</span>
+                                                aria-hidden="true"></i>Pessoas idosas</span>
                                     </label>
 
                                     <label class="acss-chip">
@@ -529,7 +529,7 @@
                                         <input type="checkbox" name="acss-tipos-ong" value="animais">
                                         <span class="acss-chip__rotulo"><span class="acss-chip__caixa"
                                                 aria-hidden="true"></span><i class="fa-solid fa-paw"
-                                                aria-hidden="true"></i>Animais</span>
+                                                aria-hidden="true"></i>Proteção animal</span>
                                     </label>
 
                                     <label class="acss-chip">
@@ -557,7 +557,7 @@
                                         <input type="checkbox" name="acss-tipos-ong" value="mulheres">
                                         <span class="acss-chip__rotulo"><span class="acss-chip__caixa"
                                                 aria-hidden="true"></span><i class="fa-solid fa-venus"
-                                                aria-hidden="true"></i>Mulheres</span>
+                                                aria-hidden="true"></i>Apoio às mulheres</span>
                                     </label>
 
                                     <label class="acss-chip">
@@ -571,7 +571,17 @@
                                         <input type="checkbox" name="acss-tipos-ong" value="emergencias">
                                         <span class="acss-chip__rotulo"><span class="acss-chip__caixa"
                                                 aria-hidden="true"></span><i class="fa-solid fa-life-ring"
-                                                aria-hidden="true"></i>Emergências</span>
+                                                aria-hidden="true"></i>Ajuda humanitária e emergências</span>
+                                    </label>
+
+                                    <label class="acss-chip">
+                                        <input type="checkbox" name="acss-tipos-ong" value="assistencia-social">
+                                        <span class="acss-chip__rotulo"><span class="acss-chip__caixa" aria-hidden="true"></span><i class="fa-solid fa-hand-holding-heart" aria-hidden="true"></i>Assistência social</span>
+                                    </label>
+
+                                    <label class="acss-chip">
+                                        <input type="checkbox" name="acss-tipos-ong" value="direitos-humanos-cidadania">
+                                        <span class="acss-chip__rotulo"><span class="acss-chip__caixa" aria-hidden="true"></span><i class="fa-solid fa-scale-balanced" aria-hidden="true"></i>Direitos humanos e cidadania</span>
                                     </label>
 
                                 </div>
@@ -590,6 +600,22 @@
                                     Salvar preferências
                                 </button>
                             </div>
+
+                            <div class="acss-configuracao" id="personalizacao-visitas-controle">
+                                <div>
+                                    <h3>Personalizar pelas minhas visitas</h3>
+                                    <p>Com sua autorização, visitas a perfis públicos ajudam a ordenar sugestões. O registro fica neste navegador. Acessibilidade continua independente.</p>
+                                </div>
+                                <label class="acss-interruptor">
+                                    <input type="checkbox" id="personalizar-pelas-minhas-visitas" role="switch" aria-label="Personalizar pelas minhas visitas">
+                                    <span></span>
+                                </label>
+                            </div>
+                            <div class="grupo-botoes">
+                                <button class="botao botao-secundario" type="button" id="redefinir-sugestoes">Redefinir sugestões</button>
+                                <button class="botao botao-secundario" type="button" id="configurar-consentimento-personalizacao">Configurações de personalização</button>
+                            </div>
+                            <p id="pa-recommendation-reset-status" role="status" aria-live="polite"></p>
 
                             <p id="estado-preferencias-acss" role="status" aria-live="polite" hidden></p>
 

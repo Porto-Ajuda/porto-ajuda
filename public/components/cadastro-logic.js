@@ -32,6 +32,46 @@ export function criarTravaEnvioCadastro() {
     };
 }
 
+export function normalizarDataCadastro(valor) {
+    const texto = String(valor ?? "").trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(texto)) return texto;
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(texto)) {
+        const [dia, mes, ano] = texto.split("/");
+        return `${ano}-${mes}-${dia}`;
+    }
+    return "";
+}
+
+export function calcularIdadeCadastro(valor, hoje = new Date()) {
+    const iso = normalizarDataCadastro(valor);
+    if (!iso) return null;
+
+    const [ano, mes, dia] = iso.split("-").map(Number);
+    const nascimentoUtc = Date.UTC(ano, mes - 1, dia);
+    const nascimento = new Date(nascimentoUtc);
+    if (
+        nascimento.getUTCFullYear() !== ano ||
+        nascimento.getUTCMonth() !== mes - 1 ||
+        nascimento.getUTCDate() !== dia
+    ) {
+        return null;
+    }
+
+    const anoAtual = hoje instanceof Date ? hoje.getFullYear() : Number.NaN;
+    const mesAtual = hoje instanceof Date ? hoje.getMonth() + 1 : Number.NaN;
+    const diaAtual = hoje instanceof Date ? hoje.getDate() : Number.NaN;
+    if (!Number.isFinite(anoAtual) || !Number.isFinite(mesAtual) || !Number.isFinite(diaAtual)) {
+        return null;
+    }
+
+    const hojeUtc = Date.UTC(anoAtual, mesAtual - 1, diaAtual);
+    if (nascimentoUtc > hojeUtc) return null;
+
+    let idade = anoAtual - ano;
+    if (mesAtual < mes || (mesAtual === mes && diaAtual < dia)) idade--;
+    return idade;
+}
+
 export function formatarCpfCadastro(valor, inicioSelecao, fimSelecao = inicioSelecao) {
     const texto = String(valor ?? "");
     if (/[^0-9.-]/.test(texto)) {

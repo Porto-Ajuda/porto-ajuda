@@ -38,6 +38,10 @@ public class SupportAssistantService {
     private final int perMinuteLimit;
     private final Clock clock;
     private final String assistantName;
+    @Autowired(required = false) private com.portoajuda.aplicacao_osc.service.CandidaturaVoluntariadoService applications;
+    @Autowired(required = false) private com.portoajuda.aplicacao_osc.service.CampaignDonationPaymentService campaignPayments;
+    @Autowired(required = false) private com.portoajuda.aplicacao_osc.service.OscDashboardService ngoDashboard;
+    @Autowired(required = false) private SupportVolunteerApplicationActionService volunteerApplicationActions;
 
     @Autowired
     public SupportAssistantService(SupportConversationRepository repository, SupportPublicContentSearch search,
@@ -94,6 +98,40 @@ public class SupportAssistantService {
 
     public List<SupportDtos.SearchResult> publicSearch(String query, String category) {
         return search.search(query, category);
+    }
+
+    public List<SupportDtos.VolunteerApplicationDraft> pendingVolunteerApplications(UUID conversationId, Usuario user) {
+        requireAssistantFeature(user);
+        if (volunteerApplicationActions == null) throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
+                "As prévias de candidatura estão temporariamente indisponíveis.");
+        return volunteerApplicationActions.pending(user, conversationId);
+    }
+
+    public SupportDtos.VolunteerApplicationDraft cancelVolunteerApplication(UUID conversationId, UUID draftId,
+            String requestHash, Usuario user) {
+        requireAssistantFeature(user);
+        if (volunteerApplicationActions == null) throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
+                "As prévias de candidatura estão temporariamente indisponíveis.");
+        return volunteerApplicationActions.cancel(user, conversationId, draftId, requestHash);
+    }
+
+    public SupportDtos.VolunteerApplicationDraft confirmVolunteerApplication(UUID conversationId, UUID draftId,
+            String requestHash, Usuario user) {
+        requireAiActionFeature(user);
+        if (volunteerApplicationActions == null) throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
+                "As prévias de candidatura estão temporariamente indisponíveis.");
+        return volunteerApplicationActions.confirm(user, conversationId, draftId, requestHash);
+    }
+
+    private void requireAiActionFeature(Usuario user) {
+        requireAssistantFeature(user);
+        if (!aiEnabled || providers.getIfAvailable() == null) throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
+                "As ações da Sophie estão temporariamente indisponíveis.");
+    }
+
+    private void requireAssistantFeature(Usuario user) {
+        requireUser(user);
+        requireEnabled();
     }
 
     public SupportDtos.Conversation create(Usuario user) {
@@ -240,6 +278,10 @@ public class SupportAssistantService {
     public SupportDtos.Conversation send(UUID id, Usuario user, SupportDtos.UserMessageRequest request) {
         int userId = requireUser(user); requireEnabled();
         String body = bounded(request == null ? null : request.body(), MAX_MESSAGE_LENGTH, true);
+        if (containsProtectedCredential(body)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Por seguran\u00e7a, n\u00e3o envie senha, c\u00f3digo, token, CPF, cart\u00e3o ou contato nesta conversa. Use os formul\u00e1rios protegidos do Porto Ajuda.");
+        }
         String key = idempotencyKey(request == null ? null : request.idempotencyKey());
         SendSnapshot snapshot = transaction.execute(status -> {
             repository.lockUser(userId);
@@ -255,13 +297,14 @@ public class SupportAssistantService {
             return new SendSnapshot(repository.lock(id).orElseThrow(), true);
         });
         if (!snapshot.inserted()) return mine(id, user);
-        if (!"AI_ACTIVE".equals(snapshot.row().state())) return mine(id, user);
+        if ("HUMAN_ACTIVE".equals(snapshot.row().state()) || "CLOSED".equals(snapshot.row().state())) return mine(id, user);
+        if ("WAITING_HUMAN".equals(snapshot.row().state()) && explicitHumanRequest(body)) return mine(id, user);
         if (explicitHumanRequest(body)) {
             escalateForHumanRequest(id, snapshot.row().version(),
                     "Sua solicitação foi encaminhada para uma pessoa da equipe. As respostas são assíncronas e você pode acompanhar esta conversa aqui.");
             return mine(id, user);
         }
-        if (outsideInitialScope(body) && !safeAccountNavigation(body)) {
+        if (outsideInitialScope(body) && !safeAccountNavigation(body) && !safeVolunteerApplicationIntent(body)) {
             addAiNotice(id, snapshot.row().version(), "scope-limit:" + snapshot.row().version(),
                     "Posso orientar sobre os caminhos seguros, mas não consulto dados privados nem faço alterações de conta, conteúdo ou operações financeiras. Use os recursos próprios da plataforma; o atendimento humano também não contorna essas permissões.");
             return mine(id, user);
@@ -309,6 +352,27 @@ public class SupportAssistantService {
             SupportAssistantProvider.Interpretation interpretation = provider.interpret(
                     new SupportAssistantProvider.InterpretationInput(minimizePrivateLocation(body), history));
             if (interpretation == null) interpretation = compatibilityInterpretation(body);
+            String ownAccountOperation = ownAccountOperation(body);
+            if (ownAccountOperation != null && interpretation.capabilities().stream()
+                    .noneMatch(action -> ownAccountOperation.equals(action.operation()))) {
+                List<SupportAssistantProvider.CapabilityCall> requested = new ArrayList<>(interpretation.capabilities());
+                while (requested.size() >= 3) requested.remove(requested.size() - 1);
+                requested.add(new SupportAssistantProvider.CapabilityCall(ownAccountOperation, "NONE", "", "NONE", "", "NONE", "NONE"));
+                interpretation = new SupportAssistantProvider.Interpretation(List.copyOf(requested), false, "",
+                        interpretation.explicitHumanRequest(), false, "NONE");
+            }
+            if (interpretation.capabilities().stream().anyMatch(action -> "NGO_DASHBOARD".equals(action.operation()))
+                    && interpretation.privacyBoundary()) {
+                interpretation = new SupportAssistantProvider.Interpretation(interpretation.capabilities(),
+                        interpretation.clarificationNeeded(), interpretation.clarificationQuestion(),
+                        interpretation.explicitHumanRequest(), false, "NONE");
+            }
+            if (interpretation.capabilities().stream().anyMatch(action -> "PREPARE_VOLUNTEER_APPLICATION".equals(action.operation()))
+                    && interpretation.privacyBoundary()) {
+                interpretation = new SupportAssistantProvider.Interpretation(interpretation.capabilities(),
+                        interpretation.clarificationNeeded(), interpretation.clarificationQuestion(),
+                        interpretation.explicitHumanRequest(), false, "NONE");
+            }
             if (interpretation.explicitHumanRequest()) {
                 escalateForHumanRequest(id, snapshot.version(),
                         "Sua solicitação foi encaminhada para a equipe. As respostas são assíncronas; você pode acompanhar esta conversa aqui.");
@@ -316,6 +380,10 @@ public class SupportAssistantService {
             }
             List<SupportDtos.SearchResult> sources = new ArrayList<>();
             List<SupportAssistantProvider.CapabilityOutcome> outcomes = new ArrayList<>();
+            SupportDtos.VolunteerApplicationDraft volunteerPreview = null;
+            if ("WAITING_HUMAN".equals(snapshot.state())) {
+                outcomes.add(new SupportAssistantProvider.CapabilityOutcome("HUMAN_QUEUE", "NONE", "GENERAL_ANSWERS_ONLY", 0));
+            }
             boolean publicSearchUnavailable = false;
             boolean publicSearchAttempted = false;
             if (!interpretation.privacyBoundary()) {
@@ -360,6 +428,44 @@ public class SupportAssistantService {
                         sources.addAll(search.help(action.topic()));
                     } else if ("OPEN_PAGE".equals(action.operation())) {
                         sources.addAll(search.openPage(action.category(), action.cause(), action.topic()));
+                    } else if ("MY_APPLICATIONS".equals(action.operation())) {
+                        AccountLookup lookup = myApplications(user);
+                        sources.add(lookup.source());
+                        outcomes.add(new SupportAssistantProvider.CapabilityOutcome("MY_APPLICATIONS", "ACCOUNT", "OWNER_SCOPED", lookup.count()));
+                    } else if ("MY_DONATIONS".equals(action.operation())) {
+                        AccountLookup lookup = myCampaignDonations(user);
+                        sources.add(lookup.source());
+                        outcomes.add(new SupportAssistantProvider.CapabilityOutcome("MY_DONATIONS", "ACCOUNT", "OWNER_SCOPED", lookup.count()));
+                    } else if ("NGO_DASHBOARD".equals(action.operation())) {
+                        SupportDtos.SearchResult dashboard = ngoDashboard(action.targetId(), user);
+                        sources.add(dashboard);
+                        outcomes.add(new SupportAssistantProvider.CapabilityOutcome("NGO_DASHBOARD", "ACCOUNT",
+                                "ACCESS_CHECKED", dashboard.id().startsWith("ngo-dashboard:") ? 1 : 0));
+                    } else if ("PREPARE_VOLUNTEER_APPLICATION".equals(action.operation())) {
+                        if (!"AI_ACTIVE".equals(snapshot.state()) || volunteerApplicationActions == null) {
+                            outcomes.add(new SupportAssistantProvider.CapabilityOutcome("PREPARE_VOLUNTEER_APPLICATION",
+                                    "VOLUNTEERING", "UNAVAILABLE", 0));
+                        } else {
+                            String query = searchQuery(action, parseCause(action.cause()));
+                            List<SupportDtos.SearchResult> choices = query.isBlank() ? List.of()
+                                    : search.search(query, "VOLUNTEERING", parseCause(action.cause()), action.city());
+                            sources.addAll(choices);
+                            SupportDtos.SearchResult selected = action.targetId() == null
+                                    ? (choices.size() == 1 ? choices.getFirst() : null)
+                                    : choices.stream().filter(option -> option.id().equals("volunteering:" + action.targetId()))
+                                            .findFirst().orElse(null);
+                            if (selected != null) {
+                                Integer opportunityId = Integer.valueOf(selected.id().substring("volunteering:".length()));
+                                volunteerPreview = volunteerApplicationActions.createDraft(user, id, opportunityId,
+                                        selected.title(), selected.summary());
+                                outcomes.add(new SupportAssistantProvider.CapabilityOutcome("PREPARE_VOLUNTEER_APPLICATION",
+                                        "VOLUNTEERING", "PREVIEW_READY", 1));
+                            } else {
+                                outcomes.add(new SupportAssistantProvider.CapabilityOutcome("PREPARE_VOLUNTEER_APPLICATION",
+                                        "VOLUNTEERING", choices.isEmpty() ? "NO_PUBLIC_MATCH" : "CLARIFICATION_REQUIRED",
+                                        choices.size()));
+                            }
+                        }
                     }
                     if (sources.size() >= 5) break;
                 }
@@ -369,6 +475,10 @@ public class SupportAssistantService {
             SupportAssistantProvider.Reply reply = provider.respond(new SupportAssistantProvider.Input(id,
                     minimizePrivateLocation(body), history, sources, publicSearchUnavailable, interpretation, outcomes));
             String answer = removeUnverifiedLinks(bounded(reply == null ? null : reply.answer(), 2400, true));
+            if (volunteerPreview != null) {
+                answer = "Encontrei esta oportunidade na " + volunteerPreview.ngoName()
+                        + ". Quer que eu envie sua candidatura? Revise os detalhes e confirme se estiver tudo certo.";
+            }
             answer = removeCatalogDeflection(answer, sources);
             if (answer.isBlank()) {
                 answer = publicSearchUnavailable
@@ -380,12 +490,13 @@ public class SupportAssistantService {
                                         : "Posso ajudar a explorar ONGs, publicações e oportunidades públicas. Qual desses assuntos você quer ver?";
             }
             answer = appendVerifiedPublicOptions(answer, sources, interpretation);
+            answer = appendCampaignOptions(answer, sources);
             if (reply.requestsHuman()) answer = answer + "\n\nSe quiser que a equipe acompanhe o caso, você pode escolher ‘Falar com uma pessoa’.";
             String saved = appendValidatedHelpLinks(answer, sources, reply == null ? null : reply.sourceIds());
             SupportConversationRepository.Row completedRow = transaction.execute(status -> {
                 SupportConversationRepository.Row current = repository.lock(id).orElseThrow(SupportAssistantService::notFound);
-                if (!"AI_ACTIVE".equals(current.state()) || current.version() != snapshot.version()) {
-                    repository.event(id, "SYSTEM", null, "AI_SUPPRESSED", "AI_ACTIVE", current.state(), "Resposta automatizada descartada após alteração concorrente da conversa.");
+                if (!snapshot.state().equals(current.state()) || current.version() != snapshot.version()) {
+                    repository.event(id, "SYSTEM", null, "AI_SUPPRESSED", snapshot.state(), current.state(), "Resposta automatizada descartada após alteração concorrente da conversa.");
                     return current;
                 }
                 repository.addMessage(id, "AI", null, assistantName + " · resposta automática", saved, "ai-reply:" + snapshot.version());
@@ -436,6 +547,24 @@ public class SupportAssistantService {
                 });
         return result.toString();
     }
+
+    static String appendCampaignOptions(String answer, List<SupportDtos.SearchResult> sources) {
+        List<SupportDtos.SearchResult> campaigns = sources.stream()
+                .filter(source -> "CAMPANHA".equals(source.category())).limit(3).toList();
+        if (campaigns.isEmpty()) return answer;
+        StringBuilder result = new StringBuilder(answer == null ? "" : answer.trim());
+        boolean addHeading = campaigns.stream().anyMatch(item -> !SupportPublicContentSearch.normalize(answer)
+                .contains(SupportPublicContentSearch.normalize(item.title())));
+        if (addHeading) result.append("\n\nVaquinhas p\u00fablicas encontradas:");
+        for (SupportDtos.SearchResult item : campaigns) {
+            String title = plainMarkdown(item.title());
+            String link = "[" + title + "](" + item.href() + ")";
+            int at = result.indexOf(title);
+            if (at >= 0) result.replace(at, at + title.length(), link);
+            else result.append("\n\u2022 Ver vaquinha: ").append(link).append(" \u2014 ").append(plainMarkdown(item.summary()));
+        }
+        return result.toString();
+    }
     private static String plainMarkdown(String value) {
         return value==null?"":value.replace("[","［").replace("]","］").replace("(","（").replace(")","）")
                 .replace("\r"," ").replace("\n"," ").replace("\t"," ").trim();
@@ -450,7 +579,92 @@ public class SupportAssistantService {
     }
 
     private static boolean validCategory(String category) {
-        return List.of("ALL", "NGO", "PUBLICATION", "VOLUNTEERING").contains(category);
+        return List.of("ALL", "NGO", "PUBLICATION", "VOLUNTEERING", "CAMPAIGN").contains(category);
+    }
+
+    private AccountLookup myApplications(Usuario user) {
+        if (user == null || user.getId() == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,
+                "Entre na sua conta para consultar suas candidaturas.");
+        if (applications == null) throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
+                "O hist\u00f3rico de voluntariado est\u00e1 indispon\u00edvel agora.");
+        var page = applications.listarMinhas(user, org.springframework.data.domain.PageRequest.of(0, 20));
+        if (page.isEmpty()) return new AccountLookup(new SupportDtos.SearchResult("account:applications", "CONTA", "Suas candidaturas",
+                "N\u00e3o encontrei candidaturas vinculadas \u00e0 sua conta.", "/perfil"), 0);
+        String summary = page.getContent().stream().map(item -> {
+            String status = switch (item.status()) {
+                case PENDENTE -> "aguardando an\u00e1lise";
+                case APROVADA -> "aprovada";
+                case RECUSADA -> "recusada";
+                case DESISTIU -> "participa\u00e7\u00e3o cancelada";
+                case CONCLUIDA -> "conclu\u00edda";
+                case CANCELADA_PELA_ONG -> "cancelada pela ONG";
+                default -> "status atualizado";
+            };
+            String completion = item.status() == com.portoajuda.aplicacao_osc.enums.StatusCandidatura.CONCLUIDA
+                    ? "; conclus\u00e3o " + item.dataConclusao() + "; horas registradas " + item.horasRealizadas()
+                    + (item.certificadoDisponivel() ? "; certificado dispon\u00edvel no seu hist\u00f3rico" : "") : "";
+            return item.tituloOportunidade() + " (" + item.nomeOsc() + "): " + status + completion;
+        }).reduce((first, next) -> first + ". " + next).orElse("");
+        if (page.hasNext()) summary += ". Exibindo as 20 mais recentes; veja o hist\u00f3rico para continuar.";
+        return new AccountLookup(new SupportDtos.SearchResult("account:applications", "CONTA", "Suas candidaturas", summary, "/perfil"), page.getNumberOfElements());
+    }
+
+    private AccountLookup myCampaignDonations(Usuario user) {
+        if (user == null || user.getId() == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,
+                "Entre na sua conta para consultar suas contribui\u00e7\u00f5es.");
+        if (campaignPayments == null) throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
+                "O hist\u00f3rico de vaquinhas est\u00e1 indispon\u00edvel agora.");
+        List<java.util.Map<String,Object>> rows = campaignPayments.donorHistory(user);
+        if (rows.isEmpty()) return new AccountLookup(new SupportDtos.SearchResult("account:donations", "CONTA", "Suas contribui\u00e7\u00f5es",
+                "N\u00e3o encontrei contribui\u00e7\u00f5es de vaquinhas vinculadas \u00e0 sua conta.", "/perfil"), 0);
+        String summary = rows.stream().limit(20).map(row -> {
+            long cents = row.get("netAmountCents") instanceof Number number ? number.longValue() : 0L;
+            String value = java.text.NumberFormat.getCurrencyInstance(java.util.Locale.forLanguageTag("pt-BR"))
+                    .format(cents / 100.0d);
+            return row.get("campaignTitle") + " (" + row.get("ngoName") + "): " + value + " l\u00edquidos; status " + row.get("status");
+        }).reduce((first, next) -> first + ". " + next).orElse("");
+        return new AccountLookup(new SupportDtos.SearchResult("account:donations", "CONTA", "Suas contribui\u00e7\u00f5es de vaquinhas", summary, "/perfil"), rows.size());
+    }
+
+    private SupportDtos.SearchResult ngoDashboard(Integer oscId, Usuario user) {
+        if (oscId == null) return new SupportDtos.SearchResult("ngo-dashboard:missing", "CONTA",
+                "Qual ONG voc\u00ea quer consultar?", "Informe a organiza\u00e7\u00e3o que voc\u00ea administra para que eu verifique sua permiss\u00e3o.", "");
+        if (ngoDashboard == null) throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
+                "Os indicadores da ONG est\u00e3o indispon\u00edveis agora.");
+        try {
+            java.util.Map<String,Object> data = ngoDashboard.dashboard(oscId, user);
+            java.util.Map<?,?> scope = map(data.get("scope"));
+            java.util.Map<?,?> applications = map(data.get("applications"));
+            java.util.Map<?,?> opportunities = map(data.get("opportunities"));
+            java.util.Map<?,?> pending = map(data.get("pendingActions"));
+            java.util.Map<?,?> campaigns = map(data.get("campaigns"));
+            String ngoName = scope.get("ngoName") == null ? "sua ONG" : scope.get("ngoName").toString();
+            Object hours = applications.get("completedHours");
+            String confirmedRaised = Boolean.TRUE.equals(campaigns.get("available"))
+                    ? money(number(campaigns.get("confirmedNetRaisedCents"))) : "Indispon\u00edvel";
+            String summary = "Estado atual de " + ngoName + ": " + number(applications.get("pending"))
+                    + " candidaturas pendentes, " + number(applications.get("accepted")) + " aprovadas e "
+                    + number(applications.get("completed")) + " participantes conclu\u00eddos com "
+                    + (hours == null ? "0" : hours.toString()) + " horas registradas. "
+                    + number(opportunities.get("availableSlots")) + " vagas eleg\u00edveis dispon\u00edveis; "
+                    + number(opportunities.get("occupiedSlots")) + " ocupadas. "
+                    + number(pending.get("pendingApplications")) + " a\u00e7\u00f5es de candidatura aguardam an\u00e1lise. "
+                    + "Arrecada\u00e7\u00e3o l\u00edquida confirmada (hist\u00f3rico): "
+                    + confirmedRaised + "; saldo dispon\u00edvel para saque: Indispon\u00edvel.";
+            return new SupportDtos.SearchResult("ngo-dashboard:" + oscId, "CONTA", "Indicadores atuais da ONG", summary,
+                    "/ong-profile?id=" + oscId + "#dashboard");
+        } catch (ResponseStatusException denied) {
+            if (denied.getStatusCode().value() != 403 && denied.getStatusCode().value() != 404) throw denied;
+            return new SupportDtos.SearchResult("ngo-dashboard:denied", "CONTA", "Acesso aos indicadores da ONG",
+                    "N\u00e3o posso mostrar esses indicadores: o servidor n\u00e3o confirmou que sua conta seja criadora ou administradora desta ONG.", "");
+        }
+    }
+
+    private static java.util.Map<?,?> map(Object value) { return value instanceof java.util.Map<?,?> result ? result : java.util.Map.of(); }
+    private static long number(Object value) { return value instanceof Number numeric ? numeric.longValue() : 0L; }
+    private static String money(long cents) {
+        return java.text.NumberFormat.getCurrencyInstance(java.util.Locale.forLanguageTag("pt-BR"))
+                .format(java.math.BigDecimal.valueOf(cents, 2));
     }
 
     private static com.portoajuda.aplicacao_osc.enums.CausaSocial parseCause(String cause) {
@@ -660,7 +874,8 @@ public class SupportAssistantService {
     private void addAiNotice(UUID id, long expectedVersion, String key, String explanation) {
         transaction.executeWithoutResult(status -> {
             SupportConversationRepository.Row locked = repository.lock(id).orElse(null);
-            if (locked == null || !"AI_ACTIVE".equals(locked.state()) || locked.version() != expectedVersion) return;
+            if (locked == null || !("AI_ACTIVE".equals(locked.state()) || "WAITING_HUMAN".equals(locked.state()))
+                    || locked.version() != expectedVersion) return;
             repository.addMessage(id, "SYSTEM", null, assistantName + " · aviso automático", explanation, key);
         });
     }
@@ -703,9 +918,40 @@ public class SupportAssistantService {
                 || normalized.matches("(?s).*(falar|conversar).{0,25}(com )?(uma )?(pessoa|humano|atendente).*")
                 || normalized.matches("(?s).*(atendimento humano|atendente humano).*");
     }
+    static boolean containsProtectedCredential(String message) {
+        if (message == null) return false;
+        String value = message.strip();
+        // A bare word such as "senha forte" is normal help-seeking language, not a credential.
+        // Only treat credential labels as leaked when the message uses an explicit assignment
+        // delimiter. Protected onboarding controls remain the primary security boundary.
+        return value.matches("(?is).*\\b(?:senha|password|passcode|token|bearer|cvv|cvc)\\b\\s*[:=]\\s*[\\w./+_-]{4,}.*")
+                || value.matches("(?is).*\\b(?:minha senha|meu token|meu codigo)\\s+(?:e|eh|é)\\s+(?=[\\w./+_-]*\\d)[\\w./+_-]{6,}.*")
+                || value.matches("(?is).*(?:c[o\u00f3]digo|otp|mfa|autenticacao|verificacao)\\b.{0,24}\\b\\d{4,8}\\b.*")
+                || value.matches("(?is).*\\b(?:cpf)\\b\\s*(?:[:=]|e|eh|\u00e9)?\\s*\\d{3}\\.?\\d{3}\\.?\\d{3}-?\\d{2}.*")
+                || value.matches("(?is).*\\b[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}\\b.*")
+                || value.matches("(?<!\\d)(?:\\+?55\\s*)?(?:\\(?\\d{2}\\)?\\s*)?9?\\d{4}[- ]?\\d{4}(?!\\d).*")
+                || value.matches("(?<!\\d)(?:\\d[ -]?){13,19}(?!\\d).*");
+    }
     private static boolean outsideInitialScope(String message) {
+        if (ownAccountOperation(message) != null) return false;
         String normalized = SupportPublicContentSearch.normalize(message);
         return normalized.matches("(?s).*(\\b(meu|minha|meus|minhas) (cpf|perfil|conta|candidatura|candidaturas|senha|dados pessoais|documento|codigo|token)\\b|\\b(codigo de autenticacao|codigo de verificacao|mfa|status da minha candidatura|status das minhas candidaturas|recuperar senha|alterar senha|trocar senha|criar post|editar post|excluir post|publicar post|inscrever me|quero me inscrever|acesse minha conta|alterar meus dados)\\b).*");
+    }
+    private static boolean safeVolunteerApplicationIntent(String message) {
+        String normalized = SupportPublicContentSearch.normalize(message);
+        return normalized.matches("(?s).*(quero|gostaria|pode|por favor).{0,35}(me candidatar|me inscrever|participar|enviar minha candidatura).*" )
+                || normalized.matches("(?s).*me (inscreve|candidate) (?:nessa|nesta|na|no|nessas|nestes) oportunidade.*");
+    }
+    private static String ownAccountOperation(String message) {
+        String normalized = SupportPublicContentSearch.normalize(message);
+        if (normalized.matches("(?s).*(\\b(cpf|senha|password|token|codigo|mfa|documento|email|cartao|dados pessoais|perfil)\\b).*")) return null;
+        boolean ownerLanguage = normalized.matches("(?s).*(\\b(minha|minhas|meu|meus|eu)\\b).*" );
+        if (!ownerLanguage) return null;
+        if (normalized.contains("candidatura") || normalized.contains("candidaturas")
+                || normalized.contains("inscricao de voluntariado") || normalized.contains("inscricoes de voluntariado")) return "MY_APPLICATIONS";
+        if (normalized.contains("doacao") || normalized.contains("doacoes")
+                || normalized.contains("contribuicao") || normalized.contains("contribuicoes")) return "MY_DONATIONS";
+        return null;
     }
     private static boolean safeAccountNavigation(String message) {
         String normalized = SupportPublicContentSearch.normalize(message);
@@ -766,6 +1012,7 @@ public class SupportAssistantService {
     }
     private static ResponseStatusException conflict(String message) { return new ResponseStatusException(HttpStatus.CONFLICT, message); }
     private static ResponseStatusException notFound() { return new ResponseStatusException(HttpStatus.NOT_FOUND, "Conversa não encontrada."); }
+    private record AccountLookup(SupportDtos.SearchResult source, int count) {}
     private record SendSnapshot(SupportConversationRepository.Row row, boolean inserted) {}
     private record RetrySnapshot(SupportConversationRepository.Row row, String question, boolean claimed) {}
 }

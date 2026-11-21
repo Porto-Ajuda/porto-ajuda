@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -67,6 +68,20 @@ class OscPerfilControllerTest {
                                                 .value()[0]);
 
                 verify(service).buscarPerfilPublico(81);
+        }
+
+        @Test
+        void perfilPublicoNaoExigeAutenticacaoMasPerfilPrivadoExige() throws Exception {
+                var perfilPublico = OscController.class.getMethod("buscarPerfil", Integer.class);
+                var perfilPrivado = OscController.class.getMethod("buscarPerfilPrivado", Integer.class, Usuario.class);
+
+                assertNull(perfilPublico.getAnnotation(PreAuthorize.class));
+                assertEquals(
+                                "isAuthenticated()",
+                                perfilPrivado.getAnnotation(PreAuthorize.class).value());
+                assertEquals(
+                                "/{id}/privado",
+                                perfilPrivado.getAnnotation(GetMapping.class).value()[0]);
         }
 
         @Test

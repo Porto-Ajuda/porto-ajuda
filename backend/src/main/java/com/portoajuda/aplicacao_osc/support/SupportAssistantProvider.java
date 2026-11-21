@@ -44,6 +44,11 @@ public interface SupportAssistantProvider {
                           String clarificationQuestion, boolean explicitHumanRequest,
                           boolean privacyBoundary, String boundaryKind) {}
     record CapabilityCall(String operation, String category, String query, String cause,
-                          String city, String topic, String scope) {}
+                          String city, String topic, String scope, Integer targetId) {
+        public CapabilityCall(String operation, String category, String query, String cause,
+                              String city, String topic, String scope) {
+            this(operation, category, query, cause, city, topic, scope, null);
+        }
+    }
     record CapabilityOutcome(String operation, String category, String status, int resultCount) {}
 }

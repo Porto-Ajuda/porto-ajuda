@@ -16,6 +16,10 @@ public final class SupportDtos {
                         String assistantName,
                         boolean conversationsEnabled, boolean aiAvailable) {}
     public record SearchResult(String id, String category, String title, String summary, String href) {}
+    public record VolunteerApplicationDraft(java.util.UUID id, Integer opportunityId, String title, String ngoName,
+                                            String details, String requestHash, Instant expiresAt,
+                                            String state, Integer applicationId, String applicationStatus,
+                                            String message) {}
     public record VoicePreferenceScope(Integer userId) {}
     public record ConversationSummary(UUID id, String state, Instant createdAt, Instant updatedAt, Instant stateChangedAt,
                                       Instant lastMessageAt, boolean unread, long version,
@@ -28,6 +32,7 @@ public final class SupportDtos {
     public record UserMessageRequest(@NotBlank @Size(max = 4000) String body,
                                      @NotBlank @Pattern(regexp = "[0-9a-fA-F-]{36}") String idempotencyKey) {}
     public record NewConversationRequest(@NotNull UUID conversationId, UUID previousConversationId) {}
+    public record ActionConfirmationRequest(@NotBlank @Pattern(regexp = "[0-9a-f]{64}") String requestHash) {}
     public record EligibleStaff(Integer userId, String displayName) {}
     public record ActionRequest(@NotBlank @Size(max = 1000) String reason) {}
     public record ReplyRequest(@NotBlank @Size(max = 4000) String body,

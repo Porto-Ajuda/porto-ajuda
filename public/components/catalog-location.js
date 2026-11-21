@@ -62,6 +62,18 @@ export function distanceKm(from, to) {
   return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
+export function matchesCatalogLocation({ kind, local = "", place = "", remote = false, origin, latitude, longitude, radiusKm }) {
+  if (kind === "volunteer" && local && !remote && !place.includes(local)) return false;
+  if (origin && (kind === "ongs" || kind === "posts")) {
+    const validOrigin = validCatalogCoordinates(origin.latitude, origin.longitude);
+    const coordinates = validCatalogCoordinates(latitude, longitude);
+    const radius = Number(radiusKm);
+    if (!validOrigin || !coordinates || !Number.isFinite(radius) || radius < 0) return false;
+    if (distanceKm(validOrigin, coordinates) > radius) return false;
+  }
+  return true;
+}
+
 export function geocodingFailureMessage(status, detail = "") {
   if (status === 400) return "A localização não está completa ou contém um CEP inválido. Corrija e tente novamente.";
   if (status === 401 || status === 403) return "O serviço de localização foi configurado como privado. Nenhum filtro de distância foi aplicado.";

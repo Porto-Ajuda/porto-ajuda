@@ -10,6 +10,8 @@ import { getAPI_URL } from "./modoBack.js";
 import {
     formatarCpfCadastro,
     criarTravaEnvioCadastro,
+    normalizarDataCadastro,
+    calcularIdadeCadastro,
     normalizarEmailCadastro,
     validarSenhasCadastro,
     verificarSenhaCadastro
@@ -76,39 +78,8 @@ import {
     // ---------- FUNÇÕES AUXILIARES ----------
     const somenteNumeros = (valor) => valor.replace(/\D/g, "");
 
-    // Aceita "2000-01-31" (input date) ou "31/01/2000" e devolve ISO.
-    // Se o formato for inválido, devolve "".
-    function normalizarData(valor) {
-        valor = (valor || "").trim();
-
-        if (/^\d{4}-\d{2}-\d{2}$/.test(valor)) {
-            return valor;
-        }
-
-        if (/^\d{2}\/\d{2}\/\d{4}$/.test(valor)) {
-            const [dia, mes, ano] = valor.split("/");
-            return `${ano}-${mes}-${dia}`;
-        }
-
-        return "";
-    }
-
-    // function calcularIdade(iso) {
-    //     // Evita o problema de fuso horário do new Date("YYYY-MM-DD")
-    //     const [ano, mes, dia] = iso.split("-").map(Number);
-    //     const hoje = new Date();
-
-    //     let idade = hoje.getFullYear() - ano;
-
-    //     if (
-    //         hoje.getMonth() + 1 < mes ||
-    //         (hoje.getMonth() + 1 === mes && hoje.getDate() < dia)
-    //     ) {
-    //         idade--;
-    //     }
-
-    //     return idade;
-    // }
+    const normalizarData = normalizarDataCadastro;
+    const calcularIdade = calcularIdadeCadastro;
 
     function validarCPF(valor) {
         valor = valor.trim();
@@ -192,7 +163,7 @@ import {
             emailCadastro.setCustomValidity("Informe um e-mail completo e válido.");
         }
 
-        if (reportarErro && resultado.valor && !emailCadastro.checkValidity()) {
+        if (reportarErro && (!resultado.valido || !emailCadastro.checkValidity())) {
             emailCadastro.reportValidity();
             emailCadastro.focus();
             return false;
@@ -261,22 +232,63 @@ import {
         erroGenero.style.display = "none";
     }
 
-    // ---------- ETAPAS ----------
-    function mostrarEtapa(n) {
-        etapa = n;
+    function resetarCadastroCompleto() {
+        formCadastro.reset();
 
-        rows.forEach((row, i) => {
-            row.style.display = i === n ? "grid" : "none";
+        formCadastro.querySelectorAll("input").forEach((campo) => {
+            campo.setCustomValidity("");
         });
 
-        backBtn.style.display = n === 0 ? "none" : "block";
+        if (usarNomeSocial) {
+            usarNomeSocial.checked = false;
+            usarNomeSocial.setAttribute("aria-expanded", "false");
+        }
+        if (campoNomeSocial) campoNomeSocial.hidden = true;
+        if (nomeSocial) {
+            nomeSocial.disabled = true;
+            nomeSocial.required = false;
+            nomeSocial.value = "";
+        }
 
-        const ultima = n === rows.length - 1;
+        nascimento.type = "text";
+        resetarGenero();
+
+        atualizarValidadeSenhas();
+        senhaCadastro.setCustomValidity("");
+        confirmarSenha.setCustomValidity("");
+        atualizarIndicadoresSenha();
+
+        if (requisitosSenha) requisitosSenha.style.display = "none";
+        nivelSenha.style.width = "0%";
+        textoSeguranca.textContent = "Digite uma senha";
+
+        reqTamanho.style.display = "block";
+        reqMaiuscula.style.display = "block";
+        reqMinuscula.style.display = "block";
+        reqNumero.style.display = "block";
+        reqEspecial.style.display = "block";
+
+        mostrarEtapa(0);
+    }
+
+    // ---------- ETAPAS ----------
+    function mostrarEtapa(n) {
+        etapa = Math.max(0, Math.min(n, rows.length - 1));
+
+        rows.forEach((row, i) => {
+            row.style.display = i === etapa ? "grid" : "none";
+        });
+
+        backBtn.style.display = etapa === 0 ? "none" : "block";
+
+        const ultima = etapa === rows.length - 1;
         nextBtn.style.display = ultima ? "none" : "block";
         cad.style.display = ultima ? "block" : "none";
     }
 
     function validarEtapa(n) {
+        if (!Number.isInteger(n) || n < 0 || n >= rows.length) return false;
+        if (!rows[n]) return false;
 
         if (n === 0 && usarNomeSocial?.checked && nomeSocial && !nomeSocial.value.trim()) {
             nomeSocial.setCustomValidity("Informe o nome social ou desmarque a opção.");
@@ -319,46 +331,45 @@ import {
                 return false;
             }
 
-            // const dataISO = normalizarData(nascimento.value);
+            const dataISO = normalizarData(nascimento.value);
+            const idade = dataISO ? calcularIdade(dataISO) : null;
 
-            // if (!dataISO) {
-            //     nascimento.setCustomValidity("Informe uma data de nascimento válida.");
-            //     nascimento.reportValidity();
-            //     nascimento.focus();
-            //     return false;
-            // }
+            if (idade === null || idade < 16 || idade > 120) {
+                nascimento.setCustomValidity(
+                    idade === null
+                        ? "Informe uma data de nascimento válida."
+                        : idade < 16
+                            ? "É necessário ter pelo menos 16 anos para se cadastrar."
+                            : "A idade máxima permitida é de 120 anos."
+                );
 
-            // const idade = calcularIdade(dataISO);
+                nascimento.reportValidity();
+                nascimento.focus();
 
-            // if (idade < 16 || idade > 120) {
-            //     nascimento.setCustomValidity(
-            //         idade < 16
-            //             ? "É necessário ter 16 anos ou mais."
-            //             : "Informe uma data de nascimento válida."
-            //     );
-            //     nascimento.reportValidity();
-            //     nascimento.focus();
-            //     return false;
-            // }
-            // nascimento.setCustomValidity("");
+                return false;
+            }
+
+            nascimento.setCustomValidity("");
 
             const telefoneNumeros = telefone.value.replace(/\D/g, '');
 
             if (
-                telefoneNumeros.length !== 10 &&
-                telefoneNumeros.length !== 11
+                (telefoneNumeros.length !== 10 &&
+                    telefoneNumeros.length !== 11) ||
+                /^(\d)\1+$/.test(telefoneNumeros)
             ) {
 
                 telefone.setCustomValidity('Digite um telefone válido.');
                 telefone.reportValidity();
                 telefone.focus();
 
-                return;
+                return false;
             }
 
             telefone.setCustomValidity('');
 
-            if (somenteNumeros(cep.value).length !== 8) {
+            const cepNumeros = somenteNumeros(cep.value);
+            if (cepNumeros.length !== 8 || /^(\d)\1{7}$/.test(cepNumeros)) {
                 cep.setCustomValidity("Digite um CEP válido.");
                 cep.reportValidity();
                 cep.focus();
@@ -372,7 +383,7 @@ import {
 
     nextBtn.addEventListener("click", () => {
         if (!validarEtapa(etapa)) return;
-        mostrarEtapa(etapa + 1);
+        if (etapa < rows.length - 1) mostrarEtapa(etapa + 1);
     });
 
     backBtn.addEventListener("click", () => {
@@ -560,11 +571,12 @@ import {
 
         // Revalida as etapas anteriores (garante que nada ficou vazio)
         for (let i = 0; i < rows.length - 1; i++) {
+            mostrarEtapa(i);
             if (!validarEtapa(i)) {
-                mostrarEtapa(i);
                 return;
             }
         }
+        mostrarEtapa(rows.length - 1);
 
         const usuario = {
             cpf: somenteNumeros(cpf.value),
@@ -737,12 +749,7 @@ import {
         document.body.style.overflow = "";
 
         // Limpa o formulário e volta para a primeira etapa
-        formCadastro.reset();
-        resetarGenero();
-        mostrarEtapa(0);
-
-        nivelSenha.style.width = "0%";
-        textoSeguranca.textContent = "Digite uma senha";
+        resetarCadastroCompleto();
 
         // Volta para o painel de login (o login.js cuida da animação)
         document.getElementById("goLogin").click();

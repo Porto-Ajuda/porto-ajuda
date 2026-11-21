@@ -3,7 +3,10 @@ import { urlImagemSegura } from "./ong-content.js";
 import { fetchAutenticado } from "./api.js";
 import { campaignMoney } from "./campaign-money.js";
 import { createCampaignDonationDialog } from "./campaign-donation-dialog.js";
-import { distanceKm, geocodingFailureMessage, parseCatalogLocation, validCatalogCoordinates } from "./catalog-location.js";
+import { distanceKm, geocodingFailureMessage, matchesCatalogLocation, parseCatalogLocation, validCatalogCoordinates } from "./catalog-location.js";
+import { CAUSE_TAXONOMY, causeCategoriesForNgo, causeLabel } from "./cause-taxonomy.js";
+import { ready as personalizationReady, orderNgoRecommendations } from "./recommendation-personalization.js";
+import { restoreNgoOrder } from "./recommendation-model.js";
 
 function normalizeLegacyDonationUrl() {
   if (location.pathname !== "/doacao-ong") return;
@@ -34,7 +37,7 @@ const $ = id => document.getElementById(id);
 const PAGE_SIZE = 6;
 const API_PAGE_SIZE = 24;
 const MAX_RECORDS = 120;
-const causes = ["EDUCACAO", "SAUDE", "MEIO_AMBIENTE", "ANIMAIS", "INCLUSAO_SOCIAL", "ESPORTE", "CULTURA", "COMBATE_POBREZA"];
+const causes = CAUSE_TAXONOMY;
 let sourceItems = [];
 let resultItems = [];
 let resultPage = 0;
@@ -48,6 +51,41 @@ let sourceNextPage = 0;
 let sourceTotalPages = 0;
 let sourceTotalElements = 0;
 const campaignDialog = createCampaignDonationDialog();
+const ORDER_KEY_PREFIX = "portoAjudaCatalogoOngOrder:v1:";
+let currentRecommendationEntry = null;
+const recommendationOrderMemory = new Map();
+
+function createEntryKey() {
+  return globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+function ensureEntryKey() {
+  const current = history.state && typeof history.state === "object" ? history.state : {};
+  if (current.paRecommendationKey) return current.paRecommendationKey;
+  const key = createEntryKey();
+  history.replaceState({ ...current, paRecommendationKey: key }, "", location.href);
+  return key;
+}
+function saveRecommendationOrder(fingerprint, items) {
+  if (!currentRecommendationEntry) currentRecommendationEntry = ensureEntryKey();
+  const value = { fingerprint, ids: items.map(item => String(item.id)) };
+  recommendationOrderMemory.set(currentRecommendationEntry, value);
+  try {
+    sessionStorage.setItem(`${ORDER_KEY_PREFIX}${currentRecommendationEntry}`, JSON.stringify(value));
+    const keys = Object.keys(sessionStorage).filter(key => key.startsWith(ORDER_KEY_PREFIX));
+    for (const old of keys.slice(0, Math.max(0, keys.length - 12))) sessionStorage.removeItem(old);
+  } catch { /* same-view memory still keeps the order stable */ }
+  const state = history.state && typeof history.state === "object" ? history.state : {};
+  history.replaceState({ ...state, paRecommendationKey: currentRecommendationEntry }, "", location.href);
+}
+function readRecommendationOrder(fingerprint) {
+  if (!currentRecommendationEntry) currentRecommendationEntry = ensureEntryKey();
+  let value = recommendationOrderMemory.get(currentRecommendationEntry) || null;
+  if (!value) {
+    try { value = JSON.parse(sessionStorage.getItem(`${ORDER_KEY_PREFIX}${currentRecommendationEntry}`) || "null"); } catch { value = null; }
+  }
+  return value?.fingerprint === fingerprint && Array.isArray(value.ids) ? value.ids : null;
+}
+if (config.kind === "ongs") currentRecommendationEntry = ensureEntryKey();
 
 function text(value) { return String(value ?? "").trim(); }
 function norm(value) { return text(value).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("pt-BR"); }
@@ -77,14 +115,17 @@ function setUpPage() {
   $("catalogo-filtro-a-label").firstChild.textContent = config.kind === "ongs" ? "Causa social" : config.kind === "volunteer" ? "Modalidade" : "Causa social";
   const filter = $("catalogo-filtro-a");
   filter.replaceChildren(new Option(config.kind === "volunteer" ? "Todas as modalidades" : "Todas as causas", ""));
-  const choices = config.kind === "volunteer" ? [["PRESENCIAL", "Presencial"], ["REMOTO", "Remoto"], ["HIBRIDO", "Híbrido"]] : causes.map(value => [value, value.replaceAll("_", " ").toLocaleLowerCase("pt-BR")]);
+  const choices = config.kind === "volunteer" ? [["PRESENCIAL", "Presencial"], ["REMOTO", "Remoto"], ["HIBRIDO", "Híbrido"]] : causes.map(item => [item.id, item.label]);
   choices.forEach(([value, label]) => filter.add(new Option(label, value)));
   if (config.kind === "posts" || config.kind === "volunteer") {
     $("catalogo-ong-label").hidden = false;
     $("catalogo-data-inicio-label").hidden = false;
     $("catalogo-data-fim-label").hidden = false;
   }
-  if (config.kind === "ongs") $("catalogo-ods-label").hidden = false;
+  if (config.kind === "ongs") {
+    $("catalogo-ods-label").hidden = false;
+    $("catalogo-ordem").add(new Option("Para você", "para-voce"));
+  }
   if (config.kind === "volunteer") $("catalogo-vagas-label").hidden = false;
   const stateSelect = $("catalogo-estado");
   for (const [uf, name] of [["AC","Acre"],["AL","Alagoas"],["AP","Amapá"],["AM","Amazonas"],["BA","Bahia"],["CE","Ceará"],["DF","Distrito Federal"],["ES","Espírito Santo"],["GO","Goiás"],["MA","Maranhão"],["MT","Mato Grosso"],["MS","Mato Grosso do Sul"],["MG","Minas Gerais"],["PA","Pará"],["PB","Paraíba"],["PR","Paraná"],["PE","Pernambuco"],["PI","Piauí"],["RJ","Rio de Janeiro"],["RN","Rio Grande do Norte"],["RS","Rio Grande do Sul"],["RO","Rondônia"],["RR","Roraima"],["SC","Santa Catarina"],["SP","São Paulo"],["SE","Sergipe"],["TO","Tocantins"]]) stateSelect.add(new Option(`${name} (${uf})`, uf));
@@ -103,10 +144,12 @@ function hydrateFiltersFromUrl() {
   $("catalogo-estado").value = params.get("estado") || "";
   $("catalogo-distancia").value = params.get("distancia") || "10";
   $("catalogo-ordem").value = params.get("ordem") || "recentes";
+  if (config.kind === "ongs" && !["recentes", "relevancia", "nome", "para-voce"].includes($("catalogo-ordem").value)) $("catalogo-ordem").value = "recentes";
   $("catalogo-data-inicio").value = params.get("de") || "";
   $("catalogo-data-fim").value = params.get("ate") || "";
   $("catalogo-ods").value = params.get("ods") || "";
   $("catalogo-vagas").value = params.get("vagas") || "0";
+  resultPage = Math.max(0, Number.parseInt(params.get("page") || "0", 10) || 0);
 }
 function apiPage(page) {
   const url = new URL(config.endpoint, API);
@@ -123,7 +166,13 @@ async function loadBounded() {
   sourceNextPage = 0;
   sourceTotalPages = 0;
   sourceTotalElements = 0;
-  setStatus("Carregando conteúdo público…");
+  const fullRecommendationPool = config.kind === "ongs" && $("catalogo-ordem").value === "para-voce";
+  if (fullRecommendationPool) {
+    $("catalogo-grade").replaceChildren();
+    $("catalogo-resultados").hidden = true;
+    $("catalogo-descobertas").hidden = true;
+  }
+  setStatus(fullRecommendationPool ? "Carregando todas as ONGs públicas para ordenar suas sugestões…" : "Carregando conteúdo público…");
   $("catalogo-repetir").hidden = true;
   $("catalogo-carregar-mais").hidden = true;
   try {
@@ -144,16 +193,25 @@ async function loadBounded() {
     sourceTotalPages = Number(first.totalPages) || 1;
     sourceTotalElements = Number(first.totalElements) || all.length;
     sourceNextPage = 1;
-    const batchLimit = Math.ceil(MAX_RECORDS / API_PAGE_SIZE);
+    const batchLimit = fullRecommendationPool ? sourceTotalPages : Math.ceil(MAX_RECORDS / API_PAGE_SIZE);
     for (let page = 1; page < Math.min(sourceTotalPages, batchLimit); page += 1) {
       const next = await apiPage(page);
       all.push(...(next.content || []));
       sourceNextPage = page + 1;
-      if (all.length >= MAX_RECORDS || !(next.content || []).length) break;
+      if ((!fullRecommendationPool && all.length >= MAX_RECORDS) || !(next.content || []).length) break;
     }
     if (version !== requestVersion) return;
-    sourceItems = all.slice(0, MAX_RECORDS);
-    $("catalogo-carregar-mais").hidden = sourceNextPage >= sourceTotalPages || sourceItems.length >= sourceTotalElements;
+    if (fullRecommendationPool) {
+      sourceItems = [...new Map(all.filter(item => item?.status === "ATIVA" && item.arquivada !== true && item.id != null)
+        .map(item => [String(item.id), item])).values()];
+      if (sourceItems.length !== sourceTotalElements) throw new Error("A lista pública mudou enquanto era carregada; recarregue antes de personalizar a ordenação.");
+      sourceNextPage = sourceTotalPages;
+      $("catalogo-carregar-mais").hidden = true;
+      await personalizationReady();
+    } else {
+      sourceItems = [...new Map(all.slice(0, MAX_RECORDS).map(item => [String(item?.id ?? item?.idPost ?? JSON.stringify(item)), item])).values()];
+      $("catalogo-carregar-mais").hidden = sourceNextPage >= sourceTotalPages || sourceItems.length >= sourceTotalElements;
+    }
     if (config.kind === "posts") {
       $("catalogo-filtro-a").value = params.get("filtro") || "";
       const select = $("catalogo-ong");
@@ -207,36 +265,46 @@ function setStatus(value) { $("catalogo-status").textContent = value; }
 function searchable(item) {
   if (config.kind === "donations") return [item.title,item.description,item.ngoName].join(" ");
   return config.kind === "ongs"
-    ? [item.nome, item.cidade, item.estado, item.causaPrincipal, ...(item.causas || []), ...(item.causasSecundarias || []), ...(item.ods || []).map(String)].join(" ")
-    : [item.titulo, item.conteudo, item.nomeOsc, item.causaPrincipalOsc, item.cidadeOsc, item.estadoOsc, item.tipo, item.vaga?.cidade, item.vaga?.bairro, item.vaga?.modalidadeVoluntariado, item.vaga?.requisitos].join(" ");
+    ? [item.nome, item.cidade, item.estado, ...causeCategoriesForNgo(item).map(causeLabel), ...(item.ods || []).map(String)].join(" ")
+    : [item.titulo, item.conteudo, item.nomeOsc, ...causeCategoriesForNgo({ causaPrincipal: item.causaPrincipalOsc }).map(causeLabel), item.cidadeOsc, item.estadoOsc, item.tipo, item.vaga?.cidade, item.vaga?.bairro, item.vaga?.modalidadeVoluntariado, item.vaga?.requisitos].join(" ");
 }
 function matchesFilter(item, term, selected, local) {
   if (term && !norm(searchable(item)).includes(term)) return false;
   if (config.kind === "donations") return item.state === "ACTIVE";
   if (selected) {
     if (config.kind === "volunteer" && item.vaga?.modalidadeVoluntariado !== selected) return false;
-    if (config.kind === "ongs" && ![item.causaPrincipal, ...(item.causas || []), ...(item.causasSecundarias || [])].includes(selected)) return false;
-    if (config.kind === "posts" && item.causaPrincipalOsc !== selected) return false;
+    if (config.kind === "ongs" && !causeCategoriesForNgo(item).includes(selected)) return false;
+    if (config.kind === "posts" && !causeCategoriesForNgo({ causaPrincipal: item.causaPrincipalOsc }).includes(selected)) return false;
   }
   if ($("catalogo-ong").value && item.nomeOsc !== $("catalogo-ong").value) return false;
   if (config.kind === "ongs" && $("catalogo-ods").value && !(item.ods || []).includes(Number($("catalogo-ods").value))) return false;
   if (config.kind === "volunteer" && Number(item.vaga?.quantidadeVagas || 0) < Number($("catalogo-vagas").value || 0)) return false;
-  if (local) {
-    const place = config.kind === "ongs" ? [item.cidade, item.estado, item.pais].join(" ") : [item.vaga?.cidade || item.cidadeOsc, item.vaga?.bairro, item.estadoOsc].join(" ");
-    const remoto = config.kind === "volunteer" && item.vaga?.modalidadeVoluntariado === "REMOTO";
-    if (!remoto && !norm(place).includes(local)) return false;
-  }
   const date = periodDate(item);
   if ($("catalogo-data-inicio").value && date < new Date(`${$("catalogo-data-inicio").value}T00:00:00`).getTime()) return false;
   if ($("catalogo-data-fim").value && date > new Date(`${$("catalogo-data-fim").value}T23:59:59`).getTime()) return false;
-  if (locationPoint && (config.kind === "ongs" || config.kind === "posts")) {
-    const latitude = Number(config.kind === "ongs" ? item.latitude : item.latitudeOsc);
-    const longitude = Number(config.kind === "ongs" ? item.longitude : item.longitudeOsc);
-    const coordinates = validCatalogCoordinates(latitude, longitude);
-    if (!coordinates) return false;
-    if (distanceKm(locationPoint, coordinates) > Number($("catalogo-distancia").value)) return false;
-  }
+  const place = config.kind === "ongs"
+    ? [item.cidade, item.estado, item.pais].join(" ")
+    : [item.vaga?.cidade || item.cidadeOsc, item.vaga?.bairro, item.estadoOsc].join(" ");
+  if (!matchesCatalogLocation({
+    kind: config.kind,
+    local,
+    place: norm(place),
+    remote: config.kind === "volunteer" && item.vaga?.modalidadeVoluntariado === "REMOTO",
+    origin: locationPoint,
+    latitude: config.kind === "ongs" ? item.latitude : item.latitudeOsc,
+    longitude: config.kind === "ongs" ? item.longitude : item.longitudeOsc,
+    radiusKm: $("catalogo-distancia").value
+  })) return false;
   return true;
+}
+function salvarFiltrosNaHistorico(order = $("catalogo-ordem").value) {
+  const url = new URL(location.href);
+  for (const [key, value] of [["q", $("catalogo-termo").value.trim()], ["filtro", $("catalogo-filtro-a").value], ["ong", $("catalogo-ong").value], ["ods", $("catalogo-ods").value], ["vagas", $("catalogo-vagas").value === "0" ? "" : $("catalogo-vagas").value], ["local", locationSource.startsWith("current") ? "atual" : locationLabel], ["estado", locationSource.startsWith("current") ? "" : locationState], ["distancia", locationSource.startsWith("current") || (locationSource === "manual" && locationPoint && config.kind !== "volunteer") ? $("catalogo-distancia").value : ""], ["ordem", order], ["de", $("catalogo-data-inicio").value], ["ate", $("catalogo-data-fim").value]]) value ? url.searchParams.set(key, value) : url.searchParams.delete(key);
+  url.searchParams.delete("page");
+  currentRecommendationEntry = config.kind === "ongs" ? createEntryKey() : currentRecommendationEntry;
+  history.pushState({ paRecommendationKey: currentRecommendationEntry }, "", url);
+  params = new URLSearchParams(url.search);
+  return url;
 }
 function applyFilters(updateUrl = true) {
   const term = norm($("catalogo-termo").value);
@@ -244,7 +312,21 @@ function applyFilters(updateUrl = true) {
   const local = norm([locationCity, locationState].filter(Boolean).join(" "));
   resultItems = sourceItems.filter(item => matchesFilter(item, term, selected, local));
   const order = $("catalogo-ordem").value;
-  if (config.kind !== "donations") resultItems.sort((a, b) => {
+  let recommendationFingerprint = null;
+  if (config.kind === "ongs" && order === "para-voce") {
+    recommendationFingerprint = JSON.stringify({
+      ids: resultItems.map(item => String(item.id)).sort(), term, selected,
+      ngo: $("catalogo-ong").value, ods: $("catalogo-ods").value, local,
+      from: $("catalogo-data-inicio").value, to: $("catalogo-data-fim").value
+    });
+    const savedIds = updateUrl ? null : readRecommendationOrder(recommendationFingerprint);
+    if (savedIds) {
+      resultItems = restoreNgoOrder(resultItems, savedIds);
+    } else {
+      resultItems = orderNgoRecommendations(resultItems);
+      if (!updateUrl) saveRecommendationOrder(recommendationFingerprint, resultItems);
+    }
+  } else if (config.kind !== "donations") resultItems.sort((a, b) => {
     if (order === "nome") return text(a.nome).localeCompare(text(b.nome), "pt-BR");
     if (order === "relevancia" && term) {
       const titleA = norm(a.nome || a.titulo), titleB = norm(b.nome || b.titulo);
@@ -261,10 +343,10 @@ function applyFilters(updateUrl = true) {
     }
     return itemDate(b) - itemDate(a);
   });
-  resultPage = 0;
+  resultPage = updateUrl ? 0 : Math.max(0, Number.parseInt(params.get("page") || "0", 10) || 0);
   if (updateUrl) {
-    const url = new URL(location.href);
     if (config.kind === "donations") {
+      const url = new URL(location.href);
       const campaignId = url.searchParams.get("campanha");
       const amount = url.searchParams.get("valorCentavos");
       url.search = "";
@@ -278,8 +360,8 @@ function applyFilters(updateUrl = true) {
       atualizarIndicadorLocal();
       return;
     }
-    for (const [key, value] of [["q", $("catalogo-termo").value.trim()], ["filtro", selected], ["ong", $("catalogo-ong").value], ["ods", $("catalogo-ods").value], ["vagas", $("catalogo-vagas").value === "0" ? "" : $("catalogo-vagas").value], ["local", locationSource.startsWith("current") ? "atual" : locationLabel], ["estado", locationSource.startsWith("current") ? "" : locationState], ["distancia", locationSource.startsWith("current") || (locationSource === "manual" && locationPoint && config.kind !== "volunteer") ? $("catalogo-distancia").value : ""], ["ordem", order], ["de", $("catalogo-data-inicio").value], ["ate", $("catalogo-data-fim").value]]) value ? url.searchParams.set(key, value) : url.searchParams.delete(key);
-    history.pushState({}, "", url);
+    salvarFiltrosNaHistorico(order);
+    if (recommendationFingerprint) saveRecommendationOrder(recommendationFingerprint, resultItems);
   }
   renderResultPage();
   renderDiscoveryRows();
@@ -318,7 +400,8 @@ function createCard(item) {
   else { const fallback = document.createElement("span"); fallback.className = "catalogo-card-fallback"; fallback.textContent = isNgo ? "ONG parceira" : text(item.titulo) || "Conteúdo público"; media.append(fallback); }
   const info = document.createElement("div"); info.className = "catalogo-card-info";
   const title = document.createElement("strong"); title.textContent = isNgo ? text(item.nome) : text(item.titulo) || "Conteúdo público"; info.append(title);
-  const sub = document.createElement("span"); sub.textContent = isNgo ? [item.causaPrincipal?.replaceAll("_", " "), item.cidade, item.estado].filter(Boolean).join(" · ") : [item.nomeOsc, config.kind === "posts" ? item.causaPrincipalOsc?.replaceAll("_", " ") : ""].filter(Boolean).join(" · "); info.append(sub);
+  const itemCause = causeCategoriesForNgo(isNgo ? item : { causaPrincipal: item.causaPrincipalOsc })[0];
+  const sub = document.createElement("span"); sub.textContent = isNgo ? [itemCause ? causeLabel(itemCause) : "", item.cidade, item.estado].filter(Boolean).join(" · ") : [item.nomeOsc, config.kind === "posts" && itemCause ? causeLabel(itemCause) : ""].filter(Boolean).join(" · "); info.append(sub);
   if (config.kind === "volunteer" && item.vaga) {
     const details = document.createElement("span"); details.textContent = [item.vaga.modalidadeVoluntariado?.replaceAll("_", " "), item.vaga.cidade || item.cidadeOsc, item.vaga.quantidadeVagas > 0 ? `${item.vaga.quantidadeVagas} vagas` : "", item.vaga.dataFim ? `até ${new Date(`${item.vaga.dataFim}T00:00:00`).toLocaleDateString("pt-BR")}` : ""].filter(Boolean).join(" · "); info.append(details);
   } else if (!isNgo && item.dataCriacao) { const date = document.createElement("time"); date.dateTime = item.dataCriacao; date.textContent = new Date(item.dataCriacao).toLocaleDateString("pt-BR"); info.append(date); }
@@ -337,6 +420,7 @@ function renderResultPage() {
     ? (filtered ? `Vaquinhas encontradas (${resultItems.length})` : "Vaquinhas ativas")
     : filtered ? `Resultados (${resultItems.length})` : "Conteúdo recente";
   const totalPages = Math.ceil(resultItems.length / PAGE_SIZE);
+  if (totalPages > 0 && resultPage >= totalPages) resultPage = totalPages - 1;
   $("catalogo-pagina").textContent = totalPages ? `Página ${resultPage + 1} de ${totalPages}` : "";
   $("catalogo-anterior").disabled = resultPage <= 0;
   $("catalogo-proximo").disabled = resultPage + 1 >= totalPages;
@@ -349,6 +433,8 @@ function renderResultPage() {
       description.textContent = $("catalogo-termo").value.trim() ? "Tente outro termo para encontrar uma campanha." : "As campanhas aparecerão aqui quando estiverem ativas e disponíveis para o público.";
     }
     setStatus("");
+  } else if (config.kind === "ongs" && $("catalogo-ordem").value === "para-voce") {
+    setStatus(resultItems.length ? `Sugestões personalizadas entre todas as ${sourceItems.length} ONGs públicas carregadas.` : "Nenhuma ONG pública corresponde às causas e filtros escolhidos.");
   } else setStatus(resultItems.length ? `Exibindo ${resultItems.length} resultados entre ${sourceItems.length} itens públicos carregados de ${sourceTotalElements}.` : "Nenhum resultado corresponde aos filtros escolhidos.");
 }
 
@@ -368,22 +454,37 @@ function row(title, records) {
 }
 function renderDiscoveryRows() {
   const root = $("catalogo-descobertas"); root.replaceChildren();
-  if (config.kind === "donations") { root.hidden = true; return; }
+  if (config.kind === "donations" || (config.kind === "ongs" && $("catalogo-ordem").value === "para-voce")) { root.hidden = true; return; }
   if ($("catalogo-termo").value || $("catalogo-filtro-a").value || $("catalogo-ong").value || $("catalogo-ods").value || Number($("catalogo-vagas").value) || locationPoint || (locationSource === "manual" && config.kind === "volunteer") || $("catalogo-data-inicio").value || $("catalogo-data-fim").value) { root.hidden = true; return; }
   root.hidden = false;
   const recent = [...sourceItems].sort((a, b) => itemDate(b) - itemDate(a));
   const rows = [row("Mais recentes", recent)];
   if (config.kind === "ongs") {
-    const set = new Set(sourceItems.map(item => item.causaPrincipal).filter(Boolean));
-    for (const cause of [...set].slice(0, 4)) rows.push(row(`Por causa · ${cause.replaceAll("_", " ").toLocaleLowerCase("pt-BR")}`, sourceItems.filter(item => item.causaPrincipal === cause)));
+    for (const cause of CAUSE_TAXONOMY) {
+      const matches = sourceItems.filter(item => causeCategoriesForNgo(item).includes(cause.id));
+      if (matches.length) rows.push(row(`Por causa · ${cause.label}`, matches));
+    }
     if (locationPoint) rows.push(row("Perto de você", resultItems));
   } else if (config.kind === "volunteer") {
     for (const modality of ["PRESENCIAL", "HIBRIDO", "REMOTO"]) rows.push(row(`Por modalidade · ${modality.toLocaleLowerCase("pt-BR")}`, sourceItems.filter(item => item.vaga?.modalidadeVoluntariado === modality)));
   } else if (config.kind === "posts") {
-    const set = new Set(sourceItems.map(item => item.causaPrincipalOsc).filter(Boolean));
-    for (const cause of [...set].slice(0, 4)) rows.push(row(`Por causa · ${cause.replaceAll("_", " ").toLocaleLowerCase("pt-BR")}`, sourceItems.filter(item => item.causaPrincipalOsc === cause)));
+    for (const cause of CAUSE_TAXONOMY) {
+      const matches = sourceItems.filter(item => causeCategoriesForNgo({ causaPrincipal: item.causaPrincipalOsc }).includes(cause.id));
+      if (matches.length) rows.push(row(`Por causa · ${cause.label}`, matches));
+    }
   }
   rows.filter(Boolean).forEach(section => root.append(section));
+}
+
+function navegarPaginaResultados(nextPage) {
+  const totalPages = Math.ceil(resultItems.length / PAGE_SIZE);
+  if (!Number.isInteger(nextPage) || nextPage < 0 || nextPage >= totalPages || nextPage === resultPage) return;
+  resultPage = nextPage;
+  const url = new URL(location.href);
+  url.searchParams.set("page", String(resultPage));
+  history.pushState({ ...(history.state || {}), paRecommendationKey: currentRecommendationEntry }, "", url);
+  params = new URLSearchParams(url.search);
+  renderResultPage();
 }
 async function resolveLocation(raw, chosenState = "") {
   let parsed = parseCatalogLocation(raw, chosenState);
@@ -536,8 +637,15 @@ function bind() {
   });
   $("catalogo-repetir").addEventListener("click", () => void loadBounded());
   $("catalogo-carregar-mais").addEventListener("click", () => void loadMoreBounded());
-  $("catalogo-anterior").addEventListener("click", () => { resultPage -= 1; renderResultPage(); });
-  $("catalogo-proximo").addEventListener("click", () => { resultPage += 1; renderResultPage(); });
+  $("catalogo-anterior").addEventListener("click", () => navegarPaginaResultados(resultPage - 1));
+  $("catalogo-proximo").addEventListener("click", () => navegarPaginaResultados(resultPage + 1));
+  $("catalogo-ordem").addEventListener("change", () => {
+    if (config.kind === "ongs" && $("catalogo-ordem").value === "para-voce") {
+      resultPage = 0;
+      salvarFiltrosNaHistorico("para-voce");
+      void loadBounded();
+    } else applyFilters(true);
+  });
   $("catalogo-distancia").addEventListener("change", () => applyFilters());
   $("catalogo-usar-localizacao").addEventListener("click", () => {
     if (!navigator.geolocation) { $("catalogo-local-status").textContent = "Este navegador não oferece localização."; return; }
@@ -561,9 +669,13 @@ function bind() {
   });
   $("catalogo-remover-localizacao").addEventListener("click", () => limparLocalizacao());
   $("catalogo-usar-cep").addEventListener("click", () => void usarCepCadastrado());
-  window.addEventListener("popstate", () => {
+  window.addEventListener("popstate", event => {
     if (config.kind === "donations") return;
     const current = new URLSearchParams(location.search);
+    params = current;
+    currentRecommendationEntry = config.kind === "ongs"
+      ? event.state?.paRecommendationKey || history.state?.paRecommendationKey || createEntryKey()
+      : currentRecommendationEntry;
     $("catalogo-termo").value = current.get("q") || "";
     $("catalogo-filtro-a").value = current.get("filtro") || "";
     $("catalogo-ong").value = current.get("ong") || "";
@@ -573,6 +685,7 @@ function bind() {
     $("catalogo-data-inicio").value = current.get("de") || "";
     $("catalogo-data-fim").value = current.get("ate") || "";
     $("catalogo-distancia").value = current.get("distancia") || "10";
+    resultPage = Math.max(0, Number.parseInt(current.get("page") || "0", 10) || 0);
     if (current.get("local") === "atual") {
       locationPoint = null;
       locationCity = "";

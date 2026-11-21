@@ -31,16 +31,28 @@ if (!document.getElementById("support-assistant-launcher")) {
           <button type="button" id="support-retry-ai" hidden>Tentar novamente</button>
           <button type="button" id="support-resume-ai" hidden>Continuar com Sophie</button>
           <button type="button" id="support-voice-mode" aria-pressed="false">Ativar assistência por voz</button>
+          <button type="button" id="support-secure-forms-toggle" aria-expanded="false" aria-controls="support-secure-forms">Cadastros protegidos</button>
+          <a id="support-my-account" href="/perfil" hidden>Minha conta</a>
           <button type="button" id="support-reopen" hidden>Reabrir conversa</button>
           <button type="button" id="support-close-conversation" hidden>Encerrar conversa</button>
           <button type="button" id="support-history" aria-expanded="false" aria-controls="support-conversation-list">Histórico</button>
         </div>
+        <section class="support-secure-forms" id="support-secure-forms" aria-label="Formulários protegidos do Porto Ajuda" hidden>
+          <div class="support-secure-forms__header"><strong id="support-secure-forms-title">Seus dados ficam no formulário oficial</strong><button type="button" id="support-secure-forms-close">Voltar à conversa</button></div>
+          <p id="support-secure-forms-notice">Preencha os campos diretamente nos formulários existentes. Senhas, documentos e códigos não são enviados à Sophie nem gravados no histórico desta conversa.</p>
+          <div class="support-secure-forms__choices" id="support-secure-forms-choices">
+            <button type="button" id="support-form-user" data-support-form="/login#cadastro">Criar conta de usuário</button>
+            <button type="button" id="support-form-ngo" data-support-form="/cadastro-osc">Cadastrar uma ONG</button>
+          </div>
+          <iframe id="support-secure-forms-frame" title="Formulário oficial de cadastro" hidden></iframe>
+        </section>
         <div class="support-messages" id="support-messages" role="log" aria-live="polite" aria-relevant="additions text" tabindex="0">
           <section class="support-conversation-list" id="support-conversation-list" hidden aria-label="Conversas anteriores">
             <div class="support-history__header"><strong>Histórico</strong><button type="button" id="support-history-close" aria-label="Fechar histórico">Fechar</button></div>
             <div id="support-history-items"></div>
           </section>
           <div id="support-message-stream"></div>
+          <section id="support-action-previews" class="support-action-previews" aria-label="Ações para revisar" aria-live="polite"></section>
         </div>
         <p class="support-status" id="support-feedback" role="status" aria-live="polite"></p>
         <section id="support-new-confirm" class="support-new-confirm" role="alertdialog" aria-modal="true" aria-labelledby="support-new-confirm-title" aria-describedby="support-new-confirm-description" hidden>
@@ -94,6 +106,7 @@ const statusLabel = document.getElementById("support-status");
 const feedback = document.getElementById("support-feedback");
 const messagesEl = document.getElementById("support-messages");
 const messageStream = document.getElementById("support-message-stream");
+const actionPreviews = document.getElementById("support-action-previews");
 const form = document.getElementById("support-form");
 const compose = document.getElementById("support-message");
 const sendButton = document.getElementById("support-send");
@@ -114,6 +127,11 @@ const infoToggle = document.getElementById("support-info-toggle");
 const infoPopover = document.getElementById("support-info");
 const humanConfirm = document.getElementById("support-human-confirm");
 const voiceModeButton = document.getElementById("support-voice-mode");
+const secureFormsToggle = document.getElementById("support-secure-forms-toggle");
+const secureForms = document.getElementById("support-secure-forms");
+const secureFormsFrame = document.getElementById("support-secure-forms-frame");
+const secureFormsChoices = document.getElementById("support-secure-forms-choices");
+const myAccountLink = document.getElementById("support-my-account");
 const voiceOnboarding = document.getElementById("support-voice-onboarding");
 const voiceSettings = document.getElementById("support-voice-settings");
 const voiceControls = document.getElementById("support-voice-controls");
@@ -125,6 +143,8 @@ let historyLoaded = false;
 let historyRows = [];
 let busy = false;
 let unreadConversationIds = new Set();
+let actionPreviewRequest = 0;
+const busyActionDrafts = new Set();
 let pendingMessageBody = null;
 let pendingMessageKey = null;
 let pendingStartConversationId = null;
@@ -250,7 +270,7 @@ function readableLinks(message) {
   const body = document.createElement("p");
   body.className = "support-message__body";
   const lines = String(message.body || "").split("\n");
-  const allowed = /^\/(?:ong-profile\?id=\d+(?:#[\w-]+)?|catalogo\?categoria=(?:ongs|publicacoes|voluntariado|doacoes)(?:&filtro=[A-Z_]+)?|login(?:#recuperacao-senha)?|perfil|pages\/cadastro-osc\.html)$/;
+  const allowed = /^\/(?:ong-profile\?id=\d+(?:#[\w-]+)?|catalogo\?categoria=(?:ongs|publicacoes|voluntariado|doacoes)(?:&filtro=[A-Z_]+)?|catalogo\?categoria=doacoes&campanha=\d+|login(?:#recuperacao-senha)?|perfil|pages\/cadastro-osc\.html)$/;
   lines.forEach((line, lineIndex) => {
     if (message.senderType === "AI") {
       const pattern = /\[([^\]]{1,120})\]\((\/[^)\s]{1,300})\)/g;
@@ -336,7 +356,89 @@ function renderConversation(data) {
   sendButton.disabled = busy || data.state === "CLOSED";
   updateComposerControls();
   renderHistoryRows(historyRows);
+  void refreshVolunteerApplicationDrafts(data.id, data.state);
   startPolling();
+}
+
+async function refreshVolunteerApplicationDrafts(conversationId, state) {
+  const requestNumber = ++actionPreviewRequest;
+  actionPreviews.replaceChildren();
+  if (!conversationId || !authenticated || state === "CLOSED") return;
+  try {
+    const drafts = await request(`/support-assistant/conversations/${encodeURIComponent(conversationId)}/volunteer-application-drafts`);
+    if (requestNumber !== actionPreviewRequest || currentConversation?.id !== conversationId) return;
+    for (const draft of Array.isArray(drafts) ? drafts : []) renderVolunteerApplicationDraft(draft, state);
+  } catch (error) {
+    if (requestNumber !== actionPreviewRequest || currentConversation?.id !== conversationId) return;
+    if (error.message !== "AUTH_REQUIRED") {
+      const status = document.createElement("p");
+      status.className = "support-action-previews__error";
+      status.textContent = "Não consegui carregar a prévia da candidatura. Atualize a conversa para tentar novamente.";
+      actionPreviews.append(status);
+    }
+  }
+}
+
+function renderVolunteerApplicationDraft(draft, conversationState) {
+  const card = document.createElement("article");
+  card.className = "support-action-preview";
+  card.dataset.actionDraftId = draft.id;
+  const title = document.createElement("h3"); title.textContent = draft.title || "Oportunidade de voluntariado";
+  const ngo = document.createElement("p"); ngo.className = "support-action-preview__ngo";
+  ngo.textContent = `ONG: ${draft.ngoName || "ONG participante"}`;
+  const details = document.createElement("p"); details.textContent = draft.details || "Confira a oportunidade no perfil público da ONG.";
+  const expires = document.createElement("p"); expires.className = "support-action-preview__expiry";
+  const expirationDate = new Date(draft.expiresAt);
+  expires.textContent = Number.isNaN(expirationDate.valueOf()) ? "Prévia temporária" : `Prévia válida até ${new Intl.DateTimeFormat("pt-BR", { timeStyle: "short" }).format(expirationDate)}.`;
+  const controls = document.createElement("div"); controls.className = "support-action-preview__controls";
+  const confirm = document.createElement("button"); confirm.type = "button"; confirm.className = "support-action-preview__confirm";
+  confirm.textContent = "Confirmar candidatura"; confirm.disabled = conversationState !== "AI_ACTIVE" || busyActionDrafts.has(draft.id);
+  confirm.setAttribute("aria-label", `Confirmar candidatura para ${draft.title || "esta oportunidade"}`);
+  const cancel = document.createElement("button"); cancel.type = "button"; cancel.className = "support-action-preview__cancel";
+  cancel.textContent = "Cancelar prévia"; cancel.disabled = busyActionDrafts.has(draft.id);
+  const note = document.createElement("p"); note.className = "support-action-preview__note"; note.setAttribute("role", "status");
+  note.textContent = conversationState === "AI_ACTIVE" ? "Nada será enviado até você confirmar." : "A equipe está com esta conversa. A candidatura não pode ser confirmada agora.";
+  confirm.addEventListener("click", () => void confirmVolunteerDraft(draft, confirm, cancel, note));
+  cancel.addEventListener("click", () => void cancelVolunteerDraft(draft, confirm, cancel, note));
+  controls.append(confirm, cancel); card.append(title, ngo, details, expires, controls, note); actionPreviews.append(card);
+}
+
+async function confirmVolunteerDraft(draft, confirm, cancel, note) {
+  const conversationId = currentConversation?.id;
+  if (!conversationId || currentConversation.state !== "AI_ACTIVE" || busyActionDrafts.has(draft.id)) return;
+  busyActionDrafts.add(draft.id); confirm.disabled = true; cancel.disabled = true; note.textContent = "Enviando sua candidatura…";
+  try {
+    const result = await request(`/support-assistant/conversations/${encodeURIComponent(conversationId)}/volunteer-application-drafts/${encodeURIComponent(draft.id)}/confirm`, {
+      method: "POST", body: { requestHash: draft.requestHash }
+    });
+    if (currentConversation?.id !== conversationId) return;
+    note.textContent = result.state === "COMPLETED" ? result.message : "A candidatura não foi confirmada.";
+    feedback.textContent = result.state === "COMPLETED" ? result.message : "Não foi possível confirmar a candidatura.";
+    renderConversation(await request(`/support-assistant/conversations/${encodeURIComponent(conversationId)}`));
+  } catch (error) {
+    note.textContent = error.message || "Não foi possível confirmar. Confira a oportunidade e tente novamente.";
+    feedback.textContent = note.textContent;
+    void refreshVolunteerApplicationDrafts(conversationId, currentConversation?.state);
+  } finally { busyActionDrafts.delete(draft.id); }
+}
+
+async function cancelVolunteerDraft(draft, confirm, cancel, note) {
+  const conversationId = currentConversation?.id;
+  if (!conversationId || busyActionDrafts.has(draft.id)) return;
+  busyActionDrafts.add(draft.id); confirm.disabled = true; cancel.disabled = true;
+  try {
+    const result = await request(`/support-assistant/conversations/${encodeURIComponent(conversationId)}/volunteer-application-drafts/${encodeURIComponent(draft.id)}/cancel`, {
+      method: "POST", body: { requestHash: draft.requestHash }
+    });
+    if (currentConversation?.id !== conversationId) return;
+    note.textContent = result.message || "Rascunho cancelado. Nenhuma candidatura foi enviada.";
+    feedback.textContent = note.textContent;
+    await refreshVolunteerApplicationDrafts(conversationId, currentConversation.state);
+  } catch (error) {
+    note.textContent = error.message || "Não foi possível cancelar esta prévia.";
+    feedback.textContent = note.textContent;
+    confirm.disabled = false; cancel.disabled = false;
+  } finally { busyActionDrafts.delete(draft.id); }
 }
 
 function formatHistoryDate(value) {
@@ -410,6 +512,7 @@ async function loadHistory() {
   try {
     const rows = await request("/support-assistant/conversations");
     authenticated = true;
+    myAccountLink.hidden = false;
     compose.disabled = false;
     newButton.hidden = false;
     sendButton.disabled = !introData?.conversationsEnabled;
@@ -425,6 +528,7 @@ async function loadHistory() {
     historyLoaded = false;
     if (error.message === "AUTH_REQUIRED") {
       authenticated = false; compose.disabled = true; sendButton.disabled = true; newButton.hidden = true;
+      myAccountLink.hidden = true;
       loginLink.hidden = false;
       feedback.textContent = "Entre na sua conta para criar uma conversa persistente e enviar mensagens.";
     }
@@ -601,6 +705,56 @@ function startPolling() {
 }
 
 launcher.addEventListener("click", () => void openPanel());
+function openSecureRegistration(path) {
+  if (!new Set(["/login#cadastro", "/cadastro-osc"]).has(path)) return;
+  secureForms.hidden = false;
+  secureFormsToggle.setAttribute("aria-expanded", "true");
+  messagesEl.hidden = true;
+  form.hidden = true;
+  secureFormsChoices.hidden = true;
+  secureFormsFrame.hidden = false;
+  document.getElementById("support-secure-forms-title").textContent = path === "/cadastro-osc"
+    ? "Cadastro de ONG e verificação" : "Cadastro da sua conta";
+  document.getElementById("support-secure-forms-notice").textContent = path === "/cadastro-osc"
+    ? "O cadastro da ONG exige login e envio de evidências pelos campos protegidos. A análise e a aprovação continuam sendo feitas pela equipe."
+    : "Preencha seus dados e aceite os termos diretamente no formulário oficial. Senhas, documentos e códigos não passam pela conversa.";
+  secureFormsFrame.addEventListener("load", () => {
+    try {
+      const frameDocument = secureFormsFrame.contentDocument;
+      if (!frameDocument?.head || frameDocument.getElementById("support-frame-hide-assistant")) return;
+      const style = frameDocument.createElement("style");
+      style.id = "support-frame-hide-assistant";
+      style.textContent = "#support-assistant-launcher,#support-assistant-panel{display:none!important}";
+      frameDocument.head.append(style);
+      frameDocument.addEventListener("keydown", event => {
+        if (event.key !== "Escape") return;
+        event.preventDefault();
+        closeSecureForms();
+      });
+    } catch { /* The official form still works if frame styling is restricted. */ }
+  }, { once: true });
+  secureFormsFrame.src = path;
+  secureFormsFrame.focus();
+}
+secureFormsToggle.addEventListener("click", () => {
+  secureForms.hidden = false;
+  secureFormsChoices.hidden = false;
+  secureFormsFrame.hidden = true;
+  secureFormsToggle.setAttribute("aria-expanded", "true");
+  messagesEl.hidden = true;
+  form.hidden = true;
+  document.getElementById("support-form-user").focus();
+});
+document.getElementById("support-form-user").addEventListener("click", () => openSecureRegistration("/login#cadastro"));
+document.getElementById("support-form-ngo").addEventListener("click", () => openSecureRegistration("/cadastro-osc"));
+function closeSecureForms() {
+  secureForms.hidden = true;
+  secureFormsToggle.setAttribute("aria-expanded", "false");
+  messagesEl.hidden = false;
+  form.hidden = false;
+  secureFormsToggle.focus();
+}
+document.getElementById("support-secure-forms-close").addEventListener("click", closeSecureForms);
 infoToggle.addEventListener("click", () => { infoPopover.hidden = !infoPopover.hidden; infoToggle.setAttribute("aria-expanded", String(!infoPopover.hidden)); if (!infoPopover.hidden) document.getElementById("support-info-close").focus(); });
 document.getElementById("support-info-close").addEventListener("click", () => { infoPopover.hidden = true; infoToggle.setAttribute("aria-expanded", "false"); infoToggle.focus(); });
 document.addEventListener("click", event => { if (!infoPopover.hidden && !infoPopover.contains(event.target) && event.target !== infoToggle) { infoPopover.hidden = true; infoToggle.setAttribute("aria-expanded", "false"); } });
@@ -632,10 +786,13 @@ dialog.addEventListener("keydown", event => {
   else if (!voiceOnboarding.hidden) { voiceOnboarding.hidden = true; voiceChoiceMade = true; try { voiceStorage()?.setItem(onboardingKey(), "done"); } catch { } voiceModeButton.focus(); }
   else if (!infoPopover.hidden) { infoPopover.hidden = true; infoToggle.setAttribute("aria-expanded", "false"); infoToggle.focus(); }
   else if (!historyList.hidden) { closeHistory(); historyButton.focus(); }
+  else if (!secureForms.hidden) closeSecureForms();
   else dialog.close();
 });
 dialog.addEventListener("close", () => {
   window.clearInterval(pollTimer); pollTimer = null; launcher.setAttribute("aria-expanded", "false"); launcher.focus();
+  secureForms.hidden = true; secureFormsToggle.setAttribute("aria-expanded", "false");
+  messagesEl.hidden = false; form.hidden = false; secureFormsChoices.hidden = false; secureFormsFrame.hidden = true;
   if (currentConversation) currentConversation = { id: currentConversation.id, state: currentConversation.state, version: currentConversation.version, messages: [], unread: currentConversation.unread };
   newConfirm.hidden = true; humanConfirm.hidden = true; voiceOnboarding.hidden = true; voiceSettings.hidden = true; compose.value = "";
   voice.stopDictation(); voice.stopSpeaking(); setVoiceMode(false);

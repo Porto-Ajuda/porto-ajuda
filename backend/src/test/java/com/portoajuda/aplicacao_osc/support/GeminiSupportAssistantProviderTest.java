@@ -68,7 +68,7 @@ class GeminiSupportAssistantProviderTest {
         String structured=mapper.writeValueAsString(Map.of("actions",List.of(
                 Map.of("operation","SEARCH_PUBLIC","category","VOLUNTEERING","query","voluntariado remoto","cause","NONE","city","","topic","NONE","scope","CURRENT_QUERY"),
                 Map.of("operation","OPEN_PAGE","category","NGO","query","","cause","ANIMAIS","city","","topic","NONE","scope","NONE"),
-                Map.of("operation","NONE","category","NONE","query","","cause","NONE","city","","topic","NONE","scope","NONE"),
+                Map.of("operation","SEARCH_PUBLIC","category","CAMPAIGN","query","vaquinhas de animais","cause","ANIMAIS","city","Santos","topic","NONE","scope","CURRENT_QUERY"),
                 Map.of("operation","SEARCH_PUBLIC","category","NGO","query","ignored extra","cause","ANIMAIS","city","","topic","NONE","scope","CURRENT_QUERY")),
                 "clarificationNeeded",false,"clarificationQuestion","","explicitHumanRequest",false,"privacyBoundary",false,"boundaryKind","NONE"));
         String response=mapper.writeValueAsString(Map.of("candidates",List.of(Map.of("content",Map.of("parts",List.of(Map.of("text",structured)))))));
@@ -80,7 +80,37 @@ class GeminiSupportAssistantProviderTest {
         assertEquals(3,plan.capabilities().size());
         assertEquals("VOLUNTEERING",plan.capabilities().getFirst().category());
         assertEquals("voluntariado remoto",plan.capabilities().getFirst().query());
+        assertEquals("CAMPAIGN",plan.capabilities().get(2).category());
         assertFalse(plan.privacyBoundary());
+        server.verify();
+    }
+
+    @Test void proposesOnlyAnUnconfirmedVolunteerApplicationForAnExplicitRequest() throws Exception {
+        var mapper = new ObjectMapper();
+        RestClient.Builder builder = restClientBuilder();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
+        var provider = new GeminiSupportAssistantProvider(builder.build(), budget(), mapper, KEY, MODEL, "Sophie", 12000);
+        String structured = mapper.writeValueAsString(Map.of("actions", List.of(Map.of(
+                "operation", "PREPARE_VOLUNTEER_APPLICATION", "category", "VOLUNTEERING",
+                "query", "Mutirão de acolhimento", "cause", "NONE", "city", "Santos",
+                "topic", "NONE", "scope", "CURRENT_QUERY", "targetId", 71)),
+                "clarificationNeeded", false, "clarificationQuestion", "", "explicitHumanRequest", false,
+                "privacyBoundary", false, "boundaryKind", "NONE"));
+        String response = mapper.writeValueAsString(Map.of("candidates", List.of(Map.of("content",
+                Map.of("parts", List.of(Map.of("text", structured)))))));
+        AtomicReference<String> captured = new AtomicReference<>();
+        server.expect(org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo(
+                        "https://generativelanguage.googleapis.com/v1beta/models/" + MODEL + ":generateContent"))
+                .andExpect(request -> captured.set(((org.springframework.mock.http.client.MockClientHttpRequest) request).getBodyAsString()))
+                .andRespond(org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess(response, MediaType.APPLICATION_JSON));
+
+        var plan = provider.interpret(new SupportAssistantProvider.InterpretationInput(
+                "Quero me candidatar ao Mutirão de acolhimento em Santos.", List.of()));
+
+        assertEquals(1, plan.capabilities().size());
+        assertEquals("PREPARE_VOLUNTEER_APPLICATION", plan.capabilities().getFirst().operation());
+        assertEquals(71, plan.capabilities().getFirst().targetId());
+        assertTrue(captured.get().contains("A capability cria uma prévia que nunca envia a candidatura"));
         server.verify();
     }
 

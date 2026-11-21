@@ -3089,3 +3089,9 @@ body {
         font-size: 26px;
     }
 }
+@media (max-width: 700px) {
+    #painel-acss {
+        padding-bottom: calc(8rem + env(safe-area-inset-bottom, 0px));
+        scroll-padding-bottom: calc(8rem + env(safe-area-inset-bottom, 0px));
+    }
+}

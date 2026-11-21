@@ -80,11 +80,12 @@ public class AdminAuthController {
             @Valid @RequestBody AdminAuthStartRequest request,
             jakarta.servlet.http.HttpServletRequest httpRequest) {
         UUID challengeId = adminAuthenticationService.iniciar(request, clientIpResolver.resolve(httpRequest));
+        boolean smsRequired = adminAuthenticationService.isSmsVerificationEnabled();
         return ResponseEntity.accepted()
                 .cacheControl(CacheControl.noStore())
                 .body(Map.of(
                         "challengeId", challengeId,
-                        "smsRequired", true,
+                        "smsRequired", smsRequired,
                         "mensagem", "Se as credenciais forem elegíveis, os códigos serão enviados ao e-mail e ao telefone cadastrados."));
     }
 

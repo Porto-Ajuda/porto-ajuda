@@ -36,6 +36,62 @@ test("validates coordinates and computes geographic distance", async () => {
     assert.equal(validCatalogCoordinates(NaN, -46.4), null);
 });
 
+test("manual location and browser location apply the same radius across municipalities", async () => {
+    const { distanceKm, matchesCatalogLocation } = await locationModule();
+    const manualPoint = { latitude: -24, longitude: -46.4 };
+    const ngo = { latitude: "-24.05", longitude: "-46.4" };
+    const nearbyDistance = distanceKm(manualPoint, ngo);
+    assert.ok(nearbyDistance < 10);
+    assert.equal(matchesCatalogLocation({
+        kind: "ongs", local: "praia grande sp", place: "sao vicente sao paulo brasil",
+        origin: manualPoint, ...ngo, radiusKm: "10"
+    }), true);
+    assert.equal(matchesCatalogLocation({
+        kind: "ongs", origin: { ...manualPoint }, ...ngo, radiusKm: "10"
+    }), true);
+    assert.equal(matchesCatalogLocation({
+        kind: "ongs", local: "praia grande sp", place: "sao vicente sao paulo brasil",
+        origin: manualPoint, latitude: -24.11, longitude: -46.4, radiusKm: "10"
+    }), false);
+});
+
+test("geographic filters reject invalid or missing coordinates and invalid radii", async () => {
+    const { matchesCatalogLocation } = await locationModule();
+    const filter = { kind: "ongs", origin: { latitude: -24, longitude: -46.4 }, radiusKm: 10 };
+    assert.equal(matchesCatalogLocation({ ...filter, latitude: "invalid", longitude: -46.4 }), false);
+    assert.equal(matchesCatalogLocation({ ...filter, latitude: 0, longitude: undefined }), false);
+    assert.equal(matchesCatalogLocation({ ...filter, latitude: -24, longitude: -46.4, radiusKm: "invalid" }), false);
+    assert.equal(matchesCatalogLocation({ ...filter, latitude: -24, longitude: -46.4, radiusKm: -1 }), false);
+});
+
+test("manual volunteer locality matching and remote opportunities retain their existing behavior", async () => {
+    const { matchesCatalogLocation } = await locationModule();
+    const filter = { kind: "volunteer", local: "praia grande sp", place: "sao vicente sp" };
+    assert.equal(matchesCatalogLocation(filter), false);
+    assert.equal(matchesCatalogLocation({ ...filter, remote: true }), true);
+});
+
+test("manual location URL parameters resolve city, state, and radius before filtering", async () => {
+    const { parseCatalogLocation } = await locationModule();
+    const script = await readFile(resolve(__dirname, "../../public/components/catalogo.js"), "utf8");
+    const params = new URLSearchParams("local=Praia+Grande&estado=SP&distancia=10");
+    assert.deepEqual(parseCatalogLocation(params.get("local"), params.get("estado")), {
+        ok: true, type: "city", city: "Praia Grande", state: "SP"
+    });
+    assert.match(script, /matchesCatalogLocation\(\{/);
+    assert.match(script, /params\.get\("distancia"\)\s*\|\|\s*"10"/);
+    assert.match(script, /await restaurarLocalizacaoDaUrl\(\)/);
+});
+
+test("geocoding failures leave the active location untouched and catalog loading awaits URL restoration", async () => {
+    const script = await readFile(resolve(__dirname, "../../public/components/catalogo.js"), "utf8");
+    const failureBranch = script.indexOf("if (!resolved.ok)");
+    const locationAssignment = script.indexOf("locationPoint = resolved.coordinates");
+    assert.ok(failureBranch >= 0 && locationAssignment > failureBranch);
+    assert.match(script.slice(failureBranch, locationAssignment), /return false;/);
+    assert.match(script, /if \(version !== requestVersion\) return;[\s\S]*?await restaurarLocalizacaoDaUrl\(\)/);
+});
+
 test("geocoding errors distinguish missing route, ambiguous result, and provider failure", async () => {
     const { geocodingFailureMessage } = await locationModule();
     assert.match(geocodingFailureMessage(404), /backend|rota/i);

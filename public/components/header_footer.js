@@ -10,6 +10,7 @@ import {
     obterEstadoSessao
 } from "./auth.js";
 import { montarAvatar, restaurarIconePadrao } from "./avatar.js";
+import "./recommendation-personalization.js";
 
 
 const API_URL = getAPI_URL();

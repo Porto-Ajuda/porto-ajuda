@@ -9,11 +9,13 @@ import static org.mockito.Mockito.when;
 
 import com.portoajuda.aplicacao_osc.service.OscService;
 import com.portoajuda.aplicacao_osc.service.PostService;
+import com.portoajuda.aplicacao_osc.service.DonationCampaignService;
 import com.portoajuda.aplicacao_osc.dto.response.OscListagemDTO;
 import com.portoajuda.aplicacao_osc.enums.CausaSocial;
 import com.portoajuda.aplicacao_osc.enums.StatusOsc;
 import java.util.List;
 import java.util.Set;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -21,6 +23,30 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
 
 class SupportPublicContentSearchTest {
+    @Test void volunteerSearchAndExactResolutionUseTheVacancyIdRatherThanTheLinkedPostId() {
+        OscService ngos = mock(OscService.class);
+        PostService posts = mock(PostService.class);
+        var vacancy = new com.portoajuda.aplicacao_osc.dto.response.VagaConteudoDTO(71, 2,
+                com.portoajuda.aplicacao_osc.enums.ModalidadeVoluntariado.PRESENCIAL, "", "4 horas",
+                "Santos", "Centro", null, null, null, java.time.LocalDate.now(), java.time.LocalDate.now().plusDays(4),
+                com.portoajuda.aplicacao_osc.enums.StatusVaga.ABERTA);
+        var post = new com.portoajuda.aplicacao_osc.dto.response.PostConteudoDTO(81, 11, "Casa Exemplo",
+                CausaSocial.INCLUSAO_SOCIAL, "Santos", "SP", null, null,
+                com.portoajuda.aplicacao_osc.enums.TipoPost.VOLUNTARIADO, true, "Mutirão", "Descrição pública",
+                null, null, null, vacancy, false);
+        when(posts.listarVoluntariadosCatalogo(any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(post)));
+        var search = new SupportPublicContentSearch(ngos, posts);
+
+        var found = search.search("Mutirão", "VOLUNTEERING").getFirst();
+        var exact = search.publicVolunteerOpportunity(71);
+
+        assertEquals("volunteering:71", found.id());
+        assertEquals("volunteering:71", exact.id());
+        assertEquals("Mutirão", exact.title());
+        assertEquals("Casa Exemplo", exact.summary().substring("Oportunidade de ".length(), exact.summary().indexOf(". ")));
+    }
+
     @Test void siteNavigationGuidanceUsesImplementedPublicCatalogRoutes() {
         OscService ngos = mock(OscService.class);
         PostService posts = mock(PostService.class);
@@ -146,6 +172,34 @@ class SupportPublicContentSearchTest {
         assertTrue(search.openPage("https://evil.invalid","NONE","NONE").isEmpty());
         var donationHelp=search.help("DONATIONS").getFirst();
         assertTrue(donationHelp.summary().contains("não inicia pagamentos"));
+    }
+
+    @Test void publicCampaignSearchAndCountUseEligibleCampaignsAndNgoCauseLocation() {
+        OscService ngos = mock(OscService.class);
+        PostService posts = mock(PostService.class);
+        DonationCampaignService campaigns = mock(DonationCampaignService.class);
+        var ngo = new OscListagemDTO(782901, "Abrigo de Santos", null, CausaSocial.ANIMAIS,
+                Set.of(), Set.of(CausaSocial.ANIMAIS), Set.of(), StatusOsc.ATIVA, "Resgate animal", "Conte\u00fado p\u00fablico",
+                null, null, null, "Santos", "SP", "Brasil", 0, 0);
+        when(ngos.viewAll(any(Pageable.class))).thenReturn(new PageImpl<>(List.of(ngo)));
+        when(campaigns.listPublicForAssistant()).thenReturn(List.of(Map.of("id", 31L, "oscId", 782901,
+                "title", "Ajuda para o abrigo", "description", "Racao e cuidados dos animais resgatados",
+                "ngoName", "Abrigo de Santos", "raisedNetCents", 1250L, "goalNetCents", 30000L)));
+        var search = new SupportPublicContentSearch(ngos, posts, campaigns);
+
+        String query = "Quero encontrar vaquinhas para animais em Santos";
+        var results = search.search(query, SupportPublicContentSearch.inferCategory(query));
+        var campaign = results.getFirst();
+        var count = search.count("Quantas vaquinhas de animais em Santos?", "CAMPAIGN", CausaSocial.ANIMAIS, "Santos");
+
+        assertEquals("CAMPAIGN", SupportPublicContentSearch.inferCategory(query));
+        assertEquals("CAMPANHA", campaign.category());
+        assertEquals("/catalogo?categoria=doacoes&campanha=31", campaign.href());
+        String summary = campaign.summary().replace('\u00a0', ' ');
+        assertTrue(summary.contains("R$ 12,50"));
+        assertTrue(summary.contains("R$ 300,00"));
+        assertTrue(count.summary().contains("1 vaquinha p\u00fablica"));
+        assertEquals("/catalogo?categoria=doacoes", count.href());
     }
 
     @Test void currentTurnCauseFallbackDoesNotCarryForwardAnExplicitCorrection() {

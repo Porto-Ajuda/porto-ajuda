@@ -44,6 +44,7 @@ import com.portoajuda.aplicacao_osc.service.AutenticacaoAbusoUsuarioService;
 import com.portoajuda.aplicacao_osc.service.AdminPrivilegedSessionService;
 import com.portoajuda.aplicacao_osc.service.PhoneVerificationService;
 import com.portoajuda.aplicacao_osc.service.OscService;
+import com.portoajuda.aplicacao_osc.service.OscDashboardService;
 import com.portoajuda.aplicacao_osc.service.OscStatusService;
 import com.portoajuda.aplicacao_osc.service.ValidacaoCnpjOscService;
 import com.portoajuda.aplicacao_osc.service.AdminDashboardService;
@@ -77,7 +78,8 @@ import org.springframework.test.web.servlet.MvcResult;
 @TestPropertySource(properties = {
                 "ALLOWED_ORIGINS=http://localhost:5500",
                 "app.frontend-url=http://localhost:5500",
-                "app.cookies.secure=false"
+                "app.cookies.secure=false",
+                "app.admin.rbac.enforcement-enabled=false"
 })
 class FotoPerfilCsrfTest {
 
@@ -127,6 +129,7 @@ class FotoPerfilCsrfTest {
         private AdminDashboardService adminDashboardService;
 
         @MockitoBean private OscService oscService;
+        @MockitoBean private OscDashboardService oscDashboardService;
         @MockitoBean private OscStatusService oscStatusService;
         @MockitoBean private ValidacaoCnpjOscService validacaoCnpjOscService;
 
@@ -464,10 +467,11 @@ class FotoPerfilCsrfTest {
                 Role roleAdmin = new Role();
                 roleAdmin.setNome("ADMIN");
                 admin.setRoles(java.util.Set.of(roleAdmin));
+                admin.setAtivo(true);
                 java.time.Instant now = java.time.Instant.now();
                 when(clientIpResolver.resolve(any())).thenReturn("192.0.2.63");
                 when(adminPrivilegedSessionService.autenticar(
-                                eq("cookie-admin-valido"), org.mockito.ArgumentMatchers.nullable(String.class)))
+                                eq("cookie-admin-valido"), eq("192.0.2.63")))
                                 .thenReturn(Optional.of(new AdminPrivilegedSessionService.AuthenticatedAdmin(
                                                 admin, java.util.UUID.randomUUID(), now.plusSeconds(7200),
                                                 now.plusSeconds(1200))));
@@ -489,7 +493,7 @@ class FotoPerfilCsrfTest {
 
                 verify(adminDashboardService).obterVisaoGeral();
                 verify(adminPrivilegedSessionService).autenticar(
-                                eq("cookie-admin-valido"), org.mockito.ArgumentMatchers.nullable(String.class));
+                                eq("cookie-admin-valido"), eq("192.0.2.63"));
         }
 
         @Test
@@ -499,6 +503,7 @@ class FotoPerfilCsrfTest {
                 Role roleAdmin = new Role();
                 roleAdmin.setNome("ADMIN");
                 admin.setRoles(java.util.Set.of(roleAdmin));
+                admin.setAtivo(true);
                 java.time.Instant now = java.time.Instant.now();
                 when(clientIpResolver.resolve(any())).thenReturn("192.0.2.64");
                 when(adminPrivilegedSessionService.autenticar(eq("cookie-status"), eq("192.0.2.64")))

@@ -4,6 +4,7 @@ import com.portoajuda.aplicacao_osc.entity.Usuario;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -110,6 +111,36 @@ public class SupportAssistantController {
     @PostMapping("/conversations/{id}/close")
     public ResponseEntity<SupportDtos.Conversation> close(@PathVariable UUID id, @AuthenticationPrincipal Usuario user) {
         return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(support.closeMine(id, user));
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/conversations/{id}/volunteer-application-drafts")
+    public ResponseEntity<List<SupportDtos.VolunteerApplicationDraft>> pendingVolunteerApplications(
+            @PathVariable UUID id, @AuthenticationPrincipal Usuario user) {
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore())
+                .body(support.pendingVolunteerApplications(id, user));
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/conversations/{id}/volunteer-application-drafts/{draftId}/confirm")
+    public ResponseEntity<SupportDtos.VolunteerApplicationDraft> confirmVolunteerApplication(
+            @PathVariable UUID id, @PathVariable UUID draftId,
+            @Valid @RequestBody SupportDtos.ActionConfirmationRequest request,
+            @AuthenticationPrincipal Usuario user) {
+        SupportDtos.VolunteerApplicationDraft result = support.confirmVolunteerApplication(
+                id, draftId, request.requestHash(), user);
+        return ResponseEntity.status("EXPIRED".equals(result.state()) ? HttpStatus.GONE : HttpStatus.OK)
+                .cacheControl(CacheControl.noStore()).body(result);
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/conversations/{id}/volunteer-application-drafts/{draftId}/cancel")
+    public ResponseEntity<SupportDtos.VolunteerApplicationDraft> cancelVolunteerApplication(
+            @PathVariable UUID id, @PathVariable UUID draftId,
+            @Valid @RequestBody SupportDtos.ActionConfirmationRequest request,
+            @AuthenticationPrincipal Usuario user) {
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(
+                support.cancelVolunteerApplication(id, draftId, request.requestHash(), user));
     }
 
 }

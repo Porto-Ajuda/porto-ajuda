@@ -50,6 +50,8 @@ import com.portoajuda.aplicacao_osc.dto.request.RequestPreferenciasAcessibilidad
 import com.portoajuda.aplicacao_osc.dto.response.ResponsePreferenciasAcessibilidadeDTO;
 import com.portoajuda.aplicacao_osc.entity.PreferenciasAcessibilidade;
 import com.portoajuda.aplicacao_osc.repository.PreferenciasAcessibilidadeRepository;
+import com.portoajuda.aplicacao_osc.repository.PreferenciasCausaOngRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @RestController
 @RequestMapping("/usuario")
@@ -67,6 +69,8 @@ public class UsuarioController {
         private final RecuperacaoSenhaService recuperacaoSenhaService;
         private final ClientIpResolver clientIpResolver;
         private final PreferenciasAcessibilidadeRepository preferenciasAcessibilidadeRepository;
+        @Autowired(required = false)
+        private PreferenciasCausaOngRepository preferenciasCausaOngRepository;
 
         @Value("${app.frontend-url}")
         private String frontendUrl;
@@ -536,21 +540,20 @@ public class UsuarioController {
                                                 .body(Map.of("mensagem", "Usuário não encontrado ou inativo."));
                         }
 
-                        return preferenciasAcessibilidadeRepository
+                        boolean causasDisponiveis = preferenciasCausaOngRepository != null
+                                        && preferenciasCausaOngRepository.available();
+                        Set<String> causasSalvas = causasDisponiveis
+                                        ? preferenciasCausaOngRepository.findByUserId(usuarioId)
+                                        : Set.of();
+                        ResponsePreferenciasAcessibilidadeDTO resposta = preferenciasAcessibilidadeRepository
                                         .findByUsuario_Id(usuarioId)
-                                        .map(preferencias -> ResponseEntity.ok()
-                                                        .cacheControl(
-                                                                        org.springframework.http.CacheControl.noStore())
-                                                        .body((Object) ResponsePreferenciasAcessibilidadeDTO
-                                                                        .de(preferencias)))
-                                        .orElseGet(() -> ResponseEntity.ok()
-                                                        .cacheControl(
-                                                                        org.springframework.http.CacheControl.noStore())
-                                                        .body((Object) new ResponsePreferenciasAcessibilidadeDTO(
-                                                                        100,
-                                                                        "escuro",
-                                                                        false,
-                                                                        false)));
+                                        .map(preferencias -> ResponsePreferenciasAcessibilidadeDTO.de(
+                                                        preferencias, causasSalvas, causasDisponiveis))
+                                        .orElseGet(() -> new ResponsePreferenciasAcessibilidadeDTO(
+                                                        100, "escuro", false, false, causasSalvas, causasDisponiveis));
+                        return ResponseEntity.ok()
+                                        .cacheControl(org.springframework.http.CacheControl.noStore())
+                                        .body((Object) resposta);
 
                 } catch (NumberFormatException e) {
                         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -598,10 +601,20 @@ public class UsuarioController {
 
                         PreferenciasAcessibilidade salvas = preferenciasAcessibilidadeRepository.save(preferencias);
 
+                        boolean causasPersistidas = preferenciasCausaOngRepository != null
+                                        && preferenciasCausaOngRepository.available();
+                        if (dados.tiposOng() != null && causasPersistidas) {
+                                preferenciasCausaOngRepository.replaceForUser(usuarioId, dados.tiposOng());
+                        }
+                        Set<String> causasSalvas = causasPersistidas
+                                        ? preferenciasCausaOngRepository.findByUserId(usuarioId)
+                                        : Set.of();
+
                         return ResponseEntity.ok()
                                         .cacheControl(
                                                         org.springframework.http.CacheControl.noStore())
-                                        .body(ResponsePreferenciasAcessibilidadeDTO.de(salvas));
+                                        .body(ResponsePreferenciasAcessibilidadeDTO.de(
+                                                        salvas, causasSalvas, causasPersistidas));
 
                 } catch (NumberFormatException e) {
                         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)

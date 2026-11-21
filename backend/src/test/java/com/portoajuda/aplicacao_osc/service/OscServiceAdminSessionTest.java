@@ -1,6 +1,8 @@
 package com.portoajuda.aplicacao_osc.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.mock;
@@ -11,7 +13,9 @@ import com.portoajuda.aplicacao_osc.entity.Role;
 import com.portoajuda.aplicacao_osc.entity.Usuario;
 import com.portoajuda.aplicacao_osc.admin.AdminAuthorizationService;
 import com.portoajuda.aplicacao_osc.admin.AdminPermission;
+import com.portoajuda.aplicacao_osc.entity.OscMembros;
 import com.portoajuda.aplicacao_osc.enums.StatusOsc;
+import com.portoajuda.aplicacao_osc.enums.CargoOsc;
 import com.portoajuda.aplicacao_osc.repository.OscMembrosRepository;
 import com.portoajuda.aplicacao_osc.repository.OscRepository;
 import com.portoajuda.aplicacao_osc.repository.RoleRepository;
@@ -73,6 +77,38 @@ class OscServiceAdminSessionTest {
                 () -> service.buscarPerfilPrivado(91, admin));
 
         assertEquals(403, erro.getStatusCode().value());
+    }
+
+    @Test
+    void administradorDaOngComVinculoPodeLerPerfilPrivado() {
+        AdminAuthorizationService authorization = mock(AdminAuthorizationService.class);
+        OscService service = new OscService(
+                oscRepository, usuarioRepository, roleRepository, membrosRepository,
+                geocodingService, validacaoCnpjOscService, persistenciaService,
+                supabaseStorageService, limpezaService, authorization);
+        Osc osc = new Osc();
+        ReflectionTestUtils.setField(osc, "id", 91);
+        osc.setNome("OSC de teste");
+        osc.setStatus(StatusOsc.ATIVA);
+        osc.setCausasSociais(null, Set.of());
+        osc.setOds(Set.of());
+
+        Usuario administradorOng = new Usuario();
+        ReflectionTestUtils.setField(administradorOng, "id", 41);
+        OscMembros vinculo = new OscMembros();
+        vinculo.setOsc(osc);
+        vinculo.setUsuario(administradorOng);
+        vinculo.setCargoOsc(CargoOsc.ADMINISTRADOR);
+
+        when(oscRepository.findById(91)).thenReturn(Optional.of(osc));
+        when(membrosRepository.findByOsc_IdAndUsuario_Id(91, 41)).thenReturn(Optional.of(vinculo));
+        when(authorization.hasValidPrivilegedSession(null)).thenReturn(false);
+
+        var perfil = service.buscarPerfilPrivado(91, administradorOng);
+
+        assertEquals(91, perfil.id());
+        assertTrue(perfil.podeAlterarStatus());
+        assertFalse(perfil.podeAdministrarStatusPlataforma());
     }
 
     @Test

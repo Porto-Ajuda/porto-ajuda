@@ -1,4 +1,6 @@
 import { getAPI_URL } from "./modoBack.js";
+import { CAUSE_TAXONOMY, causeCategoriesForNgo, causeLabel } from "./cause-taxonomy.js";
+import { categoriasParaFiltro, filtrarOngs, sincronizarVisibilidadeOngs } from "./proximity-filter.js";
 
 const API_URL = getAPI_URL();
 
@@ -19,6 +21,10 @@ let posicaoUsuario = null;
 var map = L.map('map').setView(posicaoInicial, zoomInicial);
 const camadaMarcadoresOngs = L.layerGroup().addTo(map);
 let ongsCarregadas = [];
+const marcadoresPorOngId = new Map();
+const cartoesPorOngId = new Map();
+let categoriaSelecionada = "";
+let erroAoCarregarOngs = false;
 
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -39,21 +45,11 @@ document.querySelector("#botao-inicio").addEventListener("click", () => {
 
 });
 
-const iconesCategorias = {
 
-    "Assistência Social": "🤝",
-    "Proteção Animal": "🐾",
-    "Alimentação": "🍲",
-    "Idosos": "👴",
-    "Meio Ambiente": "🌱",
-    "Educação": "📚"
 
-};
-
-function escolherIcone(categoria) {
-
-    return iconesCategorias[categoria] || "📍";
-
+function escolherIcone(categoriaId) {
+    const classeIcone = CAUSE_TAXONOMY.find(categoria => categoria.id === categoriaId)?.icon || "fa-location-dot";
+    return `<i class="fa-solid ${classeIcone} icone-categoria" aria-hidden="true"></i>`;
 }
 
 // Cadastrar sede Porto Ajuda
@@ -171,24 +167,9 @@ function destacarOng(ongId) {
 
 // Criar ongs
 
-
-function formatarCategoria(causas) {
-    const categorias = {
-        EDUCACAO: "Educação",
-        SAUDE: "Assistência Social",
-        MEIO_AMBIENTE: "Meio Ambiente",
-        ANIMAIS: "Proteção Animal",
-        INCLUSAO_SOCIAL: "Assistência Social",
-        ESPORTE: "Esporte",
-        CULTURA: "Cultura",
-        COMBATE_POBREZA: "Assistência Social"
-    };
-
-    if (!Array.isArray(causas) || causas.length === 0) {
-        return "Organização social";
-    }
-
-    return categorias[causas[0]] || "Organização social";
+function formatarCategoria(categorias) {
+    const category = categorias[0];
+    return category ? causeLabel(category) : "Organização social";
 }
 
 function formatarEndereco(ong) {
@@ -205,11 +186,14 @@ function formatarEndereco(ong) {
 }
 
 function converterOngDaAPI(ong) {
+    const categorias = causeCategoriesForNgo(ong);
     return {
         id: ong.id,
         nome: ong.nome,
         imagem: ong.logo || "../assets/ong-padrao.png",
-        categoria: formatarCategoria(ong.causas),
+        categorias,
+        categoria: formatarCategoria(categorias),
+        categoriasBusca: categorias.map(causeLabel).join(" "),
         descricao: ong.descricaoCurta || ong.descricao || "",
         endereco: formatarEndereco(ong),
         latitude: Number(ong.latitude),
@@ -258,17 +242,71 @@ function elemento(tag, texto, classe) {
     return node;
 }
 
-function aplicarBusca() {
-    const termo = document.querySelector(".barra-pesquisa input")?.value.trim().toLocaleLowerCase("pt-BR") || "";
-    document.querySelectorAll(".lista-ongs .ong").forEach(card => {
-        card.hidden = !card.dataset.busca.includes(termo);
+function renderizarFiltrosCategoria() {
+    const filtros = document.querySelector(".filtros");
+    const resultado = categoriasParaFiltro(ongsCarregadas, CAUSE_TAXONOMY, categoriaSelecionada);
+    categoriaSelecionada = resultado.categoriaSelecionada;
+    filtros.replaceChildren();
+
+    resultado.categorias.forEach(categoria => {
+        const botao = document.createElement("button");
+        botao.type = "button";
+        botao.dataset.categoriaId = categoria.id;
+        if (categoria.icon) {
+            const icone = document.createElement("i");
+            icone.className = `fa-solid ${categoria.icon}`;
+            icone.setAttribute("aria-hidden", "true");
+            botao.append(icone, document.createTextNode(` ${categoria.label}`));
+        } else {
+            botao.textContent = categoria.label;
+        }
+        const ativa = categoria.id === categoriaSelecionada;
+        botao.classList.toggle("ativo", ativa);
+        botao.setAttribute("aria-pressed", String(ativa));
+        filtros.appendChild(botao);
     });
+
+    filtros.querySelector('button[data-categoria-id=""]')
+        ?.setAttribute("aria-label", "Mostrar todas as organizações");
+}
+
+function aplicarFiltros() {
+    const termo = document.querySelector(".barra-pesquisa input")?.value || "";
+    const correspondentes = filtrarOngs(ongsCarregadas, categoriaSelecionada, termo);
+    const idsVisiveis = sincronizarVisibilidadeOngs(
+        correspondentes,
+        cartoesPorOngId,
+        marcadoresPorOngId,
+        camadaMarcadoresOngs
+    );
+    const listaOngs = document.querySelector(".lista-ongs");
+    let mensagemVazia = listaOngs.querySelector(".mensagem-lista-ongs");
+    if (correspondentes.length === 0) {
+        if (!mensagemVazia) {
+            mensagemVazia = elemento("p", "Nenhuma organização corresponde aos filtros.", "mensagem-lista-ongs");
+            listaOngs.appendChild(mensagemVazia);
+        }
+        mensagemVazia.hidden = false;
+        mensagemVazia.textContent = erroAoCarregarOngs
+            ? "Não foi possível carregar as organizações. Tente novamente mais tarde."
+            : ongsCarregadas.length === 0
+                ? "Nenhuma organização ativa foi encontrada."
+                : "Nenhuma organização corresponde aos filtros.";
+    } else if (mensagemVazia) {
+        mensagemVazia.hidden = true;
+    }
+
+    document.querySelectorAll(".filtros button[data-categoria-id]").forEach(botao => {
+        const ativa = botao.dataset.categoriaId === categoriaSelecionada;
+        botao.classList.toggle("ativo", ativa);
+        botao.setAttribute("aria-pressed", String(ativa));
+    });
+    return idsVisiveis;
 }
 
 function criarCartao(ong, localizacao) {
     const card = elemento("article", null, "ong");
     card.id = `ong-${ong.id}`;
-    card.dataset.busca = `${ong.nome} ${ong.categoria} ${ong.endereco}`.toLocaleLowerCase("pt-BR");
 
     const molduraImagem = elemento("div", null, "ong-imagem");
     const imagem = document.createElement("img");
@@ -302,8 +340,15 @@ function criarCartao(ong, localizacao) {
         const conteudoPopup = document.createElement("div");
         conteudoPopup.append(elemento("strong", ong.nome), document.createElement("br"), elemento("span", ong.categoria));
         if (ong.endereco) conteudoPopup.append(document.createElement("br"), elemento("span", ong.endereco));
+
         const marcador = L.marker([ong.latitude, ong.longitude], {
-            icon: L.divIcon({ html: escolherIcone(ong.categoria), className: "icone-ong", iconSize: [45, 45], iconAnchor: [22, 45] })
+            icon: L.divIcon({
+                html: escolherIcone(ong.categorias[0]),
+                className: "icone-ong",
+                iconSize: [45, 45],
+                iconAnchor: [22, 45],
+                popupAnchor: [0, -45]
+            })
         }).bindPopup(conteudoPopup);
         marcador.on("click", () => {
             if (painelOngs.classList.contains("fechado")) {
@@ -311,8 +356,9 @@ function criarCartao(ong, localizacao) {
                 setTimeout(() => destacarOng(ong.id), 350);
             } else destacarOng(ong.id);
         });
-        camadaMarcadoresOngs.addLayer(marcador);
+        marcadoresPorOngId.set(String(ong.id), marcador);
     }
+    cartoesPorOngId.set(String(ong.id), card);
     return card;
 }
 async function carregarOngs() {
@@ -320,6 +366,7 @@ async function carregarOngs() {
     const listaOngs = document.querySelector(".lista-ongs");
     try {
         ongsCarregadas = await buscarOngs();
+        renderizarFiltrosCategoria();
         const localizacao = ongsCarregadas.length > 0
             ? await Promise.race([
                 localizarUsuario(),
@@ -329,19 +376,30 @@ async function carregarOngs() {
 
         listaOngs.replaceChildren();
         camadaMarcadoresOngs.clearLayers();
+        cartoesPorOngId.clear();
+        marcadoresPorOngId.clear();
         if (ongsCarregadas.length === 0) {
-            listaOngs.appendChild(elemento("p", "Nenhuma organização ativa foi encontrada.", "mensagem-lista-ongs"));
+            aplicarFiltros();
             return;
         }
         ongsCarregadas.forEach(ong => listaOngs.appendChild(criarCartao(ong, localizacao)));
-        aplicarBusca();
+        aplicarFiltros();
     } catch (erro) {
+        erroAoCarregarOngs = true;
         console.error("Falha ao carregar OSCs de /osc/list:", erro);
         listaOngs.replaceChildren(elemento("p", "Não foi possível carregar as organizações. Tente novamente mais tarde.", "mensagem-lista-ongs"));
     } finally {
         telaCarregamento?.classList.add("oculto");
     }
 }
+document.querySelector(".filtros").addEventListener("click", evento => {
+    const filtros = evento.currentTarget;
+    const botao = evento.target.closest("button[data-categoria-id]");
+    if (!botao || !filtros.contains(botao)) return;
+    categoriaSelecionada = botao.dataset.categoriaId;
+    aplicarFiltros();
+});
+renderizarFiltrosCategoria();
 carregarOngs();
 
 const painelOngs = document.querySelector("#painel-ongs");
@@ -361,7 +419,8 @@ function abrirPainelOngs() {
     }, 350);
 }
 
-document.querySelector(".barra-pesquisa input")?.addEventListener("input", aplicarBusca);
+document.querySelector(".barra-pesquisa input")?.addEventListener("input", aplicarFiltros);
+document.querySelector(".barra-pesquisa button")?.addEventListener("click", aplicarFiltros);
 botaoFecharOngs.addEventListener("click", fecharPainelOngs);
 botaoAbrirOngs.addEventListener("click", abrirPainelOngs);
 

@@ -131,6 +131,40 @@ class SupportAssistantControllerSecurityTest {
         verify(support).retryAi(id,user);
     }
 
+    @Test void volunteerApplicationDraftEndpointsRequireTheOwnerSessionAndCsrfForMutations() throws Exception {
+        UUID conversation = UUID.randomUUID();
+        UUID draft = UUID.randomUUID();
+        String base = "/support-assistant/conversations/" + conversation + "/volunteer-application-drafts";
+        mvc.perform(get(base)).andExpect(status().isUnauthorized());
+        var rejected = mvc.perform(post(base + "/" + draft + "/confirm")
+                        .with(authentication(userAuthentication)).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"requestHash\":\"" + "a".repeat(64) + "\"}"))
+                .andExpect(status().isForbidden()).andReturn();
+        Cookie csrf = rejected.getResponse().getCookie("XSRF-TOKEN");
+        Instant now = Instant.now();
+        var completed = new SupportDtos.VolunteerApplicationDraft(draft, 71, "Mutirão", "Casa Exemplo",
+                "Detalhes públicos", "a".repeat(64), now.plusSeconds(300), "COMPLETED", 81,
+                "PENDENTE", "Candidatura enviada.");
+        when(support.pendingVolunteerApplications(conversation,user)).thenReturn(List.of());
+        when(support.confirmVolunteerApplication(conversation,draft,"a".repeat(64),user)).thenReturn(completed);
+        when(support.cancelVolunteerApplication(conversation,draft,"a".repeat(64),user)).thenReturn(
+                new SupportDtos.VolunteerApplicationDraft(draft,71,"Mutirão","Casa Exemplo","Detalhes públicos",
+                        "a".repeat(64),now.plusSeconds(300),"CANCELLED",null,null,"Prévia cancelada."));
+
+        mvc.perform(get(base).with(authentication(userAuthentication))).andExpect(status().isOk());
+        mvc.perform(post(base + "/" + draft + "/confirm").with(authentication(userAuthentication)).cookie(csrf)
+                        .header("X-XSRF-TOKEN",csrf.getValue()).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"requestHash\":\"" + "a".repeat(64) + "\"}"))
+                .andExpect(status().isOk());
+        mvc.perform(post(base + "/" + draft + "/cancel").with(authentication(userAuthentication)).cookie(csrf)
+                        .header("X-XSRF-TOKEN",csrf.getValue()).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"requestHash\":\"" + "a".repeat(64) + "\"}"))
+                .andExpect(status().isOk());
+        verify(support).pendingVolunteerApplications(conversation,user);
+        verify(support).confirmVolunteerApplication(conversation,draft,"a".repeat(64),user);
+        verify(support).cancelVolunteerApplication(conversation,draft,"a".repeat(64),user);
+    }
+
     @Test void commonUserRoleCannotOpenStaffConversationQueue() throws Exception {
         mvc.perform(get("/admin/support-assistant/conversations").with(authentication(userAuthentication)))
                 .andExpect(status().is4xxClientError());

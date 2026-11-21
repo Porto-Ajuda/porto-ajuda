@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 import com.portoajuda.aplicacao_osc.entity.Post;
 import com.portoajuda.aplicacao_osc.entity.Role;
 import com.portoajuda.aplicacao_osc.entity.Usuario;
+import com.portoajuda.aplicacao_osc.entity.Osc;
 import com.portoajuda.aplicacao_osc.admin.AdminAuthorizationService;
 import com.portoajuda.aplicacao_osc.admin.AdminOperationAuditService;
 import com.portoajuda.aplicacao_osc.repository.OscRepository;
@@ -66,7 +67,12 @@ class PostServiceAdminSessionTest {
                 new SimpleGrantedAuthority("ADMIN_SESSION")));
         when(adminAuthorization.hasValidPrivilegedSession(any())).thenReturn(true);
         Post post = new Post();
+                Osc osc = new Osc();
+                ReflectionTestUtils.setField(osc, "id", 81);
+                post.setOsc(osc);
         when(postRepository.findById(5)).thenReturn(Optional.of(post));
+                when(postRepository.findForUpdateById(5)).thenReturn(Optional.of(post));
+                when(oscRepository.findForUpdateById(81)).thenReturn(Optional.of(osc));
         when(vagaRepository.findByPost(post)).thenReturn(Optional.empty());
 
         service.delete(5, usuario);

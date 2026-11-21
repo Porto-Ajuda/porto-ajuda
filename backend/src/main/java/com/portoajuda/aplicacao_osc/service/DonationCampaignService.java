@@ -33,6 +33,17 @@ public class DonationCampaignService {
     public List<Map<String,Object>> listPublic() {
         requireSchema();
         jdbc.update("UPDATE donation_campaigns SET state='ENDED',updated_at=CURRENT_TIMESTAMP WHERE state IN ('ACTIVE','PAUSED') AND deadline<=CURRENT_TIMESTAMP");
+        return listPublicRows();
+    }
+
+    /** Read-only public feed for assistant lookups; expired entries remain excluded by the same visibility predicate. */
+    @Transactional(readOnly=true)
+    public List<Map<String,Object>> listPublicForAssistant() {
+        requireSchema();
+        return listPublicRows();
+    }
+
+    private List<Map<String,Object>> listPublicRows() {
         return jdbc.queryForList("""
             SELECT c.id,c.osc_id AS \"oscId\",o.nome AS \"ngoName\",o.logo AS \"ngoLogo\",c.title,c.description,c.image_url AS \"imageUrl\",
                    c.goal_net_cents AS \"goalNetCents\",c.deadline,c.state,

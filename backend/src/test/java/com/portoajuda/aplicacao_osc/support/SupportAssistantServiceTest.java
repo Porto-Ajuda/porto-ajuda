@@ -12,6 +12,8 @@ import com.portoajuda.aplicacao_osc.admin.AdminAuthorizationService;
 import com.portoajuda.aplicacao_osc.admin.AdminPermission;
 import com.portoajuda.aplicacao_osc.admin.AdminProfile;
 import com.portoajuda.aplicacao_osc.entity.Usuario;
+import com.portoajuda.aplicacao_osc.dto.response.CandidaturaUsuarioDTO;
+import com.portoajuda.aplicacao_osc.enums.StatusCandidatura;
 import com.portoajuda.aplicacao_osc.service.GeminiRequestBudget;
 import java.time.Instant;
 import java.time.Clock;
@@ -38,6 +40,16 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.server.ResponseStatusException;
 
 class SupportAssistantServiceTest {
+    @Test void publicCampaignResultsAreRenderedAsValidatedLinksWithServerFacts() {
+        var source = new SupportDtos.SearchResult("campaign:31", "CAMPANHA", "Ajuda para o abrigo",
+                "Arrecadado l\u00edquido confirmado: R$ 12,50. Meta l\u00edquida: R$ 300,00.",
+                "/catalogo?categoria=doacoes&campanha=31");
+        String answer = SupportAssistantService.appendCampaignOptions("Encontrei uma vaquinha para o abrigo.", List.of(source));
+        assertTrue(answer.contains("[Ajuda para o abrigo](/catalogo?categoria=doacoes&campanha=31)"));
+        assertTrue(answer.contains("R$ 12,50"));
+        assertTrue(answer.contains("R$ 300,00"));
+    }
+
     private static final SupportDtos.SearchResult SOURCE = new SupportDtos.SearchResult(
             "ngo:3", "ONG", "ONG teste", "Conteúdo público de teste", "/ong-profile?id=3");
     private static final SupportDtos.SearchResult PROFILE_GUIDE = new SupportDtos.SearchResult(
@@ -69,6 +81,174 @@ class SupportAssistantServiceTest {
                 .filter(message -> message.body().equals("Olá! Sou a Sophie, assistente virtual do Porto Ajuda. Como posso ajudar?")).count());
     }
 
+    @Test void credentialAndPersonalRegistrationValuesAreRejectedBeforeConversationStorage() {
+        MemoryRepository repo = new MemoryRepository("AI_ACTIVE", 20);
+        SupportAssistantProvider provider = mock(SupportAssistantProvider.class);
+        SupportAssistantService service = service(repo, true, provider, List.of());
+
+        var failure = assertThrows(ResponseStatusException.class, () -> service.send(repo.current.id(), user(20),
+                new SupportDtos.UserMessageRequest("Meu e-mail e maria@example.invalid e meu codigo de verificacao e 123456", UUID.randomUUID().toString())));
+
+        assertEquals(HttpStatus.BAD_REQUEST, failure.getStatusCode());
+        assertFalse(repo.messages.stream().anyMatch(message -> message.senderType().equals("USER")));
+        verifyNoInteractions(provider);
+    }
+
+    @Test void explicitVolunteerRequestUsesCurrentPublicResultAndReturnsPreviewInsteadOfModelClaimingSuccess() {
+        MemoryRepository repo = new MemoryRepository("AI_ACTIVE", 20);
+        SupportAssistantProvider provider = mock(SupportAssistantProvider.class);
+        when(provider.interpret(any())).thenReturn(new SupportAssistantProvider.Interpretation(List.of(
+                new SupportAssistantProvider.CapabilityCall("PREPARE_VOLUNTEER_APPLICATION", "VOLUNTEERING",
+                        "Mutirão de acolhimento", "NONE", "Santos", "NONE", "CURRENT_QUERY", 71)),
+                false, "", false, true, "RESTRICTED_ACTION"));
+        when(provider.respond(any())).thenReturn(new SupportAssistantProvider.Reply(
+                "Sua candidatura foi enviada com sucesso!", List.of(), false));
+        SupportAssistantService service = service(repo, true, provider, List.of());
+        var search = (SupportPublicContentSearch) ReflectionTestUtils.getField(service, "search");
+        var publicOpportunity = new SupportDtos.SearchResult("volunteering:71", "VOLUNTARIADO", "Mutirão de acolhimento",
+                "Oportunidade de Casa Exemplo. Local da atividade: Santos.", "/ong-profile?id=11#voluntariado");
+        when(search.search("Mutirão de acolhimento", "VOLUNTEERING", null, "Santos"))
+                .thenReturn(List.of(publicOpportunity));
+        var actions = mock(SupportVolunteerApplicationActionService.class);
+        when(actions.createDraft(any(Usuario.class), eq(repo.current.id()), eq(71), eq(publicOpportunity.title()), eq(publicOpportunity.summary())))
+                .thenReturn(new SupportDtos.VolunteerApplicationDraft(UUID.randomUUID(), 71, publicOpportunity.title(),
+                        "Casa Exemplo", publicOpportunity.summary(), "1".repeat(64), Instant.now().plusSeconds(300),
+                        "DRAFT", null, null, null));
+        ReflectionTestUtils.setField(service, "volunteerApplicationActions", actions);
+
+        var result = service.send(repo.current.id(), user(20), new SupportDtos.UserMessageRequest(
+                "Quero me candidatar ao Mutirão de acolhimento", UUID.randomUUID().toString()));
+        String answer = result.messages().stream().filter(message -> message.senderType().equals("AI"))
+                .reduce((first, last) -> last).orElseThrow().body();
+
+        verify(actions).createDraft(any(Usuario.class), eq(repo.current.id()), eq(71), eq(publicOpportunity.title()), eq(publicOpportunity.summary()));
+        assertTrue(answer.contains("Encontrei esta oportunidade na Casa Exemplo"));
+        assertTrue(answer.contains("Quer que eu envie sua candidatura?"));
+        assertFalse(answer.contains("Sua candidatura foi enviada"));
+    }
+
+    @Test void ordinaryQuestionsMentioningCredentialFieldNamesRemainAnswerable() {
+        for (String question : List.of(
+                "O que é uma senha forte?",
+                "Por que o cadastro pede CPF?",
+                "Posso informar e-mail e telefone no formulário?")) {
+            MemoryRepository repo = new MemoryRepository("AI_ACTIVE", 20);
+            SupportAssistantProvider provider = mock(SupportAssistantProvider.class);
+            when(provider.respond(any())).thenReturn(new SupportAssistantProvider.Reply(
+                    "O formulário oficial explica os dados necessários para cada etapa.", List.of(), false));
+            SupportAssistantService service = service(repo, true, provider, List.of());
+
+            service.send(repo.current.id(), user(20), new SupportDtos.UserMessageRequest(question, UUID.randomUUID().toString()));
+
+            verify(provider).respond(any());
+            assertTrue(repo.messages.stream().anyMatch(message -> message.senderType().equals("USER")
+                    && message.body().equals(question)));
+        }
+    }
+
+    @Test void ownApplicationLookupUsesOnlyTheAuthenticatedOwnerAndRecordedCompletionData() {
+        MemoryRepository repo = new MemoryRepository("AI_ACTIVE", 20);
+        Usuario owner = user(20);
+        SupportAssistantProvider provider = mock(SupportAssistantProvider.class);
+        when(provider.interpret(any())).thenReturn(new SupportAssistantProvider.Interpretation(
+                List.of(), false, "", false, true, "PRIVATE_DATA"));
+        when(provider.respond(any())).thenReturn(new SupportAssistantProvider.Reply(
+                "A sua candidatura foi conclu\u00edda com as horas registradas pela ONG.", List.of(), false));
+        var service = service(repo, true, provider, List.of());
+        var applications = mock(com.portoajuda.aplicacao_osc.service.CandidaturaVoluntariadoService.class);
+        ReflectionTestUtils.setField(service, "applications", applications);
+        var item = new CandidaturaUsuarioDTO(44, 3, 5, 7, "Mutir\u00e3o de teste", "ONG de teste",
+                java.time.LocalDate.of(2026, 10, 1), StatusCandidatura.CONCLUIDA, "nota privada que n\u00e3o deve ir ao modelo",
+                null, null, null, null, null, null, java.time.LocalDate.of(2026, 10, 4),
+                new java.math.BigDecimal("4.5"), true, false);
+        when(applications.listarMinhas(eq(owner), any(org.springframework.data.domain.Pageable.class)))
+                .thenReturn(new org.springframework.data.domain.PageImpl<>(List.of(item)));
+
+        var result = service.send(repo.current.id(), owner, new SupportDtos.UserMessageRequest(
+                "Qual status da minha candidatura e quantas horas fiz?", UUID.randomUUID().toString()));
+
+        verify(applications).listarMinhas(eq(owner), any(org.springframework.data.domain.Pageable.class));
+        verify(provider).respond(argThat(input -> input.publicSources().stream().anyMatch(source ->
+                "CONTA".equals(source.category()) && source.summary().contains("4.5") && source.summary().contains("certificado dispon\u00edvel")
+                        && !source.summary().contains("nota privada"))));
+        assertTrue(result.messages().stream().anyMatch(message -> message.senderType().equals("AI")
+                && message.body().contains("conclu\u00edda com as horas registradas")));
+    }
+
+    @Test void ownCampaignDonationLookupOmitsStripePaymentDetails() {
+        MemoryRepository repo = new MemoryRepository("AI_ACTIVE", 20);
+        Usuario owner = user(20);
+        SupportAssistantProvider provider = mock(SupportAssistantProvider.class);
+        when(provider.interpret(any())).thenReturn(new SupportAssistantProvider.Interpretation(
+                List.of(), false, "", false, true, "PRIVATE_DATA"));
+        when(provider.respond(any())).thenReturn(new SupportAssistantProvider.Reply(
+                "Sua contribui\u00e7\u00e3o aguarda a confirma\u00e7\u00e3o do pagamento.", List.of(), false));
+        var service = service(repo, true, provider, List.of());
+        var payments = mock(com.portoajuda.aplicacao_osc.service.CampaignDonationPaymentService.class);
+        ReflectionTestUtils.setField(service, "campaignPayments", payments);
+        when(payments.donorHistory(owner)).thenReturn(List.of(java.util.Map.of(
+                "campaignId", 31L, "campaignTitle", "Vaquinha teste", "ngoName", "ONG teste",
+                "netAmountCents", 1234L, "status", "PENDING", "stripeSessionId", "never expose")));
+
+        service.send(repo.current.id(), owner, new SupportDtos.UserMessageRequest(
+                "Qual o status das minhas doacoes?", UUID.randomUUID().toString()));
+
+        verify(payments).donorHistory(owner);
+        verify(provider).respond(argThat(input -> input.publicSources().stream().anyMatch(source ->
+                "CONTA".equals(source.category()) && source.summary().replace('\u00a0', ' ').contains("R$ 12,34")
+                        && source.summary().contains("PENDING") && !source.summary().contains("never expose"))));
+    }
+
+    @Test void ngoDashboardToolChecksTheSpecificNgoAndSharesOnlyOperationalAggregates() {
+        MemoryRepository repo = new MemoryRepository("AI_ACTIVE", 20);
+        Usuario owner = user(20);
+        SupportAssistantProvider provider = mock(SupportAssistantProvider.class);
+        when(provider.interpret(any())).thenReturn(new SupportAssistantProvider.Interpretation(List.of(
+                new SupportAssistantProvider.CapabilityCall("NGO_DASHBOARD", "NONE", "", "NONE", "", "NONE", "NONE", 7)),
+                false, "", false, true, "PRIVATE_DATA"));
+        when(provider.respond(any())).thenReturn(new SupportAssistantProvider.Reply("Há pendências na fila.", List.of(), false));
+        var service = service(repo, true, provider, List.of());
+        var dashboard = mock(com.portoajuda.aplicacao_osc.service.OscDashboardService.class);
+        ReflectionTestUtils.setField(service, "ngoDashboard", dashboard);
+        when(dashboard.dashboard(7, owner)).thenReturn(java.util.Map.of(
+                "scope", java.util.Map.of("ngoName", "ONG teste"),
+                "applications", java.util.Map.of("pending", 2L, "accepted", 1L, "completed", 3L, "completedHours", new java.math.BigDecimal("4.5")),
+                "opportunities", java.util.Map.of("availableSlots", 1L, "occupiedSlots", 1L),
+                "pendingActions", java.util.Map.of("pendingApplications", 2L),
+                "campaigns", java.util.Map.of("available", true, "confirmedNetRaisedCents", 123456L),
+                "stripeBalance", java.util.Map.of("available", false, "label", "Indisponível")));
+
+        service.send(repo.current.id(), owner, new SupportDtos.UserMessageRequest(
+                "Como está o dashboard da minha ONG?", UUID.randomUUID().toString()));
+
+        verify(dashboard).dashboard(7, owner);
+        verify(provider).respond(argThat(input -> input.publicSources().stream().anyMatch(source ->
+                source.summary().contains("2 candidaturas pendentes") && source.summary().contains("4.5 horas registradas")
+                        && source.summary().replace('\u00a0', ' ').contains("R$ 1.234,56")
+                        && source.summary().contains("saldo dispon\u00edvel para saque: Indispon\u00edvel"))));
+    }
+
+    @Test void crossNgoDashboardDeniedByBackendIsExplainedWithoutPrivateData() {
+        MemoryRepository repo = new MemoryRepository("AI_ACTIVE", 20);
+        Usuario owner = user(20);
+        SupportAssistantProvider provider = mock(SupportAssistantProvider.class);
+        when(provider.interpret(any())).thenReturn(new SupportAssistantProvider.Interpretation(List.of(
+                new SupportAssistantProvider.CapabilityCall("NGO_DASHBOARD", "NONE", "", "NONE", "", "NONE", "NONE", 99)),
+                false, "", false, true, "PRIVATE_DATA"));
+        when(provider.respond(any())).thenReturn(new SupportAssistantProvider.Reply("Acesso negado.", List.of(), false));
+        var service = service(repo, true, provider, List.of());
+        var dashboard = mock(com.portoajuda.aplicacao_osc.service.OscDashboardService.class);
+        ReflectionTestUtils.setField(service, "ngoDashboard", dashboard);
+        when(dashboard.dashboard(99, owner)).thenThrow(new ResponseStatusException(HttpStatus.FORBIDDEN));
+
+        service.send(repo.current.id(), owner, new SupportDtos.UserMessageRequest(
+                "Mostre os indicadores da ONG 99", UUID.randomUUID().toString()));
+
+        verify(dashboard).dashboard(99, owner);
+        verify(provider).respond(argThat(input -> input.publicSources().stream().anyMatch(source ->
+                source.id().equals("ngo-dashboard:denied") && source.summary().contains("criadora ou administradora"))));
+    }
+
     @Test void introductionUsesConfiguredAssistantDisplayNameAndAiAvailability() {
         MemoryRepository repo = new MemoryRepository("AI_ACTIVE", 20);
         var service = service(repo, false, null, List.of());
@@ -96,17 +276,22 @@ class SupportAssistantServiceTest {
                         && message.body().equals("Oi, tudo bem?"))));
     }
 
-    @Test void waitingConversationAcceptsMoreMessagesWithoutCallingAi() {
+    @Test void waitingConversationCanAnswerGeneralQuestionsWithoutDecidingTheEscalatedCase() {
         MemoryRepository repo = new MemoryRepository("WAITING_HUMAN", 20);
         SupportAssistantProvider provider = mock(SupportAssistantProvider.class);
+        when(provider.respond(any())).thenReturn(new SupportAssistantProvider.Reply(
+                "O painel de ajuda fica no canto inferior direito da tela.", List.of(), false));
         SupportAssistantService service = service(repo, true, provider, List.of(SOURCE));
-        var result = service.send(repo.current.id(), user(20), new SupportDtos.UserMessageRequest("Mais contexto público", UUID.randomUUID().toString()));
+        var result = service.send(repo.current.id(), user(20), new SupportDtos.UserMessageRequest(
+                "Onde fica o painel de ajuda?", UUID.randomUUID().toString()));
         assertEquals("WAITING_HUMAN", result.state());
         assertEquals(1, repo.messages.stream().filter(m -> m.senderType().equals("USER")).count());
-        assertTrue(result.messages().stream().anyMatch(message -> message.senderType().equals("USER") && message.body().equals("Mais contexto público")));
-        verifyNoInteractions(provider);
+        assertTrue(result.messages().stream().anyMatch(message -> message.senderType().equals("AI")
+                && message.body().contains("O painel de ajuda fica no canto inferior direito da tela.")), result.messages().toString());
+        verify(provider).respond(argThat(input -> input.outcomes().stream().anyMatch(outcome ->
+                "HUMAN_QUEUE".equals(outcome.operation()) && "GENERAL_ANSWERS_ONLY".equals(outcome.status()))));
+        assertFalse(repo.events.stream().anyMatch(event -> event.contains("AI_ACTIVE>WAITING_HUMAN")));
     }
-
     @Test void humanActiveConversationAcceptsMessageWithoutCallingAiOrMixingReplies() {
         MemoryRepository repo=new MemoryRepository("HUMAN_ACTIVE",20);
         SupportAssistantProvider provider=mock(SupportAssistantProvider.class);
@@ -387,6 +572,30 @@ class SupportAssistantServiceTest {
                 && !input.publicSearchUnavailable()
                 && input.history().stream().noneMatch(message -> message.senderType().equals("USER")
                         && message.body().equals("Assunto sem referência pública"))));
+    }
+
+    @Test void administratorTakeoverDuringQueuedGeneralAnswerSuppressesTheInFlightAiReply() {
+        MemoryRepository repo = new MemoryRepository("WAITING_HUMAN", 20);
+        Usuario owner = user(20);
+        SupportAssistantService[] holder = new SupportAssistantService[1];
+        SupportAssistantProvider provider = input -> {
+            holder[0].takeOver(repo.current.id());
+            return new SupportAssistantProvider.Reply("Resposta atrasada da Sophie.", List.of(), false);
+        };
+        holder[0] = service(repo, true, provider, List.of(SOURCE));
+        var authorization = (AdminAuthorizationService) ReflectionTestUtils.getField(holder[0], "adminAuthorization");
+        when(authorization.requirePermission(AdminPermission.SUPPORT_MANAGE))
+                .thenReturn(new AdminActor(99, UUID.randomUUID(), AdminProfile.MODERATOR));
+        when(authorization.requirePermission(AdminPermission.SUPPORT_READ))
+                .thenReturn(new AdminActor(99, UUID.randomUUID(), AdminProfile.MODERATOR));
+
+        var result = holder[0].send(repo.current.id(), owner, new SupportDtos.UserMessageRequest(
+                "Onde fica o painel de ajuda?", UUID.randomUUID().toString()));
+
+        assertEquals("HUMAN_ACTIVE", result.state());
+        assertFalse(result.messages().stream().anyMatch(message -> message.senderType().equals("AI")
+                && message.body().contains("Resposta atrasada")));
+        assertTrue(repo.events.contains("AI_SUPPRESSED"));
     }
 
     @Test void publicSearchFailureIsPassedToTheModelAndNotMisreportedAsEmptyResults() {

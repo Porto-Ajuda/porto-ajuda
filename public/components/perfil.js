@@ -9,6 +9,7 @@ import { definirTamanhoFonte } from "./acessibilidade.js";
 import { TAMANHOS_FONTE } from "./acessibilidade-logic.js";
 import { fotoRemovidaNoPerfil, mensagemErroRemocaoFoto } from "./perfil-foto-logic.js";
 import { notificarToast } from "./notificacoes.js";
+import { ready as personalizationReady, saveExplicitCausePreferences, resetSuggestions, isPersonalizationEnabled, setPersonalizationEnabled, openPersonalizationSettings } from "./recommendation-personalization.js";
 
 /* =========================================================
    CONSTANTES
@@ -1194,37 +1195,48 @@ document.addEventListener("DOMContentLoaded", async () => {
             atualizarContadorOng();
         });
 
-        // Restaura as escolhas salvas neste navegador
+        // Restaura preferências explícitas. Se o navegador permitir e a sessão estiver ativa, a cópia do perfil é prioritária.
+        let salvas = null;
+        try { salvas = JSON.parse(localStorage.getItem("portoAjudaPreferencias") ?? "null"); } catch { /* armazenamento local indisponível */ }
         try {
-            const salvas = JSON.parse(
-                localStorage.getItem("portoAjudaPreferencias") ?? "null"
-            );
-
-            if (salvas) {
-                const nomeTamanho = Object.keys(TAMANHOS_FONTE).find(
-                    chave => TAMANHOS_FONTE[chave] === salvas.tamanhoFonte
-                );
-
-                if (nomeTamanho) {
-                    marcarEscolha("acss-tamanho-letra", nomeTamanho);
+            const preferenciasRemotas = await fetchAutenticado("/usuario/preferencias", { method: "GET" });
+            if (preferenciasRemotas.ok) {
+                const remotas = await preferenciasRemotas.json();
+                if (remotas?.causasPersistidas === true && Array.isArray(remotas.tiposOng)
+                    && (remotas.tiposOng.length > 0 || !Array.isArray(salvas?.tiposOng))) {
+                    salvas = { ...(salvas || {}), tiposOng: remotas.tiposOng };
+                    try { localStorage.setItem("portoAjudaPreferencias", JSON.stringify(salvas)); } catch { /* preferências em memória */ }
                 }
-
-                marcarEscolha(
-                    "acss-modo-exibicao",
-                    salvas.altoContraste ? "alto-contraste" : salvas.tema
-                );
-
-                if (libras) libras.checked = Boolean(salvas.libras);
-
-                (salvas.tiposOng ?? []).forEach(tipo => {
-                    marcarEscolha("acss-tipos-ong", tipo);
-                });
             }
-        } catch {
-            /* preferências locais inválidas: ignora */
+        } catch { /* mantém as causas que a pessoa salvou neste navegador */ }
+        if (salvas) {
+            const nomeTamanho = Object.keys(TAMANHOS_FONTE).find(chave => TAMANHOS_FONTE[chave] === salvas.tamanhoFonte);
+            if (nomeTamanho) marcarEscolha("acss-tamanho-letra", nomeTamanho);
+            marcarEscolha("acss-modo-exibicao", salvas.altoContraste ? "alto-contraste" : salvas.tema);
+            if (libras) libras.checked = Boolean(salvas.libras);
+            (salvas.tiposOng ?? []).forEach(tipo => marcarEscolha("acss-tipos-ong", tipo));
         }
 
         atualizarContadorOng();
+        const personalizarVisitas = document.getElementById("personalizar-pelas-minhas-visitas");
+        const resetarSugestoes = document.getElementById("redefinir-sugestoes");
+        const abrirConfigPersonalizacao = document.getElementById("configurar-consentimento-personalizacao");
+        const estadoSugestoes = document.getElementById("pa-recommendation-reset-status");
+        if (personalizarVisitas) {
+            await personalizationReady();
+            personalizarVisitas.checked = isPersonalizationEnabled();
+            personalizarVisitas.addEventListener("change", () => {
+                setPersonalizationEnabled(personalizarVisitas.checked);
+                if (estadoSugestoes) estadoSugestoes.textContent = personalizarVisitas.checked
+                    ? "Personalização pelas visitas ativada neste navegador."
+                    : "Personalização desativada; o histórico local foi apagado. Suas causas salvas continuam ativas.";
+            });
+        }
+        resetarSugestoes?.addEventListener("click", () => {
+            resetSuggestions();
+            if (estadoSugestoes) estadoSugestoes.textContent = "Sugestões redefinidas com base nas causas salvas no perfil.";
+        });
+        abrirConfigPersonalizacao?.addEventListener("click", openPersonalizationSettings);
 
         /* =============================================
            SALVAR PREFERÊNCIAS DE ACESSIBILIDADE
@@ -1286,14 +1298,15 @@ document.addEventListener("DOMContentLoaded", async () => {
                     );
                 }
 
-                // Atualiza o cache local utilizado pelo site.
-                localStorage.setItem(
-                    "portoAjudaPreferencias",
-                    JSON.stringify(dados)
-                );
+                // Preferências explicitamente salvas no perfil: causas ficam separadas do histórico comportamental.
+                try { localStorage.setItem("portoAjudaPreferencias", JSON.stringify(dados)); } catch { /* backend pode persistir as causas */ }
+                await saveExplicitCausePreferences(dados.tiposOng);
                 definirTamanhoFonte(tamanhoFonte, { persistir: false });
-
-                notificarToast("Preferências de acessibilidade salvas com sucesso.", { tipo: "sucesso" });
+                if (dados.tiposOng.length && resultado.causasPersistidas === false) {
+                    estadoPreferenciasAcss.textContent = "Acessibilidade salva. A sincronização das causas para novos dispositivos depende da atualização do serviço.";
+                    estadoPreferenciasAcss.hidden = false;
+                }
+                notificarToast("Preferências salvas com sucesso.", { tipo: "sucesso" });
 
             } catch (erro) {
                 console.error("Erro ao salvar preferências:", erro);
