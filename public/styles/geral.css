@@ -861,14 +861,48 @@ footer {
         display: none;
     }
 
-    .logo {
-        font-size: 1.4rem;
-
-        gap: 8px;
+    /* Cabeçalho mobile: ☰ à esquerda, perfil à direita, logo no centro */
+    .header-actions {
+        flex: 1;
+        justify-content: space-between;
     }
 
-    .logo-circle-img {
-        width: 60px;
+    .navbar > a.logo-link {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 1;
+    }
+
+    .navbar .logo {
+        position: relative;
+        justify-content: center;
+        width: auto;
+        max-width: none;
+        margin: 0;
+        gap: 0;
+        font-size: 1.9rem;
+    }
+
+    .navbar .logo-circle {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        opacity: 0.5;
+        z-index: 0;
+        pointer-events: none;
+    }
+
+    .navbar .logo-circle-img {
+        width: auto;
+        height: 80px;
+    }
+
+    .navbar .logo span {
+        position: relative;
+        z-index: 1;
     }
 
     .profile-icon {
@@ -895,63 +929,59 @@ footer {
      ======================================================= */
 
     footer {
+        --footer-img: 130px;
+
         width: 100%;
-
         min-height: 0;
-
         padding: 30px 20px;
 
-        display: flex;
-
-        flex-direction: column;
-
+        /* nome em cima e links embaixo, ambos centralizados no footer */
+        display: grid;
+        grid-template-columns: 1fr;
+        justify-items: center;
         align-items: center;
-
-        justify-content: center;
+        row-gap: 20px;
 
         text-align: center;
 
-        gap: 25px;
-
-        border-top:
-            1px solid rgba(255, 255, 255, 0.12);
+        border-top: 1px solid rgba(255, 255, 255, 0.12);
     }
 
-    .footer-logo {
-        font-size: 1.5rem;
-
-        width: 100%;
+    /* Referência para a imagem absoluta. Com :where() (especificidade 0), não
+       sobrescreve o `position: absolute` que a home já aplica ao footer. */
+    :where(footer) {
+        position: relative;
     }
 
+    /* Os wrappers "somem": a imagem, o nome e os links viram itens diretos
+       do footer. */
+    .footer-logo,
     .logo-footer {
-        justify-content: center;
-
-        font-size: 1.5rem;
-
-        gap: 8px;
-    }
-
-    .logo-footer .img {
-        width: 70px;
+        display: contents;
     }
 
     .logo-name {
+        justify-self: center;
         position: static;
-
         padding: 0;
+        font-size: 3rem;
+        text-align: center;
+    }
+
+    /* Imagem fora do fluxo: não desalinha o nome nem os links. */
+    .logo-footer .img {
+        position: absolute;
+        left: 12px;
+        bottom: 30px;
+        width: var(--footer-img);
+        height: var(--footer-img);
     }
 
     .footer-links {
-        width: 100%;
-
         display: flex;
-
         flex-direction: column;
-
         align-items: center;
-
         justify-content: center;
-
         gap: 14px;
     }
 
@@ -976,14 +1006,12 @@ footer {
         padding: 0 12px;
     }
 
-    .logo {
-        font-size: 1.2rem;
-
-        gap: 6px;
+    .navbar .logo {
+        font-size: 1.7rem;
     }
 
-    .logo-circle-img {
-        width: 50px;
+    .navbar .logo-circle-img {
+        height: 74px;
     }
 
     .profile-icon {
@@ -999,17 +1027,28 @@ footer {
     }
 
     footer {
+        --footer-img: 115px;
+
         padding: 25px 15px;
 
-        gap: 20px;
+        row-gap: 18px;
     }
 
-    .logo-footer {
-        font-size: 1.3rem;
+    .logo-name {
+        font-size: 2.6rem;
     }
 
     .logo-footer .img {
-        width: 60px;
+        left: 10px;
+        bottom: 25px;
+    }
+}
+
+/* Telas bem estreitas: imagem menor para não encostar nos links */
+@media (max-width: 360px) {
+
+    footer {
+        --footer-img: 84px;
     }
 }
 

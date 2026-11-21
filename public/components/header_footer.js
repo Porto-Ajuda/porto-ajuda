@@ -178,7 +178,7 @@ document.body.insertAdjacentHTML(
 
 const cabecalho = `
 
-<a href="${ROTAS.home}">
+<a href="${ROTAS.home}" class="logo-link">
 
     <div class="logo">
 
