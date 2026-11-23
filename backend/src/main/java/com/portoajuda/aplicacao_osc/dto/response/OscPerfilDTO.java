@@ -1,12 +1,12 @@
 
 package com.portoajuda.aplicacao_osc.dto.response;
 
+import java.time.LocalTime;
+import java.util.Set;
+
 import com.portoajuda.aplicacao_osc.entity.Osc;
 import com.portoajuda.aplicacao_osc.enums.CausaSocial;
 import com.portoajuda.aplicacao_osc.enums.StatusOsc;
-
-import java.time.LocalTime;
-import java.util.Set;
 
 public record OscPerfilDTO(
         Integer id,
@@ -54,23 +54,37 @@ public record OscPerfilDTO(
         Integer idadeMinimaVoluntario,
         Boolean processoSeletivoVoluntario,
         Boolean emiteCertificadoVoluntario,
-        String atividadesVoluntariado
+        String atividadesVoluntariado,
+        boolean temContaStripe
 ) {
     public static OscPerfilDTO de(Osc osc) {
-        return criar(osc, false, false);
+        return criar(osc, false, false, false);
+    }
+
+    public static OscPerfilDTO de(Osc osc, boolean temContaStripe) {
+        return criar(osc, false, false, temContaStripe);
     }
 
     public static OscPerfilDTO dePrivado(
             Osc osc,
             boolean podeAlterarStatus,
             boolean podeAdministrarStatusPlataforma) {
-        return criar(osc, podeAlterarStatus, podeAdministrarStatusPlataforma);
+        return criar(osc, podeAlterarStatus, podeAdministrarStatusPlataforma, false);
+    }
+
+    public static OscPerfilDTO dePrivado(
+            Osc osc,
+            boolean podeAlterarStatus,
+            boolean podeAdministrarStatusPlataforma,
+            boolean temContaStripe) {
+        return criar(osc, podeAlterarStatus, podeAdministrarStatusPlataforma, temContaStripe);
     }
 
     private static OscPerfilDTO criar(
             Osc osc,
             boolean podeAlterarStatus,
-            boolean podeAdministrarStatusPlataforma) {
+            boolean podeAdministrarStatusPlataforma,
+            boolean temContaStripe) {
         return new OscPerfilDTO(
                 osc.getId(),
                 osc.getStatus(),
@@ -115,7 +129,8 @@ public record OscPerfilDTO(
                 osc.getIdadeMinimaVoluntario(),
                 osc.getProcessoSeletivoVoluntario(),
                 osc.getEmiteCertificadoVoluntario(),
-                osc.getAtividadesVoluntariado()
+                osc.getAtividadesVoluntariado(),
+                temContaStripe
         );
     }
 }

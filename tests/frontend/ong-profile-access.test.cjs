@@ -58,6 +58,19 @@ test("NGO member sees its active public profile and member permissions are check
     assert.match(profileSource, /void carregarPermissoes\(id, acesso\.organizacoes\)/);
 });
 
+test("Stripe setup is tied to the selected creator NGO and donations require a registered Stripe account", async () => {
+    const profileSource = await readFile(resolve(__dirname, "../../public/components/ong-profile.js"), "utf8");
+    const html = await readFile(resolve(__dirname, "../../public/pages/ong-profile.html"), "utf8");
+    const settingsPage = await readFile(resolve(__dirname, "../../public/pages/perfil.html"), "utf8");
+
+    assert.match(profileSource, /vinculo\?\.cargo !== "CRIADOR"/);
+    assert.match(profileSource, /account-link\?oscId=.*oscAtual\.id/);
+    assert.match(profileSource, /osc\.temContaStripe !== true/);
+    assert.match(html, /id="criar-stripe"[^>]*hidden/);
+    assert.match(html, /id="efetuar-doacao"[^>]*hidden/);
+    assert.doesNotMatch(settingsPage, /id="criar-stripe"/);
+});
+
 test("NGO administrator reaches private profile only after membership confirmation", async () => {
     const { carregarPerfilOngAcessivel } = await loadAccessModule();
     const callOrder = [];

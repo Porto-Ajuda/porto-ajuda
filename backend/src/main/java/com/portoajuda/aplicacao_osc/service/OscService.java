@@ -1,19 +1,45 @@
 package com.portoajuda.aplicacao_osc.service;
 
-import com.portoajuda.aplicacao_osc.dto.request.RequestNewMembroDTO;
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
+
 import com.portoajuda.aplicacao_osc.admin.AdminAuthorizationService;
 import com.portoajuda.aplicacao_osc.admin.AdminPermission;
+import com.portoajuda.aplicacao_osc.dto.request.RequestNewMembroDTO;
 import com.portoajuda.aplicacao_osc.dto.request.RequestOscDTO;
 import com.portoajuda.aplicacao_osc.dto.request.UpdateOscDTO;
-import com.portoajuda.aplicacao_osc.dto.response.Coordenadas;
 import com.portoajuda.aplicacao_osc.dto.response.ConsultaCnpjDTO;
-import com.portoajuda.aplicacao_osc.dto.response.ResponseOscDTO;
+import com.portoajuda.aplicacao_osc.dto.response.Coordenadas;
+import com.portoajuda.aplicacao_osc.dto.response.OscEdicaoDTO;
 import com.portoajuda.aplicacao_osc.dto.response.OscListagemDTO;
 import com.portoajuda.aplicacao_osc.dto.response.OscMembroDTO;
-import com.portoajuda.aplicacao_osc.dto.response.OscUsuarioDTO;
 import com.portoajuda.aplicacao_osc.dto.response.OscPerfilDTO;
-import com.portoajuda.aplicacao_osc.dto.response.OscEdicaoDTO;
-import com.portoajuda.aplicacao_osc.entity.*;
+import com.portoajuda.aplicacao_osc.dto.response.OscUsuarioDTO;
+import com.portoajuda.aplicacao_osc.dto.response.ResponseOscDTO;
+import com.portoajuda.aplicacao_osc.entity.Osc;
+import com.portoajuda.aplicacao_osc.entity.OscMembros;
+import com.portoajuda.aplicacao_osc.entity.Role;
+import com.portoajuda.aplicacao_osc.entity.Usuario;
 import com.portoajuda.aplicacao_osc.enums.CargoOsc;
 import com.portoajuda.aplicacao_osc.enums.CausaSocial;
 import com.portoajuda.aplicacao_osc.enums.OrigemDesativacao;
@@ -21,34 +47,12 @@ import com.portoajuda.aplicacao_osc.enums.StatusOsc;
 import com.portoajuda.aplicacao_osc.repository.OscMembrosRepository;
 import com.portoajuda.aplicacao_osc.repository.OscRepository;
 import com.portoajuda.aplicacao_osc.repository.RoleRepository;
+import com.portoajuda.aplicacao_osc.repository.StripeAccountRepository;
 import com.portoajuda.aplicacao_osc.repository.UsuarioRepository;
 import com.portoajuda.aplicacao_osc.utils.Cnpj;
 import com.portoajuda.aplicacao_osc.utils.Email;
 
 import lombok.RequiredArgsConstructor;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.server.ResponseStatusException;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.io.IOException;
-import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -76,6 +80,8 @@ public class OscService {
     private VerificacaoRepresentanteService verificationService;
     @Autowired(required = false)
     private ManagedImageCleanupService managedImageCleanup;
+    @Autowired(required = false)
+    private StripeAccountRepository stripeAccountRepository;
 
     // =====================================================
     // PERMISSÕES
@@ -770,7 +776,7 @@ public class OscService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Organização não encontrada.");
         }
 
-        return OscPerfilDTO.de(osc);
+        return OscPerfilDTO.de(osc, temContaStripe(osc.getId()));
     }
 
     @Transactional(readOnly = true)
@@ -795,7 +801,7 @@ public class OscService {
                             ? AdminPermission.ORG_DEACTIVATE
                             : AdminPermission.ORG_REACTIVATE;
             boolean podeAdministrarStatus = adminAuthorization.hasPermission(authentication, statusPermission);
-            return OscPerfilDTO.dePrivado(osc, false, podeAdministrarStatus);
+            return OscPerfilDTO.dePrivado(osc, false, podeAdministrarStatus, temContaStripe(osc.getId()));
         }
 
         CargoOsc cargo = obterCargoUsuario(osc, solicitante);
@@ -805,7 +811,11 @@ public class OscService {
             podeAlterarStatus = podeAlterarStatus
                     && (origem == null || origem == OrigemDesativacao.ONG);
         }
-        return OscPerfilDTO.dePrivado(osc, podeAlterarStatus, false);
+        return OscPerfilDTO.dePrivado(osc, podeAlterarStatus, false, temContaStripe(osc.getId()));
+    }
+
+    private boolean temContaStripe(Integer oscId) {
+        return stripeAccountRepository != null && stripeAccountRepository.existsByOscId(oscId);
     }
 
     @Transactional(readOnly = true)

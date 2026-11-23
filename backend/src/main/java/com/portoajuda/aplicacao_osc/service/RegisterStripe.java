@@ -1,5 +1,10 @@
 package com.portoajuda.aplicacao_osc.service;
 
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
 import com.portoajuda.aplicacao_osc.entity.Osc;
 import com.portoajuda.aplicacao_osc.entity.StripeAccounts;
 import com.portoajuda.aplicacao_osc.entity.Usuario;
@@ -12,11 +17,8 @@ import com.stripe.model.v2.core.AccountLink;
 import com.stripe.net.RequestOptions;
 import com.stripe.param.v2.core.AccountCreateParams;
 import com.stripe.param.v2.core.AccountLinkCreateParams;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
 
-import java.util.Optional;
+import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 @Service
@@ -29,9 +31,9 @@ public class RegisterStripe {
     private String urlBackend;
     private final StripeAccountRepository stripeAccountRepository;
 
-    public String createStripeAccount(Usuario usuario) throws StripeException {
-        Osc osc = oscRepository.findByUsuarioIdAndDataArquivamentoIsNull(usuario.getId())
-                .orElseThrow(() -> new RuntimeException("Você não possui uma OSC cadastrada"));
+    public String createStripeAccount(Usuario usuario, Integer oscId) throws StripeException {
+        Osc osc = oscRepository.findById(oscId)
+                .orElseThrow(() -> new RuntimeException("OSC não encontrada"));
         if (osc.getUsuario() == null || !osc.getUsuario().getId().equals(usuario.getId())) {
             throw new RuntimeException("Você não possui permissão para criar uma conta Stripe para essa OSC");
         }
@@ -120,7 +122,7 @@ public class RegisterStripe {
         return account.getId();
     }
 
-    public String createOnboardingLink(String stripeAccountId) throws StripeException {
+        public String createOnboardingLink(String stripeAccountId, Integer oscId) throws StripeException {
         AccountLinkCreateParams params = AccountLinkCreateParams.builder()
                 .setAccount(stripeAccountId)
                 .setUseCase(
@@ -129,7 +131,7 @@ public class RegisterStripe {
                                 .setAccountOnboarding(
                                         AccountLinkCreateParams.UseCase.AccountOnboarding.builder()
                                                 .setReturnUrl(urlSite)
-                                                .setRefreshUrl(urlBackend + "/refresh/account-onboarding")
+                                                .setRefreshUrl(urlBackend + "/stripe/refresh/account-onboarding?oscId=" + oscId)
                                                 .build()
                                 )
                                 .build()
@@ -140,10 +142,10 @@ public class RegisterStripe {
         return accountLink.getUrl();
     }
 
-    public String refreshOnboardingLink(Usuario usuario)
+        public String refreshOnboardingLink(Usuario usuario, Integer oscId)
             throws StripeException {
 
-        Osc osc = oscRepository.findByUsuarioIdAndDataArquivamentoIsNull(usuario.getId())
+                Osc osc = oscRepository.findById(oscId)
                 .orElseThrow(() ->
                         new RuntimeException("OSC não encontrada"));
 
@@ -156,8 +158,6 @@ public class RegisterStripe {
                 .orElseThrow(() ->
                         new RuntimeException("Conta Stripe não encontrada"));
 
-        return createOnboardingLink(
-                account.getStripeAccountId()
-        );
+        return createOnboardingLink(account.getStripeAccountId(), osc.getId());
     }
 }

@@ -1,16 +1,17 @@
 package com.portoajuda.aplicacao_osc.dto.response;
 
-import com.portoajuda.aplicacao_osc.entity.Osc;
-import com.portoajuda.aplicacao_osc.enums.CausaSocial;
-import com.portoajuda.aplicacao_osc.utils.Email;
-import org.junit.jupiter.api.Test;
-import org.springframework.test.util.ReflectionTestUtils;
-import tools.jackson.databind.json.JsonMapper;
-
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
+
+import com.portoajuda.aplicacao_osc.entity.Osc;
+import com.portoajuda.aplicacao_osc.enums.CausaSocial;
+import com.portoajuda.aplicacao_osc.utils.Email;
+
+import tools.jackson.databind.json.JsonMapper;
 
 class OscPerfilDTOTest {
 
@@ -47,5 +48,15 @@ class OscPerfilDTOTest {
         assertTrue(json.contains("\"causasSecundarias\":[\"SAUDE\"]"));
         assertTrue(json.contains("\"descricao\":\"Atendimento comunitário\""));
         assertTrue(json.contains("\"email\":\"contato@instituto.org.br\""));
+    }
+
+    @Test
+    void incluiSomenteIndicadorDeContaStripeNoPerfil() {
+        Osc osc = new Osc();
+        ReflectionTestUtils.setField(osc, "id", 82);
+        osc.setNome("Instituto Exemplo");
+
+        assertTrue(OscPerfilDTO.de(osc, true).temContaStripe());
+        assertEquals(false, OscPerfilDTO.de(osc, false).temContaStripe());
     }
 }

@@ -614,6 +614,8 @@ function renderizarPerfil(osc) {
         botaoDenunciarOsc.dataset.reportId = String(osc.id);
         botaoDenunciarOsc.hidden = osc.status !== "ATIVA" || osc.arquivada === true;
     }
+    const botaoDoar = document.getElementById("efetuar-doacao");
+    if (botaoDoar) botaoDoar.hidden = osc.temContaStripe !== true;
     document.title = `${textoLimpo(osc.nome) || "Organização"} | Porto Ajuda`;
     const avisoStatus = document.getElementById("estado-status-osc");
     avisoStatus.hidden = osc.status !== "INATIVA" && !osc.arquivada;
@@ -1305,6 +1307,8 @@ function resetarConteudoPublico() {
     verificacaoConteudoPublicoConcluida = false;
     membroOscConfirmado = false;
     verificacaoMembroOscConcluida = false;
+    const botaoStripe = document.getElementById("criar-stripe");
+    if (botaoStripe) botaoStripe.hidden = true;
     for (const id of ["aba-conteudo", "aba-membros", "aba-dados"]) {
         const aba = document.getElementById(id);
         aba.hidden = true;
@@ -2312,6 +2316,8 @@ async function podeLerPerfilPrivadoComoAdmin() {
 }
 
 async function carregarPermissoes(id, organizacoesCarregadas = null) {
+    const botaoStripe = document.getElementById("criar-stripe");
+    if (botaoStripe) botaoStripe.hidden = true;
     if (obterEstadoSessao() === "anonymous") {
         definirAcessoAbasPrivadas(false);
         return;
@@ -2325,6 +2331,9 @@ async function carregarPermissoes(id, organizacoesCarregadas = null) {
             return;
         }
         const vinculo = organizacoes.find((osc) => Number(osc.id) === Number(id));
+        if (botaoStripe) {
+            botaoStripe.hidden = vinculo?.cargo !== "CRIADOR" || oscAtual?.arquivada === true;
+        }
         if (!vinculo?.cargo || oscAtual?.arquivada) {
             definirAcessoAbasPrivadas(false);
             if (vinculo && oscAtual?.arquivada) await configurarGestao();
@@ -2502,6 +2511,14 @@ async function iniciarCheckoutDoacao() {
         botaoConfirmar.textContent = "Confirmar";
     }
 }
+
+document.getElementById("criar-stripe")?.addEventListener("click", () => {
+    if (!oscAtual?.id) return;
+    const botao = document.getElementById("criar-stripe");
+    botao.disabled = true;
+    botao.textContent = "Aguarde...";
+    window.location.assign(`${API_URL.replace(/\/+$/, "")}/stripe/account-link?oscId=${encodeURIComponent(oscAtual.id)}`);
+});
 
 document.addEventListener("keydown", evento => {
     if (modalDoacao.hidden) return;
