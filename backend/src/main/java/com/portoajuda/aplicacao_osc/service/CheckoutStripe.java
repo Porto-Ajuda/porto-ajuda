@@ -7,11 +7,7 @@ import javax.management.InvalidAttributeValueException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import com.portoajuda.aplicacao_osc.entity.Osc;
-import com.portoajuda.aplicacao_osc.entity.Usuario;
-import com.portoajuda.aplicacao_osc.repository.OscRepository;
-import com.portoajuda.aplicacao_osc.repository.StripeAccountRepository;
-import com.portoajuda.aplicacao_osc.repository.UsuarioRepository;
+import com.portoajuda.aplicacao_osc.entity.Doacao;
 import com.stripe.StripeClient;
 import com.stripe.model.checkout.Session;
 import com.stripe.net.RequestOptions;
@@ -22,27 +18,12 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class CheckoutStripe {
-    private final OscRepository oscRepository;
-    private final UsuarioRepository usuarioRepository;
     @Value("${APP_FRONTEND_URL}")
     private String urlSite;
-    @Value("${APP_BACKEND_URL}")
-    private String urlBackend;
-    private final StripeAccountRepository stripeAccountRepository;
     private final StripeClient stripeClient;
 
-    public Session createCheckoutSession(Usuario usuario, Integer oscId, BigDecimal valor) throws Exception {
-        usuarioRepository.findById(usuario.getId())
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
-        if(!usuario.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_USUARIO"))) {
-            throw new RuntimeException("Faça login com uma conta de usuário para realizar doações");
-        }
-        Osc osc = oscRepository.findById(oscId)
-                .orElseThrow(() -> new RuntimeException("OSC não encontrada"));
-        String stripeAccountId = stripeAccountRepository.findByOscId(osc.getId())
-                .orElseThrow(() -> new RuntimeException("Conta Stripe não encontrada para a OSC"))
-                .getStripeAccountId();
-
+        public Session createCheckoutSession(Doacao doacao) throws Exception {
+                BigDecimal valor = doacao.getValor();
         if (valor == null || valor.compareTo(BigDecimal.ZERO) <= 0) {
             throw new InvalidAttributeValueException("Valor inválido");
         }
@@ -65,10 +46,14 @@ public class CheckoutStripe {
             .setSubmitType(SessionCreateParams.SubmitType.DONATE)
             .setSuccessUrl(urlSite + "/stripe/success")
             .setCancelUrl(urlSite + "/stripe/cancel")
-            .putMetadata("oscId", String.valueOf(oscId))
+            .putMetadata("doacaoId", doacao.getId().toString())
+            .putMetadata("oscId", doacao.getOsc().getId().toString())
+            .putMetadata("usuarioId", doacao.getUsuario().getId().toString())
             .setPaymentIntentData(
                     SessionCreateParams.PaymentIntentData.builder()
-                            .putMetadata("oscId", osc.getId().toString())
+                            .putMetadata("doacaoId", doacao.getId().toString())
+                            .putMetadata("oscId", doacao.getOsc().getId().toString())
+                            .putMetadata("usuarioId", doacao.getUsuario().getId().toString())
                             .build()
             )
             .addLineItem(
@@ -79,7 +64,7 @@ public class CheckoutStripe {
                                             .setUnitAmount(valorEmCentavos)
                                             .setProductData(
                                                     SessionCreateParams.LineItem.PriceData.ProductData.builder()
-                                                            .setName("Doação para " + osc.getNome())
+                                                            .setName("Doação para " + doacao.getOsc().getNome())
                                                             .setDescription("Doação voluntária")
                                                             .build()
                                             )
@@ -90,7 +75,7 @@ public class CheckoutStripe {
             ).build();
 
         RequestOptions requestOptions = RequestOptions.builder()
-                .setStripeAccount(stripeAccountId)
+                .setStripeAccount(doacao.getStripeAccountId())
                 .build();
 
         return stripeClient.v1()

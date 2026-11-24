@@ -22,6 +22,12 @@ Execute o backend a partir de `backend` com `mvnw.cmd spring-boot:run` no Window
 
 O `.env` usa exclusivamente `DB_URL`, `DB_USER` e `DB_PASSWORD` para o datasource. O usuario pelo pooler Supabase deve preservar o identificador de projeto exigido pelo provedor.
 
+## Doações avulsas e webhook Stripe
+
+Antes de iniciar o backend com a versão que persiste doações avulsas, aplique manualmente `src/main/resources/db/manual/20261123_direct_donation_stripe.sql` no PostgreSQL configurado. O Hibernate está em modo `validate` e não executa essa migração.
+
+Configure `STRIPE_DONATION_WEBHOOK_SECRET` no backend com o signing secret do endpoint de webhook. No Stripe, cadastre `https://<APP_BACKEND_URL>/stripe/donation-webhook` para eventos de contas conectadas e selecione `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed` e `checkout.session.expired`. Mantenha o signing secret somente no servidor. Sem essa configuração, a doação ainda pode iniciar o checkout, mas o endpoint não aceitará confirmações; configure o webhook antes de usar pagamentos.
+
 ## Railway
 
 O repositorio nao contem arquivo versionado de configuracao Railway. Cadastre `DB_URL`, `DB_USER` e `DB_PASSWORD` no painel de variaveis do servico. A execucao local e o deploy usam a mesma configuracao PostgreSQL, sem alternancia por perfil.

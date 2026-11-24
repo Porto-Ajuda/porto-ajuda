@@ -19,9 +19,13 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
 @Table(name = "doacoes")
+@Getter
+@Setter
 public class Doacao {
 
     @Id
@@ -46,6 +50,18 @@ public class Doacao {
     @Column(name = "status", nullable = false)
     @Enumerated(EnumType.STRING)
     private StatusDoacao status;
+
+    @Column(name = "stripe_session_id", unique = true, length = 255)
+    private String stripeSessionId;
+
+    @Column(name = "stripe_payment_intent_id", unique = true, length = 255)
+    private String stripePaymentIntentId;
+
+    @Column(name = "stripe_account_id", length = 255)
+    private String stripeAccountId;
+
+    @Column(name = "stripe_livemode", nullable = false)
+    private boolean stripeLivemode;
 
     @CreationTimestamp
     @Column(name = "data_pag", nullable = false, updatable = false)

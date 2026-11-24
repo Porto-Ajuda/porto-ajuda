@@ -3524,6 +3524,7 @@ body.alto-contraste .perfil-publico :is(.bloco-perfil p, .lista-perfil, .texto-a
 }
 .campo-valor-doacao:focus-within { outline: 3px solid #f9c86b; outline-offset: 3px; }
 .feedback-doacao-perfil { min-height: 1.4em; margin: 12px 0 0; color: #ffb8b8; font-size: .88rem; }
+#efetuar-doacao.doacao-login-alerta { outline: 2px solid #c93636; outline-offset: 3px; box-shadow: 0 0 0 5px rgba(201, 54, 54, .2); }
 .acoes-doacao-perfil { display: flex; justify-content: flex-end; gap: 10px; margin-top: 26px; }
 .acoes-doacao-perfil button {
   min-height: 44px; padding: 9px 16px; border: 1px solid #ddaa41; border-radius: 7px;

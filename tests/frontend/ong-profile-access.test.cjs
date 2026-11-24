@@ -71,6 +71,18 @@ test("Stripe setup is tied to the selected creator NGO and donations require a r
     assert.doesNotMatch(settingsPage, /id="criar-stripe"/);
 });
 
+test("anonymous donation click is blocked and briefly displays the login warning", async () => {
+    const profileSource = await readFile(resolve(__dirname, "../../public/components/ong-profile.js"), "utf8");
+    const profileStyles = await readFile(resolve(__dirname, "../../public/styles/ong-profile.css"), "utf8");
+    const clickHandler = profileSource.slice(profileSource.indexOf('botaoDoar.addEventListener("click"'), profileSource.indexOf('botaoCancelarDoacao.addEventListener'));
+
+    assert.match(clickHandler, /obterEstadoSessao\(\) !== "authenticated"/);
+    assert.match(clickHandler, /textContent = "Necessário estar logado"/);
+    assert.match(clickHandler, /setTimeout\([\s\S]*?3000\)/);
+    assert.match(clickHandler, /return;[\s\S]*?modalDoacao.hidden = false/);
+    assert.match(profileStyles, /#efetuar-doacao\.doacao-login-alerta[^{]*\{[^}]*#c93636/);
+});
+
 test("NGO administrator reaches private profile only after membership confirmation", async () => {
     const { carregarPerfilOngAcessivel } = await loadAccessModule();
     const callOrder = [];

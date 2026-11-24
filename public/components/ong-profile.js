@@ -2445,6 +2445,18 @@ function fecharModalDoacao() {
 }
 
 botaoDoar.addEventListener("click", () => {
+    if (obterEstadoSessao() !== "authenticated") {
+        const textoOriginal = botaoDoar.dataset.textoOriginal || botaoDoar.textContent;
+        botaoDoar.dataset.textoOriginal = textoOriginal;
+        botaoDoar.textContent = "Necessário estar logado";
+        botaoDoar.classList.add("doacao-login-alerta");
+        window.clearTimeout(botaoDoar.timerAvisoLogin);
+        botaoDoar.timerAvisoLogin = window.setTimeout(() => {
+            botaoDoar.textContent = textoOriginal;
+            botaoDoar.classList.remove("doacao-login-alerta");
+        }, 3000);
+        return;
+    }
     overflowAnterior = document.body.style.overflow;
     campoValorDoacao.value = "5.00";
     modalDoacao.hidden = false;
