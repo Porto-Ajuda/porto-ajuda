@@ -918,9 +918,9 @@ body {
         width: 20px;
     }
 
-    .sobre-titulo {
+    .sobre-hero-text .sobre-titulo {
         width: 100%;
-        font-size: clamp(2rem, 13vw, 2rem);
+        font-size: clamp(3rem, 16vw, 4rem);
         line-height: .9;
         overflow-wrap: break-word;
     }
@@ -1059,8 +1059,8 @@ body {
         padding: 90px 14px 40px;
     }
 
-    .sobre-titulo {
-        font-size: 2.7rem;
+    .sobre-hero-text .sobre-titulo {
+        font-size: clamp(3rem, 16vw, 4rem);
     }
 
     .sobre-subtitulo {
