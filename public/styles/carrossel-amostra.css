@@ -59,7 +59,7 @@
     line-height: 1.7;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1200px) {
     .secao-ongs {
         padding: 0;
     }

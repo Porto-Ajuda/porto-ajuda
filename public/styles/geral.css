@@ -855,7 +855,7 @@ footer {
    O MENU ☰ SÓ APARECE AQUI
    ========================================================= */
 
-@media (max-width: 768px) {
+@media (max-width: 1200px) {
 
     .navbar {
         height: 70px;

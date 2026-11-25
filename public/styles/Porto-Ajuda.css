@@ -679,7 +679,7 @@ Lista escondida
 
 }
 
-@media(max-width:768px) {
+@media(max-width:1200px) {
 
   .hero {
     padding:
@@ -1446,7 +1446,7 @@ Lista escondida
 /* RESPONSIVO MODAL */
 /* ========================= */
 
-@media(max-width: 768px) {
+@media(max-width: 1200px) {
 
   .modal-container,
   .modal-card-container {
@@ -1614,7 +1614,7 @@ Lista escondida
    CELULAR
    ========================================================= */
 
-@media (max-width: 768px) {
+@media (max-width: 1200px) {
 
   /* =======================================================
      HERO
@@ -2089,7 +2089,7 @@ Lista escondida
 }
 
 /* Desktop */
-@media (min-width: 769px) {
+@media (min-width: 1201px) {
 
     .dropdown-regiao:hover .regioes {
         opacity: 1;
@@ -2100,7 +2100,7 @@ Lista escondida
 }
 
 /* Mobile */
-@media (max-width: 768px) {
+@media (max-width: 1200px) {
 
     .dropdown-regiao.aberto .regioes {
         opacity: 1;
@@ -2110,7 +2110,7 @@ Lista escondida
 
 }
 
-@media (min-width: 769px) {
+@media (min-width: 1201px) {
 
   .regioes {
     pointer-events: auto;
@@ -2358,7 +2358,7 @@ Lista escondida
   overflow-wrap: anywhere;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1200px) {
   .modal-card-vaga-detalhes {
     grid-template-columns: minmax(85px, .4fr) minmax(0, 1fr);
   }
@@ -2372,7 +2372,7 @@ Lista escondida
 }
 
 /* HOME (MOBILE) - HERO CENTRALIZADO + DIVIDER APARECENDO */
-@media (max-width: 768px) {
+@media (max-width: 1200px) {
   .hero {
     min-height: 0;
     height: calc(100vh - 64px);
