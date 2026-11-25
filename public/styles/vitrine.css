@@ -445,6 +445,41 @@
     opacity: 1;
 }
 
+@media (hover: none) and (pointer: coarse) {
+    .vitrine-item:focus-within {
+        flex-basis: var(--v-w);
+        width: var(--v-w);
+    }
+
+    .vitrine-item:focus-within .vitrine-topo,
+    .vitrine-item:focus-within .vitrine-nome,
+    .vitrine-item:focus-within .vitrine-local-base,
+    .vitrine-item:focus-within .vitrine-cta {
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .vitrine-item:focus-within .vitrine-sep,
+    .vitrine-item:focus-within .vitrine-local-topo {
+        max-width: 0;
+        margin-left: 0;
+        opacity: 0;
+    }
+
+    .vitrine-item:focus-within .vitrine-nome {
+        --v-teto-nome: 2.5rem;
+    }
+
+    .vitrine-item:focus-within .vitrine-local-base {
+        opacity: 1;
+    }
+
+    .vitrine-item:focus-within .vitrine-cta {
+        opacity: 0;
+        pointer-events: none;
+    }
+}
+
 
 /* os outros cards recuam para o segundo plano */
 @media (hover: hover) and (pointer: fine) {
