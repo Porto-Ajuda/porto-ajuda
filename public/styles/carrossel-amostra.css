@@ -65,10 +65,17 @@
     }
 
     .cabecalho-ongs {
-        align-items: flex-end;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
         width: 100%;
         gap: 14px;
         margin-bottom: 22px;
+        text-align: center;
+    }
+
+    .cabecalho-ongs > div {
+        width: 100%;
     }
 
     .cabecalho-ongs h2 {
@@ -77,6 +84,8 @@
 
     .cabecalho-ongs p {
         font-size: 0.82rem;
+        margin-inline: auto;
+        text-align: center;
     }
 }
 

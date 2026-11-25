@@ -2370,3 +2370,45 @@ Lista escondida
   }
 
 }
+
+/* HOME (MOBILE) - HERO CENTRALIZADO + DIVIDER APARECENDO */
+@media (max-width: 768px) {
+  .hero {
+    min-height: 0;
+    height: calc(100vh - 64px);
+    height: calc(100svh - 64px);
+    padding: 65px 20px 0;
+    align-items: center;
+    justify-content: center;
+  }
+  .divider img {
+    display: none;
+  }
+  .hero-container {
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+  }
+  .hero-text {
+    padding-top: 0;
+    text-align: center;
+  }
+  .section-content {
+    text-align: center;
+  }
+  .section-image {
+    display: contents;
+  }
+  .section-image > :not(.btn-editar-secao) {
+    display: none;
+  }
+  .section-image .btn-editar-secao {
+    position: static;
+    margin: 0 auto;
+    transform: none;
+  }
+  .section-content:has(.vitrine) .section-link {
+    position: static;
+    margin: 28px auto 0;
+  }
+}

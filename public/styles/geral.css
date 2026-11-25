@@ -346,7 +346,9 @@ body.alto-contraste .profile-icon .avatar-nav-iniciais {
    ========================================================= */
 
 .menu-mobile-button {
-    display: none;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
 
     width: 50px;
     height: 50px;
@@ -403,7 +405,9 @@ body.alto-contraste .profile-icon .avatar-nav-iniciais {
 
     inset: 0;
 
-    display: none;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
 
     background: rgba(5, 2, 15, 0.72);
 
@@ -411,10 +415,19 @@ body.alto-contraste .profile-icon .avatar-nav-iniciais {
     -webkit-backdrop-filter: blur(6px);
 
     z-index: 100000;
+
+    transition:
+        opacity .3s ease,
+        visibility 0s linear .65s;
 }
 
 .menu-mobile-overlay.aberto {
-    display: block;
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    transition:
+        opacity .3s ease,
+        visibility 0s;
 }
 
 
@@ -426,7 +439,7 @@ body.alto-contraste .profile-icon .avatar-nav-iniciais {
     position: absolute;
 
     top: 0;
-    right: 0;
+    left: 0;
 
     width: min(360px, 88vw);
 
@@ -451,9 +464,9 @@ body.alto-contraste .profile-icon .avatar-nav-iniciais {
 
     overflow-y: auto;
 
-    transform: translateX(100%);
+    transform: translateX(-100%);
 
-    transition: transform .3s ease;
+    transition: transform .65s cubic-bezier(.22, .7, .2, 1);
 }
 
 .menu-mobile-overlay.aberto .menu-mobile {
@@ -916,6 +929,9 @@ footer {
 
     .menu-mobile-button {
         display: flex;
+        visibility: visible;
+        opacity: 1;
+        pointer-events: auto;
 
         width: 42px;
         height: 42px;
