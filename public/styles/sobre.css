@@ -259,6 +259,7 @@ body {
 
 .sobre-section-topo {
   margin-bottom: 48px;
+  text-align: center;
 }
 
 .section-tag {
@@ -812,9 +813,6 @@ body {
     }
 
     .missao-card {
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
         gap: 18px;
         padding: 28px 22px;
         border-radius: 24px;
@@ -871,10 +869,6 @@ body {
         padding: 50px 25px;
     }
 
-    .citacao-moon {
-        display: none;
-    }
-
     .citacao {
         padding: 14px 25px 22px;
         border-radius: 24px;
@@ -890,8 +884,13 @@ body {
         font-size: 4rem;
     }
 
-    .aspas-fecha {
-        margin-top: 10px;
+    .citacao-moon {
+        right: 45px;
+        top: 45px;
+    }
+
+    .citacao-moon img {
+        width: 80px;
     }
 }
 
