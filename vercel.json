@@ -7,6 +7,16 @@
       "source": "/public/pages/confirmacao-email",
       "destination": "/pages/confirmacao-email",
       "permanent": false
+    },
+    {
+      "source": "/oscs",
+      "destination": "/catalogo",
+      "permanent": false
+    },
+    {
+      "source": "/pages/oscs-page",
+      "destination": "/catalogo",
+      "permanent": false
     }
   ],
   "rewrites": [
@@ -53,10 +63,6 @@
     {
       "source": "/admin",
       "destination": "/admin/index"
-    },
-    {
-      "source": "/oscs",
-      "destination": "/pages/oscs-page"
     },
     {
       "source": "/proximidade",

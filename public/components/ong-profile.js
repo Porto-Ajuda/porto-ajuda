@@ -2281,7 +2281,7 @@ async function configurarGestao() {
                     aoConfirmar: async () => {
                         const resposta = await requisicaoAutenticada(`/osc/${oscAtual.id}`, { method: "DELETE" });
                         if (!resposta?.ok) throw new Error(await mensagemErroApi(resposta, "excluir organização"));
-                        window.location.assign("/pages/oscs-page.html");
+                        window.location.assign("/catalogo");
                     }
                 });
             } catch (erro) {

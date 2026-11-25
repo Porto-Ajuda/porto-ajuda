@@ -200,30 +200,30 @@ const API_URL = await getAPI_URL();
 
 
         /* =================================================
-           ONG / FEED
+           CATÁLOGO
         ================================================= */
 
-        ongs: [
+        catalogo: [
 
             {
-                seletor: ".ONGs-hero",
-                titulo: "Iniciativas e organizações",
+                seletor: ".catalogo-heading",
+                titulo: "Explorar ONGs",
                 texto:
-                    "Aqui você acompanha conteúdos e publicações relacionados às organizações presentes no Porto Ajuda."
+                    "Conheça as organizações disponíveis no catálogo."
             },
 
             {
-                seletor: "#feed-posts",
-                titulo: "Publicações",
+                seletor: "#catalogo-filtros",
+                titulo: "Busca e filtros",
                 texto:
-                    "Nesta área aparecem as publicações e informações compartilhadas pelas organizações."
+                    "Pesquise e refine os resultados para encontrar o que procura."
             },
 
             {
-                seletor: ".post-card",
-                titulo: "Veja uma publicação",
+                seletor: ".catalogo-card",
+                titulo: "Veja uma organização",
                 texto:
-                    "Cada cartão apresenta informações de uma publicação. Selecione uma delas para conhecer mais detalhes."
+                    "Abra um cartão para conhecer melhor uma organização."
             }
 
         ],
@@ -457,7 +457,7 @@ const API_URL = await getAPI_URL();
         { pagina: "iniciativas", url: "iniciativas.html" },
         { pagina: "apoie", url: "apoie.html" },
         { pagina: "mapa", url: "proximity.html" },
-        { pagina: "ongs", url: "oscs-page.html" }
+        { pagina: "catalogo", url: "catalogo.html" }
     ];
 
     const SEQUENCIA_TOUR_COMPLETO = API_URL === "http://localhost:8080"
@@ -467,7 +467,7 @@ const API_URL = await getAPI_URL();
             { pagina: "iniciativas", url: "/iniciativas" },
             { pagina: "apoie", url: "/apoie" },
             { pagina: "mapa", url: "/proximidade" },
-            { pagina: "ongs", url: "/oscs" }
+            { pagina: "catalogo", url: "/catalogo" }
         ]
         : [
             { pagina: "home", url: "Porto-Ajuda.html" },
@@ -475,7 +475,7 @@ const API_URL = await getAPI_URL();
             { pagina: "iniciativas", url: "iniciativas.html" },
             { pagina: "apoie", url: "apoie.html" },
             { pagina: "mapa", url: "proximity.html" },
-            { pagina: "ongs", url: "oscs-page.html" }
+            { pagina: "catalogo", url: "catalogo.html" }
         ];
 
     const CHAVE_TOUR_COMPLETO =
@@ -597,10 +597,10 @@ const API_URL = await getAPI_URL();
         }
 
         if (
-            document.querySelector(".ONGs-hero") ||
-            document.querySelector("#feed-posts")
+            document.querySelector(".catalogo-shell") ||
+            path.includes("catalogo")
         ) {
-            return "ongs";
+            return "catalogo";
         }
 
         if (
