@@ -117,7 +117,7 @@ window.abrirModalConteudoPublico = (item, tipo, origem) => {
         botaoDenunciar = document.createElement("button");
         botaoDenunciar.id = "btn-modal-denunciar";
         botaoDenunciar.type = "button";
-        botaoDenunciar.className = "botao botao-secundario";
+        botaoDenunciar.className = "botao-padrao";
         botaoDenunciar.dataset.contentReport = "";
         botaoDenunciar.textContent = "Denunciar";
         document.querySelector("#modal-card-overlay .modal-card-info")?.append(botaoDenunciar);
