@@ -1,7 +1,39 @@
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap');
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css');
 
+:root {
 
+    /* FUNDOS */
+
+    --bg-main: #161928;
+    --bg-section: #2E1C50;
+    --bg-card: #3E2871;
+    --bg-card-hover: #453B80;
+
+    /* DETALHES */
+
+    --primary: #4A5492;
+    --secondary: #5B68AC;
+
+    /* DOURADOS */
+
+    --gold: #F2AA1A;
+    --gold-dark: #DDAA41;
+    --gold-light: #F9C86B;
+    --gold-soft: #FCE0A1;
+
+    /* NOVO: cards de ONG */
+
+    --lilac: #C9A8FF;
+    --purple-deep: #4A2A8A;
+    --ink: #241A45;
+
+    /* TEXT OS */
+
+    --text: #FFFFFF;
+    --text-soft: #d7d7d7;
+
+}
 
 /* ========================= */
 /* RESET */
@@ -55,35 +87,49 @@ body {
     z-index: 6;
 }
 
+/* ========================================
+   CONTEÚDO DO PAINEL
+   (cabeçalho fixo + lista com rolagem)
+======================================== */
+
 .section-ongs {
     width: 100%;
     height: 100%;
+    background-color: var(--ink);
+    display: flex;
+    flex-direction: column;
 
-    margin-top: 0;
-    padding-bottom: 20px;
-
-    overflow-y: auto;
-    overflow-x: hidden;
+    overflow: hidden;
 
     text-align: center;
 }
 
-.section-ongs {
-    padding-bottom: 5vh;
-    height: calc(100vh - 40px);
-    overflow-y: auto;
-    overflow-x: hidden;
+.titulo-ongs {
+    flex: none;
+
+    margin: 14px 12px 0;
+
+    color: var(--gold-soft);
+
+    font-size: 1.05rem;
+    font-weight: 600;
 }
 
 /* PESQUISA */
 
 .barra-pesquisa {
+    flex: none;
+
     display: flex;
+    align-items: center;
 
-    margin: 15px;
-    height: 50px;
+    margin: 12px;
+    height: 44px;
 
-    border-radius: 25px;
+    border: 1.5px solid var(--gold-soft);
+    border-radius: 22px;
+
+    background: rgba(22, 25, 40, 0.75);
 
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 
@@ -92,62 +138,129 @@ body {
 
 .barra-pesquisa input {
     flex: 1;
+    min-width: 0;
 
     border: none;
     outline: none;
 
-    padding: 0 20px;
+    padding: 0 18px;
 
-    font-size: 15px;
+    background: transparent;
+    color: var(--text);
+
+    font-size: 14px;
+}
+
+.barra-pesquisa input::placeholder {
+    color: rgba(255, 255, 255, 0.55);
 }
 
 .barra-pesquisa button {
-    width: 55px;
+    width: 50px;
+    height: 100%;
 
     border: none;
-    background: white;
+    background: transparent;
 
     cursor: pointer;
 
-    font-size: 18px;
+    font-size: 17px;
 }
 
 
-/* FILTROS */
+/* FILTROS (com setas) */
+
+.filtros-wrap {
+    flex: none;
+
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    padding: 0 12px 12px;
+}
+
+.seta-filtro {
+    flex: none;
+
+    width: 32px;
+    height: 22px;
+
+    display: grid;
+    place-items: center;
+
+    border: none;
+    border-radius: 12px;
+
+    background: var(--gold-soft);
+    color: var(--ink);
+
+    font-size: 0.7rem;
+
+    cursor: pointer;
+
+    transition: background 0.2s ease;
+}
+
+.seta-filtro:hover {
+    background: var(--gold-soft);
+}
 
 .filtros {
+    flex: 1;
+
     display: flex;
 
     gap: 8px;
 
-    padding: 5px 15px 15px;
+    padding: 2px 0;
 
     overflow-x: auto;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+}
+
+.filtros::-webkit-scrollbar {
+    display: none;
 }
 
 .filtros button {
+    flex: none;
+
     white-space: nowrap;
 
-    padding: 8px 15px;
+    padding: 3px 14px;
 
-    border: 1px solid rgba(var(--gold-rgb), 0.55);
-    border-radius: 20px;
+    border: 1.5px solid var(--gold-soft);
+    border-radius: 14px;
 
-    background: white;
-    color: var(--bg-card);
+    background: transparent;
+    color: var(--gold-soft);
+
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 600;
 
     cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        color 0.2s ease;
+}
+
+.filtros button:hover {
+    background: rgba(249, 200, 107, 0.15);
 }
 
 .filtros button.ativo {
-    border-color: var(--gold);
-    background: #4A3475;
-    color: var(--gold-light);
-    box-shadow: 0 0 0 2px rgba(var(--gold-rgb), 0.2);
+    border-color: var(--gold-soft);
+    background: var(--gold-soft);
+    color: var(--ink);
+    box-shadow: none;
 }
 
 .filtros button:focus-visible {
-    outline: 3px solid var(--gold-light);
+    outline: 3px solid var(--gold-soft);
     outline-offset: 2px;
 }
 
@@ -162,29 +275,128 @@ body {
 }
 
 
-/* ONG */
+/* ========================================
+   LISTA E CARDS DE ONG
+======================================== */
+.lista-ongs {
+    flex: 1;
+    min-height: 0;
 
-.ong {
     display: flex;
-    align-items: center;
-    gap: 15px;
+    flex-direction: column;
+    gap: 12px;
 
-    padding: 15px;
+    padding: 10px 12px 14px;
 
-    border-top: 1px solid #eee;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Cartão de cada ONG */
+.ong {
+    position: relative;
+
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+
+    padding: 14px 12px;
+
+    border: 1px solid rgba(255, 215, 140, 0.22);
+    border-radius: 18px;
+
+    /* Vidro dourado suave */
+    background: linear-gradient(
+        135deg,
+        rgba(255, 226, 170, 0.16),
+        rgba(245, 181, 46, 0.07)
+    );
+
+    color: var(--gold-soft);
+
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+
+    box-shadow:
+        0 4px 14px rgba(0, 0, 0, 0.16),
+        inset 0 1px 0 rgba(255, 245, 215, 0.18);
 
     cursor: pointer;
+
+    transition:
+        background 0.25s ease,
+        border-color 0.25s ease,
+        box-shadow 0.25s ease,
+        transform 0.25s ease;
 }
 
+/* Reflexo sutil na parte superior */
+.ong::before {
+    content: "";
+    position: absolute;
+
+    top: 0;
+    left: 12%;
+    right: 12%;
+
+    height: 1px;
+
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 230, 180, 0.55),
+        transparent
+    );
+
+    pointer-events: none;
+}
+
+/* Hover delicado */
 .ong:hover {
-    background: var(--gold-light);
+    background: linear-gradient(
+        135deg,
+        rgba(255, 226, 170, 0.24),
+        rgba(245, 181, 46, 0.12)
+    );
+
+    border-color: rgba(255, 215, 140, 0.45);
+
+    box-shadow:
+        0 0 0 1px rgba(245, 181, 46, 0.12),
+        0 6px 18px rgba(0, 0, 0, 0.22),
+        inset 0 1px 0 rgba(255, 245, 215, 0.25);
+
+    transform: translateY(-2px);
 }
 
-/* IMAGEM */
+/* Acessibilidade */
+.ong:focus-visible {
+    outline: 2px solid var(--gold-light);
+    outline-offset: 3px;
+}
+
+/* ONG selecionada no mapa ou na lista */
+.ong.ong-selecionada {
+    background: linear-gradient(
+        135deg,
+        rgba(255, 224, 160, 0.30),
+        rgba(245, 181, 46, 0.16)
+    );
+
+    border-color: rgba(255, 215, 140, 0.65);
+
+    box-shadow:
+        0 0 0 2px rgba(245, 181, 46, 0.45),
+        0 6px 18px rgba(0, 0, 0, 0.20),
+        inset 0 1px 0 rgba(255, 245, 215, 0.30);
+
+    transform: translateX(4px);
+}
+/* IMAGEM / LOGO */
 
 .ong-imagem {
-    width: 70px;
-    height: 70px;
+    width: 52px;
+    height: 52px;
 
     flex-shrink: 0;
 
@@ -192,11 +404,14 @@ body {
     align-items: center;
     justify-content: center;
 
-    background: #eee;
+    background: var(--bg-main);
 
-    border-radius: 8px;
+    border: 2px solid var(--gold-light);
+    border-radius: 50%;
 
-    font-size: 30px;
+    overflow: hidden;
+
+    font-size: 24px;
 }
 
 .ong-imagem img {
@@ -205,31 +420,70 @@ body {
     object-fit: cover;
 }
 
+.ong-imagem svg {
+    width: 30px;
+    height: 30px;
+
+    fill: none;
+    stroke: var(--gold-light);
+    stroke-width: 2;
+}
+
 /* INFORMAÇÕES */
 
 .ong-info {
     flex: 1;
+    min-width: 0;
+
     text-align: left;
 }
 
-.ong-info h3 {
-    margin: 0 0 5px;
+.ong-topo {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+}
 
-    font-size: 17px;
+.ong-info h3 {
+    margin: 0 0 4px;
+
+    color: var(--gold-soft);
+
+    font-size: 14px;
+    font-weight: 700;
 }
 
 .ong-info p {
-    margin: 0 0 8px;
+    margin: 0 0 6px;
 
-    color: #dfdcdc;
+    color: var(--gold-soft);
 
-    font-size: 14px;
+    font-size: 11px;
+    line-height: 1.35;
 }
 
 .ong-info span {
-    color: #b3b3b3;
+    color: var(--gold-soft);
 
-    font-size: 13px;
+    font-size: 11px;
+}
+
+.ong-anos {
+    white-space: nowrap;
+    font-weight: 700;
+}
+
+.ong-rodape {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+
+    font-weight: 700;
+}
+
+.ong-distancia {
+    white-space: nowrap;
 }
 
 .botao-ong {
@@ -299,20 +553,20 @@ body {
     justify-content: center;
 }
 
-.section-ongs::-webkit-scrollbar {
+.lista-ongs::-webkit-scrollbar {
     width: 6px;
 }
 
-.section-ongs::-webkit-scrollbar-track {
+.lista-ongs::-webkit-scrollbar-track {
     background: transparent;
 }
 
-.section-ongs::-webkit-scrollbar-thumb {
+.lista-ongs::-webkit-scrollbar-thumb {
     background: var(--gold-dark);
     border-radius: 10px;
 }
 
-.section-ongs::-webkit-scrollbar-thumb:hover {
+.lista-ongs::-webkit-scrollbar-thumb:hover {
     background: var(--gold);
 }
 
@@ -441,8 +695,6 @@ body {
 ======================================== */
 
 #painel-ongs {
-    padding-top: 5px;
-    ;
     position: fixed;
 
     top: 90px;
@@ -453,7 +705,13 @@ body {
 
     z-index: 1000;
 
-    background: rgba(var(--bg-section-rgb), 0.35);
+    display: flex;
+    flex-direction: column;
+
+    padding-top: 5px;
+
+    background: rgba(22, 25, 40, 0.94);
+    color: var(--text);
 
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
@@ -467,8 +725,10 @@ body {
 /* Conteúdo interno */
 
 .conteudo-ongs {
+    flex: 1;
+    min-height: 0;
+
     width: 100%;
-    height: 100%;
 
     overflow: hidden;
 }
@@ -595,6 +855,339 @@ body {
 
 
 /* ========================================
+   ABA LATERAL DE DETALHES DA ONG
+======================================== */
+
+:root {
+    --altura-header: 89px;
+}
+
+/* Fundo atrás da aba */
+#overlay-detalhe {
+    position: fixed;
+
+    top: var(--altura-header);
+    left: 0;
+
+    width: 100%;
+    height: calc(100dvh - var(--altura-header));
+
+    background: rgba(0, 0, 0, 0.55);
+
+    z-index: 1190;
+
+    opacity: 0;
+    visibility: hidden;
+
+    transition:
+        opacity 0.3s ease,
+        visibility 0.3s ease;
+}
+
+#overlay-detalhe.ativo {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Aba lateral */
+#painel-detalhe {
+    position: fixed;
+
+    top: var(--altura-header);
+    right: 0;
+
+    width: min(88%, 380px);
+    height: calc(100dvh - var(--altura-header));
+
+    padding: 24px 20px 30px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+
+    background: var(--ink);
+    border-left: 2px solid var(--gold-soft);
+    color: var(--text);
+
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    z-index: 1200;
+
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+
+    box-shadow: -8px 0 25px rgba(0, 0, 0, 0.25);
+}
+
+/* Aba aberta */
+#painel-detalhe.aberto {
+    transform: translateX(0);
+}
+
+/* Botão fechar */
+#detalhe-fechar {
+    position: absolute;
+
+    top: 14px;
+    right: 14px;
+
+    width: 34px;
+    height: 34px;
+
+    display: grid;
+    place-items: center;
+
+    border: none;
+    border-radius: 50%;
+
+    background: var(--gold-soft);
+    color: var(--ink);
+
+    font-size: 1.2rem;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
+}
+
+#detalhe-fechar:hover {
+    background: var(--gold-soft);
+    transform: rotate(90deg);
+}
+
+/* ========================================
+   LOGO DA ONG
+======================================== */
+
+.detalhe-logo {
+    width: 90px;
+    height: 90px;
+
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin: 24px auto 8px;
+
+    border: 3px solid var(--gold-light);
+    border-radius: 50%;
+
+    background: var(--bg-main);
+
+    overflow: hidden;
+
+    box-shadow:
+        0 0 0 5px rgba(249, 200, 107, 0.12),
+        0 5px 18px rgba(0, 0, 0, 0.3);
+}
+
+/* Imagem real da logo */
+.detalhe-logo img {
+    width: 100%;
+    height: 100%;
+
+    display: block;
+
+    object-fit: contain;
+    padding: 5px;
+
+    border-radius: 50%;
+}
+
+/* Ícone padrão quando não existe logo */
+.detalhe-logo svg {
+    width: 42px;
+    height: 42px;
+
+    fill: none;
+    stroke: var(--gold-light);
+    stroke-width: 2;
+}
+
+/* Nome da ONG */
+#painel-detalhe h2 {
+    margin: 0;
+
+    color: var(--gold-light);
+
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+
+    text-align: center;
+    overflow-wrap: anywhere;
+}
+
+/* Subtítulo */
+.detalhe-sub {
+    margin: 0;
+
+    font-size: 0.8rem;
+    text-align: center;
+
+    color: var(--text-soft);
+    opacity: 0.85;
+}
+
+/* Títulos internos */
+#painel-detalhe h3 {
+    margin: 8px 0 4px;
+
+    color: var(--gold-light);
+    font-size: 0.9rem;
+}
+
+/* Descrição */
+.detalhe-desc {
+    margin: 0 0 px;
+
+    color: var(--text-soft);
+
+    font-size: 0.85rem;
+    line-height: 1.6;
+
+    overflow-wrap: anywhere;
+}
+
+/* Endereço */
+#detalhe-endereco {
+    flex: 1;
+    min-width: 0;
+
+    color: var(--text);
+    text-decoration: none;
+
+    cursor: pointer;
+
+    overflow-wrap: anywhere;
+
+    transition:
+        color 0.2s ease,
+        text-decoration 0.2s ease;
+}
+
+#detalhe-endereco:hover {
+    color: var(--gold-light);
+    text-decoration: underline;
+}
+
+#detalhe-endereco:focus-visible {
+    outline: 2px solid var(--gold-light);
+    outline-offset: 3px;
+    border-radius: 4px;
+}.btn-maps,
+.btn-perfil {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 100%;
+    box-sizing: border-box;
+
+    padding: 10px 14px;
+
+    background: #3d2775;
+    color: white;
+
+    text-decoration: none;
+    border: 1px solid rgba(255, 215, 140, 0.12);
+    border-radius: 10px;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    white-space: nowrap;
+
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.btn-maps:hover,
+.btn-perfil:hover {
+    background: #4b3288;
+    border-color: rgba(255, 215, 140, 0.35);
+    transform: translateY(-2px);
+}#painel-detalhe {
+    padding-bottom: 85px;
+    box-sizing: border-box;
+}
+
+#painel-detalhe .acoes-detalhe {
+    position: relative;
+    z-index: 2;
+}
+/* Mensagem de endereço copiado */
+.msg-copiado {
+    min-height: 18px;
+    margin-top: 6px;
+
+    color: var(--gold-light);
+    font-size: 0.75rem;
+}
+
+/* Botão copiar endereço */
+#btn-copiar {
+    flex: none;
+
+    width: 36px;
+    height: 36px;
+
+    border: 1.5px solid var(--gold-light);
+    border-radius: 8px;
+
+    background: transparent;
+    color: var(--gold-light);
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
+}
+
+#btn-copiar:hover {
+    background: rgba(246, 220, 171, 0.281);
+}
+
+#btn-copiar:active {
+    transform: scale(0.95);
+}
+
+/* ========================================
+   RESPONSIVIDADE
+======================================== */
+
+@media (max-width: 768px) {
+    #painel-detalhe {
+        width: min(92%, 420px);
+
+        top: var(--altura-header);
+        height: calc(100dvh - var(--altura-header));
+
+        padding: 20px 18px 28px;
+    }
+
+    .detalhe-logo {
+        width: 95px;
+        height: 95px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #painel-detalhe,
+    #overlay-detalhe {
+        transition: none !important;
+    }
+}
+
+/* ========================================
    SCROLLBAR
 ======================================== */
 
@@ -662,4 +1255,13 @@ body {
     color: #4b2a86;
     /* roxo do site */
     -webkit-text-stroke: 0.5px #000000;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .ong,
+    #painel-detalhe,
+    #painel-ongs {
+        transition: none !important;
+    }
 }

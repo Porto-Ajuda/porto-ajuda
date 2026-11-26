@@ -1,77 +1,290 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Porto Ajuda</title>
+    <title>Porto Ajuda</title>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Fontes -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
-  <link rel="stylesheet" href="../styles/proximity.css">
-  <link rel="stylesheet" href="../styles/geral.css">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <!-- Font Awesome -->
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+    >
 
-  <script type="module" src="../components/proximity.js" defer></script>
-  <script type="module" src="../components/header_footer.js" defer></script>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <!-- CSS do projeto -->
+    <link rel="stylesheet" href="../styles/proximity.css">
+    <link rel="stylesheet" href="../styles/geral.css">
 
+    <!-- Leaflet CSS -->
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+        crossorigin=""
+    >
+
+    <!-- Scripts do projeto -->
+    <script type="module" src="../components/proximity.js" defer></script>
+    <script type="module" src="../components/header_footer.js" defer></script>
+    <script type="module" src="../components/ongs-painel.js" defer></script>
+
+    <!-- Leaflet JS -->
+    <script
+        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossorigin=""
+    ></script>
 
 </head>
 
 <body>
 
-  <!-- ========================= -->
-  <!-- NAVBAR -->
-  <!-- ========================= -->
-  <div class="retangulo-roxo"></div>
+    <!-- ========================= -->
+    <!-- HEADER -->
+    <!-- ========================= -->
 
-  <header class="navbar"></header>
+    <div class="retangulo-roxo"></div>
 
-  <!-- ========================= -->
-  <!-- mapa -->
-  <!-- ========================= -->
+    <header class="navbar"></header>
 
-  <div id="tela-carregamento">
-    <div class="loader"></div>
-    <p>Carregando ONGs...</p>
-  </div>
 
-  <div id="map"></div>
+    <!-- ========================= -->
+    <!-- TELA DE CARREGAMENTO -->
+    <!-- ========================= -->
 
-  <button id="botao-inicio" type="button">
-    🏠
-  </button>
+    <div id="tela-carregamento">
+        <div class="loader"></div>
+        <p>Carregando ONGs...</p>
+    </div>
 
-  <aside id="painel-ongs">
 
-    <button id="botao-fechar-ongs" aria-label="Fechar lista de ONGs">
-      <i class="fa-solid fa-chevron-left"></i>
+    <!-- ========================= -->
+    <!-- MAPA -->
+    <!-- ========================= -->
+
+    <div id="map"></div>
+
+    <button id="botao-inicio" type="button" aria-label="Voltar ao início">
+        <i class="fa-solid fa-house"></i>
     </button>
 
-    <div class="conteudo-ongs">
-      <div class="section-ongs">
 
-        <div class="barra-pesquisa">
-          <input type="search" placeholder="Pesquisar ONGs" aria-label="Pesquisar ONGs">
-          <button type="button" aria-label="Pesquisar">🔍</button>
+    <!-- ========================= -->
+    <!-- PAINEL DE ONGs -->
+    <!-- ========================= -->
+
+    <aside id="painel-ongs">
+
+        <button
+            type="button"
+            id="botao-fechar-ongs"
+            aria-label="Fechar lista de ONGs"
+        >
+            <i class="fa-solid fa-chevron-left"></i>
+        </button>
+
+        <div class="conteudo-ongs">
+
+            <div class="section-ongs">
+
+                <h1 class="titulo-ongs">
+                    Encontre ONGs perto de você
+                </h1>
+
+                <!-- Pesquisa -->
+                <div class="barra-pesquisa">
+
+                    <input
+                        type="search"
+                        placeholder="Pesquisar ONGs"
+                        aria-label="Pesquisar ONGs"
+                    >
+
+                    <button
+                        type="button"
+                        aria-label="Pesquisar"
+                    >
+                       <i class="fa-solid fa-magnifying-glass" style="color: #fce0a1;"></i>
+                    </button>
+
+                </div>
+
+
+                <!-- Filtros -->
+              <div class="filtros-wrap">
+
+    <button
+        type="button"
+        class="seta-filtro"
+        data-direcao="esquerda"
+        aria-label="Ver categorias anteriores"
+    >
+        <i class="fa-solid fa-chevron-left"></i>
+    </button>
+
+    <div class="filtros"></div>
+
+    <button
+        type="button"
+        class="seta-filtro"
+        data-direcao="direita"
+        aria-label="Ver próximas categorias"
+    >
+        <i class="fa-solid fa-chevron-right"></i>
+    </button>
+
+</div>
+
+
+                <!-- Lista dinâmica de ONGs -->
+                <div class="lista-ongs"></div>
+
+            </div>
+
         </div>
 
-        <div class="filtros" role="group" aria-label="Filtrar organizações por causa"></div>
+    </aside>
 
-        <div class="lista-ongs"></div>
 
-      </div>
-    </div>
-  </aside>
+    <!-- ========================= -->
+    <!-- BOTÃO ABRIR PAINEL -->
+    <!-- ========================= -->
 
-  <button id="botao-abrir-ongs" aria-label="Abrir lista de ONGs">
-    <i class="fa-solid fa-chevron-right"></i>
-  </button>
+    <button
+        type="button"
+        id="botao-abrir-ongs"
+        aria-label="Abrir lista de ONGs"
+    >
+        <i class="fa-solid fa-chevron-right"></i>
+    </button>
+
+
+    <!-- ========================= -->
+    <!-- ABA LATERAL DE DETALHES -->
+    <!-- ========================= -->
+
+    <div
+        id="overlay-detalhe"
+        hidden
+    ></div>
+
+    <aside
+        id="painel-detalhe"
+        aria-hidden="true"
+        aria-labelledby="detalhe-nome"
+    >
+
+        <!-- Botão fechar -->
+        <button
+            type="button"
+            id="detalhe-fechar"
+            aria-label="Fechar detalhes"
+        >
+            &times;
+        </button>
+
+
+        <!-- Logo da ONG -->
+        <div class="detalhe-logo" id="detalhe-logo">
+
+            <img
+                src="../assets/ong-padrao.png"
+                alt="Logo da organização"
+            >
+
+        </div>
+
+
+        <!-- Nome -->
+        <h2 id="detalhe-nome"></h2>
+
+
+        <!-- Informações complementares -->
+        <p
+            class="detalhe-sub"
+            id="detalhe-sub"
+        ></p>
+
+
+        <!-- Descrição -->
+        <p
+            class="detalhe-desc"
+            id="detalhe-desc"
+        ></p>
+
+
+        <!-- ========================= -->
+        <!-- ENDEREÇO -->
+        <!-- ========================= -->
+
+        <h3>Endereço</h3>
+
+        <div class="endereco-linha">
+
+            <a
+                id="detalhe-endereco"
+                href="#"
+                target="_blank"
+                rel="noopener noreferrer"
+            ></a>
+
+            <button
+                type="button"
+                id="btn-copiar"
+                aria-label="Copiar endereço"
+                title="Copiar endereço"
+            >
+                <i class="fa-regular fa-copy"></i>
+            </button>
+
+        </div>
+
+
+        <!-- Mensagem de endereço copiado -->
+        <p
+            class="msg-copiado"
+            id="msg-copiado"
+            role="status"
+            aria-live="polite"
+        ></p>
+
+
+        <!-- ========================= -->
+        <!-- GOOGLE MAPS -->
+        <!-- ========================= -->
+
+        <a
+            class="btn-maps"
+            id="btn-maps"
+            href="#"
+            target="_blank"
+            rel="noopener noreferrer"
+        >
+            <i class="fa-solid fa-location-dot"></i>
+            Abrir no Google Maps
+        </a>
+
+
+        <!-- ========================= -->
+        <!-- PERFIL DA OSC -->
+        <!-- ========================= -->
+
+        <a
+            class="btn-perfil"
+            id="btn-perfil"
+            href="#"
+        >
+            Ver perfil da OSC
+        </a>
+
+    </aside>
 
 </body>
+</html>
