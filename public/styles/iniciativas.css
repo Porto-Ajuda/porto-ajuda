@@ -76,7 +76,7 @@ main {
 
     background: linear-gradient(to right,
             transparent,
-            rgba(255, 255, 255, 0.25),
+            rgba(var(--ink-rgb), 0.25),
             transparent);
 }
 

@@ -59,7 +59,7 @@ main {
 .valor-pix,
 #botao-outro {
     min-height: 38px;
-    border: 1px solid rgba(242, 170, 26, .35);
+    border: 1px solid rgba(var(--gold-rgb), .35);
     border-radius: 10px;
     background: rgba(74, 84, 146, .35);
     color: var(--text);
@@ -75,7 +75,7 @@ main {
 .valor-pix.ativo {
     background: var(--gold);
     border-color: var(--gold);
-    color: #211a3e;
+    color: var(--on-gold);
     transform: translateY(-1px);
 }
 
@@ -97,7 +97,7 @@ main {
 
     background: linear-gradient(to right,
             transparent,
-            rgba(255, 255, 255, 0.25),
+            rgba(var(--ink-rgb), 0.25),
             transparent);
 }
 
@@ -425,7 +425,7 @@ main {
     border-radius: 1em;
 
     background: linear-gradient(145deg,
-            #3d2775,
+            var(--bg-card),
             #28194f);
 
     box-shadow:
@@ -1113,9 +1113,9 @@ main {
 .instagram:hover,
 .copiar_link:hover,
 .email:hover {
-    color: #F2AA1A;
-    border-color: #F2AA1A;
-    box-shadow: 0 0 15px rgba(242, 170, 26, 0.3);
+    color: var(--gold);
+    border-color: var(--gold);
+    box-shadow: 0 0 15px rgba(var(--gold-rgb), 0.3);
 }
 
 

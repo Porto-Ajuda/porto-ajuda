@@ -1,33 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap');
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css');
 
-:root {
 
-    /* FUNDOS */
-
-    --bg-main: #161928;
-    --bg-section: #2E1C50;
-    --bg-card: #3E2871;
-    --bg-card-hover: #453B80;
-
-    /* DETALHES */
-
-    --primary: #4A5492;
-    --secondary: #5B68AC;
-
-    /* DOURADOS */
-
-    --gold: #F2AA1A;
-    --gold-dark: #DDAA41;
-    --gold-light: #F9C86B;
-    --gold-soft: #FCE0A1;
-
-    /* TEXT OS */
-
-    --text: #FFFFFF;
-    --text-soft: #d7d7d7;
-
-}
 
 /* ========================= */
 /* RESET */
@@ -156,11 +130,11 @@ body {
 
     padding: 8px 15px;
 
-    border: 1px solid rgba(249, 200, 107, 0.55);
+    border: 1px solid rgba(var(--gold-rgb), 0.55);
     border-radius: 20px;
 
     background: white;
-    color: #3d2775;
+    color: var(--bg-card);
 
     cursor: pointer;
 }
@@ -169,7 +143,7 @@ body {
     border-color: var(--gold);
     background: #4A3475;
     color: var(--gold-light);
-    box-shadow: 0 0 0 2px rgba(242, 170, 26, 0.2);
+    box-shadow: 0 0 0 2px rgba(var(--gold-rgb), 0.2);
 }
 
 .filtros button:focus-visible {
@@ -203,7 +177,7 @@ body {
 }
 
 .ong:hover {
-    background: #F9C86B;
+    background: var(--gold-light);
 }
 
 /* IMAGEM */
@@ -266,7 +240,7 @@ body {
 
     padding: 8px 14px;
 
-    background-color: #3d2775;
+    background-color: var(--bg-card);
     color: white;
 
     text-decoration: none;
@@ -365,8 +339,8 @@ body {
 
     background:
         linear-gradient(145deg,
-            rgba(62, 40, 113, 0.97),
-            rgba(22, 25, 40, 0.98));
+            rgba(var(--bg-card-rgb), 0.97),
+            rgba(var(--bg-main-rgb), 0.98));
 
     border: none;
     border-radius: 0;
@@ -405,7 +379,7 @@ body {
     border-radius: 50%;
 
     border:
-        3px solid rgba(255, 255, 255, 0.12);
+        3px solid rgba(var(--ink-rgb), 0.12);
 
     border-top-color: var(--gold);
 
@@ -413,7 +387,7 @@ body {
         girar .8s linear infinite;
 
     filter:
-        drop-shadow(0 0 8px rgba(242, 170, 26, .35));
+        drop-shadow(0 0 8px rgba(var(--gold-rgb), .35));
 }
 
 /* ========================= */
@@ -457,8 +431,8 @@ body {
 }
 
 .ong.ong-selecionada {
-    background-color: rgba(242, 170, 26, 0.25);
-    box-shadow: inset 4px 0 0 #F2AA1A;
+    background-color: rgba(var(--gold-rgb), 0.25);
+    box-shadow: inset 4px 0 0 var(--gold);
     transform: translateX(4px);
 }
 
@@ -479,7 +453,7 @@ body {
 
     z-index: 1000;
 
-    background: rgba(46, 28, 80, 0.35);
+    background: rgba(var(--bg-section-rgb), 0.35);
 
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
@@ -522,7 +496,7 @@ body {
     border: 3px solid white;
     border-radius: 50%;
 
-    background: #4A5492;
+    background: var(--primary);
     color: white;
 
     cursor: pointer;
@@ -537,7 +511,7 @@ body {
 }
 
 #botao-fechar-ongs:hover {
-    background: #5B68AC;
+    background: var(--secondary);
 
     transform:
         translateY(-50%) scale(1.08);
@@ -583,7 +557,7 @@ body {
     border: 3px solid white;
     border-radius: 50%;
 
-    background: #4A5492;
+    background: var(--primary);
     color: white;
 
     cursor: pointer;
@@ -598,7 +572,7 @@ body {
 }
 
 #botao-abrir-ongs:hover {
-    background: #5B68AC;
+    background: var(--secondary);
 
     transform:
         translateY(-50%) scale(1.08);
@@ -633,7 +607,7 @@ body {
 }
 
 .conteudo-ongs::-webkit-scrollbar-thumb {
-    background: #5B68AC;
+    background: var(--secondary);
     border-radius: 10px;
 }
 

@@ -5,33 +5,7 @@
 /* PALETA */
 /* ========================= */
 
-:root {
 
-  /* FUNDOS */
-
-  --bg-main: #161928;
-  --bg-section: #2E1C50;
-  --bg-card: #3E2871;
-  --bg-card-hover: #453B80;
-
-  /* DETALHES */
-
-  --primary: #4A5492;
-  --secondary: #5B68AC;
-
-  /* DOURADOS */
-
-  --gold: #F2AA1A;
-  --gold-dark: #DDAA41;
-  --gold-light: #F9C86B;
-  --gold-soft: #FCE0A1;
-
-  /* TEXTOS */
-
-  --text: #FFFFFF;
-  --text-soft: #d7d7d7;
-
-}
 
 /* ========================= */
 /* RESET */
@@ -112,7 +86,7 @@ body {
   background: linear-gradient(
     to right,
     transparent,
-    rgba(255, 255, 255, 0.25),
+    rgba(var(--ink-rgb), 0.25),
     transparent
   );
 }
@@ -216,7 +190,7 @@ body {
   content: '';
   width: 40px;
   height: 1px;
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(var(--ink-rgb), 0.3);
 }
 
 /* ========================= */
@@ -271,7 +245,7 @@ body {
 
   color: var(--gold);
 
-  border: 1px solid rgba(242, 170, 26, 0.35);
+  border: 1px solid rgba(var(--gold-rgb), 0.35);
   border-radius: 60px;
 
   padding: 4px 14px;
@@ -303,9 +277,9 @@ body {
   background:
     linear-gradient(to bottom,
       rgba(74, 84, 146, .18),
-      rgba(46, 28, 80, .55));
+      rgba(var(--bg-section-rgb), .55));
 
-  border: 1px solid rgba(255, 255, 255, .06);
+  border: 1px solid rgba(var(--ink-rgb), .06);
 
   border-radius: 28px;
 
@@ -315,10 +289,10 @@ body {
 }
 
 .missao-card:hover {
-  border-color: rgba(242, 170, 26, 0.18);
+  border-color: rgba(var(--gold-rgb), 0.18);
   box-shadow:
     0 20px 50px rgba(0, 0, 0, .2),
-    0 0 40px rgba(242, 170, 26, .06);
+    0 0 40px rgba(var(--gold-rgb), .06);
 }
 
 .missao-icone {
@@ -329,15 +303,15 @@ body {
 
   border-radius: 50%;
 
-  border: 1.5px solid rgba(242, 170, 26, .5);
+  border: 1.5px solid rgba(var(--gold-rgb), .5);
 
   display: flex;
   align-items: center;
   justify-content: center;
 
-  background: rgba(242, 170, 26, .06);
+  background: rgba(var(--gold-rgb), .06);
 
-  box-shadow: 0 0 25px rgba(242, 170, 26, .12);
+  box-shadow: 0 0 25px rgba(var(--gold-rgb), .12);
 }
 
 .missao-icone svg {
@@ -381,9 +355,9 @@ body {
   background:
     linear-gradient(to bottom,
       rgba(74, 84, 146, .28),
-      rgba(46, 28, 80, .75));
+      rgba(var(--bg-section-rgb), .75));
 
-  border: 1px solid rgba(255, 255, 255, .05);
+  border: 1px solid rgba(var(--ink-rgb), .05);
 
   border-radius: 28px;
 
@@ -408,11 +382,11 @@ body {
       rgba(91, 104, 172, .4),
       rgba(69, 59, 128, .88));
 
-  border-color: rgba(242, 170, 26, .2);
+  border-color: rgba(var(--gold-rgb), .2);
 
   box-shadow:
     0 20px 40px rgba(0, 0, 0, .3),
-    0 0 30px rgba(249, 200, 107, .1);
+    0 0 30px rgba(var(--gold-rgb), .1);
 }
 
 .pilar-icone {
@@ -421,7 +395,7 @@ body {
 
   border-radius: 50%;
 
-  border: 1.5px solid rgba(242, 170, 26, .45);
+  border: 1.5px solid rgba(var(--gold-rgb), .45);
 
   display: flex;
   align-items: center;
@@ -429,14 +403,14 @@ body {
 
   margin: 0 auto 18px;
 
-  background: rgba(242, 170, 26, .05);
+  background: rgba(var(--gold-rgb), .05);
 
   transition: box-shadow .4s, background .4s;
 }
 
 .pilar:hover .pilar-icone {
-  background: rgba(242, 170, 26, .1);
-  box-shadow: 0 0 20px rgba(242, 170, 26, .2);
+  background: rgba(var(--gold-rgb), .1);
+  box-shadow: 0 0 20px rgba(var(--gold-rgb), .2);
 }
 
 .pilar-icone svg {
@@ -483,7 +457,7 @@ body {
   top: 60px;
   right: 70px;
 
-  filter: drop-shadow(0 0 18px rgba(249, 200, 107, .3));
+  filter: drop-shadow(0 0 18px rgba(var(--gold-rgb), .3));
 
   z-index: 0;
 }
@@ -500,9 +474,9 @@ body {
   background:
     linear-gradient(to bottom,
       rgba(74, 84, 146, .2),
-      rgba(46, 28, 80, .6));
+      rgba(var(--bg-section-rgb), .6));
 
-  border: 1px solid rgba(242, 170, 26, .18);
+  border: 1px solid rgba(var(--gold-rgb), .18);
 
   border-radius: 28px;
 
@@ -514,8 +488,8 @@ body {
 }
 
 .citacao:hover {
-  border-color: rgba(242, 170, 26, .3);
-  box-shadow: 0 0 50px rgba(242, 170, 26, .07);
+  border-color: rgba(var(--gold-rgb), .3);
+  box-shadow: 0 0 50px rgba(var(--gold-rgb), .07);
 }
 
 .aspas-abre {

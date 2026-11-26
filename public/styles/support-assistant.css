@@ -8,7 +8,7 @@
 #support-assistant-launcher {
   --support-assistant-launcher-base-bottom: 20px;
   position: fixed; right: 94px; bottom: var(--support-assistant-launcher-base-bottom); z-index: 9997; min-width: 60px; height: 60px; padding: 0 17px;
-  border: 1px solid var(--support-gold); border-radius: 32px; background: var(--support-purple); color: #fff;
+  border: 1px solid var(--support-gold); border-radius: 32px; background: var(--support-purple); color: var(--text);
   font: 600 20px/1 Poppins, sans-serif; box-shadow: 0 5px 18px #17112e55; cursor: pointer;
   transition: bottom .2s ease-out, opacity .2s;
 }
@@ -23,7 +23,7 @@
 #support-assistant-panel input:focus-visible { outline: 3px solid var(--support-gold); outline-offset: 2px; }
 #support-assistant-panel select:focus-visible { outline: 3px solid var(--support-gold); outline-offset: 2px; }
 .support-secure-forms button:focus-visible,.support-secure-forms iframe:focus-visible { outline:3px solid var(--support-gold); outline-offset:2px; }
-#support-assistant-unread { position:absolute; top:-4px; right:-4px; min-width:18px; height:18px; border-radius:50%; background:#b43e63; color:#fff; font:700 16px/18px Poppins,sans-serif; }
+#support-assistant-unread { position:absolute; top:-4px; right:-4px; min-width:18px; height:18px; border-radius:50%; background:#b43e63; color:var(--text); font:700 16px/18px Poppins,sans-serif; }
 #support-assistant-panel {
   --sa-text: #fff;
   --sa-name: var(--gold, #F2AA1A);
@@ -63,7 +63,7 @@
 }
 .support-avatar {
   position: relative; width: 84px; height: 84px; flex: none;
-  border-radius: 50%; overflow: hidden; background: #161928;
+  border-radius: 50%; overflow: hidden; background: var(--bg-main);
   border: 2px solid var(--sa-border); box-sizing: border-box;
 }
 .support-avatar img { position: absolute; width: 151%; max-width: none; left: -24%; top: -30%; }
@@ -74,20 +74,17 @@
 }
 .support-header__id p {
   margin: 4px 0 0; font: 500 29px/1.1 "Cormorant Garamond", serif;
-  color: #fff;
+  color: var(--text);
 }
 .support-header__actions { display: flex; gap: 10px; align-items: center; align-self: flex-start; }
 .support-icon-btn {
   width: 52px; height: 52px; display: grid; place-items: center;
   border: 2px solid var(--sa-border); border-radius: 12px;
-  background: var(--sa-user-bg); color: #fff; cursor: pointer; padding: 0;
+  background: var(--sa-user-bg); color: var(--text); cursor: pointer; padding: 0;
 }
 .support-icon-btn svg { width: 30px; height: 30px; }
 #support-close {
   background: #A98AE8; border-color: #6C4BAC;
-}
-body.modo-claro #support-close {
-  background: #8BC4A0; border-color: #3F7A5A;
 }
 body.alto-contraste #support-close {
   background: #000; border-color: #fff;
@@ -164,10 +161,9 @@ body.alto-contraste #support-close {
   flex: 1; min-width: 0; box-sizing: border-box;
   height: 48px; max-height: 128px; resize: none;
   border: 0; outline: 0; background: transparent;
-  color: #fff; font: 400 29px/32px "Cormorant Garamond", serif;
+  color: var(--text); font: 400 29px/32px "Cormorant Garamond", serif;
   padding: 8px 0;
 }
-body.modo-claro .support-bar textarea { color: #000; }
 .support-bar textarea::placeholder {
   color: #604399; opacity: 1;
 }
@@ -185,7 +181,7 @@ body.modo-claro .support-bar textarea { color: #000; }
   position: absolute; right: 16px; top: 118px; z-index: 3;
   width: 56px; height: 56px; border-radius: 12px;
   border: 2px solid var(--sa-border); background: var(--sa-accent);
-  color: #fff; display: grid; place-items: center; cursor: pointer; padding: 0;
+  color: var(--text); display: grid; place-items: center; cursor: pointer; padding: 0;
 }
 .support-voice-onboarding {
   box-sizing: border-box; position: absolute; right: 84px; top: 150px; z-index: 3;
@@ -263,8 +259,8 @@ body.modo-claro .support-bar textarea { color: #000; }
   .support-voice-controls, .support-voice-controls.is-visible { transition: opacity .01s, visibility 0s; }
   .support-typing i, .support-transcribing { animation: none; }
 }
-.microfone{color:#ffffff}
-.support-bar button svg.microfone,#support-voice-mode svg.microfone{width:32px;height:32px;color:#ffffff}
+.microfone{color:var(--text)}
+.support-bar button svg.microfone,#support-voice-mode svg.microfone{width:32px;height:32px;color:var(--text)}
 
 #support-info-toggle { color: var(--support-gold); font-weight: 700; }
 .support-info {
@@ -279,7 +275,7 @@ body.modo-claro .support-bar textarea { color: #000; }
 .support-toolbar button,
 .support-toolbar a {
   display: inline-flex; align-items: center; min-height: 34px; padding: 6px 9px;
-  border: 1px solid #8d7db6; border-radius: 10px; background: #352b60; color: #fff;
+  border: 1px solid #8d7db6; border-radius: 10px; background: #352b60; color: var(--text);
   font: 500 17px Poppins, sans-serif; cursor: pointer;
 }
 .support-toolbar a { text-decoration: underline; }
@@ -293,7 +289,7 @@ body.modo-claro .support-bar textarea { color: #000; }
 .support-secure-forms__header { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: var(--support-gold); font-size: 18px; }
 .support-secure-forms button {
   min-height: 38px; padding: 7px 10px; border: 1px solid #8d7db6; border-radius: 9px;
-  background: #352b60; color: #fff; font: 500 17px Poppins, sans-serif; cursor: pointer;
+  background: #352b60; color: var(--text); font: 500 17px Poppins, sans-serif; cursor: pointer;
 }
 .support-secure-forms button:hover { border-color: var(--support-gold); background: #4d407c; }
 .support-secure-forms p { margin: 0; color: var(--support-muted); font-size: 16px; line-height: 1.45; }
@@ -301,13 +297,13 @@ body.modo-claro .support-bar textarea { color: #000; }
 .support-secure-forms iframe { display: block; flex: 1 1 auto; width: 100%; min-height: 0; border: 1px solid #8d7db6; border-radius: 10px; background: #fff; }
 .support-conversation-list { display: grid; gap: 7px; padding: 10px; border: 1px solid #ffffff22; border-radius: 12px; background: #251e46; }
 .support-history__header { display: flex; align-items: center; justify-content: space-between; gap: 10px; color: var(--support-gold); font-size: 17px; }
-.support-history__header button { border: 1px solid #8d7db6; border-radius: 8px; padding: 5px 8px; background: #352b60; color: #fff; font: 500 16px Poppins, sans-serif; cursor: pointer; }
+.support-history__header button { border: 1px solid #8d7db6; border-radius: 8px; padding: 5px 8px; background: #352b60; color: var(--text); font: 500 16px Poppins, sans-serif; cursor: pointer; }
 .support-conversation-list > div:last-child { display: grid; gap: 6px; }
 .support-conversation-list button.support-history-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 3px 8px; width: 100%; padding: 9px 10px; text-align: left; overflow: hidden; }
 .support-history-item[aria-pressed="true"] { border-color: var(--support-gold); box-shadow: inset 3px 0 var(--support-gold); background: #403565; }
 .support-history-item__title,
 .support-history-item__preview { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.support-history-item__title { color: #fff; font-size: 17px; font-weight: 600; }
+.support-history-item__title { color: var(--text); font-size: 17px; font-weight: 600; }
 .support-history-item__date,
 .support-history-item__state,
 .support-history-item__preview { color: var(--support-muted); font-size: 15px; }

@@ -44,7 +44,7 @@
 }
 .pa-personalization-consent button:focus-visible,
 .pa-personalization-settings button:focus-visible,
-.pa-personalization-settings input:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+.pa-personalization-settings input:focus-visible { outline: 3px solid var(--text); outline-offset: 3px; }
 .pa-personalization-settings {
   width: min(520px, calc(100vw - 2rem));
   max-width: none;

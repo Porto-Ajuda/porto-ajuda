@@ -51,8 +51,8 @@ body {
     justify-content: center;
 
     color: var(--dourado);
-    background: rgba(242, 170, 26, 0.10);
-    border: 2px solid rgba(242, 170, 26, 0.55);
+    background: rgba(var(--gold-rgb), 0.10);
+    border: 2px solid rgba(var(--gold-rgb), 0.55);
     border-radius: 50%;
     font-size: 44px;
     font-weight: 500;
@@ -87,8 +87,8 @@ h1 {
     margin: 24px 0 20px;
     padding: 22px;
     text-align: left;
-    background: rgba(22, 25, 40, 0.35);
-    border: 1px solid rgba(255, 255, 255, 0.10);
+    background: rgba(var(--bg-main-rgb), 0.35);
+    border: 1px solid rgba(var(--ink-rgb), 0.10);
     border-radius: 16px;
 }
 
@@ -112,7 +112,7 @@ h1 {
 
     color: var(--texto);
     background: var(--campo);
-    border: 1px solid rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(var(--ink-rgb), 0.18);
     border-radius: 10px;
     outline: none;
 
@@ -128,7 +128,7 @@ h1 {
 
 #email-reenvio:focus {
     border-color: var(--dourado);
-    box-shadow: 0 0 0 3px rgba(242, 170, 26, 0.13);
+    box-shadow: 0 0 0 3px rgba(var(--gold-rgb), 0.13);
 }
 
 .botao {

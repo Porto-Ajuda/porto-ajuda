@@ -50,9 +50,9 @@
     box-shadow:
         0 0 0 9999px rgba(7, 7, 18, 0.76),
 
-        0 0 0 5px rgba(242, 170, 26, 0.12),
+        0 0 0 5px rgba(var(--gold-rgb), 0.12),
 
-        0 0 35px rgba(242, 170, 26, 0.40);
+        0 0 35px rgba(var(--gold-rgb), 0.40);
 
     transition:
         top .35s cubic-bezier(.2, .8, .2, 1),
@@ -80,11 +80,11 @@
 
     background:
         linear-gradient(145deg,
-            #3E2871,
+            var(--bg-card),
             #28194D);
 
     border:
-        1px solid rgba(242, 170, 26, .28);
+        1px solid rgba(var(--gold-rgb), .28);
 
     border-radius: 20px;
 
@@ -94,7 +94,7 @@
 
         0 25px 70px rgba(0, 0, 0, .55),
 
-        0 0 40px rgba(242, 170, 26, .08);
+        0 0 40px rgba(var(--gold-rgb), .08);
 
     overflow: hidden;
 
@@ -124,7 +124,7 @@
         16px 20px;
 
     border-bottom:
-        1px solid rgba(255, 255, 255, .07);
+        1px solid rgba(var(--ink-rgb), .07);
 
 }
 
@@ -163,7 +163,7 @@
         var(--gold, #F2AA1A);
 
     box-shadow:
-        0 0 12px rgba(242, 170, 26, .65);
+        0 0 12px rgba(var(--gold-rgb), .65);
 
 }
 
@@ -185,7 +185,7 @@
     border-radius: 50%;
 
     background:
-        rgba(255, 255, 255, .06);
+        rgba(var(--ink-rgb), .06);
 
     color:
         var(--text-soft, #d7d7d7);
@@ -205,7 +205,7 @@
 #tour-fechar:hover {
 
     background:
-        rgba(242, 170, 26, .15);
+        rgba(var(--gold-rgb), .15);
 
     color:
         var(--gold-light, #F9C86B);
@@ -295,7 +295,7 @@
     overflow: hidden;
 
     background:
-        rgba(255, 255, 255, .08);
+        rgba(var(--ink-rgb), .08);
 
     border-radius: 10px;
 
@@ -450,13 +450,13 @@
         var(--gold, #F2AA1A);
 
     color:
-        #161928;
+        var(--on-gold);
 
     font-weight:
         600;
 
     box-shadow:
-        0 5px 18px rgba(242, 170, 26, .18);
+        0 5px 18px rgba(var(--gold-rgb), .18);
 
 }
 
@@ -482,7 +482,7 @@
         rgba(215, 215, 215, .45);
 
     border-top:
-        1px solid rgba(255, 255, 255, .05);
+        1px solid rgba(var(--ink-rgb), .05);
 
     font-size:
         .65rem;
@@ -517,13 +517,13 @@
         0 5px;
 
     border:
-        1px solid rgba(255, 255, 255, .13);
+        1px solid rgba(var(--ink-rgb), .13);
 
     border-radius:
         4px;
 
     color:
-        rgba(255, 255, 255, .65);
+        rgba(var(--ink-rgb), .65);
 
     font-size:
         .58rem;
@@ -784,15 +784,15 @@ CÓDIGO SECRETO - KONAMI CODE
 
     background:
         linear-gradient(145deg,
-            #3d2775,
+            var(--bg-card),
             #28194f);
 
-    border: 2px solid #F2AA1A;
+    border: 2px solid var(--gold);
 
     border-radius: 18px;
 
     box-shadow:
-        0 0 25px rgba(242, 170, 26, 0.35);
+        0 0 25px rgba(var(--gold-rgb), 0.35);
 
     color: white;
 }
@@ -808,7 +808,7 @@ CÓDIGO SECRETO - KONAMI CODE
 
     font-size: 42px;
 
-    color: #F2AA1A;
+    color: var(--gold);
 
     margin-bottom: 10px;
 }
@@ -836,7 +836,7 @@ CÓDIGO SECRETO - KONAMI CODE
 
     font-family: "Poppins", sans-serif;
 
-    color: #d7d7d7;
+    color: var(--text-soft);
 
     line-height: 1.6;
 
@@ -886,9 +886,9 @@ CÓDIGO SECRETO - KONAMI CODE
 
     border-radius: 8px;
 
-    background: #F2AA1A;
+    background: var(--gold);
 
-    color: #161928;
+    color: var(--on-gold);
 
     font-family: "Poppins", sans-serif;
 
@@ -902,7 +902,7 @@ CÓDIGO SECRETO - KONAMI CODE
 
 #fechar-segredo:hover {
 
-    background: #F9C86B;
+    background: var(--gold-light);
 
     transform: translateY(-2px);
 }

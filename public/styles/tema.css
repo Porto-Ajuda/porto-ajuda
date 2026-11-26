@@ -1,0 +1,195 @@
+/* =========================================================
+   PORTO AJUDA — TEMAS (ÚNICO LUGAR COM CORES DE TEMA)
+   ---------------------------------------------------------
+   Para mudar uma cor do site, mude APENAS aqui.
+
+   Como funciona:
+   1) PALETA   -> as cores "cruas" (hex). Edite estas.
+   2) ESCURO   -> tema padrão (sem classe no <body>).
+   3) CLARO    -> <body class="modo-claro"> (o roxo que antes
+                  era o modo escuro).
+   4) Alto contraste continua em geral.css (body.alto-contraste).
+
+   O JS não muda: acessibilidade.js continua alternando a classe
+   "modo-claro" no <body>.
+
+   Tokens com sufixo -rgb guardam só "R, G, B" para permitir
+   transparência:  rgba(var(--gold-rgb), .35)
+   ========================================================= */
+
+
+/* =========================================================
+   1) PALETA (valores crus)
+   ========================================================= */
+
+:root {
+
+    /* ---- ESCURO (novo) ---- */
+
+    /* roxos, do mais claro ao mais escuro */
+    --pal-roxo-1: #3A2A6B;
+    --pal-roxo-2: #2A1E4F;
+    --pal-roxo-3: #1E1739;
+    --pal-roxo-4: #141328;
+    --pal-roxo-5: #0C0E1A;
+
+    /* neutros */
+    --pal-preto: #0B0B0B;
+    --pal-grafite: #333533;
+
+    /* creme (texto) e dourados */
+    --pal-creme: #F2ECDD;
+    --pal-ouro: #F5CB5C;
+    --pal-ouro-escuro: #CD9C20;
+
+
+    /* ---- CLARO (roxo que era o escuro anterior) ---- */
+
+    --pal-c-bg-main: #161928;
+    --pal-c-bg-section: #2E1C50;
+    --pal-c-bg-card: #3E2871;
+    --pal-c-bg-card-hover: #453B80;
+    --pal-c-bg-deep: #211A38;
+
+    --pal-c-pagina-topo: #513883;
+    --pal-c-pagina-base: #3A256A;
+
+    --pal-c-primary: #4A5492;
+    --pal-c-secondary: #5B68AC;
+
+    --pal-c-gold: #F2AA1A;
+    --pal-c-gold-dark: #DDAA41;
+    --pal-c-gold-light: #F9C86B;
+    --pal-c-gold-soft: #FCE0A1;
+}
+
+
+/* =========================================================
+   2) TEMA ESCURO (padrão)
+   Definido em :root para valer também em <html>.
+   ========================================================= */
+
+:root {
+
+    /* FUNDOS */
+    --bg-main: var(--pal-roxo-4);
+    --bg-section: var(--pal-roxo-3);
+    --bg-card: var(--pal-roxo-2);
+    --bg-card-hover: var(--pal-roxo-1);
+    --bg-deep: var(--pal-roxo-5);
+    --bg-surface: var(--pal-roxo-3);        /* painéis/cartões do admin */
+
+    --bg-main-rgb: 20, 19, 40;
+    --bg-section-rgb: 30, 23, 57;
+    --bg-card-rgb: 42, 30, 79;
+
+    /* FUNDO DAS PÁGINAS (degradê de cima para baixo) */
+    --page-bg-top: var(--pal-roxo-2);
+    --page-bg-bottom: var(--pal-roxo-4);
+    --page-bg: linear-gradient(to bottom, var(--page-bg-top) 0%, var(--page-bg-bottom) 100%);
+    --page-bg-moon-upper: color-mix(in srgb, var(--page-bg-top) 75%, var(--page-bg-bottom));
+    --page-bg-moon-middle: color-mix(in srgb, var(--page-bg-top) 50%, var(--page-bg-bottom));
+    --page-bg-moon-lower: color-mix(in srgb, var(--page-bg-top) 25%, var(--page-bg-bottom));
+
+    /* INTERFACE */
+    --primary: var(--pal-roxo-1);
+    --secondary: color-mix(in srgb, var(--pal-roxo-1) 82%, var(--pal-creme));
+    --ui-primary: color-mix(in srgb, var(--pal-roxo-1) 78%, var(--pal-creme));
+    --ui-primary-hover: color-mix(in srgb, var(--pal-roxo-1) 66%, var(--pal-creme));
+    --ui-secondary: var(--pal-roxo-1);
+    --ui-secondary-hover: color-mix(in srgb, var(--pal-roxo-1) 85%, var(--pal-creme));
+
+    /* ROXOS DE APOIO (cadastro / perfil) */
+    --purple: color-mix(in srgb, var(--pal-roxo-1) 75%, var(--pal-creme));
+    --purple-dark: var(--pal-roxo-1);
+    --purple-light: color-mix(in srgb, var(--pal-roxo-1) 55%, var(--pal-creme));
+
+    /* BORDAS */
+    --border: var(--pal-roxo-1);
+    --border-light: color-mix(in srgb, var(--pal-roxo-1) 85%, var(--pal-creme));
+    --border-gold: var(--pal-ouro);
+    --dark-contrast: color-mix(in srgb, var(--pal-roxo-5) 81%, transparent);
+
+    /* DOURADOS */
+    --gold: var(--pal-ouro);
+    --gold-dark: var(--pal-ouro-escuro);
+    --gold-light: color-mix(in srgb, var(--pal-ouro) 70%, var(--pal-creme));
+    --gold-soft: color-mix(in srgb, var(--pal-ouro) 25%, var(--pal-creme));
+    --gold-rgb: 245, 203, 92;
+
+    /* TEXTOS */
+    --text: var(--pal-creme);
+    --text-soft: color-mix(in srgb, var(--pal-creme) 86%, var(--pal-grafite));
+    --text-muted: color-mix(in srgb, var(--pal-creme) 70%, var(--pal-grafite));
+    --text-disabled: color-mix(in srgb, var(--pal-creme) 50%, var(--pal-grafite));
+    --on-gold: var(--pal-roxo-4);          /* texto sobre botão dourado */
+    --ink-rgb: 242, 236, 221;              /* base das transparências claras (antes: branco) */
+
+    /* STATUS */
+    --success: #45C99A;
+    --warning: var(--pal-ouro);
+    --error: #F06B7A;
+    --info: #6CA8FF;
+}
+
+
+/* =========================================================
+   3) TEMA CLARO  (<body class="modo-claro">)
+   Usa :has() para também pintar o <html>.
+   ========================================================= */
+
+:root:has(body.modo-claro) {
+
+    /* FUNDOS */
+    --bg-main: var(--pal-c-bg-main);
+    --bg-section: var(--pal-c-bg-section);
+    --bg-card: var(--pal-c-bg-card);
+    --bg-card-hover: var(--pal-c-bg-card-hover);
+    --bg-deep: var(--pal-c-bg-deep);
+    --bg-surface: #201B38;
+
+    --bg-main-rgb: 22, 25, 40;
+    --bg-section-rgb: 46, 28, 80;
+    --bg-card-rgb: 62, 40, 113;
+
+    /* FUNDO DAS PÁGINAS */
+    --page-bg-top: var(--pal-c-pagina-topo);
+    --page-bg-bottom: var(--pal-c-pagina-base);
+
+    /* INTERFACE */
+    --primary: var(--pal-c-primary);
+    --secondary: var(--pal-c-secondary);
+    --ui-primary: #6674D8;
+    --ui-primary-hover: #7B87E8;
+    --ui-secondary: #8B6EDB;
+    --ui-secondary-hover: #9D83E8;
+
+    /* ROXOS DE APOIO */
+    --purple: #7C5CCF;
+    --purple-dark: #51369B;
+    --purple-light: #A995F0;
+
+    /* BORDAS */
+    --border: #533597;
+    --border-light: #6743BC;
+    --border-gold: #F5B52E;
+    --dark-contrast: #0E0A22CF;
+
+    /* DOURADOS */
+    --gold: var(--pal-c-gold);
+    --gold-dark: var(--pal-c-gold-dark);
+    --gold-light: var(--pal-c-gold-light);
+    --gold-soft: var(--pal-c-gold-soft);
+    --gold-rgb: 242, 170, 26;
+
+    /* TEXTOS */
+    --text: #FFFFFF;
+    --text-soft: #D7D7D7;
+    --text-muted: #B5AACF;
+    --text-disabled: #9083AF;
+    --on-gold: var(--pal-c-bg-deep);
+    --ink-rgb: 255, 255, 255;
+
+    /* STATUS */
+    --warning: #F5B52E;
+}

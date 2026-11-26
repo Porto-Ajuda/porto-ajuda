@@ -1,16 +1,16 @@
 :root {
     color-scheme: dark;
-    --admin-bg: #161928;
-    --admin-surface: #201b38;
-    --admin-surface-raised: #2e1c50;
-    --admin-purple: #3e2871;
-    --admin-purple-hover: #453b80;
-    --admin-blue: #4a5492;
-    --admin-gold: #f2aa1a;
-    --admin-gold-soft: #f9c86b;
-    --admin-text: #f6f2fb;
-    --admin-muted: #b9b1c9;
-    --admin-border: rgba(221, 170, 65, 0.18);
+    --admin-bg: var(--bg-main);
+    --admin-surface: var(--bg-surface);
+    --admin-surface-raised: var(--bg-section);
+    --admin-purple: var(--bg-card);
+    --admin-purple-hover: var(--bg-card-hover);
+    --admin-blue: var(--primary);
+    --admin-gold: var(--gold);
+    --admin-gold-soft: var(--gold-light);
+    --admin-text: var(--text);
+    --admin-muted: var(--text-muted);
+    --admin-border: rgba(var(--gold-rgb), 0.18);
     --admin-danger: #ffb2a7;
     font-family: "Poppins", sans-serif;
     color: var(--admin-text);
@@ -218,28 +218,6 @@ a { color: inherit; }
 .admin-generated-at { margin: 16px 0 0; color: #91899f; font-size: 0.65rem; text-align: right; }
 
 :focus-visible { outline: 3px solid var(--admin-gold-soft); outline-offset: 3px; }
-
-body.modo-claro {
-    color-scheme: light;
-    --admin-bg: #e9efec;
-    --admin-surface: #ffffff;
-    --admin-surface-raised: #f6f7f5;
-    --admin-purple: #453b80;
-    --admin-purple-hover: #5b68ac;
-    --admin-blue: #4a5492;
-    --admin-text: #1a241e;
-    --admin-muted: #42564a;
-    --admin-border: rgba(69, 59, 128, 0.22);
-}
-
-body.modo-claro .admin-sidebar,
-body.modo-claro .admin-topbar { background: rgba(255, 255, 255, 0.95); }
-body.modo-claro .admin-session-indicator,
-body.modo-claro .metric-footnote,
-body.modo-claro .activity-time { color: #4a5b50; }
-body.modo-claro .metric-card,
-body.modo-claro .admin-activity-card,
-body.modo-claro .admin-state-card { background: #fff; }
 
 body.alto-contraste {
     color-scheme: dark;

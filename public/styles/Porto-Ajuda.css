@@ -1,33 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap');
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css');
 
-:root {
 
-  /* FUNDOS */
-
-  --bg-main: #161928;
-  --bg-section: #2E1C50;
-  --bg-card: #3E2871;
-  --bg-card-hover: #453B80;
-
-  /* DETALHES */
-
-  --primary: #4A5492;
-  --secondary: #5B68AC;
-
-  /* DOURADOS */
-
-  --gold: #F2AA1A;
-  --gold-dark: #DDAA41;
-  --gold-light: #F9C86B;
-  --gold-soft: #FCE0A1;
-
-  /* TEXT OS */
-
-  --text: #FFFFFF;
-  --text-soft: #d7d7d7;
-
-}
 
 /* ========================= */
 /* RESET */
@@ -103,7 +77,7 @@ body {
   content: '';
   width: 40px;
   height: 1px;
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(var(--ink-rgb), 0.3);
 }
 
 .hero {
@@ -166,12 +140,12 @@ body {
     width: 70px;
     height: 70px;
     border-radius: 50%;
-    border: 1px solid rgba(255, 255, 255, .08);
+    border: 1px solid rgba(var(--ink-rgb), .08);
     display: flex;
     align-items: center;
     justify-content: center;
 background:
-    rgba(255, 255, 255, .05);
+    rgba(var(--ink-rgb), .05);
     cursor: pointer;
     overflow: hidden;
 
@@ -214,7 +188,7 @@ gap: 15px;
     translateY(-6px) scale(1.08);
 
   box-shadow:
-    0 0 30px rgba(242, 170, 26, .45);
+    0 0 30px rgba(var(--gold-rgb), .45);
     padding-left:25px;
 
 }
@@ -227,7 +201,7 @@ gap: 15px;
   border-radius: 60px;
 
   background:
-    rgba(255, 255, 255, .05);
+    rgba(var(--ink-rgb), .05);
 
   color: var(--text);
 
@@ -238,7 +212,7 @@ gap: 15px;
   font-size: 1rem;
 
   border:
-    1px solid rgba(255, 255, 255, .06);
+    1px solid rgba(var(--ink-rgb), .06);
 }
 
 .search-button:hover input,
@@ -257,7 +231,7 @@ gap: 15px;
     translateY(-4px);
 
   box-shadow:
-    0 0 30px rgba(242, 170, 26, .35);
+    0 0 30px rgba(var(--gold-rgb), .35);
 
 }
 
@@ -285,9 +259,9 @@ Lista escondida
     transition: 0.2s ease;
     overflow-y: auto;
     border:
-      1px solid rgba(255, 255, 255, .06);
+      1px solid rgba(var(--ink-rgb), .06);
       background:
-        rgba(255, 255, 255, .05);    
+        rgba(var(--ink-rgb), .05);    
 }
 .regioes::-webkit-scrollbar {
     width: 5px;
@@ -364,7 +338,7 @@ Lista escondida
   border-radius: 50%;
 
   border:
-    1px solid rgba(255, 255, 255, .08);
+    1px solid rgba(var(--ink-rgb), .08);
 
   box-shadow:
     0 0 50px rgba(0, 0, 0, .18);
@@ -405,10 +379,10 @@ Lista escondida
   background:
     linear-gradient(to bottom,
       rgba(74, 84, 146, .45),
-      rgba(46, 28, 80, .92));
+      rgba(var(--bg-section-rgb), .92));
 
   border:
-    1px solid rgba(255, 255, 255, .05);
+    1px solid rgba(var(--ink-rgb), .05);
 
   position: relative;
 
@@ -443,7 +417,7 @@ Lista escondida
 
   background:
     linear-gradient(180deg,
-      rgba(255, 255, 255, .12),
+      rgba(var(--ink-rgb), .12),
       transparent);
 
   opacity: 0;
@@ -463,7 +437,7 @@ Lista escondida
 
   box-shadow:
     0 20px 40px rgba(0, 0, 0, .35),
-    0 0 35px rgba(249, 200, 107, .15);
+    0 0 35px rgba(var(--gold-rgb), .15);
 
 }
 
@@ -504,7 +478,7 @@ Lista escondida
   background: linear-gradient(
     to bottom,
     transparent 30%,
-    rgba(22, 25, 40, 0.92) 100%
+    rgba(var(--bg-main-rgb), 0.92) 100%
   );
   border-radius: 35px;
   z-index: 1;
@@ -549,7 +523,7 @@ Lista escondida
   border-radius: 35px;
   z-index: 0;
   font-size: 2.5rem;
-  color: rgba(255,255,255,0.12);
+  color: rgba(var(--ink-rgb), 0.12);
 }
 
 /* ======================================== */
@@ -569,9 +543,9 @@ Lista escondida
 
   padding: 11px 22px;
 
-  background: rgba(22, 25, 40, 0.88);
+  background: rgba(var(--bg-main-rgb), 0.88);
 
-  border: 1px solid rgba(242, 170, 26, 0.35);
+  border: 1px solid rgba(var(--gold-rgb), 0.35);
 
   border-radius: 60px;
 
@@ -595,7 +569,7 @@ Lista escondida
   color: var(--bg-main);
   border-color: var(--gold);
   transform: translateX(-50%) translateY(-4px);
-  box-shadow: 0 8px 25px rgba(242, 170, 26, 0.4);
+  box-shadow: 0 8px 25px rgba(var(--gold-rgb), 0.4);
 }
 
 .btn-editar-secao i {
@@ -729,7 +703,7 @@ Lista escondida
   z-index: 3;
 
   filter:
-    drop-shadow(0 0 18px rgba(249, 200, 107, .45));
+    drop-shadow(0 0 18px rgba(var(--gold-rgb), .45));
 }
 
 .moon1 img {
@@ -780,7 +754,7 @@ Lista escondida
   background: linear-gradient(
       to right,
       transparent,
-      rgba(255,255,255,0.25),
+      rgba(var(--ink-rgb), 0.25),
       transparent
   );
 }
@@ -844,10 +818,10 @@ Lista escondida
 
   background:
     linear-gradient(160deg,
-      rgba(62, 40, 113, 0.97) 0%,
-      rgba(22, 25, 40, 0.99) 100%);
+      rgba(var(--bg-card-rgb), 0.97) 0%,
+      rgba(var(--bg-main-rgb), 0.99) 100%);
 
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(var(--ink-rgb), 0.08);
   border-radius: 28px;
 
   box-shadow:
@@ -887,7 +861,7 @@ Lista escondida
 
   padding: 28px 32px 20px;
 
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(var(--ink-rgb), 0.06);
 
   position: sticky;
   top: 0;
@@ -895,7 +869,7 @@ Lista escondida
 
   background:
     linear-gradient(160deg,
-      rgba(62, 40, 113, 0.99) 0%,
+      rgba(var(--bg-card-rgb), 0.99) 0%,
       rgba(30, 22, 55, 0.99) 100%);
 }
 
@@ -912,9 +886,9 @@ Lista escondida
 
   border-radius: 50%;
 
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(var(--ink-rgb), 0.1);
 
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(var(--ink-rgb), 0.04);
 
   color: var(--text-soft);
 
@@ -930,7 +904,7 @@ Lista escondida
 }
 
 .modal-fechar:hover {
-  background: rgba(242, 170, 26, 0.15);
+  background: rgba(var(--gold-rgb), 0.15);
   border-color: var(--gold);
   color: var(--gold-light);
   transform: rotate(90deg);
@@ -984,8 +958,8 @@ Lista escondida
 }
 
 .form-input {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(var(--ink-rgb), 0.04);
+  border: 1px solid rgba(var(--ink-rgb), 0.1);
   border-radius: 12px;
   padding: 12px 16px;
   color: var(--text);
@@ -996,12 +970,12 @@ Lista escondida
 }
 
 .form-input:focus {
-  border-color: rgba(242, 170, 26, 0.5);
-  box-shadow: 0 0 0 3px rgba(242, 170, 26, 0.08);
+  border-color: rgba(var(--gold-rgb), 0.5);
+  box-shadow: 0 0 0 3px rgba(var(--gold-rgb), 0.08);
 }
 
 .form-input::placeholder {
-  color: rgba(255, 255, 255, 0.25);
+  color: rgba(var(--ink-rgb), 0.25);
 }
 
 .form-textarea {
@@ -1027,9 +1001,9 @@ Lista escondida
   position: relative;
   width: 48px;
   height: 26px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(var(--ink-rgb), 0.1);
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(var(--ink-rgb), 0.12);
   transition: background .3s;
 }
 
@@ -1041,14 +1015,14 @@ Lista escondida
   transform: translateY(-50%);
   width: 18px;
   height: 18px;
-  background: rgba(255, 255, 255, 0.45);
+  background: rgba(var(--ink-rgb), 0.45);
   border-radius: 50%;
   transition: left .3s, background .3s;
 }
 
 .toggle-label input:checked + .toggle-slider {
-  background: rgba(242, 170, 26, 0.35);
-  border-color: rgba(242, 170, 26, 0.5);
+  background: rgba(var(--gold-rgb), 0.35);
+  border-color: rgba(var(--gold-rgb), 0.5);
 }
 
 .toggle-label input:checked + .toggle-slider::after {
@@ -1066,7 +1040,7 @@ Lista escondida
   width: 100%;
   height: 110px;
 
-  border: 1.5px dashed rgba(255, 255, 255, 0.15);
+  border: 1.5px dashed rgba(var(--ink-rgb), 0.15);
   border-radius: 14px;
 
   display: flex;
@@ -1079,24 +1053,24 @@ Lista escondida
   position: relative;
   overflow: hidden;
 
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(var(--ink-rgb), 0.02);
 
   transition: border-color .3s, background .3s;
 }
 
 .upload-area:hover {
-  border-color: rgba(242, 170, 26, 0.4);
-  background: rgba(242, 170, 26, 0.04);
+  border-color: rgba(var(--gold-rgb), 0.4);
+  background: rgba(var(--gold-rgb), 0.04);
 }
 
 .upload-icone {
   font-size: 1.6rem;
-  color: rgba(255, 255, 255, 0.25);
+  color: rgba(var(--ink-rgb), 0.25);
 }
 
 .upload-texto {
   font-size: 0.78rem;
-  color: rgba(255, 255, 255, 0.35);
+  color: rgba(var(--ink-rgb), 0.35);
 }
 
 .upload-preview {
@@ -1120,8 +1094,8 @@ Lista escondida
 .btn-cancelar {
   padding: 11px 24px;
   border-radius: 60px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(var(--ink-rgb), 0.1);
+  background: rgba(var(--ink-rgb), 0.04);
   color: var(--text-soft);
   font-family: 'Poppins', sans-serif;
   font-size: 0.85rem;
@@ -1130,7 +1104,7 @@ Lista escondida
 }
 
 .btn-cancelar:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(var(--ink-rgb), 0.08);
   color: var(--text);
 }
 
@@ -1153,7 +1127,7 @@ Lista escondida
 
 .btn-salvar:hover {
   transform: translateY(-3px);
-  box-shadow: 0 8px 24px rgba(242, 170, 26, 0.4);
+  box-shadow: 0 8px 24px rgba(var(--gold-rgb), 0.4);
 }
 
 /* ========================= */
@@ -1173,7 +1147,7 @@ Lista escondida
 
   margin-bottom: 16px;
   padding-top: 24px;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-top: 1px solid rgba(var(--ink-rgb), 0.06);
 }
 
 .modal-lista {
@@ -1189,16 +1163,16 @@ Lista escondida
 
   padding: 12px 16px;
 
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(var(--ink-rgb), 0.03);
+  border: 1px solid rgba(var(--ink-rgb), 0.06);
   border-radius: 14px;
 
   transition: border-color .3s, background .3s;
 }
 
 .modal-lista-item:hover {
-  background: rgba(255, 255, 255, 0.055);
-  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(var(--ink-rgb), 0.055);
+  border-color: rgba(var(--ink-rgb), 0.1);
 }
 
 .modal-lista-thumb {
@@ -1207,7 +1181,7 @@ Lista escondida
   border-radius: 10px;
   object-fit: cover;
   flex-shrink: 0;
-  border: 1px solid rgba(255,255,255,0.08);
+  border: 1px solid rgba(var(--ink-rgb), 0.08);
 }
 
 .modal-lista-thumb-vazio {
@@ -1216,11 +1190,11 @@ Lista escondida
   border-radius: 10px;
   flex-shrink: 0;
   background: rgba(74, 84, 146, 0.3);
-  border: 1px solid rgba(255,255,255,0.06);
+  border: 1px solid rgba(var(--ink-rgb), 0.06);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(255,255,255,0.2);
+  color: rgba(var(--ink-rgb), 0.2);
   font-size: 1.1rem;
 }
 
@@ -1251,16 +1225,16 @@ Lista escondida
   font-size: 0.68rem;
   padding: 3px 10px;
   border-radius: 99px;
-  background: rgba(242, 170, 26, 0.15);
+  background: rgba(var(--gold-rgb), 0.15);
   color: var(--gold-light);
-  border: 1px solid rgba(242, 170, 26, 0.25);
+  border: 1px solid rgba(var(--gold-rgb), 0.25);
   white-space: nowrap;
 }
 
 .modal-lista-ativo.inativo {
-  background: rgba(255, 255, 255, 0.05);
-  color: rgba(255,255,255,0.3);
-  border-color: rgba(255,255,255,0.07);
+  background: rgba(var(--ink-rgb), 0.05);
+  color: rgba(var(--ink-rgb), 0.3);
+  border-color: rgba(var(--ink-rgb), 0.07);
 }
 
 .modal-lista-acoes {
@@ -1273,8 +1247,8 @@ Lista escondida
   width: 34px;
   height: 34px;
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(var(--ink-rgb), 0.08);
+  background: rgba(var(--ink-rgb), 0.04);
   color: var(--text-soft);
   font-size: 0.8rem;
   cursor: pointer;
@@ -1285,8 +1259,8 @@ Lista escondida
 }
 
 .modal-lista-btn:hover {
-  background: rgba(242, 170, 26, 0.15);
-  border-color: rgba(242, 170, 26, 0.35);
+  background: rgba(var(--gold-rgb), 0.15);
+  border-color: rgba(var(--gold-rgb), 0.35);
   color: var(--gold-light);
   transform: translateY(-2px);
 }
@@ -1300,7 +1274,7 @@ Lista escondida
 .modal-lista-vazio {
   text-align: center;
   padding: 32px 0;
-  color: rgba(255,255,255,0.25);
+  color: rgba(var(--ink-rgb), 0.25);
   font-size: 0.85rem;
 }
 
@@ -1324,10 +1298,10 @@ Lista escondida
 
   background:
     linear-gradient(155deg,
-      rgba(62, 40, 113, 0.98) 0%,
-      rgba(22, 25, 40, 0.99) 100%);
+      rgba(var(--bg-card-rgb), 0.98) 0%,
+      rgba(var(--bg-main-rgb), 0.99) 100%);
 
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(var(--ink-rgb), 0.08);
   border-radius: 28px;
 
   box-shadow:
@@ -1373,7 +1347,7 @@ Lista escondida
   align-items: center;
   justify-content: center;
   font-size: 3.5rem;
-  color: rgba(255,255,255,0.1);
+  color: rgba(var(--ink-rgb), 0.1);
 }
 
 .modal-card-info {
@@ -1387,8 +1361,8 @@ Lista escondida
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--gold);
-  background: rgba(242, 170, 26, 0.1);
-  border: 1px solid rgba(242, 170, 26, 0.25);
+  background: rgba(var(--gold-rgb), 0.1);
+  border: 1px solid rgba(var(--gold-rgb), 0.25);
   border-radius: 99px;
   padding: 4px 14px;
   margin-bottom: 14px;
@@ -1422,7 +1396,7 @@ Lista escondida
   align-items: center;
   justify-content: space-between;
   padding-top: 18px;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-top: 1px solid rgba(var(--ink-rgb), 0.06);
 }
 
 .modal-card-usuario {
@@ -1439,7 +1413,7 @@ Lista escondida
 
 .modal-card-data {
   font-size: 0.75rem;
-  color: rgba(255,255,255,0.3);
+  color: rgba(var(--ink-rgb), 0.3);
 }
 
 /* ========================= */
@@ -2081,9 +2055,9 @@ Lista escondida
     transition: 0.2s ease;
     overflow-y: auto;
 
-    border: 1px solid rgba(255, 255, 255, .06);
+    border: 1px solid rgba(var(--ink-rgb), .06);
 
-    background: rgba(255, 255, 255, .05);
+    background: rgba(var(--ink-rgb), .05);
 
     z-index: 100;
 }
@@ -2157,7 +2131,7 @@ Lista escondida
 }
 
 .showcase-retry:focus-visible {
-  outline: 3px solid #f9c86b;
+  outline: 3px solid var(--gold-light);
   outline-offset: 3px;
 }
 
@@ -2173,15 +2147,15 @@ Lista escondida
   padding: 9px 15px;
   border: 1px solid rgb(249 200 107 / 45%);
   border-radius: 999px;
-  color: #f9c86b;
-  background: #2e1c50;
+  color: var(--gold-light);
+  background: var(--bg-section);
   font: inherit;
   cursor: pointer;
 }
 
 .showcase-card-kicker {
   display: block;
-  color: #f9c86b;
+  color: var(--gold-light);
   font-size: .7rem;
   font-weight: 700;
   letter-spacing: .13em;
@@ -2227,17 +2201,17 @@ Lista escondida
   width: 100%;
   max-width: 100%;
   transform: none;
-  color: #fff;
+  color: var(--text);
   font: 500 .75rem/1.35 Poppins, sans-serif;
 }
-.vitrine-item-campanha .vitrine-campanha-arrecadado { color: #fff; font-weight: 700; }
+.vitrine-item-campanha .vitrine-campanha-arrecadado { color: var(--text); font-weight: 700; }
 .vitrine-item-campanha .vitrine-campanha-meta { color: #eee8f5; }
 .vitrine-item-campanha .vitrine-campanha-progresso {
   display: block;
   width: 100%;
   height: 9px;
   margin: 1px 0;
-  accent-color: #f9c86b;
+  accent-color: var(--gold-light);
 }
 .vitrine-item-campanha .vitrine-base { grid-row: 4; margin-top: 5px; }
 
@@ -2249,7 +2223,7 @@ Lista escondida
   padding: 0;
   border: 0;
   overflow: visible;
-  color: #f8f4ff;
+  color: var(--text);
   background: transparent;
 }
 .home-organization-dialog::backdrop { background: rgba(10, 7, 18, .68); }
@@ -2259,14 +2233,14 @@ Lista escondida
   max-height: min(88vh, 760px);
   overflow: auto;
   padding: clamp(20px, 4vw, 30px);
-  border: 1px solid rgba(249, 200, 107, .55);
+  border: 1px solid rgba(var(--gold-rgb), .55);
   border-radius: 16px;
-  background: linear-gradient(145deg, #2e1c50, #191528);
+  background: linear-gradient(145deg, var(--bg-section), #191528);
   box-shadow: 0 22px 64px rgba(0, 0, 0, .45);
 }
 .home-organization-dialog__card h2,
 .home-organization-dialog__card p { margin: 0; }
-.home-organization-dialog__card h2 { color: #f9c86b; }
+.home-organization-dialog__card h2 { color: var(--gold-light); }
 .home-organization-dialog__card p { line-height: 1.55; }
 .home-organization-dialog__state { min-height: 1.5em; color: #ded8e9; }
 .home-organization-dialog__state.erro { color: #ffc3c3; }
@@ -2277,19 +2251,19 @@ Lista escondida
   width: 100%;
   min-width: 0;
   padding: 13px 15px;
-  border: 1px solid rgba(249, 200, 107, .42);
+  border: 1px solid rgba(var(--gold-rgb), .42);
   border-radius: 10px;
-  color: #fff;
-  background: rgba(255, 255, 255, .045);
+  color: var(--text);
+  background: rgba(var(--ink-rgb), .045);
   text-align: left;
   cursor: pointer;
 }
-.home-organization-dialog__item:hover { border-color: #f9c86b; background: rgba(249, 200, 107, .1); }
+.home-organization-dialog__item:hover { border-color: var(--gold-light); background: rgba(var(--gold-rgb), .1); }
 .home-organization-dialog__item span { color: #d8d1e2; font-size: .9rem; }
 .home-organization-dialog__links,
 .home-organization-dialog__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
-.home-organization-dialog__links a { color: #f9c86b; text-decoration: underline; text-underline-offset: 3px; }
-.home-organization-dialog :is(button, a):focus-visible { outline: 3px solid #f9c86b; outline-offset: 3px; }
+.home-organization-dialog__links a { color: var(--gold-light); text-decoration: underline; text-underline-offset: 3px; }
+.home-organization-dialog :is(button, a):focus-visible { outline: 3px solid var(--gold-light); outline-offset: 3px; }
 .home-organization-dialog__actions { justify-content: flex-end; }
 @media (max-width: 520px) {
   .home-organization-dialog__actions { flex-direction: column-reverse; align-items: stretch; }
@@ -2317,7 +2291,7 @@ Lista escondida
 }
 
 .modal-card-vaga-detalhes dt {
-  color: #f9c86b;
+  color: var(--gold-light);
   font-size: .78rem;
   font-weight: 600;
 }
@@ -2341,19 +2315,19 @@ Lista escondida
   padding: clamp(20px, 4vw, 46px);
   border-radius: inherit;
   background: radial-gradient(circle at 80% 15%, rgb(249 200 107 / 26%), transparent 40%),
-    linear-gradient(145deg, #453b80, #211a38);
+    linear-gradient(145deg, var(--bg-card-hover), var(--bg-deep));
   text-align: center;
 }
 
 .modal-preview-textual > span {
-  color: #f9c86b;
+  color: var(--gold-light);
   font-size: .75rem;
   font-weight: 700;
   letter-spacing: .13em;
 }
 
 .modal-preview-textual > strong {
-  color: #fff;
+  color: var(--text);
   font: 600 clamp(1.5rem, 3vw, 2.6rem)/1.1 'Cormorant Garamond', serif;
   overflow-wrap: anywhere;
 }

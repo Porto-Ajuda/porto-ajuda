@@ -3,14 +3,14 @@
 .dialogo-denuncia-conteudo__cartao { display:grid; gap:12px; padding:clamp(20px,5vw,30px); }
 .dialogo-denuncia-conteudo__cartao h2,.dialogo-denuncia-conteudo__cartao p { margin:0; }
 .dialogo-denuncia-conteudo__cartao label { margin-top:4px; font-weight:600; }
-.dialogo-denuncia-conteudo__cartao select,.dialogo-denuncia-conteudo__cartao textarea { width:100%; padding:11px 12px; color:inherit; background:#302044; border:1px solid rgba(255,255,255,.2); border-radius:9px; font:inherit; }
+.dialogo-denuncia-conteudo__cartao select,.dialogo-denuncia-conteudo__cartao textarea { width:100%; padding:11px 12px; color:inherit; background:#302044; border:1px solid rgba(var(--ink-rgb), .2); border-radius:9px; font:inherit; }
 .dialogo-denuncia-conteudo__cartao textarea { box-sizing:border-box; min-height:110px; resize:vertical; }
 .dialogo-denuncia-conteudo__cartao [aria-invalid="true"] { border-color:#ff9f99; }
 .dialogo-denuncia-conteudo__erro { margin:0; color:#ffb2a7; font-size:.82rem; }
 .dialogo-denuncia-conteudo__cartao .botao { display:inline-flex; align-items:center; justify-content:center; min-height:44px; padding:10px 18px; border:1px solid transparent; border-radius:10px; font:inherit; font-size:.85rem; font-weight:500; cursor:pointer; transition:background .25s ease,color .25s ease,transform .2s ease; }
 .dialogo-denuncia-conteudo__cartao .botao-primario { color:var(--bg-main,#161928); background:linear-gradient(135deg,var(--gold-light,#F9C86B),var(--gold,#F2AA1A)); }
 .dialogo-denuncia-conteudo__cartao .botao-primario:hover:not(:disabled) { filter:brightness(1.06); transform:translateY(-1px); }
-.dialogo-denuncia-conteudo__cartao .botao-secundario { color:var(--gold-light,#F9C86B); background:rgba(255,255,255,.05); border-color:rgba(255,255,255,.18); }
+.dialogo-denuncia-conteudo__cartao .botao-secundario { color:var(--gold-light,#F9C86B); background:rgba(var(--ink-rgb), .05); border-color:rgba(var(--ink-rgb), .18); }
 .dialogo-denuncia-conteudo__cartao .botao-secundario:hover:not(:disabled) { color:var(--bg-main,#161928); background:var(--gold,#F2AA1A); }
 .dialogo-denuncia-conteudo__cartao .botao:disabled { cursor:wait; opacity:.65; }
 .dialogo-denuncia-conteudo__cartao :focus-visible { outline:3px solid #e2c276; outline-offset:2px; }

@@ -4,18 +4,7 @@
 /* PALETA */
 /* ========================= */
 
-:root {
-  --bg-main: #161928;
-  --bg-section: #2E1C50;
-  --bg-card: #3E2871;
 
-  --gold: #f6c569;
-  --gold-light: #f6c569;
-  --gold-soft: #FCE0A1;
-
-  --text: #FFFFFF;
-  --text-soft: #FFFFFF;
-}
 
 /* ========================= */
 /* RESET */
@@ -98,7 +87,7 @@ body {
   background: linear-gradient(
     to right,
     transparent,
-    rgba(255, 255, 255, 0.25),
+    rgba(var(--ink-rgb), 0.25),
     transparent
   );
 }

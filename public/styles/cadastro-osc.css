@@ -3,46 +3,19 @@
 
 :root {
   /* FUNDOS */
-  --bg-main: #161928;
-  --bg-section: #2E1C50;
-  --bg-card: #3E2871;
-  --bg-card-hover: #453B80;
   --bg-card-hover2: #292F72;
-  --dark-contrast: #070b29cf;
 
   /* INTERFACE */
-  --primary: #6674D8;
-  --primary-hover: #7B87E8;
-  --secondary: #8B6EDB;
-  --secondary-hover: #9D83E8;
 
   /* ROXOS */
-  --purple: #7C5CCF;
-  --purple-dark: #51369B;
-  --purple-light: #A995F0;
 
   /* DOURADOS */
-  --gold: #F2AA1A;
-  --gold-dark: #DDAA41;
-  --gold-light: #F9C86B;
-  --gold-soft: #FCE0A1;
 
   /* TEXTOS */
-  --text: #FFFFFF;
-  --text-soft: #D9DCF0;
-  --text-muted: #A8AECA;
-  --text-disabled: #72799C;
 
   /* BORDAS */
-  --border: #353C78;
-  --border-light: #454C8C;
-  --border-gold: #F5B52E;
 
   /* ESTADOS */
-  --success: #45C99A;
-  --warning: #F5B52E;
-  --error: #F06B7A;
-  --info: #6CA8FF;
 }
 
 /* ========================= RESET ========================= */
@@ -96,8 +69,8 @@ body {
   padding: 28px 26px 22px;
   overflow: hidden;
   border-radius: 30px;
-  background: linear-gradient(to bottom, rgba(62, 40, 113, .92), rgba(46, 28, 80, .96));
-  border: 1px solid rgba(255, 255, 255, .06);
+  background: linear-gradient(to bottom, rgba(var(--bg-card-rgb), .92), rgba(var(--bg-section-rgb), .96));
+  border: 1px solid rgba(var(--ink-rgb), .06);
   box-shadow: 0 20px 50px rgba(221, 187, 122, .35);
   z-index: 10;
   text-align: center;
@@ -128,7 +101,7 @@ body {
 .progresso-trilho {
   height: 5px;
   border-radius: 99px;
-  background: rgba(255, 255, 255, .08);
+  background: rgba(var(--ink-rgb), .08);
   overflow: hidden;
 }
 
@@ -147,7 +120,7 @@ body {
   overflow-y: auto;
   padding: 2px 8px 12px 2px;
   scrollbar-width: thin;
-  scrollbar-color: rgba(242, 170, 26, .45) transparent;
+  scrollbar-color: rgba(var(--gold-rgb), .45) transparent;
 }
 
 .form-cadastro-osc .row.ativa {
@@ -205,9 +178,9 @@ body {
 .campo select {
   width: 100%;
   padding: 11px 13px;
-  border: 1px solid rgba(255, 255, 255, .1);
+  border: 1px solid rgba(var(--ink-rgb), .1);
   border-radius: 14px;
-  background: rgba(255, 255, 255, .05);
+  background: rgba(var(--ink-rgb), .05);
   color: var(--text);
   font-family: 'Poppins', sans-serif;
   font-size: .85rem;
@@ -218,14 +191,14 @@ body {
 .campo textarea { min-height: 100px; resize: vertical; line-height: 1.5; }
 
 .campo input::placeholder,
-.campo textarea::placeholder { color: rgba(255, 255, 255, .45); }
+.campo textarea::placeholder { color: rgba(var(--ink-rgb), .45); }
 
 .campo input:focus,
 .campo textarea:focus,
 .campo select:focus {
-  border-color: rgba(245, 181, 46, .65);
-  background: rgba(255, 255, 255, .08);
-  box-shadow: 0 0 20px rgba(245, 181, 46, .10);
+  border-color: rgba(var(--gold-rgb), .65);
+  background: rgba(var(--ink-rgb), .08);
+  box-shadow: 0 0 20px rgba(var(--gold-rgb), .10);
 }
 
 .campo input:disabled,
@@ -298,9 +271,9 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 11px 13px;
-  border: 1px solid rgba(255, 255, 255, .1);
+  border: 1px solid rgba(var(--ink-rgb), .1);
   border-radius: 14px;
-  background: rgba(255, 255, 255, .05);
+  background: rgba(var(--ink-rgb), .05);
   color: var(--text);
   font-family: 'Poppins', sans-serif;
   font-size: .85rem;
@@ -309,7 +282,7 @@ body {
   transition: .3s ease;
 }
 
-.botao-dropdown:hover { border-color: rgba(245, 181, 46, .45); background: rgba(255, 255, 255, .08); }
+.botao-dropdown:hover { border-color: rgba(var(--gold-rgb), .45); background: rgba(var(--ink-rgb), .08); }
 .botao-dropdown i { color: var(--gold); }
 
 /* CAUSA DO BUG: antes a lista aberta virava "position: static" e empurrava o
@@ -330,7 +303,7 @@ body {
   box-shadow: 0 15px 35px rgba(0, 0, 0, .45);
   z-index: 1000;
   scrollbar-width: thin;
-  scrollbar-color: rgba(242, 170, 26, .45) transparent;
+  scrollbar-color: rgba(var(--gold-rgb), .45) transparent;
 }
 
 .dropdown-opcoes.aberto { display: flex; }
@@ -349,7 +322,7 @@ body {
   transition: .25s ease;
 }
 
-.dropdown-opcoes button:hover { background: rgba(245, 181, 46, .12); color: var(--gold-light); }
+.dropdown-opcoes button:hover { background: rgba(var(--gold-rgb), .12); color: var(--gold-light); }
 
 /* chips: áreas secundárias e ODS */
 .areas-selecionadas,
@@ -372,7 +345,7 @@ body {
 }
 
 .area-selecionada { background: rgba(124, 92, 207, .22); border: 1px solid rgba(169, 149, 240, .3); }
-.ods-selecionada { background: rgba(245, 181, 46, .10); border: 1px solid rgba(245, 181, 46, .25); }
+.ods-selecionada { background: rgba(var(--gold-rgb), .10); border: 1px solid rgba(var(--gold-rgb), .25); }
 
 .area-selecionada button,
 .ods-selecionada button {
@@ -392,23 +365,23 @@ body {
 }
 
 .area-selecionada button:hover,
-.ods-selecionada button:hover { color: var(--gold); background: rgba(255, 255, 255, .08); }
+.ods-selecionada button:hover { color: var(--gold); background: rgba(var(--ink-rgb), .08); }
 
 .ods-numero { color: var(--gold); font-weight: 600; margin-right: 4px; }
 
 .ods-sugestoes { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
 .ods-sugestao,
 .link-login-cadastro {
-  border: 1px solid rgba(245, 181, 46, .45);
+  border: 1px solid rgba(var(--gold-rgb), .45);
   border-radius: 999px;
   padding: 7px 12px;
   color: var(--gold);
-  background: rgba(245, 181, 46, .08);
+  background: rgba(var(--gold-rgb), .08);
   cursor: pointer;
   font: inherit;
 }
 .ods-sugestao:hover,
-.link-login-cadastro:hover { background: rgba(245, 181, 46, .16); }
+.link-login-cadastro:hover { background: rgba(var(--gold-rgb), .16); }
 .status-cadastro-osc {
   flex: 0 0 100%;
   margin: 0 0 8px;
@@ -430,9 +403,9 @@ body {
   justify-content: center;
   gap: 8px;
   padding: 10px;
-  border: 1px dashed rgba(245, 181, 46, .4);
+  border: 1px dashed rgba(var(--gold-rgb), .4);
   border-radius: 13px;
-  background: rgba(245, 181, 46, .04);
+  background: rgba(var(--gold-rgb), .04);
   color: var(--gold);
   font-family: 'Poppins', sans-serif;
   font-size: .8rem;
@@ -445,7 +418,7 @@ body {
 .botao-adicionar-ods span { font-size: 1.1rem; font-weight: 600; }
 
 .botao-adicionar-area:hover,
-.botao-adicionar-ods:hover { background: rgba(245, 181, 46, .10); border-color: var(--gold); }
+.botao-adicionar-ods:hover { background: rgba(var(--gold-rgb), .10); border-color: var(--gold); }
 
 /* ========================= DIAS ========================= */
 
@@ -456,17 +429,17 @@ body {
   align-items: center;
   gap: 6px;
   padding: 8px 9px;
-  border: 1px solid rgba(255, 255, 255, .08);
+  border: 1px solid rgba(var(--ink-rgb), .08);
   border-radius: 10px;
-  background: rgba(255, 255, 255, .04);
+  background: rgba(var(--ink-rgb), .04);
   color: var(--text-soft);
   font-size: .73rem;
   cursor: pointer;
   transition: .25s ease;
 }
 
-.dias-semana label:hover { border-color: rgba(245, 181, 46, .4); color: var(--text); }
-.dias-semana label:has(input:checked) { border-color: var(--gold); background: rgba(245, 181, 46, .1); color: var(--text); }
+.dias-semana label:hover { border-color: rgba(var(--gold-rgb), .4); color: var(--text); }
+.dias-semana label:has(input:checked) { border-color: var(--gold); background: rgba(var(--gold-rgb), .1); color: var(--text); }
 
 /* ========================= SENHA ========================= */
 
@@ -491,7 +464,7 @@ body {
   transition: .25s ease;
 }
 
-.btn-olho:hover { color: var(--gold); background: rgba(255, 255, 255, .06); }
+.btn-olho:hover { color: var(--gold); background: rgba(var(--ink-rgb), .06); }
 
 .requisitos {
   grid-column: 1 / -1;
@@ -500,9 +473,9 @@ body {
   grid-template-columns: 1fr 1fr;
   gap: 8px 12px;
   padding: 14px;
-  border: 1px solid rgba(255, 255, 255, .08);
+  border: 1px solid rgba(var(--ink-rgb), .08);
   border-radius: 14px;
-  background: rgba(255, 255, 255, .03);
+  background: rgba(var(--ink-rgb), .03);
   text-align: left;
 }
 
@@ -536,7 +509,7 @@ body {
   gap: 12px;
   margin-top: auto;
   padding-top: 14px;
-  border-top: 1px solid rgba(255, 255, 255, .06);
+  border-top: 1px solid rgba(var(--ink-rgb), .06);
 }
 
 .botao {
@@ -558,11 +531,11 @@ body {
 .botao-cadastrar:hover {
   transform: translateY(-3px);
   background: var(--gold-light);
-  box-shadow: 0 8px 25px rgba(242, 170, 26, .25);
+  box-shadow: 0 8px 25px rgba(var(--gold-rgb), .25);
 }
 
-.botao-voltar { background: rgba(255, 255, 255, .08); color: var(--text-soft); }
-.botao-voltar:hover { background: rgba(255, 255, 255, .14); color: var(--text); transform: translateY(-3px); }
+.botao-voltar { background: rgba(var(--ink-rgb), .08); color: var(--text-soft); }
+.botao-voltar:hover { background: rgba(var(--ink-rgb), .14); color: var(--text); transform: translateY(-3px); }
 
 .botao:disabled { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; }
 
@@ -599,7 +572,7 @@ body {
   border-radius: 24px;
   text-align: center;
   background: linear-gradient(to bottom, var(--bg-card), var(--bg-section));
-  border: 1px solid rgba(255, 255, 255, .08);
+  border: 1px solid rgba(var(--ink-rgb), .08);
   box-shadow: 0 20px 60px rgba(0, 0, 0, .5);
   animation: aparecerAlerta .35s cubic-bezier(.22, 1, .36, 1);
 }
@@ -623,8 +596,8 @@ body {
   margin-bottom: 12px;
   padding: 5px 12px;
   border-radius: 99px;
-  background: rgba(245, 181, 46, .12);
-  border: 1px solid rgba(245, 181, 46, .3);
+  background: rgba(var(--gold-rgb), .12);
+  border: 1px solid rgba(var(--gold-rgb), .3);
   color: var(--gold-light);
   font-size: .75rem;
   font-weight: 500;
@@ -659,7 +632,7 @@ body {
   transition: .3s ease;
 }
 
-.btn-ir-login:hover { background: var(--gold-light); transform: translateY(-2px); box-shadow: 0 8px 25px rgba(245, 181, 46, .25); }
+.btn-ir-login:hover { background: var(--gold-light); transform: translateY(-2px); box-shadow: 0 8px 25px rgba(var(--gold-rgb), .25); }
 
 /* ========================= ANIMAÇÕES ========================= */
 
@@ -719,11 +692,11 @@ body {
     padding: 16px;
     border: 1px solid rgba(240, 190, 90, .55);
     border-radius: 12px;
-    color: #f8f4ff;
+    color: var(--text);
     background: rgba(39, 29, 58, .78);
 }
 .verificacao-representante-cadastro[hidden] { display: none; }
-.verificacao-representante-cadastro legend { padding: 0 6px; color: #ffd16a; font-weight: 700; }
+.verificacao-representante-cadastro legend { padding: 0 6px; color: var(--gold-light); font-weight: 700; }
 .verificacao-representante-cadastro label { display: flex; align-items: center; gap: 10px; }
 .verificacao-representante-cadastro input[type="radio"] { accent-color: #f0be5a; }
 .verificacao-representante-cadastro p { margin: 0; line-height: 1.55; }
@@ -733,7 +706,7 @@ body {
     padding: 12px 16px;
     border: 1px solid #f0be5a;
     border-radius: 9px;
-    color: #211a38;
+    color: var(--on-gold);
     background: #f0be5a;
     font-weight: 700;
     text-align: center;
@@ -741,4 +714,4 @@ body {
 }
 .btn-ir-verificacao-osc[hidden] { display: none; }
 .btn-ir-verificacao-osc:focus-visible,
-.verificacao-representante-cadastro input:focus-visible { outline: 3px solid #ffd16a; outline-offset: 3px; }
+.verificacao-representante-cadastro input:focus-visible { outline: 3px solid var(--gold-light); outline-offset: 3px; }
